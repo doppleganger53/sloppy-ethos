@@ -45,17 +45,22 @@ def run_lua_check(project_dir: Path, luac_exec: str):
     subprocess.run([luac_exec, "-p", str(target)], check=True)
 
 
-def build_zip(project_dir: Path, project_name: str, dist_dir: Path):
+def build_zip(project_dir: Path, project_name: str, dist_dir: Path, repo_root: Path):
     dist_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    base_name = dist_dir / f"{project_name}-ethos-install-{timestamp}"
+    staging_root = repo_root / ".build-staging"
+    if staging_root.exists():
+        shutil.rmtree(staging_root, ignore_errors=True)
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        staging = Path(tmpdir) / "package"
-        scripts = staging / "scripts"
-        destination = scripts / project_name
+    try:
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        base_name = dist_dir / f"{project_name}-ethos-install-{timestamp}"
+        staging = staging_root / "package"
+        destination = staging / "scripts" / project_name
         shutil.copytree(project_dir, destination)
         archive_path = shutil.make_archive(str(base_name), "zip", staging)
+    finally:
+        shutil.rmtree(staging_root, ignore_errors=True)
+
     print(f"Packaged widget ZIP: {archive_path}")
     return Path(archive_path)
 
@@ -64,10 +69,15 @@ def deploy_to_simulator(project_dir: Path, project_name: str, sim_path: Path):
     if not sim_path.exists():
         sys.exit(f"Simulator path '{sim_path}' does not exist.")
     target = sim_path / "scripts" / project_name
-    if target.exists():
-        shutil.rmtree(target)
     target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(project_dir, target)
+    try:
+        shutil.copytree(project_dir, target, dirs_exist_ok=True)
+    except PermissionError as exc:
+        sys.exit(
+            f"Permission denied while copying to '{target}'. "
+            "Ensure the simulator is closed and you have write access.\nDetails: "
+            f"{exc}"
+        )
     print(f"Deployed {project_name} -> {target}")
 
 
@@ -92,7 +102,7 @@ def main():
         sys.exit("Nothing to do: specify --dist or --deploy.")
 
     if args.dist and not args.no_zip:
-        build_zip(project_dir, args.project, repo_root / "dist")
+        build_zip(project_dir, args.project, repo_root / "dist", repo_root)
 
     if args.deploy:
         config_path = Path(args.config) if args.config else (repo_root / "tools" / "deploy.config.json")

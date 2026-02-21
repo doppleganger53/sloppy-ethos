@@ -282,6 +282,9 @@ local function buildSignature(sensors)
 end
 
 local function refreshSensors(widget, allowDeepScan)
+  if type(widget) ~= "table" then
+    return
+  end
   local raw, debug = getSensorList(widget, allowDeepScan)
   widget.lastRawCount = #raw
   widget.lastDebug = debug or widget.lastDebug
