@@ -3,6 +3,11 @@ local WIDGET_NAME = "SensorList"
 local FONT_BODY = FONT_XS or FONT_STD
 local FONT_HEADER = FONT_STD_BOLD or FONT_STD
 
+local DEFAULT_WINDOW_WIDTH = 480
+local DEFAULT_WINDOW_HEIGHT = 272
+local SCROLL_ROW_HEIGHT = 16
+local HEADER_HEIGHT = 18
+
 local COLOR_PALETTE = {
   { 255, 235, 59 },
   { 129, 212, 250 },
@@ -64,6 +69,25 @@ local function colorFromRgb(rgb)
   return safeCall(lcd.RGB, rgb[1], rgb[2], rgb[3])
 end
 
+local function getWindowSizeSafe()
+  if type(lcd.getWindowSize) == "function" then
+    local ok, w, h = pcall(lcd.getWindowSize)
+    if ok and type(w) == "number" and w > 0 and type(h) == "number" and h > 0 then
+      return w, h
+    end
+  end
+  return DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT
+end
+
+local function calculateVisibleRows()
+  local _, h = getWindowSizeSafe()
+  local rows = math.floor((h - HEADER_HEIGHT) / SCROLL_ROW_HEIGHT)
+  if rows < 1 then
+    return 1
+  end
+  return rows
+end
+
 local function shortenText(text, maxChars)
   if #text <= maxChars then
     return text
@@ -86,16 +110,14 @@ end
 
 local function collectFromCategory(category, maxMember)
   local sensors = {}
-  local seenNames = {}
   local highestMember = -1
   local emptyRun = 0
 
   for member = 0, maxMember do
     local source = safeCall(system.getSource, { category = category, member = member })
     local name = sourceName(source)
-    if source and type(name) == "string" and name ~= "" and name ~= "---" and not seenNames[name] then
+    if source and type(name) == "string" and name ~= "" and name ~= "---" then
       sensors[#sensors + 1] = source
-      seenNames[name] = true
       highestMember = member
       emptyRun = 0
     else
@@ -296,8 +318,8 @@ local function refreshSensors(widget, allowDeepScan)
     widget.groups = buildPhysicalGroups(widget.sensors)
     widget.colorCache = {}
     widget.lastSignature = signature
-    local _, h = lcd.getWindowSize()
-    local visibleRows = math.max(1, math.floor((h - 18) / 16))
+    widget.needsInvalidate = true
+    local visibleRows = calculateVisibleRows()
     local maxOffset = math.max(0, #widget.sensors - visibleRows)
     if widget.scrollOffset < 0 then
       widget.scrollOffset = 0
@@ -318,10 +340,7 @@ local function drawText(x, y, text, font, color)
 end
 
 local function getVisibleRows()
-  local _, h = lcd.getWindowSize()
-  local headerHeight = 18
-  local rowHeight = 16
-  return math.max(1, math.floor((h - headerHeight) / rowHeight))
+  return calculateVisibleRows()
 end
 
 local function getMaxOffset(widget)
@@ -338,9 +357,16 @@ local function clampOffset(widget)
 end
 
 local function drawSensorRows(widget)
-  local w, h = lcd.getWindowSize()
-  local rowHeight = 16
-  local headerHeight = 18
+  local w, _ = getWindowSizeSafe()
+  local _, h = getWindowSizeSafe()
+  local rowHeight = SCROLL_ROW_HEIGHT
+  local headerHeight = HEADER_HEIGHT
+
+  -- Paint our own background so Ethos focus highlight does not bleed through.
+  lcd.color(COLOR_BLACK or 0)
+  if type(lcd.drawFilledRectangle) == "function" then
+    lcd.drawFilledRectangle(0, 0, w, h)
+  end
 
   local colNameX = 0
   local colPhysX = math.floor(w * 0.56)
@@ -405,6 +431,10 @@ local function create()
     lastPoll = 0,
     lastDeepScan = 0,
     lastInvalidate = 0,
+    needsInvalidate = true,
+    touchActive = false,
+    touchLastY = nil,
+    touchAccumY = 0,
   }
   refreshSensors(widget, true)
   return widget
@@ -419,50 +449,77 @@ end
 
 local function applyScroll(widget, delta)
   if delta == 0 then
-    return
+    return false
   end
+  local previous = widget.scrollOffset
   widget.scrollOffset = widget.scrollOffset + delta
   clampOffset(widget)
+  return widget.scrollOffset ~= previous
 end
 
-local function isEvent(event, names)
-  if type(event) ~= "number" then
+local function matchesCategory(category, names)
+  if type(category) ~= "number" then
     return false
   end
   for _, key in ipairs(names) do
     local code = rawget(_G, key)
-    if type(code) == "number" and event == code then
+    if type(code) == "number" and category == code then
       return true
     end
   end
   return false
 end
 
-local function handleInput(widget, event)
+local function handleTouchScroll(widget, category, x, y)
   if type(widget) ~= "table" then
-    return
+    return false
   end
-  if type(event) ~= "number" or event == 0 then
-    return
-  end
-
-  if isEvent(event, { "EVT_ROTARY_RIGHT", "EVT_ROT_RIGHT", "EVT_VIRTUAL_NEXT", "EVT_PLUS_FIRST", "EVT_PLUS_REPT", "EVT_DOWN_FIRST", "EVT_DOWN_REPT" }) then
-    applyScroll(widget, 1)
-    lcd.invalidate()
-    return
+  if type(x) ~= "number" or type(y) ~= "number" then
+    return false
   end
 
-  if isEvent(event, { "EVT_ROTARY_LEFT", "EVT_ROT_LEFT", "EVT_VIRTUAL_PREV", "EVT_MINUS_FIRST", "EVT_MINUS_REPT", "EVT_UP_FIRST", "EVT_UP_REPT" }) then
-    applyScroll(widget, -1)
-    lcd.invalidate()
+  local touchStart = matchesCategory(category, { "EVT_TOUCH_FIRST", "EVT_TOUCH_START", "EVT_TOUCH_TAP" })
+  local touchEnd = matchesCategory(category, { "EVT_TOUCH_BREAK", "EVT_TOUCH_END", "EVT_TOUCH_LONG" })
+
+  if touchEnd then
+    widget.touchActive = false
+    widget.touchLastY = nil
+    widget.touchAccumY = 0
+    return true
   end
+
+  if touchStart or not widget.touchActive then
+    widget.touchActive = true
+    widget.touchLastY = y
+    widget.touchAccumY = 0
+    return true
+  end
+
+  local dy = y - (widget.touchLastY or y)
+  widget.touchLastY = y
+  widget.touchAccumY = (widget.touchAccumY or 0) + dy
+
+  local moved = false
+  while math.abs(widget.touchAccumY) >= SCROLL_ROW_HEIGHT do
+    local delta = widget.touchAccumY < 0 and 1 or -1
+    if applyScroll(widget, delta) then
+      moved = true
+    end
+    widget.touchAccumY = widget.touchAccumY - (delta == 1 and -SCROLL_ROW_HEIGHT or SCROLL_ROW_HEIGHT)
+  end
+
+  if moved then
+    widget.needsInvalidate = true
+    return true
+  end
+
+  return true
 end
 
 local function wakeup(widget, event)
   if type(widget) ~= "table" then
     return
   end
-  handleInput(widget, event)
   local now = os.clock()
 
   if now - widget.lastPoll >= 5.0 then
@@ -474,10 +531,34 @@ local function wakeup(widget, event)
     end
   end
 
-  if lcd.isVisible() and now - widget.lastInvalidate >= 1.0 then
+  if widget.needsInvalidate and lcd.isVisible() and now - widget.lastInvalidate >= 0.05 then
     lcd.invalidate()
     widget.lastInvalidate = now
+    widget.needsInvalidate = false
   end
+end
+
+local function event(widget, category, value, x, y)
+  if type(widget) ~= "table" then
+    return false
+  end
+
+  local evtTouch = rawget(_G, "EVT_TOUCH")
+
+  if type(evtTouch) == "number" then
+    if category ~= evtTouch then
+      return false
+    end
+    return handleTouchScroll(widget, category, x, y)
+  end
+
+  -- Fallback for firmware variants that don't expose EVT_TOUCH as a category:
+  -- treat event callbacks with valid pointer coordinates as touch input.
+  if type(x) == "number" and type(y) == "number" then
+    return handleTouchScroll(widget, category, x, y)
+  end
+
+  return false
 end
 
 local function name()
@@ -491,6 +572,7 @@ local function init()
     create = create,
     paint = paint,
     wakeup = wakeup,
+    event = event,
     persistent = false,
   })
 end

@@ -2,11 +2,10 @@
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
-import tempfile
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -45,15 +44,35 @@ def run_lua_check(project_dir: Path, luac_exec: str):
     subprocess.run([luac_exec, "-p", str(target)], check=True)
 
 
-def build_zip(project_dir: Path, project_name: str, dist_dir: Path, repo_root: Path):
+def normalize_version(raw_value: str):
+    version = raw_value.strip()
+    if not version:
+        sys.exit("Version cannot be empty.")
+    if not re.match(r"^[0-9A-Za-z][0-9A-Za-z._-]*$", version):
+        sys.exit(
+            f"Invalid version '{version}'. Use only letters, numbers, '.', '-', '_' and no spaces."
+        )
+    return version
+
+
+def resolve_version(repo_root: Path, explicit_version: Optional[str]):
+    if explicit_version:
+        return normalize_version(explicit_version)
+
+    version_file = repo_root / "VERSION"
+    if not version_file.exists():
+        sys.exit(f"Version file not found: {version_file}")
+    return normalize_version(version_file.read_text(encoding="utf-8").splitlines()[0])
+
+
+def build_zip(project_dir: Path, project_name: str, version: str, dist_dir: Path, repo_root: Path):
     dist_dir.mkdir(parents=True, exist_ok=True)
     staging_root = repo_root / ".build-staging"
     if staging_root.exists():
         shutil.rmtree(staging_root, ignore_errors=True)
 
     try:
-        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        base_name = dist_dir / f"{project_name}-ethos-install-{timestamp}"
+        base_name = dist_dir / f"{project_name}-{version}"
         staging = staging_root / "package"
         destination = staging / "scripts" / project_name
         shutil.copytree(project_dir, destination)
@@ -65,6 +84,35 @@ def build_zip(project_dir: Path, project_name: str, dist_dir: Path, repo_root: P
     return Path(archive_path)
 
 
+def format_deploy_error(target: Path, exc: OSError):
+    hint_lines = [
+        f"Failed to deploy '{target.name}' to simulator path '{target}'.",
+    ]
+
+    if isinstance(exc, PermissionError):
+        hint_lines.extend(
+            [
+                "Permission denied while writing to the simulator folder.",
+                "Possible causes:",
+                "- Ethos Suite or simulator still has the folder open.",
+                "- Current shell/session cannot write outside the workspace sandbox.",
+                "- Windows ACL/antivirus is blocking writes for this process.",
+            ]
+        )
+    else:
+        hint_lines.append("Unexpected filesystem error while copying files.")
+
+    hint_lines.extend(
+        [
+            "Suggested checks:",
+            "- Close Ethos Suite and retry.",
+            "- Retry from a shell/session with elevated filesystem access.",
+            f"Details: {exc}",
+        ]
+    )
+    return "\n".join(hint_lines)
+
+
 def deploy_to_simulator(project_dir: Path, project_name: str, sim_path: Path):
     if not sim_path.exists():
         sys.exit(f"Simulator path '{sim_path}' does not exist.")
@@ -72,12 +120,8 @@ def deploy_to_simulator(project_dir: Path, project_name: str, sim_path: Path):
     target.parent.mkdir(parents=True, exist_ok=True)
     try:
         shutil.copytree(project_dir, target, dirs_exist_ok=True)
-    except PermissionError as exc:
-        sys.exit(
-            f"Permission denied while copying to '{target}'. "
-            "Ensure the simulator is closed and you have write access.\nDetails: "
-            f"{exc}"
-        )
+    except OSError as exc:
+        sys.exit(format_deploy_error(target, exc))
     print(f"Deployed {project_name} -> {target}")
 
 
@@ -88,6 +132,7 @@ def parse_args():
     parser.add_argument("--deploy", action="store_true", help="Copy the widget folder into the simulator scripts directory.")
     parser.add_argument("--config", "-c", help="Path to JSON config containing ETHOS_SIM_PATH.")
     parser.add_argument("--no-zip", action="store_true", help="Skip ZIP even when --dist is provided.")
+    parser.add_argument("--version", help="Override package version (default: read from VERSION file at repo root).")
     return parser.parse_args()
 
 
@@ -95,6 +140,7 @@ def main():
     args = parse_args()
     repo_root = Path(__file__).resolve().parent.parent
     project_dir = repo_root / "src" / "scripts" / args.project
+    version = resolve_version(repo_root, args.version)
     luac_exec = ensure_luac_available()
     run_lua_check(project_dir, luac_exec)
 
@@ -102,7 +148,7 @@ def main():
         sys.exit("Nothing to do: specify --dist or --deploy.")
 
     if args.dist and not args.no_zip:
-        build_zip(project_dir, args.project, repo_root / "dist", repo_root)
+        build_zip(project_dir, args.project, version, repo_root / "dist", repo_root)
 
     if args.deploy:
         config_path = Path(args.config) if args.config else (repo_root / "tools" / "deploy.config.json")

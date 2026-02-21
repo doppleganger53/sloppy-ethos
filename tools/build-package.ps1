@@ -1,6 +1,7 @@
 param(
   [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path,
   [string]$ProjectName = "SensorList",
+  [string]$Version = "",
   [string]$OutDir = ""
 )
 
@@ -20,6 +21,22 @@ if (-not $luac) {
   throw "Could not find 'luac' on PATH. Install Lua and make sure 'luac' is available."
 }
 
+if ([string]::IsNullOrWhiteSpace($Version)) {
+  $versionFile = Join-Path $RepoRoot "VERSION"
+  if (-not (Test-Path $versionFile)) {
+    throw "Version file '$versionFile' does not exist."
+  }
+  $Version = (Get-Content -Path $versionFile -TotalCount 1).Trim()
+}
+
+if ([string]::IsNullOrWhiteSpace($Version)) {
+  throw "Version cannot be empty."
+}
+
+if ($Version -notmatch '^[0-9A-Za-z][0-9A-Za-z._-]*$') {
+  throw "Invalid version '$Version'. Use only letters, numbers, '.', '-', '_' and no spaces."
+}
+
 Write-Host "Checking Lua syntax with $($luac.Source)..."
 $luaFiles = Get-ChildItem -Path $sourceDir -Recurse -File -Filter *.lua
 foreach ($file in $luaFiles) {
@@ -29,8 +46,7 @@ foreach ($file in $luaFiles) {
   }
 }
 
-$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$zipName = "$ProjectName-ethos-install-$timestamp.zip"
+$zipName = "$ProjectName-$Version.zip"
 $zipPath = Join-Path $OutDir $zipName
 
 $stagingRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("ethos-build-" + [System.Guid]::NewGuid().ToString("N"))

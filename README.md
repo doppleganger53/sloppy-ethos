@@ -21,6 +21,7 @@ python tools/build.py --project SensorList --deploy
 2. Install the dist ZIP inside Ethos Suite for radio deployment.
 3. Use the PowerShell helpers (`tools/build-package.ps1`, `tools/deploy-ethos-sim.ps1`) as Windows-only fallbacks.
 4. Configure `tools/deploy.config.json` (copy the example) or set `ETHOS_SIM_PATH` before running `--deploy`.
+5. Package version is read from `VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
 
 ## Project Layout
 
@@ -28,7 +29,7 @@ python tools/build.py --project SensorList --deploy
 - `src/scripts/SensorList/README.md`: widget-focused usage notes
 - `tools/build-package.ps1`: syntax-check + packaging script
 - `tools/deploy-ethos-sim.ps1`: simulator deploy helper (placeholder)
-- `prompts/SensorList.md`: original implementation prompt (renamed)
+- `deslopification/prompts/SensorList.md`: original implementation prompt
 - `docs/`: development notes and handoff documents
 
 ## Development
@@ -45,4 +46,4 @@ luac -p src/scripts/SensorList/main.lua
 
 - See `CONTRIBUTING.md` for contribution flow.
 - Use `.github/PULL_REQUEST_TEMPLATE.md` when opening PRs.
-- See `docs/HANDOFF_2026-02-21.md` for the latest session notes.
+- See `deslopification/memory/HANDOFF_2026-02-21.md` for latest session notes.

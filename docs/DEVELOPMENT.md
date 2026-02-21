@@ -25,7 +25,8 @@
 `tools/build.py`:
 
 - validates Lua syntax using `luac -p`.
-- produces `dist/{ProjectName}-ethos-install-<timestamp>.zip`.
+- reads package version from `VERSION` (or `--version` override).
+- produces `dist/{ProjectName}-{version}.zip`.
 - optionally copies `src/scripts/{ProjectName}` into `${ETHOS_SIM_PATH}/scripts/{ProjectName}` when `--deploy` is specified (no ZIP).
 - Write operations fail fast with clear errors when paths are missing or unwritable.
 - PowerShell helpers (`tools/build-package.ps1`, `tools/deploy-ethos-sim.ps1`) remain available as documented fallbacks for Windows-only workflows.
