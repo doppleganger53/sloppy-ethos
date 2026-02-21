@@ -11,14 +11,16 @@ Ethos Lua widget workspace. Current active project: `SensorList`.
 
 ## Quick Start
 
-1. Build package from repo root:
+1. Build or deploy from repo root:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-package.ps1 -ProjectName SensorList
+python tools/build.py --project SensorList --dist
+python tools/build.py --project SensorList --deploy
 ```
 
-2. Install in Ethos Suite using Lua install/import.
-3. Sync/transfer to radio or simulator SD.
+2. Install the dist ZIP inside Ethos Suite for radio deployment.
+3. Use the PowerShell helpers (`tools/build-package.ps1`, `tools/deploy-ethos-sim.ps1`) as Windows-only fallbacks.
+4. Configure `tools/deploy.config.json` (copy the example) or set `ETHOS_SIM_PATH` before running `--deploy`.
 
 ## Project Layout
 

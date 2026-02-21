@@ -35,6 +35,38 @@
         "reveal": "always"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Python Build Dist",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "tools/build.py",
+        "--project",
+        "SensorList",
+        "--dist"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Python Deploy Simulator",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "tools/build.py",
+        "--project",
+        "SensorList",
+        "--deploy"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
     }
   ]
 }
