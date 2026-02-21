@@ -16,6 +16,25 @@
         "reveal": "always"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Build Ethos Install ZIP",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/build-package.ps1",
+        "-ProjectName",
+        "SensorList"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
     }
   ]
 }
