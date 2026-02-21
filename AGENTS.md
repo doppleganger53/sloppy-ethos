@@ -38,6 +38,7 @@ From repo root:
   - `luac -p src/scripts/SensorList/main.lua`
 
 Notes:
+
 - Deploy path comes from `tools/deploy.config.json` or `ETHOS_SIM_PATH`.
 - `tools/deploy.config.json` is local-only and gitignored.
 
