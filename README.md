@@ -28,7 +28,7 @@ python tools/build.py --project SensorList --deploy
 - `src/scripts/SensorList/README.md`: widget-focused usage notes
 - `tools/build-package.ps1`: syntax-check + packaging script
 - `tools/deploy-ethos-sim.ps1`: simulator deploy helper (placeholder)
-- `prompts/SensorWidgetTemplate.md`: original implementation prompt
+- `prompts/SensorList.md`: original implementation prompt (renamed)
 - `docs/`: development notes and handoff documents
 
 ## Development
