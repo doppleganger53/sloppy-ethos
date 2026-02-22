@@ -9,12 +9,32 @@ Ethos widget that lists configured sensors in a sortable table with:
 Conflicting sensors that share the same Physical ID are color-grouped to make
 potential conflicts easier to identify.
 
-## Install
+## Current Behavior
 
-1. Build the install ZIP from the repository root:
-   `powershell -ExecutionPolicy Bypass -File tools/build-package.ps1 -ProjectName SensorList`
-2. In Ethos Suite, run the Lua install/import action and select the ZIP file
-   from `dist/`.
+- Displays columns for `Name`, `Physical ID`, `Application ID`.
+- Sort order is deterministic by `Physical ID`, then `Application ID`, then name.
+- Duplicate physical IDs are color-grouped to help identify conflicts.
+- List navigation is manual via wheel/button/touch scrolling (no forced auto-scroll).
+- Sensor discovery uses a lightweight poll + periodic deep-scan strategy for simulator/radio stability.
+
+## Build and Install
+
+1. Build the install ZIP from repository root:
+   `python tools/build.py --project SensorList --dist`
+2. In Ethos Suite, run the Lua install/import action and select the ZIP from `dist/`.
 3. Transfer/sync to the radio.
 
-Installed path on radio: `scripts/SensorList`
+Installed path on radio: `scripts/SensorList`.
+
+## Simulator Deploy
+
+- Deploy script files into simulator scripts directory:
+  `python tools/build.py --project SensorList --deploy`
+- Configure simulator path via `tools/deploy.config.json` or `ETHOS_SIM_PATH`.
+
+## Fallback Commands
+
+PowerShell helpers remain available for Windows-only fallback workflows:
+
+- `tools/build-package.ps1`
+- `tools/deploy-ethos-sim.ps1`

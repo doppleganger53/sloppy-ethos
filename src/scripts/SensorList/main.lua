@@ -577,4 +577,22 @@ local function init()
   })
 end
 
-return { init = init }
+local function testExports()
+  return {
+    toInt = toInt,
+    formatHex = formatHex,
+    normalizeSensors = normalizeSensors,
+    buildPhysicalGroups = buildPhysicalGroups,
+    buildSignature = buildSignature,
+    applyScroll = applyScroll,
+    clampOffset = clampOffset,
+    getSensorList = getSensorList,
+  }
+end
+
+local module = { init = init }
+if rawget(_G, "__SENSORLIST_TEST__") then
+  module._test = testExports()
+end
+
+return module
