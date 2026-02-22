@@ -3,3 +3,5 @@ tools/deploy.config.json
 tools/__pycache__
 .build-staging/
 .tmp_refs
+__pycache__/
+*.pyc
