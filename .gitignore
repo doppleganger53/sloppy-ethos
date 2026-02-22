@@ -5,3 +5,4 @@ tools/__pycache__
 .tmp_refs
 __pycache__/
 *.pyc
+.pytest_cache/
