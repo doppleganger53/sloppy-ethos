@@ -23,6 +23,15 @@ python tools/build.py --project SensorList --deploy
 - Configure `tools/deploy.config.json` (copy the example) or set `ETHOS_SIM_PATH` before running `--deploy`.
 - Package version is read from `VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
 
+### 30-Second First Run
+
+1. Run:
+   `python tools/build.py --project SensorList --dist`
+2. Confirm output contains both:
+   - `Checking Lua syntax:`
+   - `Packaged widget ZIP:`
+3. Install the generated archive from `dist/` in Ethos Suite.
+
 ## Project Layout
 
 - `src/scripts/SensorList/main.lua`: widget implementation
@@ -31,6 +40,7 @@ python tools/build.py --project SensorList --deploy
 - `tools/deploy-ethos-sim.ps1`: simulator deploy helper (placeholder)
 - `deslopification/prompts/SensorList.md`: original implementation prompt
 - `docs/`: development notes and handoff documents
+- `docs/REPOSITORY_LAYOUT.md`: reference for `tools/`, `tests/`, `deslopification/`, and root artifacts
 
 ## Development
 
@@ -55,7 +65,20 @@ luac -p src/scripts/SensorList/main.lua
 
 - See `CONTRIBUTING.md` for contribution flow.
 - Use `.github/PULL_REQUEST_TEMPLATE.md` when opening PRs.
+- See `CODE_OF_CONDUCT.md` for collaboration expectations.
+- See `SECURITY.md` for responsible vulnerability reporting.
 - See `deslopification/memory/HANDOFF_2026-02-21.md` for latest session notes.
+
+## Troubleshooting
+
+- `Required command 'luac' not found on PATH.`:
+  install Lua tooling and verify `luac` resolves in your shell.
+- `Simulator path not configured.`:
+  set `ETHOS_SIM_PATH` or create `tools/deploy.config.json` from `tools/deploy.config.example.json`.
+- Deploy fails with permission denied:
+  close Ethos Suite, then retry deployment from a shell with write access.
+- Stale simulator behavior after script changes:
+  remove cached `main.luac`, reinstall widget, then reset Ethos Info errors.
 
 ## Roadmap
 
