@@ -76,12 +76,25 @@ def build_zip(project_dir: Path, project_name: str, version: str, dist_dir: Path
         staging = staging_root / "package"
         destination = staging / "scripts" / project_name
         shutil.copytree(project_dir, destination)
+        add_project_extras_to_scripts_root(project_dir, project_name, staging / "scripts")
         archive_path = shutil.make_archive(str(base_name), "zip", staging)
     finally:
         shutil.rmtree(staging_root, ignore_errors=True)
 
     print(f"Packaged widget ZIP: {archive_path}")
     return Path(archive_path)
+
+
+def add_project_extras_to_scripts_root(project_dir: Path, project_name: str, scripts_root: Path):
+    # Ethos system tool icon lookup expects this icon path on physical radios.
+    if project_name != "ethos_events":
+        return
+    icon_source = project_dir / "ethos_events.png"
+    if not icon_source.exists():
+        return
+    tools_dir = scripts_root / "tools"
+    tools_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(icon_source, tools_dir / "ethos_events.png")
 
 
 def format_deploy_error(target: Path, exc: OSError):
@@ -120,6 +133,7 @@ def deploy_to_simulator(project_dir: Path, project_name: str, sim_path: Path):
     target.parent.mkdir(parents=True, exist_ok=True)
     try:
         shutil.copytree(project_dir, target, dirs_exist_ok=True)
+        add_project_extras_to_scripts_root(project_dir, project_name, sim_path / "scripts")
     except OSError as exc:
         sys.exit(format_deploy_error(target, exc))
     print(f"Deployed {project_name} -> {target}")

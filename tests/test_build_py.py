@@ -196,6 +196,25 @@ def test_build_zip_cleans_staging_on_copy_failure(monkeypatch, tmp_path: Path):
     assert staging_root in cleanup_calls
 
 
+def test_add_project_extras_to_scripts_root_noop_for_other_projects(tmp_path: Path):
+    project_dir = tmp_path / "src" / "scripts" / "SensorList"
+    scripts_root = tmp_path / "staging" / "scripts"
+    project_dir.mkdir(parents=True)
+    scripts_root.mkdir(parents=True)
+    build.add_project_extras_to_scripts_root(project_dir, "SensorList", scripts_root)
+    assert not (scripts_root / "tools" / "ethos_events.png").exists()
+
+
+def test_add_project_extras_to_scripts_root_copies_ethos_events_icon(tmp_path: Path):
+    project_dir = tmp_path / "src" / "scripts" / "ethos_events"
+    scripts_root = tmp_path / "staging" / "scripts"
+    project_dir.mkdir(parents=True)
+    scripts_root.mkdir(parents=True)
+    (project_dir / "ethos_events.png").write_bytes(b"pngdata")
+    build.add_project_extras_to_scripts_root(project_dir, "ethos_events", scripts_root)
+    assert (scripts_root / "tools" / "ethos_events.png").read_bytes() == b"pngdata"
+
+
 def test_format_deploy_error_permission():
     target = Path("C:/sim/scripts/SensorList")
     message = build.format_deploy_error(target, PermissionError("denied"))

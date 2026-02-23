@@ -28,6 +28,7 @@
 - validates Lua syntax using `luac -p`.
 - reads package version from `VERSION` (or `--version` override).
 - produces `dist/{ProjectName}-{version}.zip`.
+- for `ethos_events`, mirrors `ethos_events.png` to `scripts/tools/ethos_events.png` in ZIP/deploy output for physical-radio system-tool icon compatibility.
 - optionally copies `src/scripts/{ProjectName}` into `${ETHOS_SIM_PATH}/scripts/{ProjectName}` when `--deploy` is specified (no ZIP).
 - Write operations fail fast with clear errors when paths are missing or unwritable.
 - PowerShell helpers (`tools/build-package.ps1`, `tools/deploy-ethos-sim.ps1`) remain available as documented fallbacks for Windows-only workflows.
