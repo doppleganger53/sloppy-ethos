@@ -21,9 +21,9 @@ State expected behavior invariants. If behavior changes are intentional, list th
 
 ## Validation Checklist
 
-1. 
-2. 
-3. 
+1. Validation step 1
+2. Validation step 2
+3. Validation step 3
 
 ## Rollback Plan
 

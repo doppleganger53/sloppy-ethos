@@ -3,6 +3,7 @@
 `<human>`
 
 What started as a simple experiment to play around with agentic AI coding for a little utility widget has morphed itself into an idea to start a community repo with two main goals:
+
 - Make some handy Ethos utilities
 - Spend more time flying than coding
 

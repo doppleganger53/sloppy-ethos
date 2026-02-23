@@ -9,7 +9,7 @@ new events appear automatically.
 
 Copy `ethos_events.lua` to your radio:
 
-```
+```text
 /SCRIPTS/LIB/ethos_events.lua
 ```
 

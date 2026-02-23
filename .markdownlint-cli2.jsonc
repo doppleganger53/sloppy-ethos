@@ -1,0 +1,17 @@
+{
+  "globs": [
+    "**/*.md",
+    "!.tmp_refs/**",
+    "!deslopification/memory/**",
+    "!deslopification/prompts/**",
+    "!node_modules/**",
+    "!dist/**"
+  ],
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD024": {
+      "siblings_only": true
+    }
+  }
+}
