@@ -85,3 +85,9 @@ luac -p src/scripts/SensorList/main.lua
 - Touch column headings to change sorting.
 - Refine conflict display behavior for `Application ID` vs `Physical ID` cases.
 - Allow defining acceptable conflicts (for example, multiple values per device such as receivers or servos).
+
+Roadmap implementation work is currently tracked in the following enhancement issues:
+
+- [#8](https://github.com/doppleganger53/sloppy-ethos/issues/8) Touchable column headers for sort control.
+- [#9](https://github.com/doppleganger53/sloppy-ethos/issues/9) Conflict display severity refinement.
+- [#10](https://github.com/doppleganger53/sloppy-ethos/issues/10) Acceptable conflict definition model.
