@@ -30,7 +30,7 @@ python tools/build.py --project SensorList --deploy
 2. Confirm output contains both:
    - `Checking Lua syntax:`
    - `Packaged widget ZIP:`
-3. Install the generated archive from `dist/` in Ethos Suite.
+3. Install the generated archive from `dist/` via Ethos Suite.
 
 ## Project Layout
 
