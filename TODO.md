@@ -1,8 +1,6 @@
 # TODO List
 
-- [ ] add `CHANGELOG.md` and define release/tagging convention
-- [ ] add `.github/CODEOWNERS` for default reviewer ownership
-- [ ] align `CONTRIBUTING.md` verification commands with canonical `python tools/build.py` workflow
-- [ ] add a short architecture doc covering SensorList widget lifecycle and state flow
-- [ ] add screenshot/GIF section in `README.md` for quick visual orientation
-- [ ] add "good first issue" guidance to `CONTRIBUTING.md`
+Documentation backlog items were consolidated into enhancement issue #11:
+https://github.com/doppleganger53/sloppy-ethos/issues/11
+
+- [ ] Test Sensorlist v0.1.0 on physical radio & promote to full release if successful

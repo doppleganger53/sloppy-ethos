@@ -1,6 +1,6 @@
 ---
 name: Enhancement
-about: Propose an improvement to widget behavior, tooling, docs, or workflow
+about: Propose an improvement to widget behavior, tooling, or workflow
 title: "[Enhancement] "
 labels: enhancement
 assignees: ""
@@ -9,6 +9,12 @@ assignees: ""
 ## Problem Statement
 
 What gap or pain point exists today?
+
+## Enhancement Type
+
+- [ ] Widget behavior
+- [ ] Tooling / automation
+- [ ] Workflow / process
 
 ## Desired Outcome
 
@@ -20,9 +26,9 @@ Describe the implementation approach at a high level.
 
 ## Acceptance Criteria
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Risks / Edge Cases
 
