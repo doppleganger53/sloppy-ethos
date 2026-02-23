@@ -12,9 +12,9 @@ What gap or pain point exists today?
 
 ## Enhancement Type
 
-- [ ] Widget behavior
-- [ ] Tooling / automation
-- [ ] Workflow / process
+- [] Widget behavior
+- [] Tooling / automation
+- [] Workflow / process
 
 ## Desired Outcome
 
