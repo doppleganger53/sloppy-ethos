@@ -7,6 +7,9 @@ local DEFAULT_WINDOW_WIDTH = 480
 local DEFAULT_WINDOW_HEIGHT = 272
 local SCROLL_ROW_HEIGHT = 16
 local HEADER_HEIGHT = 18
+local DEBUG_TRACE_ENABLED = false
+local MAX_SCROLL_STEPS_PER_EVENT = 4
+local MAX_TOUCH_DELTA_PER_EVENT = 128
 
 local COLOR_PALETTE = {
   { 255, 235, 59 },
@@ -21,6 +24,7 @@ local function safeCall(fn, ...)
   if type(fn) ~= "function" then
     return nil
   end
+  -- Ethos APIs vary by firmware/runtime; optional calls must fail soft.
   local ok, result = pcall(fn, ...)
   if ok then
     return result
@@ -171,6 +175,8 @@ local function getSensorList(widget, allowDeepScan)
       return {}, debug
     end
 
+    -- Dynamic category discovery keeps this widget portable across Ethos builds
+    -- where CATEGORY_* constants can differ.
     local categories = {}
     for key, value in pairs(_G) do
       if type(key) == "string" and key:match("^CATEGORY_") and type(value) == "number" then
@@ -307,13 +313,26 @@ local function refreshSensors(widget, allowDeepScan)
   if type(widget) ~= "table" then
     return
   end
+  local refreshStart = os.clock()
   local raw, debug = getSensorList(widget, allowDeepScan)
+  local afterSource = os.clock()
   widget.lastRawCount = #raw
   widget.lastDebug = debug or widget.lastDebug
   local normalized = normalizeSensors(raw)
   local signature = buildSignature(normalized)
+  local signatureChanged = signature ~= widget.lastSignature
+  local strategy = debug and debug.strategy or "unknown"
 
-  if signature ~= widget.lastSignature then
+  widget.debugRefreshCount = (widget.debugRefreshCount or 0) + 1
+  if strategy == "deep-scan" then
+    widget.debugDeepScanCount = (widget.debugDeepScanCount or 0) + 1
+  elseif strategy == "cached-category" then
+    widget.debugCachedScanCount = (widget.debugCachedScanCount or 0) + 1
+  elseif strategy == "deferred-deep-scan" then
+    widget.debugDeferredScanCount = (widget.debugDeferredScanCount or 0) + 1
+  end
+
+  if signatureChanged then
     widget.sensors = normalized
     widget.groups = buildPhysicalGroups(widget.sensors)
     widget.colorCache = {}
@@ -326,6 +345,30 @@ local function refreshSensors(widget, allowDeepScan)
     elseif widget.scrollOffset > maxOffset then
       widget.scrollOffset = maxOffset
     end
+  end
+
+  if DEBUG_TRACE_ENABLED and type(print) == "function" then
+    local totalMs = math.floor((os.clock() - refreshStart) * 1000 + 0.5)
+    local sourceMs = math.floor((afterSource - refreshStart) * 1000 + 0.5)
+    print(
+      string.format(
+        "SLDBG refresh=%d strategy=%s allowDeep=%d raw=%d norm=%d sigChanged=%d cats=%d scanned=%d sourceMs=%d totalMs=%d offset=%d deep=%d cached=%d deferred=%d",
+        widget.debugRefreshCount or 0,
+        tostring(strategy),
+        allowDeepScan and 1 or 0,
+        #raw,
+        #normalized,
+        signatureChanged and 1 or 0,
+        debug and debug.categoryCount or 0,
+        debug and debug.scannedCategories or 0,
+        sourceMs,
+        totalMs,
+        widget.scrollOffset or 0,
+        widget.debugDeepScanCount or 0,
+        widget.debugCachedScanCount or 0,
+        widget.debugDeferredScanCount or 0
+      )
+    )
   end
 end
 
@@ -428,13 +471,15 @@ local function create()
     lastDebug = {},
     sourceCategory = nil,
     sourceMaxMember = 255,
-    lastPoll = 0,
-    lastDeepScan = 0,
     lastInvalidate = 0,
     needsInvalidate = true,
     touchActive = false,
     touchLastY = nil,
     touchAccumY = 0,
+    debugRefreshCount = 0,
+    debugDeepScanCount = 0,
+    debugCachedScanCount = 0,
+    debugDeferredScanCount = 0,
   }
   refreshSensors(widget, true)
   return widget
@@ -470,7 +515,52 @@ local function matchesCategory(category, names)
   return false
 end
 
-local function handleTouchScroll(widget, category, x, y)
+local function matchesCode(value, names)
+  if type(value) ~= "number" then
+    return false
+  end
+  for _, key in ipairs(names) do
+    local code = rawget(_G, key)
+    if type(code) == "number" and value == code then
+      return true
+    end
+  end
+  return false
+end
+
+local function resolveTouchPhase(category, value)
+  local evtTouch = rawget(_G, "EVT_TOUCH")
+  local startCodes = { "EVT_TOUCH_FIRST", "EVT_TOUCH_START", "EVT_TOUCH_TAP" }
+  local endCodes = { "EVT_TOUCH_BREAK", "EVT_TOUCH_END" }
+  local moveCodes = { "EVT_TOUCH_MOVE", "EVT_TOUCH_SLIDE", "EVT_TOUCH_REPT" }
+
+  if type(evtTouch) == "number" then
+    if category ~= evtTouch then
+      return nil
+    end
+    if matchesCode(value, startCodes) then
+      return "start"
+    end
+    if matchesCode(value, endCodes) then
+      return "end"
+    end
+    return "move"
+  end
+
+  if matchesCategory(category, startCodes) then
+    return "start"
+  end
+  if matchesCategory(category, endCodes) then
+    return "end"
+  end
+  if matchesCategory(category, moveCodes) then
+    return "move"
+  end
+
+  return nil
+end
+
+local function handleTouchScroll(widget, phase, x, y, category, value)
   if type(widget) ~= "table" then
     return false
   end
@@ -478,29 +568,57 @@ local function handleTouchScroll(widget, category, x, y)
     return false
   end
 
-  local touchStart = matchesCategory(category, { "EVT_TOUCH_FIRST", "EVT_TOUCH_START", "EVT_TOUCH_TAP" })
-  local touchEnd = matchesCategory(category, { "EVT_TOUCH_BREAK", "EVT_TOUCH_END", "EVT_TOUCH_LONG" })
-
-  if touchEnd then
+  if phase == "end" then
     widget.touchActive = false
     widget.touchLastY = nil
     widget.touchAccumY = 0
     return true
   end
 
-  if touchStart or not widget.touchActive then
+  if phase == "start" then
     widget.touchActive = true
     widget.touchLastY = y
     widget.touchAccumY = 0
     return true
   end
 
-  local dy = y - (widget.touchLastY or y)
+  if not widget.touchActive then
+    return false
+  end
+
+  local rawDy = y - (widget.touchLastY or y)
+  local dy = rawDy
+  if dy > MAX_TOUCH_DELTA_PER_EVENT then
+    dy = MAX_TOUCH_DELTA_PER_EVENT
+  elseif dy < -MAX_TOUCH_DELTA_PER_EVENT then
+    dy = -MAX_TOUCH_DELTA_PER_EVENT
+  end
+
   widget.touchLastY = y
   widget.touchAccumY = (widget.touchAccumY or 0) + dy
 
   local moved = false
+  local steps = 0
   while math.abs(widget.touchAccumY) >= SCROLL_ROW_HEIGHT do
+    steps = steps + 1
+    if steps > MAX_SCROLL_STEPS_PER_EVENT then
+      widget.touchAccumY = widget.touchAccumY < 0 and -(SCROLL_ROW_HEIGHT - 1) or (SCROLL_ROW_HEIGHT - 1)
+      if DEBUG_TRACE_ENABLED and type(print) == "function" then
+        print(
+          string.format(
+            "SLDBG event-cap category=%s value=%s x=%s y=%s rawDy=%d clampedDy=%d",
+            tostring(category),
+            tostring(value),
+            tostring(x),
+            tostring(y),
+            rawDy,
+            dy
+          )
+        )
+      end
+      break
+    end
+
     local delta = widget.touchAccumY < 0 and 1 or -1
     if applyScroll(widget, delta) then
       moved = true
@@ -513,6 +631,20 @@ local function handleTouchScroll(widget, category, x, y)
     return true
   end
 
+  if DEBUG_TRACE_ENABLED and type(print) == "function" and math.abs(rawDy) >= (MAX_TOUCH_DELTA_PER_EVENT * 2) then
+    print(
+      string.format(
+        "SLDBG event-dy category=%s value=%s x=%s y=%s rawDy=%d clampedDy=%d",
+        tostring(category),
+        tostring(value),
+        tostring(x),
+        tostring(y),
+        rawDy,
+        dy
+      )
+    )
+  end
+
   return true
 end
 
@@ -522,15 +654,7 @@ local function wakeup(widget, event)
   end
   local now = os.clock()
 
-  if now - widget.lastPoll >= 5.0 then
-    local allowDeepScan = (now - widget.lastDeepScan) >= 30.0
-    refreshSensors(widget, allowDeepScan)
-    widget.lastPoll = now
-    if allowDeepScan then
-      widget.lastDeepScan = now
-    end
-  end
-
+  -- No periodic refresh: we refresh on create() and explicit long-press only.
   if widget.needsInvalidate and lcd.isVisible() and now - widget.lastInvalidate >= 0.05 then
     lcd.invalidate()
     widget.lastInvalidate = now
@@ -543,22 +667,20 @@ local function event(widget, category, value, x, y)
     return false
   end
 
-  local evtTouch = rawget(_G, "EVT_TOUCH")
-
-  if type(evtTouch) == "number" then
-    if category ~= evtTouch then
-      return false
-    end
-    return handleTouchScroll(widget, category, x, y)
+  -- Long-press is an explicit user request to rescan all sensors.
+  local isLongPress = matchesCode(value, { "EVT_TOUCH_LONG" }) or matchesCategory(category, { "EVT_TOUCH_LONG" })
+  if isLongPress then
+    refreshSensors(widget, true)
+    widget.needsInvalidate = true
+    return true
   end
 
-  -- Fallback for firmware variants that don't expose EVT_TOUCH as a category:
-  -- treat event callbacks with valid pointer coordinates as touch input.
-  if type(x) == "number" and type(y) == "number" then
-    return handleTouchScroll(widget, category, x, y)
+  local phase = resolveTouchPhase(category, value)
+  if not phase then
+    return false
   end
 
-  return false
+  return handleTouchScroll(widget, phase, x, y, category, value)
 end
 
 local function name()
@@ -587,6 +709,8 @@ local function testExports()
     applyScroll = applyScroll,
     clampOffset = clampOffset,
     getSensorList = getSensorList,
+    event = event,
+    resolveTouchPhase = resolveTouchPhase,
   }
 end
 
