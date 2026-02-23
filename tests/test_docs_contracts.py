@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
 
@@ -12,6 +13,10 @@ from tests.test_docs_commands import DOC_FILES, MANUAL_PATTERNS, discover_comman
 
 README_PATH = REPO_ROOT / "README.md"
 DEVELOPMENT_PATH = REPO_ROOT / "docs" / "DEVELOPMENT.md"
+REQUIRED_EXTERNAL_LINKS = (
+    ("Visual Studio Code", "https://code.visualstudio.com/"),
+    ("OpenAI Codex", "https://openai.com/codex/"),
+)
 
 
 def _read(path: Path) -> str:
@@ -20,6 +25,10 @@ def _read(path: Path) -> str:
 
 def _extract_backtick_tokens(text: str) -> list[str]:
     return [token.strip() for token in re.findall(r"`([^`\n]+)`", text) if token.strip()]
+
+
+def _extract_markdown_links(text: str) -> list[tuple[str, str]]:
+    return [(label.strip(), target.strip()) for label, target in re.findall(r"\[([^\]]+)\]\(([^)]+)\)", text)]
 
 
 def _looks_like_local_file_reference(token: str) -> bool:
@@ -39,6 +48,14 @@ def _iter_documented_file_refs() -> list[str]:
             if _looks_like_local_file_reference(token):
                 refs.append(token)
     return sorted(set(refs))
+
+
+def _iter_markdown_links() -> list[tuple[Path, str, str]]:
+    links: list[tuple[Path, str, str]] = []
+    for path in DOC_FILES:
+        for label, target in _extract_markdown_links(_read(path)):
+            links.append((path, label, target))
+    return links
 
 
 @pytest.mark.parametrize(
@@ -86,6 +103,29 @@ def test_version_file_exists_and_nonempty():
 def test_vscode_pytest_enabled_in_repo_settings():
     settings = json.loads((REPO_ROOT / ".vscode" / "settings.json").read_text(encoding="utf-8"))
     assert settings.get("python.testing.pytestEnabled") is True
+
+
+def test_required_recommended_links_present_in_readme():
+    readme_text = _read(README_PATH)
+    links = set(_extract_markdown_links(readme_text))
+    for required in REQUIRED_EXTERNAL_LINKS:
+        assert required in links, f"Missing required README link: {required[0]} -> {required[1]}"
+
+
+@pytest.mark.parametrize(("path", "label", "target"), _iter_markdown_links())
+def test_markdown_link_targets_are_valid(path: Path, label: str, target: str):
+    if target.startswith(("http://", "https://")):
+        parsed = urlparse(target)
+        assert parsed.scheme == "https", f"External docs link must use HTTPS: {target}"
+        assert parsed.netloc, f"External docs link missing host: {target}"
+        return
+
+    if target.startswith(("#", "mailto:")):
+        return
+
+    local_target = target.split("#", 1)[0]
+    assert local_target, f"Invalid markdown link target in {path}: [{label}]({target})"
+    assert (path.parent / local_target).exists(), f"Broken local markdown link in {path}: [{label}]({target})"
 
 
 def test_environment_dependent_doc_commands_are_manual():
