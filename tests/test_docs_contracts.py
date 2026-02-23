@@ -50,6 +50,12 @@ def _iter_documented_file_refs() -> list[str]:
     return sorted(set(refs))
 
 
+def _has_companion_example(ref: str) -> bool:
+    path = Path(ref)
+    example_name = f"{path.stem}.example{path.suffix}"
+    return (REPO_ROOT / path.with_name(example_name)).exists()
+
+
 def _iter_markdown_links() -> list[tuple[Path, str, str]]:
     links: list[tuple[Path, str, str]] = []
     for path in DOC_FILES:
@@ -73,7 +79,15 @@ def test_docs_include_required_sections(path: Path, sections: tuple[str, ...]):
 
 @pytest.mark.parametrize("ref", _iter_documented_file_refs())
 def test_documented_local_file_references_exist(ref: str):
-    assert (REPO_ROOT / ref).exists(), f"Missing documented path: {ref}"
+    path = REPO_ROOT / ref
+    if path.exists():
+        return
+
+    # Allow local-only config files when docs also point to a committed template.
+    if ref.endswith(".json") and _has_companion_example(ref):
+        return
+
+    assert False, f"Missing documented path: {ref}"
 
 
 def test_python_version_guidance_consistent_across_docs():
