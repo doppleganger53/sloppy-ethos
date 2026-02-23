@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -19,6 +20,7 @@ MANUAL_PATTERNS = (
     "luac -p",
     "python tools/build.py --project SensorList --dist",
     "python tools/build.py --project SensorList --deploy",
+    "python -m pip install -r requirements-dev.txt",
     "powershell -ExecutionPolicy Bypass -File tools/build-package.ps1 -ProjectName SensorList",
     "powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-package.ps1 -ProjectName SensorList",
 )
@@ -54,6 +56,16 @@ def discover_commands() -> list[str]:
 def test_documented_commands_discovered():
     commands = discover_commands()
     assert commands, "Expected at least one command snippet in docs."
+
+
+def test_extract_backtick_commands_filters_supported_prefixes():
+    text = "Run `python tools/build.py --project SensorList --dist` and `echo nope`."
+    assert _extract_backtick_commands(text) == ["python tools/build.py --project SensorList --dist"]
+
+
+def test_extract_fenced_commands_parses_supported_lines():
+    text = "```powershell\npython tools/build.py --project SensorList --dist\nnot-a-command\n```"
+    assert _extract_fenced_commands(text) == ["python tools/build.py --project SensorList --dist"]
 
 
 @pytest.mark.parametrize("command", discover_commands())
@@ -94,3 +106,41 @@ def test_documented_command_syntax_or_execution(command: str):
 
     if command.startswith("powershell "):
         pytest.skip("PowerShell doc command treated as manual fallback.")
+
+
+def test_documented_command_luac_skips_when_missing(monkeypatch):
+    monkeypatch.setattr("tests.test_docs_commands.command_exists", lambda _name: False)
+    with pytest.raises(pytest.skip.Exception):
+        test_documented_command_syntax_or_execution("luac -p src/scripts/SensorList/main.lua")
+
+
+def test_documented_command_luac_fragment_skips(monkeypatch):
+    monkeypatch.setattr("tests.test_docs_commands.command_exists", lambda _name: True)
+    monkeypatch.setattr("tests.test_docs_commands.MANUAL_PATTERNS", ())
+    with pytest.raises(pytest.skip.Exception):
+        test_documented_command_syntax_or_execution("luac -p")
+
+
+def test_documented_command_stylua_runs_with_check(monkeypatch):
+    called: dict[str, object] = {}
+
+    def fake_run(command: list[str]):
+        called["command"] = command
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr("tests.test_docs_commands.command_exists", lambda _name: True)
+    monkeypatch.setattr("tests.test_docs_commands.run_command", fake_run)
+    test_documented_command_syntax_or_execution("stylua src")
+    assert called["command"] == ["stylua", "src", "--check"]
+
+
+def test_documented_command_python_dist_skips():
+    with pytest.raises(pytest.skip.Exception):
+        test_documented_command_syntax_or_execution("python tools/build.py --project WidgetX --dist")
+
+
+def test_documented_command_powershell_skips():
+    with pytest.raises(pytest.skip.Exception):
+        test_documented_command_syntax_or_execution(
+            "powershell -File script.ps1"
+        )

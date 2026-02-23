@@ -42,6 +42,13 @@ python tools/build.py --project SensorList --deploy
 luac -p src/scripts/SensorList/main.lua
 ```
 
+### Running the Python tests
+
+- Select a Python 3.9+ interpreter in VS Code via `Python: Select Interpreter` (or ensure `python` resolves to your preferred interpreter in terminal).
+- Install test dependencies once per interpreter: `python -m pip install -r requirements-dev.txt`.
+- Execute the sensor-list test file: `python -m pytest tests/test_sensorlist_widget.py`.
+- VS Code Test Explorer coverage runs require `pytest-cov`, which is included in `requirements-dev.txt`.
+
 ## Collaboration
 
 - See `CONTRIBUTING.md` for contribution flow.

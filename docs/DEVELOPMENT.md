@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Python 3.8+ (standard library only)
+- Python 3.9+
 - Lua tooling on PATH (`lua`, `luac`)
 - Optional: `stylua` for formatting
 
@@ -35,3 +35,10 @@
 
 - If stale behavior appears after script updates, remove cached `main.luac` and reinstall the widget.
 - Ethos Info errors persist until you hit the `Reset` button; clear them between test runs.
+
+## Running the Python tests
+
+- Select a Python 3.9+ interpreter in VS Code via `Python: Select Interpreter`, or use a shell where `python` resolves to your desired interpreter.
+- Install the pytest harness listed in `requirements-dev.txt`: `python -m pip install -r requirements-dev.txt` (includes `pytest-cov` for coverage in the VS Code Test Explorer).
+- Run the Lua-driven sensor list test file through pytest: `python -m pytest tests/test_sensorlist_widget.py`.
+- Use the VS Code Testing view to run/discover tests and trigger coverage once dependencies are installed for the selected interpreter.

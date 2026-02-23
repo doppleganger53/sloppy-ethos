@@ -19,11 +19,12 @@ Repository-level operating notes for Codex sessions in `sloppy-ethos`.
 
 ## Documentation and Memory Sync
 
-- Update user/developer docs in the same session when workflow or behavior changes.
+- Update user/developer docs and tests in the same session when workflow or behavior changes.
 - Record meaningful changes in `deslopification/memory/` with:
   - what changed
   - validation run
   - follow-up items
+- Doc updates should pass test_docs* tests
 
 ## Release and Versioning Guardrails
 
@@ -35,3 +36,11 @@ Repository-level operating notes for Codex sessions in `sloppy-ethos`.
 
 - SensorList-specific operating guidance lives in:
   - `deslopification/memory/SensorList.md`
+
+## Pre-commit/push Checklist
+
+- Latest changes have passed appropriate tests in session.
+- Workspace and .gitignore examined for appropriate changes to keep repot clean of:
+  - environment-specific settings
+  - PII, PHI, and other potential security risks
+- alert user of potential security concerns in workspace

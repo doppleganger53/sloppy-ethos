@@ -2,7 +2,10 @@ dist/
 tools/deploy.config.json
 tools/__pycache__
 .build-staging/
+.coverage
+.editorconfig
 .tmp_refs
 __pycache__/
 *.pyc
 .pytest_cache/
+.venv/
