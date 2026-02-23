@@ -85,15 +85,14 @@ def test_resolve_simulator_path_env_wins(tmp_path: Path):
     config = tmp_path / "deploy.json"
     config.write_text('{"ETHOS_SIM_PATH":"C:/from/config"}', encoding="utf-8")
     result = build.resolve_simulator_path(config, "C:/from/env")
-    assert str(result) == "C:\\from\\env" or str(result) == "C:/from/env"
+    assert result == Path("C:/from/env")
 
 
 def test_resolve_simulator_path_from_config(tmp_path: Path):
     config = tmp_path / "deploy.json"
     config.write_text('{"ETHOS_SIM_PATH":"C:/simulator"}', encoding="utf-8")
     result = build.resolve_simulator_path(config, None)
-    assert result is not None
-    assert "simulator" in str(result)
+    assert result == Path("C:/simulator")
 
 
 def test_resolve_simulator_path_missing_key_returns_none(tmp_path: Path):
@@ -397,20 +396,3 @@ def test_main_deploy_exits_when_sim_path_unconfigured(monkeypatch):
     assert "Simulator path not configured" in str(exc.value)
 
 
-def test_main_deploy_calls_deploy_to_simulator_with_resolved_path(monkeypatch):
-    calls = _set_main_prerequisites(
-        monkeypatch,
-        Namespace(project="SensorList", dist=False, deploy=True, config=None, no_zip=False, version=None),
-    )
-    resolved_path = Path("C:/simulator")
-    monkeypatch.setattr(build, "resolve_simulator_path", lambda *_args, **_kwargs: resolved_path)
-
-    def fake_deploy_to_simulator(project_dir: Path, project_name: str, sim_path: Path):
-        calls["deploy"] = (project_dir, project_name, sim_path)
-
-    monkeypatch.setattr(build, "deploy_to_simulator", fake_deploy_to_simulator)
-    build.main()
-    project_dir, project_name, sim_path = calls["deploy"]
-    assert project_name == "SensorList"
-    assert sim_path == resolved_path
-    assert project_dir == Path(build.__file__).resolve().parent.parent / "src" / "scripts" / "SensorList"

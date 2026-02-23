@@ -138,18 +138,14 @@ def test_documented_command_stylua_runs_with_check(monkeypatch):
     assert called["command"] == ["stylua", "src", "--check"]
 
 
-def test_documented_command_python_dist_skips():
+@pytest.mark.parametrize(
+    "command",
+    [
+        "python tools/build.py --project WidgetX --dist",
+        "python -m pytest tests/test_sensorlist_widget.py",
+        "powershell -File script.ps1",
+    ],
+)
+def test_documented_manual_commands_skip(command: str):
     with pytest.raises(pytest.skip.Exception):
-        test_documented_command_syntax_or_execution("python tools/build.py --project WidgetX --dist")
-
-
-def test_documented_command_python_pytest_skips():
-    with pytest.raises(pytest.skip.Exception):
-        test_documented_command_syntax_or_execution("python -m pytest tests/test_sensorlist_widget.py")
-
-
-def test_documented_command_powershell_skips():
-    with pytest.raises(pytest.skip.Exception):
-        test_documented_command_syntax_or_execution(
-            "powershell -File script.ps1"
-        )
+        test_documented_command_syntax_or_execution(command)

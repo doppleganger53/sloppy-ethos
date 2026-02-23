@@ -13,19 +13,17 @@ def _lua_executable() -> str | None:
     return shutil.which("lua") or shutil.which("lua54") or shutil.which("lua53")
 
 
-def test_lua_executable_prefers_lua(monkeypatch):
-    monkeypatch.setattr(shutil, "which", lambda name: "lua" if name == "lua" else None)
-    assert _lua_executable() == "lua"
-
-
-def test_lua_executable_falls_back_to_lua54(monkeypatch):
-    monkeypatch.setattr(shutil, "which", lambda name: "lua54" if name == "lua54" else None)
-    assert _lua_executable() == "lua54"
-
-
-def test_lua_executable_returns_none_when_missing(monkeypatch):
-    monkeypatch.setattr(shutil, "which", lambda _name: None)
-    assert _lua_executable() is None
+@pytest.mark.parametrize(
+    ("which_map", "expected"),
+    [
+        ({"lua": "lua"}, "lua"),
+        ({"lua54": "lua54"}, "lua54"),
+        ({}, None),
+    ],
+)
+def test_lua_executable_resolution(monkeypatch, which_map: dict[str, str], expected: str | None):
+    monkeypatch.setattr(shutil, "which", lambda name: which_map.get(name))
+    assert _lua_executable() == expected
 
 
 def test_sensorlist_lua_unit_tests_skips_when_no_lua(monkeypatch):
