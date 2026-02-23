@@ -76,13 +76,19 @@ luac -p src/scripts/SensorList/main.lua
 - Execute the sensor-list test file: `python -m pytest tests/test_sensorlist_widget.py`.
 - VS Code Test Explorer coverage runs require `pytest-cov`, which is included in `requirements-dev.txt`.
 
+## Releases
+
+- Changelog source of truth: `CHANGELOG.md`.
+- Version source of truth: `VERSION`.
+- Published release notes and install assets: [GitHub Releases](https://github.com/doppleganger53/sloppy-ethos/releases).
+
 ## Collaboration
 
 - See `CONTRIBUTING.md` for contribution flow.
 - Use `.github/PULL_REQUEST_TEMPLATE.md` when opening PRs.
 - See `CODE_OF_CONDUCT.md` for collaboration expectations.
 - See `SECURITY.md` for responsible vulnerability reporting.
-- See `deslopification/memory/HANDOFF_2026-02-21.md` for latest session notes.
+- See `deslopification/memory/` for latest session notes.
 
 ## Troubleshooting
 

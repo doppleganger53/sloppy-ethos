@@ -44,3 +44,14 @@
 - Run the Lua-driven sensor list test file through pytest: `python -m pytest tests/test_sensorlist_widget.py`.
 - For any documentation updates, run docs contract checks: `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`.
 - Use the VS Code Testing view to run/discover tests and trigger coverage once dependencies are installed for the selected interpreter.
+
+## Release Workflow
+
+1. Confirm `VERSION` contains the release version and update `CHANGELOG.md`.
+2. Build release artifact:
+   `python tools/build.py --project SensorList --dist`
+3. Validate the release branch according to touched files (see `AGENTS.md` validation matrix).
+4. Tag and push:
+   `git tag v{VERSION}`
+   `git push origin v{VERSION}`
+5. Publish GitHub release with notes from `CHANGELOG.md` and attach `dist/SensorList-{VERSION}.zip`.
