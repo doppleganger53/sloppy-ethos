@@ -41,4 +41,5 @@
 - Select a Python 3.9+ interpreter in VS Code via `Python: Select Interpreter`, or use a shell where `python` resolves to your desired interpreter.
 - Install the pytest harness listed in `requirements-dev.txt`: `python -m pip install -r requirements-dev.txt` (includes `pytest-cov` for coverage in the VS Code Test Explorer).
 - Run the Lua-driven sensor list test file through pytest: `python -m pytest tests/test_sensorlist_widget.py`.
+- For any documentation updates, run docs contract checks: `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`.
 - Use the VS Code Testing view to run/discover tests and trigger coverage once dependencies are installed for the selected interpreter.

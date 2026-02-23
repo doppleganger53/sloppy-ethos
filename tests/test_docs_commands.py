@@ -21,6 +21,8 @@ MANUAL_PATTERNS = (
     "python tools/build.py --project SensorList --dist",
     "python tools/build.py --project SensorList --deploy",
     "python -m pip install -r requirements-dev.txt",
+    "python -m pytest tests/test_sensorlist_widget.py",
+    "python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q",
     "powershell -ExecutionPolicy Bypass -File tools/build-package.ps1 -ProjectName SensorList",
     "powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-package.ps1 -ProjectName SensorList",
 )
@@ -100,6 +102,8 @@ def test_documented_command_syntax_or_execution(command: str):
         # Only run lightweight doc commands by default.
         if "--dist" in command or "--deploy" in command:
             pytest.skip("Build/deploy commands are documented but environment-dependent.")
+        if command.startswith("python -m pytest"):
+            pytest.skip("pytest doc commands are manual to avoid recursive test process spawning.")
         result = run_command(command.split())
         assert result.returncode == 0, result.stderr
         return
@@ -137,6 +141,11 @@ def test_documented_command_stylua_runs_with_check(monkeypatch):
 def test_documented_command_python_dist_skips():
     with pytest.raises(pytest.skip.Exception):
         test_documented_command_syntax_or_execution("python tools/build.py --project WidgetX --dist")
+
+
+def test_documented_command_python_pytest_skips():
+    with pytest.raises(pytest.skip.Exception):
+        test_documented_command_syntax_or_execution("python -m pytest tests/test_sensorlist_widget.py")
 
 
 def test_documented_command_powershell_skips():

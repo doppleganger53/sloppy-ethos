@@ -6,10 +6,18 @@
 2. Keep changes focused and scoped to one concern.
 3. Run local checks before opening a PR:
    - `luac -p src/scripts/SensorList/main.lua`
+   - docs validation (required for any documentation changes):
+     `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
    - `stylua src` (if formatting changed)
    - package build:
      `powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-package.ps1 -ProjectName SensorList`
 4. Open a PR using the repository PR template.
+
+## Documentation Changes
+
+- If a change touches `README.md`, `docs/`, or other contributor-facing docs, run:
+  `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
+- Include that command in the PR `Verification` checklist output.
 
 ## Commit Guidance
 

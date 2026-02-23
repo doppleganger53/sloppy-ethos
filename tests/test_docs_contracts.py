@@ -133,6 +133,7 @@ def test_environment_dependent_doc_commands_are_manual():
         return (
             "--dist" in command
             or "--deploy" in command
+            or command.startswith("python -m pytest")
             or command.startswith("powershell ")
             or command == "python -m pip install -r requirements-dev.txt"
         )
