@@ -460,6 +460,7 @@ local function drawSensorRows(widget)
   return visibleRows
 end
 
+-- Ethos widget API callback: constructs per-instance widget state.
 local function create()
   local widget = {
     sensors = {},
@@ -485,6 +486,7 @@ local function create()
   return widget
 end
 
+-- Ethos widget API callback: draws current widget frame.
 local function paint(widget)
   if type(widget) ~= "table" then
     return
@@ -648,6 +650,7 @@ local function handleTouchScroll(widget, phase, x, y, category, value)
   return true
 end
 
+-- Ethos widget API callback: periodic runtime hook used for redraw scheduling.
 local function wakeup(widget, event)
   if type(widget) ~= "table" then
     return
@@ -662,6 +665,7 @@ local function wakeup(widget, event)
   end
 end
 
+-- Ethos widget API callback: input/event dispatcher from Ethos runtime.
 local function event(widget, category, value, x, y)
   if type(widget) ~= "table" then
     return false
@@ -687,6 +691,7 @@ local function name()
   return WIDGET_NAME
 end
 
+-- Ethos widget API registration entrypoint.
 local function init()
   system.registerWidget({
     key = "slist",
