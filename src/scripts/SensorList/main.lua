@@ -10,6 +10,8 @@ local HEADER_HEIGHT = 18
 local DEBUG_TRACE_ENABLED = false
 local MAX_SCROLL_STEPS_PER_EVENT = 4
 local MAX_TOUCH_DELTA_PER_EVENT = 128
+local LONG_PRESS_SECONDS = 0.8
+local LONG_PRESS_MOVE_TOLERANCE = 4
 
 local COLOR_PALETTE = {
   { 255, 235, 59 },
@@ -372,6 +374,15 @@ local function refreshSensors(widget, allowDeepScan)
   end
 end
 
+local function triggerManualRefresh(widget)
+  if type(widget) ~= "table" then
+    return false
+  end
+  refreshSensors(widget, true)
+  widget.needsInvalidate = true
+  return true
+end
+
 local function drawText(x, y, text, font, color)
   if color then
     lcd.color(color)
@@ -477,6 +488,9 @@ local function create()
     touchActive = false,
     touchLastY = nil,
     touchAccumY = 0,
+    touchStartY = nil,
+    touchStartClock = nil,
+    touchHoldTriggered = false,
     debugRefreshCount = 0,
     debugDeepScanCount = 0,
     debugCachedScanCount = 0,
@@ -540,13 +554,16 @@ local function resolveTouchPhase(category, value)
     if category ~= evtTouch then
       return nil
     end
-    if matchesCode(value, startCodes) then
+    if value == 16640 or matchesCode(value, startCodes) then
       return "start"
     end
-    if matchesCode(value, endCodes) then
+    if value == 16641 or matchesCode(value, endCodes) then
       return "end"
     end
-    return "move"
+    if value == 16642 or matchesCode(value, moveCodes) then
+      return "move"
+    end
+    return nil
   end
 
   if matchesCategory(category, startCodes) then
@@ -571,9 +588,24 @@ local function handleTouchScroll(widget, phase, x, y, category, value)
   end
 
   if phase == "end" then
+    local startClock = widget.touchStartClock
+    local heldFor = startClock and (os.clock() - startClock) or 0
+    local startY = widget.touchStartY or y
+    local endY = widget.touchLastY or y
+    if
+      not widget.touchHoldTriggered
+      and heldFor >= LONG_PRESS_SECONDS
+      and math.abs(endY - startY) <= LONG_PRESS_MOVE_TOLERANCE
+    then
+      widget.touchHoldTriggered = true
+      triggerManualRefresh(widget)
+    end
     widget.touchActive = false
     widget.touchLastY = nil
     widget.touchAccumY = 0
+    widget.touchStartY = nil
+    widget.touchStartClock = nil
+    widget.touchHoldTriggered = false
     return true
   end
 
@@ -581,6 +613,9 @@ local function handleTouchScroll(widget, phase, x, y, category, value)
     widget.touchActive = true
     widget.touchLastY = y
     widget.touchAccumY = 0
+    widget.touchStartY = y
+    widget.touchStartClock = os.clock()
+    widget.touchHoldTriggered = false
     return true
   end
 
@@ -674,9 +709,7 @@ local function event(widget, category, value, x, y)
   -- Long-press is an explicit user request to rescan all sensors.
   local isLongPress = matchesCode(value, { "EVT_TOUCH_LONG" }) or matchesCategory(category, { "EVT_TOUCH_LONG" })
   if isLongPress then
-    refreshSensors(widget, true)
-    widget.needsInvalidate = true
-    return true
+    return triggerManualRefresh(widget)
   end
 
   local phase = resolveTouchPhase(category, value)

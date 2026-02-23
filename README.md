@@ -16,6 +16,7 @@ Ethos Lua widget workspace. Current active project: `SensorList`.
 ```powershell
 python tools/build.py --project SensorList --dist
 python tools/build.py --project SensorList --deploy
+python tools/build.py --project ethos_events --deploy
 ```
 
 - Install the dist ZIP inside Ethos Suite for radio deployment.
@@ -36,6 +37,8 @@ python tools/build.py --project SensorList --deploy
 
 - `src/scripts/SensorList/main.lua`: widget implementation
 - `src/scripts/SensorList/README.md`: widget-focused usage notes
+- `src/scripts/ethos_events/main.lua`: system-tool event tracer entrypoint
+- `src/scripts/ethos_events/README.md`: event tracer usage notes
 - `tools/build-package.ps1`: syntax-check + packaging script
 - `tools/deploy-ethos-sim.ps1`: simulator deploy helper (placeholder)
 - `deslopification/prompts/SensorList.md`: original implementation prompt

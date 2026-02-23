@@ -13,6 +13,7 @@ DOC_FILES = [
     REPO_ROOT / "README.md",
     REPO_ROOT / "docs" / "DEVELOPMENT.md",
     REPO_ROOT / "src" / "scripts" / "SensorList" / "README.md",
+    REPO_ROOT / "src" / "scripts" / "ethos_events" / "README.md",
     REPO_ROOT / "CONTRIBUTING.md",
 ]
 
@@ -20,6 +21,8 @@ MANUAL_PATTERNS = (
     "luac -p",
     "python tools/build.py --project SensorList --dist",
     "python tools/build.py --project SensorList --deploy",
+    "python tools/build.py --project ethos_events --dist",
+    "python tools/build.py --project ethos_events --deploy",
     "python -m pip install -r requirements-dev.txt",
     "python -m pytest tests/test_sensorlist_widget.py",
     "python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q",
