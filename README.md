@@ -82,6 +82,14 @@ luac -p src/scripts/SensorList/main.lua
 
 ## Roadmap
 
+### sloppy-ethos
+
+- Script idea: smart switch map that pre-populates mapped switches and identifies unused switches
+- optimize agentic and human workflows in the repo
+- genericize build and test scripts for multiple scripts
+
+### SensorList
+
 - Touch column headings to change sorting.
 - Refine conflict display behavior for `Application ID` vs `Physical ID` cases.
 - Allow defining acceptable conflicts (for example, multiple values per device such as receivers or servos).
