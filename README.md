@@ -34,6 +34,8 @@ python tools/build.py --project SensorList --deploy
 
 ## Development
 
+- Recommended development environment: [Visual Studio Code](https://code.visualstudio.com/).
+- Recommended coding agent: [OpenAI Codex](https://openai.com/codex/).
 - Format Lua: VS Code task `Format Lua (stylua)` or run `stylua src`
 - Build package: VS Code task `Build Ethos Install ZIP`
 - Lua parse check:
