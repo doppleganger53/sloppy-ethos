@@ -4,7 +4,7 @@
 
 Participants are expected to:
 
-- ebrace the slop, deslopify over time
+- embrace the slop, deslopify over time
 - focus feedback on code and behavior, not people
 - assume good intent while asking clarifying questions
 
