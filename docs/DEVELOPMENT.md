@@ -13,6 +13,7 @@
 - Package and deploy:
   `python tools/build.py --project SensorList --dist`
   `python tools/build.py --project SensorList --deploy`
+  `python tools/build.py --project ethos_events --deploy`
 
 ## Configuring Simulator Path
 

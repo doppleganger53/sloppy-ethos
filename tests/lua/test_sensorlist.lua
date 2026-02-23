@@ -24,6 +24,11 @@ _G.lcd = {
 }
 
 _G.model = nil
+_G.EVT_TOUCH_FIRST = 100
+_G.EVT_TOUCH_MOVE = 101
+_G.EVT_TOUCH_BREAK = 102
+_G.EVT_TOUCH_LONG = 103
+_G.EVT_TOUCH = 1
 
 local function fail(message)
   io.stderr:write(message .. "\n")
@@ -93,5 +98,56 @@ _G.system = {}
 local empty, debug = test.getSensorList({}, false)
 assert_equal(#empty, 0, "no-api empty list")
 assert_equal(debug.strategy, "no-source-api", "no-api strategy")
+
+local eventWidget = {
+  sensors = large,
+  scrollOffset = 0,
+  touchActive = false,
+  touchLastY = nil,
+  touchAccumY = 0,
+  needsInvalidate = false,
+}
+
+local consumedUnknown = test.event(eventWidget, 999, 0, 12, 12)
+assert_true(consumedUnknown == false, "unknown category should not be treated as touch")
+assert_equal(test.resolveTouchPhase(_G.EVT_TOUCH, 16640), "start", "raw touch start value maps")
+assert_equal(test.resolveTouchPhase(_G.EVT_TOUCH, 16641), "end", "raw touch end value maps")
+assert_equal(test.resolveTouchPhase(_G.EVT_TOUCH, 16642), "move", "raw touch move value maps")
+
+local moveOnlyWidget = {
+  sensors = large,
+  scrollOffset = 0,
+  touchActive = false,
+  touchLastY = nil,
+  touchAccumY = 0,
+  needsInvalidate = false,
+}
+local consumedMoveWithoutStart = test.event(moveOnlyWidget, _G.EVT_TOUCH, 16642, 20, 220)
+assert_true(consumedMoveWithoutStart == false, "move without start should be ignored")
+assert_true(moveOnlyWidget.touchActive == false, "move without start should not activate touch session")
+
+local consumedStart = test.event(eventWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 12, 120)
+assert_true(consumedStart, "touch start should be consumed")
+assert_true(eventWidget.touchActive, "touch session should activate")
+
+local consumedMove = test.event(eventWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_MOVE, 12, -900)
+assert_true(consumedMove, "touch move should be consumed")
+assert_true(eventWidget.scrollOffset >= 0, "move should keep offset in valid range")
+assert_true(math.abs(eventWidget.touchAccumY) < 16, "accumulator remains bounded")
+
+local consumedEnd = test.event(eventWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 12, -900)
+assert_true(consumedEnd, "touch end should be consumed")
+assert_true(eventWidget.touchActive == false, "touch session should deactivate")
+
+_G.system = {
+  getSensors = function()
+    return {
+      { name = "From long press", physicalId = "01", applicationId = "1001" },
+    }
+  end,
+}
+local consumedLong = test.event(eventWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_LONG, 12, 12)
+assert_true(consumedLong, "long press should be consumed")
+assert_equal(#eventWidget.sensors, 1, "long press should refresh sensors")
 
 print("sensorlist lua tests passed")

@@ -15,7 +15,7 @@ potential conflicts easier to identify.
 - Sort order is deterministic by `Physical ID`, then `Application ID`, then name.
 - Duplicate physical IDs are color-grouped to help identify conflicts.
 - List navigation is manual via wheel/button/touch scrolling (no forced auto-scroll).
-- Sensor discovery uses a lightweight poll + periodic deep-scan strategy for simulator/radio stability.
+- Sensor discovery runs on initial widget load and explicit long-press refresh only (no periodic polling).
 
 ## Build and Install
 
