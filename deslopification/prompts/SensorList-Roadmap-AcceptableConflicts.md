@@ -9,7 +9,7 @@ Allow defining acceptable conflict patterns so known-safe combinations are de-em
 ## Environment
 
 - Widget: `SensorList`
-- Script entry: `src/scripts/SensorList/main.lua`
+- Script entry: `scripts/SensorList/main.lua`
 - Target radio/simulator: `X20RS`
 - Ethos version target: `1.6.4+`
 
@@ -43,7 +43,7 @@ Allow defining acceptable conflict patterns so known-safe combinations are de-em
 
 ## Validation Checklist
 
-1. `luac -p src/scripts/SensorList/main.lua` passes.
+1. `luac -p scripts/SensorList/main.lua` passes.
 2. Rule hit: whitelisted duplicates appear as acceptable (not critical conflict).
 3. Rule miss: non-whitelisted duplicates remain highlighted as conflicts.
 4. Regression: list sorting, scrolling, and empty-state behavior remain correct.
@@ -53,3 +53,4 @@ Allow defining acceptable conflict patterns so known-safe combinations are de-em
 1. Acceptable conflict behavior is configurable via maintainable rule data.
 2. Widget clearly differentiates acceptable vs unresolved conflicts.
 3. No regressions in existing sensor discovery and display behavior.
+

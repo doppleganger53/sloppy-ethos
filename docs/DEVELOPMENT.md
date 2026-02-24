@@ -9,7 +9,7 @@
 ## Core Commands
 
 - Syntax check:
-  `luac -p src/scripts/SensorList/main.lua`
+  `luac -p scripts/SensorList/main.lua`
 - Package and deploy:
   `python tools/build.py --project SensorList --dist`
   `python tools/build.py --project SensorList --deploy`
@@ -25,13 +25,12 @@
 
 `tools/build.py`:
 
-- validates Lua syntax using `luac -p`.
+- validates Lua syntax for all project Lua files using `luac -p`.
 - reads package version from `VERSION` (or `--version` override).
 - produces `dist/{ProjectName}-{version}.zip`.
-- for `ethos_events`, mirrors `ethos_events.png` to `scripts/tools/ethos_events.png` in ZIP/deploy output for physical-radio system-tool icon compatibility.
-- optionally copies `src/scripts/{ProjectName}` into `${ETHOS_SIM_PATH}/scripts/{ProjectName}` when `--deploy` is specified (no ZIP).
+- optionally copies `scripts/{ProjectName}` into `${ETHOS_SIM_PATH}/scripts/{ProjectName}` when `--deploy` is specified (no ZIP).
+- supports custom ZIP destination via `--out-dir`.
 - Write operations fail fast with clear errors when paths are missing or unwritable.
-- PowerShell helpers (`tools/build-package.ps1`, `tools/deploy-ethos-sim.ps1`) remain available as documented fallbacks for Windows-only workflows.
 
 ## Simulator Tips
 

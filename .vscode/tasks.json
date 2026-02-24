@@ -6,7 +6,7 @@
       "type": "shell",
       "command": "stylua",
       "args": [
-        "src"
+        "scripts"
       ],
       "group": {
         "kind": "build",
@@ -20,15 +20,12 @@
     {
       "label": "Build Ethos Install ZIP",
       "type": "shell",
-      "command": "powershell",
+      "command": "python",
       "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "tools/build-package.ps1",
-        "-ProjectName",
-        "SensorList"
+        "tools/build.py",
+        "--project",
+        "SensorList",
+        "--dist"
       ],
       "group": "build",
       "presentation": {

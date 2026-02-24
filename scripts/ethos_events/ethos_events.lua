@@ -18,11 +18,11 @@
 --  INSTALLATION
 --  ------------
 --  Place this file in:
---      /SCRIPTS/LIB/ethos_events.lua
+--      /SCRIPTS/ethos_events/ethos_events.lua
 --
 --  Then include it in your script:
 --
---      local events = require("ethos_events")
+--      local events = loadScript("/scripts/ethos_events/ethos_events.lua")()
 --
 --
 --  BASIC USAGE

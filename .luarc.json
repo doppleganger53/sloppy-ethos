@@ -4,11 +4,11 @@
     "device"
   ],
   "files": [
-    "src/scripts/**/*.lua"
+    "scripts/**/*.lua"
   ],
   "exclude": [
-    "src/scripts/SensorList/images/**",
-    "src/scripts/SensorList/i18n/**"
+    "scripts/SensorList/images/**",
+    "scripts/SensorList/i18n/**"
   ],
   "std": "luajit",
   "parser": "luau"

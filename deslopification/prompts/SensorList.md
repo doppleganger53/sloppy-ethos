@@ -13,8 +13,8 @@ of all configured sensors in a tabular format with 3 columns: `Name`,
 - Radio/Simulator target: X20RS
 - Ethos version: `1.6.4+`
 - Project layout:
-  - Script file: `src/scripts/{WIDGET_NAME}/main.lua`
-  - Optional assets folder: `src/scripts/{WIDGET_NAME}/images/`
+  - Script file: `scripts/{WIDGET_NAME}/main.lua`
+  - Optional assets folder: `scripts/{WIDGET_NAME}/images/`
 
 ### Functional Requirements
 
@@ -108,3 +108,4 @@ Return:
   to keep track of sensor IDs, especially as the build continues or sensors
   are added over time.
 - An easy way to identify and resolve sensor conflicts is highly desirable.
+

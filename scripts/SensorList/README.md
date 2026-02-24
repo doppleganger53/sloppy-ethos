@@ -31,10 +31,3 @@ Installed path on radio: `scripts/SensorList`.
 - Deploy script files into simulator scripts directory:
   `python tools/build.py --project SensorList --deploy`
 - Configure simulator path via `tools/deploy.config.json` or `ETHOS_SIM_PATH`.
-
-## Fallback Commands
-
-PowerShell helpers remain available for Windows-only fallback workflows:
-
-- `tools/build-package.ps1`
-- `tools/deploy-ethos-sim.ps1`

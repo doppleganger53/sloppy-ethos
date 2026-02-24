@@ -2,22 +2,14 @@
 -- Source: FrSkyRC/ETHOS-Feedback-Community (branch 1.6)
 
 local function loadEventsHelper()
-  local ok, helper = pcall(require, "ethos_events")
-  if ok and type(helper) == "table" and type(helper.debug) == "function" then
-    return helper
-  end
-
   local loader = rawget(_G, "loadScript")
   if type(loader) == "function" then
     local candidates = {
-      "/scripts/lib/ethos_events.lua",
-      "/SCRIPTS/LIB/ethos_events.lua",
-      "scripts/lib/ethos_events.lua",
-      "SCRIPTS/LIB/ethos_events.lua",
       "/scripts/ethos_events/ethos_events.lua",
       "/SCRIPTS/ethos_events/ethos_events.lua",
       "scripts/ethos_events/ethos_events.lua",
       "SCRIPTS/ethos_events/ethos_events.lua",
+      "ethos_events.lua",
     }
     for _, path in ipairs(candidates) do
       local chunk = loader(path)
@@ -58,8 +50,6 @@ local function loadIcon()
     return nil
   end
   local iconCandidates = {
-    "/scripts/tools/ethos_events.png",
-    "/SCRIPTS/TOOLS/ethos_events.png",
     "/scripts/ethos_events/ethos_events.png",
     "/SCRIPTS/ethos_events/ethos_events.png",
     "ethos_events.png",

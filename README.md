@@ -33,7 +33,6 @@ python tools/build.py --project ethos_events --deploy
 ```
 
 - Install the dist ZIP inside Ethos Suite for radio deployment.
-- Use the PowerShell helpers (`tools/build-package.ps1`, `tools/deploy-ethos-sim.ps1`) as Windows-only fallbacks.
 - Configure `tools/deploy.config.json` (copy the example) or set `ETHOS_SIM_PATH` before running `--deploy`.
 - Package version is read from `VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
 
@@ -48,12 +47,12 @@ python tools/build.py --project ethos_events --deploy
 
 ## Project Layout
 
-- `src/scripts/SensorList/main.lua`: widget implementation
-- `src/scripts/SensorList/README.md`: widget-focused usage notes
-- `src/scripts/ethos_events/main.lua`: system-tool event tracer entrypoint
-- `src/scripts/ethos_events/README.md`: event tracer usage notes
-- `tools/build-package.ps1`: syntax-check + packaging script
-- `tools/deploy-ethos-sim.ps1`: simulator deploy helper (placeholder)
+- `scripts/SensorList/main.lua`: widget implementation
+- `scripts/SensorList/README.md`: widget-focused usage notes
+- `scripts/ethos_events/main.lua`: system-tool event tracer entrypoint
+- `scripts/ethos_events/README.md`: event tracer usage notes
+- `tools/build.py`: syntax-check + packaging + simulator deploy script
+- `tools/create_todo_issues.py`: GitHub issue bootstrap for TODO backlog tracking
 - `deslopification/prompts/SensorList.md`: original implementation prompt
 - `docs/`: development notes and handoff documents
 - `docs/REPOSITORY_LAYOUT.md`: reference for `tools/`, `tests/`, `deslopification/`, and root artifacts
@@ -62,12 +61,12 @@ python tools/build.py --project ethos_events --deploy
 
 - Recommended development environment: [Visual Studio Code](https://code.visualstudio.com/).
 - Recommended coding agent: [OpenAI Codex](https://openai.com/codex/).
-- Format Lua: VS Code task `Format Lua (stylua)` or run `stylua src`
+- Format Lua: VS Code task `Format Lua (stylua)` or run `stylua scripts`
 - Build package: VS Code task `Build Ethos Install ZIP`
 - Lua parse check:
 
 ```powershell
-luac -p src/scripts/SensorList/main.lua
+luac -p scripts/SensorList/main.lua
 ```
 
 ### Running the Python tests

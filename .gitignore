@@ -1,4 +1,4 @@
-dist/
+dist/*
 tools/deploy.config.json
 tools/__pycache__
 .build-staging/
@@ -9,3 +9,4 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
+.markdownlint*

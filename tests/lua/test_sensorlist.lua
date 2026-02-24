@@ -47,7 +47,7 @@ local function assert_true(value, label)
   end
 end
 
-local module = dofile("src/scripts/SensorList/main.lua")
+local module = dofile("scripts/SensorList/main.lua")
 local test = module._test
 
 assert_true(type(test) == "table", "expected _test export table")

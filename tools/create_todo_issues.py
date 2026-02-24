@@ -1,51 +1,20 @@
-param(
-  [string]$Repo = "doppleganger53/sloppy-ethos"
-)
+#!/usr/bin/env python3
+from __future__ import annotations
 
-Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
+import argparse
+import shutil
+import subprocess
+import sys
 
-$gh = "C:\Program Files\GitHub CLI\gh.exe"
-if (-not (Test-Path $gh)) {
-  throw "GitHub CLI not found at '$gh'."
-}
 
-& $gh auth status | Out-Null
-if ($LASTEXITCODE -ne 0) {
-  throw "GitHub CLI is not authenticated. Run '$gh auth login' first."
-}
+TODO_REF = "Source backlog: TODO.md (TODO-03..TODO-09)."
 
-function New-Issue {
-  param(
-    [string]$Title,
-    [string[]]$Labels,
-    [string]$Body
-  )
-  $labelArgs = @()
-  foreach ($label in $Labels) {
-    $labelArgs += @("--label", $label)
-  }
-  $args = @(
-    "issue", "create",
-    "--repo", $Repo,
-    "--title", $Title,
-    "--body", $Body
-  ) + $labelArgs
-  $url = & $gh @args
-  if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($url)) {
-    throw "Failed to create issue: $Title"
-  }
-  return $url.Trim()
-}
 
-$todoRef = "Source backlog: TODO.md (TODO-03..TODO-09)."
-
-$children = @()
-$children += @{
-  title = "[Enhancement] Generate roadmap prompt files for SensorList roadmap items"
-  labels = @("enhancement", "docs")
-  body = @"
-## Problem Statement
+CHILD_ISSUES = [
+    {
+        "title": "[Enhancement] Generate roadmap prompt files for SensorList roadmap items",
+        "labels": ["enhancement", "docs"],
+        "body": """## Problem Statement
 Roadmap items exist in README but prompt artifacts are incomplete.
 
 ## Desired Outcome
@@ -63,14 +32,13 @@ Create prompt files for sort headers, conflict display refinement, and acceptabl
 - Scope creep into implementation details.
 - Prompt ambiguity for acceptable conflicts model.
 
-$todoRef
-"@
-}
-$children += @{
-  title = "[Enhancement] Add unit tests for SensorList Lua behavior"
-  labels = @("enhancement", "tests")
-  body = @"
-## Problem Statement
+"""
+        + TODO_REF,
+    },
+    {
+        "title": "[Enhancement] Add unit tests for SensorList Lua behavior",
+        "labels": ["enhancement", "tests"],
+        "body": """## Problem Statement
 SensorList behavior is validated manually but lacks repeatable unit tests.
 
 ## Desired Outcome
@@ -88,14 +56,13 @@ Add a guarded `_test` export in `main.lua`, Lua test script with mocked Ethos AP
 - Lua runtime differences across developer machines.
 - Mocked APIs drifting from simulator behavior.
 
-$todoRef
-"@
-}
-$children += @{
-  title = "[Enhancement] Add unit tests for tools/build.py"
-  labels = @("enhancement", "tests")
-  body = @"
-## Problem Statement
+"""
+        + TODO_REF,
+    },
+    {
+        "title": "[Enhancement] Add unit tests for tools/build.py",
+        "labels": ["enhancement", "tests"],
+        "body": """## Problem Statement
 Build tooling has no automated regression tests for version/config/deploy behavior.
 
 ## Desired Outcome
@@ -112,14 +79,13 @@ Add tests for version normalization, config parsing, simulator path resolution, 
 ## Risks / Edge Cases
 - Over-mocking may hide integration issues.
 
-$todoRef
-"@
-}
-$children += @{
-  title = "[Enhancement] Add tests for documentation command examples"
-  labels = @("enhancement", "tests", "docs")
-  body = @"
-## Problem Statement
+"""
+        + TODO_REF,
+    },
+    {
+        "title": "[Enhancement] Add tests for documentation command examples",
+        "labels": ["enhancement", "tests", "docs"],
+        "body": """## Problem Statement
 Documentation command snippets can drift from actual working workflows.
 
 ## Desired Outcome
@@ -136,14 +102,13 @@ Add pytest docs command parser for README, DEVELOPMENT, SensorList README, and C
 ## Risks / Edge Cases
 - Some command snippets are intentionally partial in prose context.
 
-$todoRef
-"@
-}
-$children += @{
-  title = "[Refactor] Streamline AGENTS.md and move SensorList-specific notes to memory"
-  labels = @("refactor", "docs")
-  body = @"
-## Current Pain / Complexity
+"""
+        + TODO_REF,
+    },
+    {
+        "title": "[Refactor] Streamline AGENTS.md and move SensorList-specific notes to memory",
+        "labels": ["refactor", "docs"],
+        "body": """## Current Pain / Complexity
 AGENTS mixes repo-wide and script-specific operational detail, causing repeated context noise.
 
 ## Refactor Boundaries
@@ -161,15 +126,14 @@ No workflow regressions; command references remain consistent with documented Py
 ## Rollback Plan
 Restore prior AGENTS content from git history and remove script-specific memory note if needed.
 
-$todoRef
-"@
-}
-$children += @{
-  title = "[Enhancement] Refresh SensorList README with current behavior and Python-first workflow"
-  labels = @("enhancement", "docs")
-  body = @"
-## Problem Statement
-`src/scripts/SensorList/README.md` is stale and uses PowerShell-first packaging steps.
+"""
+        + TODO_REF,
+    },
+    {
+        "title": "[Enhancement] Refresh SensorList README with current behavior and Python-first workflow",
+        "labels": ["enhancement", "docs"],
+        "body": """## Problem Statement
+`scripts/SensorList/README.md` is stale and uses PowerShell-first packaging steps.
 
 ## Desired Outcome
 README reflects current widget behavior and uses `python tools/build.py` as primary workflow, with PowerShell as fallback.
@@ -185,27 +149,74 @@ Update behavior section (scroll/conflict grouping/discovery strategy) and replac
 ## Risks / Edge Cases
 - Inconsistency with other docs if not updated together.
 
-$todoRef
-"@
-}
+"""
+        + TODO_REF,
+    },
+]
 
-$childUrls = @()
-foreach ($item in $children) {
-  $childUrls += New-Issue -Title $item.title -Labels $item.labels -Body $item.body
-}
 
-$childList = ($childUrls | ForEach-Object { "- $_" }) -join "`n"
-$parentBody = @"
-Tracks execution of TODO backlog items that remain after issue template creation.
+def run_gh(args: list[str]) -> str:
+    result = subprocess.run(args, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        message = result.stderr.strip() or result.stdout.strip() or "unknown error"
+        raise RuntimeError(message)
+    return result.stdout.strip()
+
+
+def ensure_gh_available():
+    if shutil.which("gh") is None:
+        sys.exit("GitHub CLI not found on PATH.")
+    try:
+        run_gh(["gh", "auth", "status"])
+    except RuntimeError as exc:
+        sys.exit(f"GitHub CLI is not authenticated. Run 'gh auth login' first. Details: {exc}")
+
+
+def new_issue(repo: str, title: str, labels: list[str], body: str) -> str:
+    command = ["gh", "issue", "create", "--repo", repo, "--title", title, "--body", body]
+    for label in labels:
+        command.extend(["--label", label])
+    url = run_gh(command)
+    if not url:
+        raise RuntimeError(f"Failed to create issue: {title}")
+    return url
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Create TODO-tracking GitHub issues for sloppy-ethos.")
+    parser.add_argument("--repo", default="doppleganger53/sloppy-ethos", help="GitHub repository in owner/name format.")
+    parser.add_argument("--dry-run", action="store_true", help="Print issue titles without creating them.")
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    if args.dry_run:
+        for issue in CHILD_ISSUES:
+            print(issue["title"])
+        print("[Enhancement] Track TODO backlog execution (tests, prompts, docs, AGENTS refactor)")
+        return
+
+    ensure_gh_available()
+
+    child_urls: list[str] = []
+    for issue in CHILD_ISSUES:
+        child_urls.append(new_issue(args.repo, issue["title"], issue["labels"], issue["body"]))
+
+    child_list = "\n".join(f"- {url}" for url in child_urls)
+    parent_body = f"""Tracks execution of TODO backlog items that remain after issue template creation.
 
 ## Child Issues
-$childList
+{child_list}
 
 ## Notes
 - Linked from TODO.md item TODO-03.
 - Child issues correspond to TODO-04 through TODO-09.
-"@
+"""
+    parent_title = "[Enhancement] Track TODO backlog execution (tests, prompts, docs, AGENTS refactor)"
+    parent_url = new_issue(args.repo, parent_title, ["enhancement"], parent_body)
+    print(f"Created parent issue: {parent_url}")
 
-$parentUrl = New-Issue -Title "[Enhancement] Track TODO backlog execution (tests, prompts, docs, AGENTS refactor)" -Labels @("enhancement") -Body $parentBody
 
-Write-Output "Created parent issue: $parentUrl"
+if __name__ == "__main__":
+    main()

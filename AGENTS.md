@@ -26,8 +26,8 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
 - Documentation changes (`README.md`, `docs/`, `CONTRIBUTING.md`, PR/issue templates):
   - `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
-- Lua widget behavior changes (`src/scripts/**/*.lua`):
-  - `luac -p src/scripts/SensorList/main.lua`
+- Lua widget behavior changes (`scripts/**/*.lua`):
+  - `luac -p scripts/SensorList/main.lua`
   - `python -m pytest tests/test_sensorlist_widget.py -q`
 - Build/tooling changes (`tools/`, Python build/test harness):
   - `python -m pytest tests/test_build_py.py -q`

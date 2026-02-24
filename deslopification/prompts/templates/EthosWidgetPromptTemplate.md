@@ -14,9 +14,9 @@ Create a widget named `{WIDGET_NAME}` that implements:
 - Radio target(s): `{RADIO_TARGETS}` (example: `X20RS`)
 - Ethos version target: `{ETHOS_VERSION}` (example: `1.6.4+`)
 - Project layout:
-  - Script entry point: `src/scripts/{WIDGET_NAME}/main.lua`
-  - Optional images: `src/scripts/{WIDGET_NAME}/images/`
-  - Optional i18n: `src/scripts/{WIDGET_NAME}/i18n/`
+  - Script entry point: `scripts/{WIDGET_NAME}/main.lua`
+  - Optional images: `scripts/{WIDGET_NAME}/images/`
+  - Optional i18n: `scripts/{WIDGET_NAME}/i18n/`
 
 ## Ethos API Requirements (Critical)
 
@@ -103,3 +103,4 @@ Return:
 - Compact mode for smaller zones.
 - User-configurable options (`configure/read/write`).
 - Debug overlay toggle for API/event diagnostics.
+

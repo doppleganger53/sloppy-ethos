@@ -5,12 +5,12 @@
 1. Create a branch from `main`.
 2. Keep changes focused and scoped to one concern.
 3. Run local checks before opening a PR:
-   - `luac -p src/scripts/SensorList/main.lua`
+   - `luac -p scripts/SensorList/main.lua`
    - docs validation (required for any documentation changes):
      `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
-   - `stylua src` (if formatting changed)
+   - `stylua scripts` (if formatting changed)
    - package build:
-     `powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-package.ps1 -ProjectName SensorList`
+     `python tools/build.py --project SensorList --dist`
 4. Open a PR using the repository PR template.
 
 ## Documentation Changes

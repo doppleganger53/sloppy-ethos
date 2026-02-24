@@ -9,7 +9,7 @@ Add touchable column headers in `SensorList` to control sorting at runtime.
 ## Environment
 
 - Widget: `SensorList`
-- Script entry: `src/scripts/SensorList/main.lua`
+- Script entry: `scripts/SensorList/main.lua`
 - Target radio/simulator: `X20RS`
 - Ethos version target: `1.6.4+`
 
@@ -41,7 +41,7 @@ Add touchable column headers in `SensorList` to control sorting at runtime.
 
 ## Validation Checklist
 
-1. `luac -p src/scripts/SensorList/main.lua` passes.
+1. `luac -p scripts/SensorList/main.lua` passes.
 2. Simulator: header tap changes sort key and direction correctly.
 3. Simulator: empty state remains readable and stable.
 4. Regression: manual scrolling and conflict color-group rendering still work.
@@ -51,3 +51,4 @@ Add touchable column headers in `SensorList` to control sorting at runtime.
 1. User can tap any header to sort by that column.
 2. Sort indicator is visible and accurate.
 3. No regressions in scrolling, deep scan behavior, or empty state rendering.
+

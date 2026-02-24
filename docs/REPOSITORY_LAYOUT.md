@@ -4,18 +4,17 @@ This document explains the purpose of the top-level folders and key root files i
 
 ## Top-Level Directories
 
-### `src/`
+### `scripts/`
 
 - Source for Ethos Lua projects.
-- Current active widget: `src/scripts/SensorList/`.
+- Current active widget: `scripts/SensorList/`.
 
 ### `tools/`
 
 - Build, packaging, and deployment tooling.
 - Key scripts:
   - `tools/build.py`: canonical cross-platform build/deploy entrypoint.
-  - `tools/build-package.ps1`: Windows fallback packaging helper.
-  - `tools/deploy-ethos-sim.ps1`: Windows fallback simulator deploy helper.
+  - `tools/create_todo_issues.py`: utility to create TODO-tracking GitHub issues.
   - `tools/deploy.config.example.json`: template for local simulator-path config.
 
 ### `tests/`

@@ -4,4 +4,4 @@ indent_width = 2
 quote_style = "AutoPreferDouble"
 line_endings = "Windows"
 newline_end_of_file = true
-skip = ["src/scripts/SensorList/images", "src/scripts/SensorList/i18n"]
+skip = ["scripts/SensorList/images", "scripts/SensorList/i18n"]

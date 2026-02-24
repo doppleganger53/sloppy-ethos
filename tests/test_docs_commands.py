@@ -12,8 +12,8 @@ from tests.helpers import REPO_ROOT, command_exists, run_command
 DOC_FILES = [
     REPO_ROOT / "README.md",
     REPO_ROOT / "docs" / "DEVELOPMENT.md",
-    REPO_ROOT / "src" / "scripts" / "SensorList" / "README.md",
-    REPO_ROOT / "src" / "scripts" / "ethos_events" / "README.md",
+    REPO_ROOT / "scripts" / "SensorList" / "README.md",
+    REPO_ROOT / "scripts" / "ethos_events" / "README.md",
     REPO_ROOT / "CONTRIBUTING.md",
 ]
 
@@ -26,8 +26,6 @@ MANUAL_PATTERNS = (
     "python -m pip install -r requirements-dev.txt",
     "python -m pytest tests/test_sensorlist_widget.py",
     "python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q",
-    "powershell -ExecutionPolicy Bypass -File tools/build-package.ps1 -ProjectName SensorList",
-    "powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-package.ps1 -ProjectName SensorList",
 )
 
 
@@ -75,7 +73,7 @@ def test_extract_fenced_commands_parses_supported_lines():
 
 @pytest.mark.parametrize("command", discover_commands())
 def test_command_references_existing_scripts(command: str):
-    for script in ("tools/build.py", "tools/build-package.ps1"):
+    for script in ("tools/build.py",):
         if script in command:
             assert (REPO_ROOT / script).exists(), f"Missing referenced script: {script}"
 
@@ -118,7 +116,7 @@ def test_documented_command_syntax_or_execution(command: str):
 def test_documented_command_luac_skips_when_missing(monkeypatch):
     monkeypatch.setattr("tests.test_docs_commands.command_exists", lambda _name: False)
     with pytest.raises(pytest.skip.Exception):
-        test_documented_command_syntax_or_execution("luac -p src/scripts/SensorList/main.lua")
+        test_documented_command_syntax_or_execution("luac -p scripts/SensorList/main.lua")
 
 
 def test_documented_command_luac_fragment_skips(monkeypatch):
@@ -137,8 +135,8 @@ def test_documented_command_stylua_runs_with_check(monkeypatch):
 
     monkeypatch.setattr("tests.test_docs_commands.command_exists", lambda _name: True)
     monkeypatch.setattr("tests.test_docs_commands.run_command", fake_run)
-    test_documented_command_syntax_or_execution("stylua src")
-    assert called["command"] == ["stylua", "src", "--check"]
+    test_documented_command_syntax_or_execution("stylua scripts")
+    assert called["command"] == ["stylua", "scripts", "--check"]
 
 
 @pytest.mark.parametrize(

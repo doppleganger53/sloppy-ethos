@@ -33,12 +33,12 @@ def _set_main_prerequisites(monkeypatch, args: Namespace):
         calls["ensure_luac_available"] = True
         return "luac"
 
-    def fake_run_lua_check(project_dir: Path, luac_exec: str):
-        calls["run_lua_check"] = (project_dir, luac_exec)
+    def fake_run_lua_checks(project_dir: Path, luac_exec: str):
+        calls["run_lua_checks"] = (project_dir, luac_exec)
 
     monkeypatch.setattr(build, "resolve_version", fake_resolve_version)
     monkeypatch.setattr(build, "ensure_luac_available", fake_ensure_luac_available)
-    monkeypatch.setattr(build, "run_lua_check", fake_run_lua_check)
+    monkeypatch.setattr(build, "run_lua_checks", fake_run_lua_checks)
     return calls
 
 
@@ -113,34 +113,44 @@ def test_ensure_luac_available_exits_when_missing(monkeypatch):
     assert "Required command 'luac' not found" in str(exc.value)
 
 
-def test_run_lua_check_invokes_luac(monkeypatch, tmp_path: Path):
+def test_run_lua_checks_invokes_luac_for_all_lua_files(monkeypatch, tmp_path: Path):
     project_dir = tmp_path / "SensorList"
-    project_dir.mkdir()
+    nested_dir = project_dir / "nested"
+    nested_dir.mkdir(parents=True)
     (project_dir / "main.lua").write_text("print('ok')\n", encoding="utf-8")
-    called: dict[str, object] = {}
+    (nested_dir / "module.lua").write_text("print('nested')\n", encoding="utf-8")
+    called: list[list[str]] = []
 
     def fake_run(command: list[str], check: bool):
-        called["command"] = command
-        called["check"] = check
+        assert check is True
+        called.append(command)
         return None
 
     monkeypatch.setattr(build.subprocess, "run", fake_run)
-    build.run_lua_check(project_dir, "luac")
-    assert called["command"] == ["luac", "-p", str(project_dir / "main.lua")]
-    assert called["check"] is True
+    build.run_lua_checks(project_dir, "luac")
+    assert called == [
+        ["luac", "-p", str(project_dir / "main.lua")],
+        ["luac", "-p", str(nested_dir / "module.lua")],
+    ]
 
 
-def test_run_lua_check_exits_when_main_missing(tmp_path: Path):
+def test_run_lua_checks_exits_when_project_missing(tmp_path: Path):
+    with pytest.raises(SystemExit) as exc:
+        build.run_lua_checks(tmp_path / "missing", "luac")
+    assert "Project directory not found" in str(exc.value)
+
+
+def test_run_lua_checks_exits_when_main_missing(tmp_path: Path):
     project_dir = tmp_path / "SensorList"
     project_dir.mkdir()
     with pytest.raises(SystemExit) as exc:
-        build.run_lua_check(project_dir, "luac")
+        build.run_lua_checks(project_dir, "luac")
     assert "Widget entrypoint not found" in str(exc.value)
 
 
 def test_build_zip_creates_archive_and_cleans_staging(monkeypatch, tmp_path: Path):
     repo_root = tmp_path / "repo"
-    project_dir = repo_root / "src" / "scripts" / "SensorList"
+    project_dir = repo_root / "scripts" / "SensorList"
     dist_dir = repo_root / "dist"
     project_dir.mkdir(parents=True)
     (project_dir / "main.lua").write_text("print('ok')\n", encoding="utf-8")
@@ -154,7 +164,7 @@ def test_build_zip_creates_archive_and_cleans_staging(monkeypatch, tmp_path: Pat
 
 def test_build_zip_removes_existing_staging_before_copy(monkeypatch, tmp_path: Path):
     repo_root = tmp_path / "repo"
-    project_dir = repo_root / "src" / "scripts" / "SensorList"
+    project_dir = repo_root / "scripts" / "SensorList"
     dist_dir = repo_root / "dist"
     staging_root = repo_root / ".build-staging"
     project_dir.mkdir(parents=True)
@@ -175,7 +185,7 @@ def test_build_zip_removes_existing_staging_before_copy(monkeypatch, tmp_path: P
 
 def test_build_zip_cleans_staging_on_copy_failure(monkeypatch, tmp_path: Path):
     repo_root = tmp_path / "repo"
-    project_dir = repo_root / "src" / "scripts" / "SensorList"
+    project_dir = repo_root / "scripts" / "SensorList"
     dist_dir = repo_root / "dist"
     staging_root = repo_root / ".build-staging"
     project_dir.mkdir(parents=True)
@@ -196,23 +206,24 @@ def test_build_zip_cleans_staging_on_copy_failure(monkeypatch, tmp_path: Path):
     assert staging_root in cleanup_calls
 
 
-def test_add_project_extras_to_scripts_root_noop_for_other_projects(tmp_path: Path):
-    project_dir = tmp_path / "src" / "scripts" / "SensorList"
-    scripts_root = tmp_path / "staging" / "scripts"
-    project_dir.mkdir(parents=True)
-    scripts_root.mkdir(parents=True)
-    build.add_project_extras_to_scripts_root(project_dir, "SensorList", scripts_root)
-    assert not (scripts_root / "tools" / "ethos_events.png").exists()
+def test_ensure_packaged_readme_noop_when_present(tmp_path: Path):
+    destination = tmp_path / "scripts" / "WidgetX"
+    destination.mkdir(parents=True)
+    readme = destination / "README.md"
+    readme.write_text("existing\n", encoding="utf-8")
+    build.ensure_packaged_readme(destination, "WidgetX")
+    assert readme.read_text(encoding="utf-8") == "existing\n"
 
 
-def test_add_project_extras_to_scripts_root_copies_ethos_events_icon(tmp_path: Path):
-    project_dir = tmp_path / "src" / "scripts" / "ethos_events"
-    scripts_root = tmp_path / "staging" / "scripts"
-    project_dir.mkdir(parents=True)
-    scripts_root.mkdir(parents=True)
-    (project_dir / "ethos_events.png").write_bytes(b"pngdata")
-    build.add_project_extras_to_scripts_root(project_dir, "ethos_events", scripts_root)
-    assert (scripts_root / "tools" / "ethos_events.png").read_bytes() == b"pngdata"
+def test_ensure_packaged_readme_writes_default_when_missing(tmp_path: Path):
+    destination = tmp_path / "scripts" / "WidgetX"
+    destination.mkdir(parents=True)
+    build.ensure_packaged_readme(destination, "WidgetX")
+    readme = destination / "README.md"
+    assert readme.exists()
+    content = readme.read_text(encoding="utf-8")
+    assert "# WidgetX" in content
+    assert "scripts/WidgetX" in content
 
 
 def test_format_deploy_error_permission():
@@ -285,6 +296,7 @@ def test_parse_args_defaults(monkeypatch):
     assert args.config is None
     assert args.no_zip is False
     assert args.version is None
+    assert args.out_dir is None
 
 
 def test_parse_args_flags(monkeypatch):
@@ -302,6 +314,8 @@ def test_parse_args_flags(monkeypatch):
             "--no-zip",
             "--version",
             "9.9.9",
+            "--out-dir",
+            "custom-dist",
         ],
     )
     args = build.parse_args()
@@ -311,12 +325,13 @@ def test_parse_args_flags(monkeypatch):
     assert args.config == "path/to/deploy.json"
     assert args.no_zip is True
     assert args.version == "9.9.9"
+    assert args.out_dir == "custom-dist"
 
 
 def test_main_requires_action(monkeypatch):
     _set_main_prerequisites(
         monkeypatch,
-        Namespace(project="SensorList", dist=False, deploy=False, config=None, no_zip=False, version=None),
+        Namespace(project="SensorList", dist=False, deploy=False, config=None, no_zip=False, version=None, out_dir=None),
     )
     with pytest.raises(SystemExit) as exc:
         build.main()
@@ -326,7 +341,7 @@ def test_main_requires_action(monkeypatch):
 def test_main_dist_calls_build_zip_when_nozip_false(monkeypatch):
     calls = _set_main_prerequisites(
         monkeypatch,
-        Namespace(project="SensorList", dist=True, deploy=False, config=None, no_zip=False, version=None),
+        Namespace(project="SensorList", dist=True, deploy=False, config=None, no_zip=False, version=None, out_dir=None),
     )
 
     def fake_build_zip(project_dir: Path, project_name: str, version: str, dist_dir: Path, repo_root: Path):
@@ -339,24 +354,40 @@ def test_main_dist_calls_build_zip_when_nozip_false(monkeypatch):
     project_dir, project_name, version, dist_dir, repo_root = calls["build_zip"]
     assert project_name == "SensorList"
     assert version == "1.0.0"
-    assert project_dir == repo_root / "src" / "scripts" / "SensorList"
+    assert project_dir == repo_root / "scripts" / "SensorList"
     assert dist_dir == repo_root / "dist"
 
 
 def test_main_dist_skips_build_zip_when_nozip_true(monkeypatch):
     calls = _set_main_prerequisites(
         monkeypatch,
-        Namespace(project="SensorList", dist=True, deploy=False, config=None, no_zip=True, version=None),
+        Namespace(project="SensorList", dist=True, deploy=False, config=None, no_zip=True, version=None, out_dir=None),
     )
     monkeypatch.setattr(build, "build_zip", lambda *_args, **_kwargs: calls.setdefault("build_zip", "called"))
     build.main()
     assert "build_zip" not in calls
 
 
+def test_main_dist_uses_explicit_out_dir(monkeypatch):
+    calls = _set_main_prerequisites(
+        monkeypatch,
+        Namespace(project="SensorList", dist=True, deploy=False, config=None, no_zip=False, version=None, out_dir="custom-dist"),
+    )
+
+    def fake_build_zip(project_dir: Path, project_name: str, version: str, dist_dir: Path, repo_root: Path):
+        calls["build_zip"] = (project_dir, project_name, version, dist_dir, repo_root)
+        return dist_dir / "SensorList-1.0.0.zip"
+
+    monkeypatch.setattr(build, "build_zip", fake_build_zip)
+    build.main()
+    _project_dir, _project_name, _version, dist_dir, _repo_root = calls["build_zip"]
+    assert dist_dir == Path("custom-dist")
+
+
 def test_main_deploy_uses_default_config_path_when_config_missing(monkeypatch):
     calls = _set_main_prerequisites(
         monkeypatch,
-        Namespace(project="SensorList", dist=False, deploy=True, config=None, no_zip=False, version=None),
+        Namespace(project="SensorList", dist=False, deploy=True, config=None, no_zip=False, version=None, out_dir=None),
     )
     sim_path = Path("C:/simulator")
     monkeypatch.delenv("ETHOS_SIM_PATH", raising=False)
@@ -377,7 +408,7 @@ def test_main_deploy_uses_default_config_path_when_config_missing(monkeypatch):
     project_dir, project_name, resolved_sim_path = calls["deploy"]
     assert project_name == "SensorList"
     assert resolved_sim_path == sim_path
-    assert project_dir == Path(build.__file__).resolve().parent.parent / "src" / "scripts" / "SensorList"
+    assert project_dir == Path(build.__file__).resolve().parent.parent / "scripts" / "SensorList"
 
 
 def test_main_deploy_uses_explicit_config_path(monkeypatch):
@@ -390,6 +421,7 @@ def test_main_deploy_uses_explicit_config_path(monkeypatch):
             config="C:/custom/deploy.json",
             no_zip=False,
             version=None,
+            out_dir=None,
         ),
     )
     def fake_resolve_simulator_path(config_path: Path, override_env: str | None):
@@ -406,7 +438,7 @@ def test_main_deploy_uses_explicit_config_path(monkeypatch):
 def test_main_deploy_exits_when_sim_path_unconfigured(monkeypatch):
     _set_main_prerequisites(
         monkeypatch,
-        Namespace(project="SensorList", dist=False, deploy=True, config=None, no_zip=False, version=None),
+        Namespace(project="SensorList", dist=False, deploy=True, config=None, no_zip=False, version=None, out_dir=None),
     )
     monkeypatch.delenv("ETHOS_SIM_PATH", raising=False)
     monkeypatch.setattr(build, "resolve_simulator_path", lambda *_args, **_kwargs: None)

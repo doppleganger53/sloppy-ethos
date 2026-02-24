@@ -12,7 +12,7 @@ based on `Physical ID` and `Application ID` combinations.
 ## Environment
 
 - Widget: `SensorList`
-- Script entry: `src/scripts/SensorList/main.lua`
+- Script entry: `scripts/SensorList/main.lua`
 - Target radio/simulator: `X20RS`
 - Ethos version target: `1.6.4+`
 
@@ -46,7 +46,7 @@ based on `Physical ID` and `Application ID` combinations.
 
 ## Validation Checklist
 
-1. `luac -p src/scripts/SensorList/main.lua` passes.
+1. `luac -p scripts/SensorList/main.lua` passes.
 2. Simulator data with duplicate physical+application IDs is clearly marked high risk.
 3. Simulator data with duplicate physical IDs but distinct application IDs is shown with lower-severity cue.
 4. Regression: no runtime errors in empty-state path and no scroll regressions.
@@ -56,3 +56,4 @@ based on `Physical ID` and `Application ID` combinations.
 1. Conflict display conveys severity using observable row cues.
 2. Users can distinguish likely-bad and potentially-acceptable duplicates at a glance.
 3. Widget remains stable and readable under normal and empty data conditions.
+

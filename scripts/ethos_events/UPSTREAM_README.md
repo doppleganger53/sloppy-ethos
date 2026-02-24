@@ -7,16 +7,16 @@ new events appear automatically.
 
 ## Install
 
-Copy `ethos_events.lua` to your radio:
+In this repository layout, `ethos_events.lua` is packaged and deployed under:
 
 ```text
-/SCRIPTS/LIB/ethos_events.lua
+/SCRIPTS/ethos_events/ethos_events.lua
 ```
 
 ## Usage
 
 ```lua
-local events = require("ethos_events")
+local events = loadScript("/scripts/ethos_events/ethos_events.lua")()
 
 function mytool.event(widget, category, value, x, y)
     events.debug("mytool", category, value, x, y)
