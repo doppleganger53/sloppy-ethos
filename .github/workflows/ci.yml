@@ -30,7 +30,11 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
 
       - name: Lua syntax check
-        run: luac -p src/scripts/SensorList/main.lua
+        run: |
+          luac -p scripts/SensorList/main.lua
+          luac -p scripts/ethos_events/main.lua
+          luac -p scripts/ethos_events/example.lua
+          luac -p scripts/ethos_events/ethos_events.lua
 
       - name: Run docs tests
         run: python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q
