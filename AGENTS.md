@@ -8,6 +8,13 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 - Keep changes scoped to the user request. Do not perform unrelated cleanup or broad refactors.
 - Preserve existing behavior unless the task explicitly requests behavior changes.
 
+## Root-Cause Strategy
+
+- Prefer root-cause fixes over compatibility shims, legacy aliases, or temporary band-aids.
+- Diagnose and clear local state issues first (for example: IDE/test discovery caches) when failures are caused by stale metadata rather than code defects.
+- Only introduce compatibility layers when explicitly requested or when a real external compatibility requirement is confirmed.
+- If a compatibility layer is approved, document why it is needed and define a removal condition in session notes.
+
 ## Required Startup Workflow
 
 1. Read the latest relevant note in `deslopification/memory/`.

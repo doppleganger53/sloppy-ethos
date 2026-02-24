@@ -70,6 +70,7 @@ Create a widget named `{WIDGET_NAME}` that implements:
 ## Technical Constraints
 
 - Keep implementation intentionally simple and maintainable.
+- Prefer root-cause solutions over compatibility shims or temporary workarounds.
 - Avoid unnecessary global state.
 - Add brief comments only where behavior is non-obvious.
 - Do not add unrelated features unless requested (alarms, logs, advanced menus).
