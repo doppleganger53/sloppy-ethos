@@ -14,11 +14,14 @@
   `python tools/build.py --project SensorList --dist`
   `python tools/build.py --project SensorList --deploy`
   `python tools/build.py --project ethos_events --deploy`
+  `python tools/build.py --project SensorList --clean --sim-radio X20RS`
+  `python tools/build.py --help`
 
 ## Configuring Simulator Path
 
-- Copy `tools/deploy.config.example.json` to `tools/deploy.config.json` and populate `ETHOS_SIM_PATH` with your simulator persist directory.
-- Alternatively override via `ETHOS_SIM_PATH` environment variable (Python script honors the override).
+- Copy `tools/deploy.config.example.json` to `tools/deploy.config.json` and populate `ETHOS_SIM_PATHS`.
+- `ETHOS_SIM_PATHS` must be an array of entries with `radio` and `path`.
+- Mark exactly one entry as `"default": true` for deploy/clean when `--sim-radio` is not provided.
 - `tools/deploy.config.json` is ignored via `.gitignore`, so each contributor can keep their private path local.
 
 ## Packaging Behavior
@@ -28,7 +31,10 @@
 - validates Lua syntax for all project Lua files using `luac -p`.
 - reads package version from `VERSION` (or `--version` override).
 - produces `dist/{ProjectName}-{version}.zip`.
-- optionally copies `scripts/{ProjectName}` into `${ETHOS_SIM_PATH}/scripts/{ProjectName}` when `--deploy` is specified (no ZIP).
+- optionally copies `scripts/{ProjectName}` into `${ETHOS_SIM_PATHS[default_or_selected_radio]}/scripts/{ProjectName}` when `--deploy` is specified (no ZIP).
+- supports `--clean` to remove `scripts/{ProjectName}` from simulator deploy path.
+- supports `--sim-radio` to resolve model-specific simulator paths via `ETHOS_SIM_PATHS`.
+- supports `--help` to print `tools/build_help.txt` command reference.
 - supports custom ZIP destination via `--out-dir`.
 - Write operations fail fast with clear errors when paths are missing or unwritable.
 

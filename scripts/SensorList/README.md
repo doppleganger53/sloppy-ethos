@@ -30,4 +30,4 @@ Installed path on radio: `scripts/SensorList`.
 
 - Deploy script files into simulator scripts directory:
   `python tools/build.py --project SensorList --deploy`
-- Configure simulator path via `tools/deploy.config.json` or `ETHOS_SIM_PATH`.
+- Configure simulator paths via `tools/deploy.config.json` `ETHOS_SIM_PATHS`, with one entry marked `"default": true`.

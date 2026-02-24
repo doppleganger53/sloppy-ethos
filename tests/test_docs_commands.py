@@ -21,6 +21,7 @@ MANUAL_PATTERNS = (
     "luac -p",
     "python tools/build.py --project SensorList --dist",
     "python tools/build.py --project SensorList --deploy",
+    "python tools/build.py --project SensorList --clean --sim-radio X20RS",
     "python tools/build.py --project ethos_events --dist",
     "python tools/build.py --project ethos_events --deploy",
     "python -m pip install -r requirements/dev.txt",
@@ -101,7 +102,7 @@ def test_documented_command_syntax_or_execution(command: str):
 
     if command.startswith("python "):
         # Only run lightweight doc commands by default.
-        if "--dist" in command or "--deploy" in command:
+        if "--dist" in command or "--deploy" in command or "--clean" in command:
             pytest.skip("Build/deploy commands are documented but environment-dependent.")
         if command.startswith("python -m pytest"):
             pytest.skip("pytest doc commands are manual to avoid recursive test process spawning.")
