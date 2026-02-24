@@ -16,6 +16,13 @@ This document explains the purpose of the top-level folders and key root files i
   - `tools/build.py`: canonical cross-platform build/deploy entrypoint.
   - `tools/create_todo_issues.py`: utility to create TODO-tracking GitHub issues.
   - `tools/deploy.config.example.json`: template for local simulator-path config.
+  - `tools/config/stylua.toml`: Lua formatting configuration for StyLua workflows.
+
+### `requirements/`
+
+- Python dependency manifests used by contributor and CI workflows.
+- Key file:
+  - `requirements/dev.txt`: Python test dependencies.
 
 ### `tests/`
 
@@ -47,7 +54,7 @@ This document explains the purpose of the top-level folders and key root files i
 - `TODO.md`: current backlog and follow-up actions.
 - `VERSION`: package version source of truth.
 - `LICENSE`: project license (GPLv3).
-- `requirements-dev.txt`: Python test dependencies.
+- `requirements/dev.txt`: Python test dependencies.
 - `.editorconfig`: repository-wide formatting defaults.
 - `.gitignore`: ignored local artifacts (dist output, local config, caches, virtualenv, etc.).
-- `stylua.toml`: Lua formatting configuration.
+- `tools/config/stylua.toml`: Lua formatting configuration.

@@ -38,7 +38,7 @@ def _looks_like_local_file_reference(token: str) -> bool:
         return True
     if token.startswith(("dist/", "dist\\", "${", "<")):
         return False
-    return token.endswith((".md", ".py", ".ps1", ".lua", ".json", ".txt"))
+    return token.endswith((".md", ".py", ".ps1", ".lua", ".json", ".txt", ".toml"))
 
 
 def _iter_documented_file_refs() -> list[str]:
@@ -98,8 +98,8 @@ def test_python_version_guidance_consistent_across_docs():
 def test_test_dependency_guidance_consistent_across_docs():
     readme_text = _read(README_PATH)
     development_text = _read(DEVELOPMENT_PATH)
-    assert "requirements-dev.txt" in readme_text
-    assert "requirements-dev.txt" in development_text
+    assert "requirements/dev.txt" in readme_text
+    assert "requirements/dev.txt" in development_text
     assert "pytest-cov" in readme_text
     assert "pytest-cov" in development_text
 
@@ -149,7 +149,7 @@ def test_environment_dependent_doc_commands_are_manual():
             or "--deploy" in command
             or command.startswith("python -m pytest")
             or command.startswith("powershell ")
-            or command == "python -m pip install -r requirements-dev.txt"
+            or command == "python -m pip install -r requirements/dev.txt"
         )
 
     for command in discover_commands():

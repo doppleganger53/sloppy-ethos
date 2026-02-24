@@ -8,7 +8,7 @@
    - `luac -p scripts/SensorList/main.lua`
    - docs validation (required for any documentation changes):
      `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
-   - `stylua scripts` (if formatting changed)
+   - `stylua --config-path tools/config/stylua.toml scripts` (if formatting changed)
    - package build:
      `python tools/build.py --project SensorList --dist`
 4. Open a PR using the repository PR template.

@@ -23,7 +23,7 @@ MANUAL_PATTERNS = (
     "python tools/build.py --project SensorList --deploy",
     "python tools/build.py --project ethos_events --dist",
     "python tools/build.py --project ethos_events --deploy",
-    "python -m pip install -r requirements-dev.txt",
+    "python -m pip install -r requirements/dev.txt",
     "python -m pytest tests/test_sensorlist_widget.py",
     "python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q",
 )
@@ -135,8 +135,8 @@ def test_documented_command_stylua_runs_with_check(monkeypatch):
 
     monkeypatch.setattr("tests.test_docs_commands.command_exists", lambda _name: True)
     monkeypatch.setattr("tests.test_docs_commands.run_command", fake_run)
-    test_documented_command_syntax_or_execution("stylua scripts")
-    assert called["command"] == ["stylua", "scripts", "--check"]
+    test_documented_command_syntax_or_execution("stylua --config-path tools/config/stylua.toml scripts")
+    assert called["command"] == ["stylua", "--config-path", "tools/config/stylua.toml", "scripts", "--check"]
 
 
 @pytest.mark.parametrize(

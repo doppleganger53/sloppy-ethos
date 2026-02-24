@@ -61,7 +61,7 @@ python tools/build.py --project ethos_events --deploy
 
 - Recommended development environment: [Visual Studio Code](https://code.visualstudio.com/).
 - Recommended coding agent: [OpenAI Codex](https://openai.com/codex/).
-- Format Lua: VS Code task `Format Lua (stylua)` or run `stylua scripts`
+- Format Lua: VS Code task `Format Lua (stylua)` or run `stylua --config-path tools/config/stylua.toml scripts`
 - Build package: VS Code task `Build Ethos Install ZIP`
 - Lua parse check:
 
@@ -72,9 +72,9 @@ luac -p scripts/SensorList/main.lua
 ### Running the Python tests
 
 - Select a Python 3.9+ interpreter in VS Code via `Python: Select Interpreter` (or ensure `python` resolves to your preferred interpreter in terminal).
-- Install test dependencies once per interpreter: `python -m pip install -r requirements-dev.txt`.
+- Install test dependencies once per interpreter: `python -m pip install -r requirements/dev.txt`.
 - Execute the sensor-list test file: `python -m pytest tests/test_sensorlist_widget.py`.
-- VS Code Test Explorer coverage runs require `pytest-cov`, which is included in `requirements-dev.txt`.
+- VS Code Test Explorer coverage runs require `pytest-cov`, which is included in `requirements/dev.txt`.
 
 ## Releases
 

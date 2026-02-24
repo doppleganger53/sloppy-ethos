@@ -6,6 +6,8 @@
       "type": "shell",
       "command": "stylua",
       "args": [
+        "--config-path",
+        "tools/config/stylua.toml",
         "scripts"
       ],
       "group": {
