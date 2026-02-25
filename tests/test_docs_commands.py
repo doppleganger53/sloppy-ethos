@@ -15,6 +15,7 @@ DOC_FILES = [
     REPO_ROOT / "scripts" / "SensorList" / "README.md",
     REPO_ROOT / "scripts" / "ethos_events" / "README.md",
     REPO_ROOT / "CONTRIBUTING.md",
+    REPO_ROOT / ".github" / "PULL_REQUEST_TEMPLATE.md",
 ]
 
 MANUAL_PATTERNS = (

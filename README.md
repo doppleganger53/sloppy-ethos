@@ -22,6 +22,11 @@ Ethos Lua widget workspace. Current active project: `SensorList`.
 - Packaging flow produces Ethos-installable ZIP archives.
 - Manual list scrolling is implemented via wheel/button events.
 
+## Visual Overview
+
+Visual onboarding media is intentionally placeholder-only for now. A screenshot
+or GIF walkthrough will be added in a follow-up docs update.
+
 ## Quick Start
 
 - Build or deploy from repo root:
@@ -59,6 +64,7 @@ python tools/build.py --help
 - `deslopification/prompts/SensorList.md`: original implementation prompt
 - `docs/`: development notes and handoff documents
 - `docs/REPOSITORY_LAYOUT.md`: reference for `tools/`, `tests/`, `deslopification/`, and root artifacts
+- [docs/SensorList/SENSORLIST_ARCHITECTURE.md](docs/SensorList/SENSORLIST_ARCHITECTURE.md): SensorList lifecycle/state flow reference
 
 ## Development
 

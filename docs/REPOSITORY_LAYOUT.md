@@ -37,6 +37,7 @@ This document explains the purpose of the top-level folders and key root files i
 
 - Contributor/developer-facing documentation.
 - Primary guide: `docs/DEVELOPMENT.md`.
+- SensorList architecture reference: `docs/SensorList/SENSORLIST_ARCHITECTURE.md`.
 - This file (`docs/REPOSITORY_LAYOUT.md`) documents repository structure and root artifacts.
 
 ### `deslopification/`
