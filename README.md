@@ -22,6 +22,11 @@ Ethos Lua widget workspace. Current active project: `SensorList`.
 - Packaging flow produces Ethos-installable ZIP archives.
 - Manual list scrolling is implemented via wheel/button events.
 
+## Visual Overview
+
+Visual onboarding media is intentionally placeholder-only for now. A screenshot
+or GIF walkthrough will be added in a follow-up docs update.
+
 ## Quick Start
 
 - Build or deploy from repo root:
@@ -30,10 +35,13 @@ Ethos Lua widget workspace. Current active project: `SensorList`.
 python tools/build.py --project SensorList --dist
 python tools/build.py --project SensorList --deploy
 python tools/build.py --project ethos_events --deploy
+python tools/build.py --project SensorList --clean --sim-radio X20RS
+python tools/build.py --help
 ```
 
 - Install the dist ZIP inside Ethos Suite for radio deployment.
-- Configure `tools/deploy.config.json` (copy the example) or set `ETHOS_SIM_PATH` before running `--deploy`.
+- Configure `tools/deploy.config.json` with `ETHOS_SIM_PATHS` entries before running `--deploy`/`--clean`.
+- Mark exactly one `ETHOS_SIM_PATHS` entry as `"default": true` for deploy/clean without `--sim-radio`.
 - Package version is read from `VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
 
 ### 30-Second First Run
@@ -56,6 +64,7 @@ python tools/build.py --project ethos_events --deploy
 - `deslopification/prompts/SensorList.md`: original implementation prompt
 - `docs/`: development notes and handoff documents
 - `docs/REPOSITORY_LAYOUT.md`: reference for `tools/`, `tests/`, `deslopification/`, and root artifacts
+- [docs/SensorList/SENSORLIST_ARCHITECTURE.md](docs/SensorList/SENSORLIST_ARCHITECTURE.md): SensorList lifecycle/state flow reference
 
 ## Development
 
@@ -95,7 +104,7 @@ luac -p scripts/SensorList/main.lua
 - `Required command 'luac' not found on PATH.`:
   install Lua tooling and verify `luac` resolves in your shell.
 - `Simulator path not configured.`:
-  set `ETHOS_SIM_PATH` or create `tools/deploy.config.json` from `tools/deploy.config.example.json`.
+  configure `ETHOS_SIM_PATHS` in `tools/deploy.config.json` and set one default entry.
 - Deploy fails with permission denied:
   close Ethos Suite, then retry deployment from a shell with write access.
 - Stale simulator behavior after script changes:

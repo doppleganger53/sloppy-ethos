@@ -13,6 +13,9 @@ from tests.test_docs_commands import DOC_FILES, MANUAL_PATTERNS, discover_comman
 
 README_PATH = REPO_ROOT / "README.md"
 DEVELOPMENT_PATH = REPO_ROOT / "docs" / "DEVELOPMENT.md"
+CONTRIBUTING_PATH = REPO_ROOT / "CONTRIBUTING.md"
+CODEOWNERS_PATH = REPO_ROOT / ".github" / "CODEOWNERS"
+ARCHITECTURE_PATH = REPO_ROOT / "docs" / "SensorList" / "SENSORLIST_ARCHITECTURE.md"
 REQUIRED_EXTERNAL_LINKS = (
     ("Visual Studio Code", "https://code.visualstudio.com/"),
     ("OpenAI Codex", "https://openai.com/codex/"),
@@ -114,6 +117,23 @@ def test_version_file_exists_and_nonempty():
     assert version_text, "VERSION file must contain a non-empty version string."
 
 
+def test_codeowners_exists():
+    assert CODEOWNERS_PATH.exists(), "Expected .github/CODEOWNERS to exist."
+
+
+def test_readme_has_visual_overview_section():
+    assert "## Visual Overview" in _read(README_PATH)
+
+
+def test_readme_links_sensorlist_architecture_doc():
+    assert "(docs/SensorList/SENSORLIST_ARCHITECTURE.md)" in _read(README_PATH)
+    assert ARCHITECTURE_PATH.exists()
+
+
+def test_contributing_has_good_first_issue_guidance():
+    assert "good first issue" in _read(CONTRIBUTING_PATH).lower()
+
+
 def test_vscode_pytest_enabled_in_repo_settings():
     settings = json.loads((REPO_ROOT / ".vscode" / "settings.json").read_text(encoding="utf-8"))
     assert settings.get("python.testing.pytestEnabled") is True
@@ -147,6 +167,7 @@ def test_environment_dependent_doc_commands_are_manual():
         return (
             "--dist" in command
             or "--deploy" in command
+            or "--clean" in command
             or command.startswith("python -m pytest")
             or command.startswith("powershell ")
             or command == "python -m pip install -r requirements/dev.txt"

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 import argparse
 import json
-import os
 import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 from typing import Optional
+
+HELP_FILE = Path(__file__).resolve().parent / "build_help.txt"
 
 
 def load_config(path: Path):
@@ -19,14 +20,59 @@ def load_config(path: Path):
         sys.exit(f"Failed to parse config at {path}: {exc}")
 
 
-def resolve_simulator_path(config_path: Path, override_env: Optional[str]):
-    if override_env:
-        return Path(override_env)
+def _normalize_model_paths(raw_model_paths, config_path: Path):
+    if raw_model_paths is None:
+        sys.exit(f"Simulator path list 'ETHOS_SIM_PATHS' not found in config: {config_path}")
+    if not isinstance(raw_model_paths, list):
+        sys.exit(f"ETHOS_SIM_PATHS must be a JSON array in config: {config_path}")
+
+    normalized = {}
+    default_model: Optional[str] = None
+    for entry in raw_model_paths:
+        if not isinstance(entry, dict):
+            sys.exit(
+                f"Each ETHOS_SIM_PATHS entry must be an object with 'radio' and 'path' keys in {config_path}"
+            )
+        model = entry.get("radio")
+        path_value = entry.get("path")
+        if not model or not path_value:
+            sys.exit(
+                f"Each ETHOS_SIM_PATHS entry must include non-empty 'radio' and 'path' in {config_path}"
+            )
+        model_key = str(model)
+        if model_key in normalized:
+            sys.exit(f"Duplicate simulator radio '{model_key}' in ETHOS_SIM_PATHS at {config_path}")
+        normalized[model_key] = str(path_value)
+
+        if "default" in entry and not isinstance(entry.get("default"), bool):
+            sys.exit(f"ETHOS_SIM_PATHS entry 'default' must be true/false in {config_path}")
+        if entry.get("default") is True:
+            if default_model is not None:
+                sys.exit(f"Only one ETHOS_SIM_PATHS entry may set default=true in {config_path}")
+            default_model = model_key
+
+    return normalized, default_model
+
+
+def resolve_simulator_path(config_path: Path, sim_radio: Optional[str] = None):
     config = load_config(config_path)
-    path_value = config.get("ETHOS_SIM_PATH")
-    if not path_value:
-        return None
-    return Path(path_value)
+    model_paths, default_model = _normalize_model_paths(config.get("ETHOS_SIM_PATHS"), config_path)
+    if sim_radio:
+        model_path = model_paths.get(sim_radio)
+        if not model_path:
+            available = ", ".join(sorted(str(key) for key in model_paths.keys())) or "(none configured)"
+            sys.exit(
+                f"Simulator path for radio model '{sim_radio}' is not configured in {config_path}. "
+                f"Configured models: {available}"
+            )
+        return Path(str(model_path))
+
+    if not default_model:
+        sys.exit(
+            f"No default simulator path configured in ETHOS_SIM_PATHS at {config_path}. "
+            "Set one entry with \"default\": true."
+        )
+    return Path(str(model_paths[default_model]))
 
 
 def ensure_luac_available():
@@ -153,12 +199,35 @@ def deploy_to_simulator(project_dir: Path, project_name: str, sim_path: Path):
     print(f"Deployed {project_name} -> {target}")
 
 
+def clean_from_simulator(project_name: str, sim_path: Path):
+    if not sim_path.exists():
+        sys.exit(f"Simulator path '{sim_path}' does not exist.")
+    target = sim_path / "scripts" / project_name
+    if not target.exists():
+        print(f"Clean skip: simulator target not found: {target}")
+        return
+    try:
+        shutil.rmtree(target)
+    except OSError as exc:
+        sys.exit(f"Failed to clean simulator target '{target}': {exc}")
+    print(f"Cleaned simulator target: {target}")
+
+
+def print_help_text():
+    if not HELP_FILE.exists():
+        sys.exit(f"Help file not found: {HELP_FILE}")
+    print(HELP_FILE.read_text(encoding="utf-8"))
+
+
 def parse_args():
-    parser = argparse.ArgumentParser(description="Build or deploy Ethos widget packages.")
+    parser = argparse.ArgumentParser(description="Build or deploy Ethos widget packages.", add_help=False)
+    parser.add_argument("--help", action="store_true", help="Print build command reference.")
     parser.add_argument("--project", "-p", default="SensorList", help="Name of the widget project.")
     parser.add_argument("--dist", action="store_true", help="Produce an Ethos install ZIP in dist/.")
     parser.add_argument("--deploy", action="store_true", help="Copy the widget folder into the simulator scripts directory.")
-    parser.add_argument("--config", "-c", help="Path to JSON config containing ETHOS_SIM_PATH.")
+    parser.add_argument("--clean", action="store_true", help="Remove deployed widget folder from the simulator scripts directory.")
+    parser.add_argument("--sim-radio", help="Radio model key to select simulator path from ETHOS_SIM_PATHS.")
+    parser.add_argument("--config", "-c", help="Path to JSON config containing ETHOS_SIM_PATHS.")
     parser.add_argument("--no-zip", action="store_true", help="Skip ZIP even when --dist is provided.")
     parser.add_argument("--version", help="Override package version (default: read from VERSION file at repo root).")
     parser.add_argument(
@@ -170,24 +239,34 @@ def parse_args():
 
 def main():
     args = parse_args()
+    if args.help:
+        print_help_text()
+        return
+
     repo_root = Path(__file__).resolve().parent.parent
     project_dir = repo_root / "scripts" / args.project
-    version = resolve_version(repo_root, args.version)
-    luac_exec = ensure_luac_available()
-    run_lua_checks(project_dir, luac_exec)
+    if args.dist or args.deploy:
+        luac_exec = ensure_luac_available()
+        run_lua_checks(project_dir, luac_exec)
 
-    if not args.dist and not args.deploy:
-        sys.exit("Nothing to do: specify --dist or --deploy.")
+    if not args.dist and not args.deploy and not args.clean:
+        sys.exit("Nothing to do: specify --dist, --deploy, or --clean.")
 
     if args.dist and not args.no_zip:
+        version = resolve_version(repo_root, args.version)
         dist_dir = Path(args.out_dir) if args.out_dir else (repo_root / "dist")
         build_zip(project_dir, args.project, version, dist_dir, repo_root)
 
-    if args.deploy:
+    if args.deploy or args.clean:
         config_path = Path(args.config) if args.config else (repo_root / "tools" / "deploy.config.json")
-        sim_path = resolve_simulator_path(config_path, os.environ.get("ETHOS_SIM_PATH"))
+        sim_path = resolve_simulator_path(config_path, args.sim_radio)
         if not sim_path:
-            sys.exit("Simulator path not configured. Set ETHOS_SIM_PATH or create tools/deploy.config.json.")
+            sys.exit("Simulator path not configured. Configure ETHOS_SIM_PATHS in tools/deploy.config.json.")
+        if args.sim_radio and not sim_path.exists():
+            sys.exit(f"Simulator path for radio model '{args.sim_radio}' does not exist: {sim_path}")
+        if args.clean:
+            clean_from_simulator(args.project, sim_path)
+    if args.deploy:
         deploy_to_simulator(project_dir, args.project, sim_path)
 
 

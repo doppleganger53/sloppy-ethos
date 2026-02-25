@@ -1,3 +1,13 @@
 {
-  "ETHOS_SIM_PATH": "C:\\\\Users\\\\your-user\\\\AppData\\\\Roaming\\\\Ethos Suite\\\\.simulator\\\\1.6.4\\\\persist\\\\X20RS"
+  "ETHOS_SIM_PATHS": [
+    {
+      "radio": "X20RS",
+      "path": "C:\\\\Users\\\\your-user\\\\AppData\\\\Roaming\\\\Ethos Suite\\\\.simulator\\\\1.6.4\\\\persist\\\\X20RS",
+      "default": true
+    },
+    {
+      "radio": "X20S",
+      "path": "C:\\\\Users\\\\your-user\\\\AppData\\\\Roaming\\\\Ethos Suite\\\\.simulator\\\\1.6.4\\\\persist\\\\X20S"
+    }
+  ]
 }
