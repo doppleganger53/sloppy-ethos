@@ -2,3 +2,5 @@
 
 - [x] Test Sensorlist v0.1.0 on physical radio & promote to full release if successful
 - [ ] Enhance build scripts with optional clean step - remove deployed scripts from simulator directory
+- [ ] Add project goal to readme - help those unfamiliar with lua to create useful scripts for themselves and others
+- [ ] Arduino FBus integration for accelerometer / other non-FrSky sensors
