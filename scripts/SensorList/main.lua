@@ -7,11 +7,21 @@ local DEFAULT_WINDOW_WIDTH = 480
 local DEFAULT_WINDOW_HEIGHT = 272
 local SCROLL_ROW_HEIGHT = 16
 local HEADER_HEIGHT = 18
+local HEADER_TO_ROWS_GAP = 8
 local DEBUG_TRACE_ENABLED = false
 local MAX_SCROLL_STEPS_PER_EVENT = 4
 local MAX_TOUCH_DELTA_PER_EVENT = 128
 local LONG_PRESS_SECONDS = 0.8
 local LONG_PRESS_MOVE_TOLERANCE = 4
+local HEADER_TAP_MOVE_TOLERANCE = 12
+local TOUCH_CONTENT_Y_OFFSET = 18
+local HEADER_HITBOX_X_PADDING = 12
+local HEADER_HITBOX_TOP_PADDING = 8
+local HEADER_HITBOX_BOTTOM_PADDING = 10
+
+local SORT_KEY_NAME = "name"
+local SORT_KEY_PHYSICAL = "physical"
+local SORT_KEY_APPLICATION = "application"
 
 local COLOR_PALETTE = {
   { 255, 235, 59 },
@@ -87,11 +97,25 @@ end
 
 local function calculateVisibleRows()
   local _, h = getWindowSizeSafe()
-  local rows = math.floor((h - HEADER_HEIGHT) / SCROLL_ROW_HEIGHT)
+  local rows = math.floor((h - HEADER_HEIGHT - HEADER_TO_ROWS_GAP) / SCROLL_ROW_HEIGHT)
   if rows < 1 then
     return 1
   end
   return rows
+end
+
+local function getColumnLayout(windowWidth)
+  local width = type(windowWidth) == "number" and windowWidth or DEFAULT_WINDOW_WIDTH
+  if width < 1 then
+    width = 1
+  end
+  local colPhysX = math.floor(width * 0.56)
+  local colAppX = math.floor(width * 0.76)
+  return {
+    { key = SORT_KEY_NAME, title = "Name", x = 0 },
+    { key = SORT_KEY_PHYSICAL, title = "Physical ID", x = colPhysX },
+    { key = SORT_KEY_APPLICATION, title = "Application ID", x = colAppX },
+  }
 end
 
 local function shortenText(text, maxChars)
@@ -243,6 +267,78 @@ local function readCandidate(sensor, keys)
   return nil
 end
 
+local function compareDefaultSensors(a, b)
+  if a.physical ~= b.physical then
+    return a.physical < b.physical
+  end
+  if a.application ~= b.application then
+    return a.application < b.application
+  end
+  return a.name < b.name
+end
+
+local function compareSortedByKey(a, b, sortKey, descending)
+  if sortKey == SORT_KEY_NAME then
+    if a.name ~= b.name then
+      if descending then
+        return a.name > b.name
+      end
+      return a.name < b.name
+    end
+    return compareDefaultSensors(a, b)
+  end
+  if sortKey == SORT_KEY_PHYSICAL then
+    if a.physical ~= b.physical then
+      if descending then
+        return a.physical > b.physical
+      end
+      return a.physical < b.physical
+    end
+    if a.application ~= b.application then
+      return a.application < b.application
+    end
+    return a.name < b.name
+  end
+  if sortKey == SORT_KEY_APPLICATION then
+    if a.application ~= b.application then
+      if descending then
+        return a.application > b.application
+      end
+      return a.application < b.application
+    end
+    if a.physical ~= b.physical then
+      return a.physical < b.physical
+    end
+    return a.name < b.name
+  end
+  return compareDefaultSensors(a, b)
+end
+
+local function sortSensorsInPlace(sensors, sortKey, descending)
+  if type(sensors) ~= "table" or #sensors < 2 then
+    return
+  end
+  table.sort(sensors, function(a, b)
+    return compareSortedByKey(a, b, sortKey, descending)
+  end)
+end
+
+local function cloneSensors(sensors)
+  local out = {}
+  for idx, sensor in ipairs(sensors) do
+    out[idx] = sensor
+  end
+  return out
+end
+
+local function buildDisplaySensors(widget, normalized)
+  local display = cloneSensors(normalized)
+  if type(widget) == "table" and widget.sortKey then
+    sortSensorsInPlace(display, widget.sortKey, widget.sortDescending and true or false)
+  end
+  return display
+end
+
 local function normalizeSensors(rawSensors)
   local normalized = {}
   for idx, sensor in ipairs(rawSensors) do
@@ -260,15 +356,7 @@ local function normalizeSensors(rawSensors)
     }
   end
 
-  table.sort(normalized, function(a, b)
-    if a.physical ~= b.physical then
-      return a.physical < b.physical
-    end
-    if a.application ~= b.application then
-      return a.application < b.application
-    end
-    return a.name < b.name
-  end)
+  sortSensorsInPlace(normalized, nil, false)
   return normalized
 end
 
@@ -335,8 +423,8 @@ local function refreshSensors(widget, allowDeepScan)
   end
 
   if signatureChanged then
-    widget.sensors = normalized
-    widget.groups = buildPhysicalGroups(widget.sensors)
+    widget.sensors = buildDisplaySensors(widget, normalized)
+    widget.groups = buildPhysicalGroups(normalized)
     widget.colorCache = {}
     widget.lastSignature = signature
     widget.needsInvalidate = true
@@ -393,6 +481,149 @@ local function drawText(x, y, text, font, color)
   lcd.drawText(x, y, text)
 end
 
+local function headerTitle(widget, column)
+  if type(column) ~= "table" then
+    return ""
+  end
+  if type(widget) ~= "table" or widget.sortKey ~= column.key then
+    return column.title
+  end
+  local arrow = widget.sortDescending and " v" or " ^"
+  return column.title .. arrow
+end
+
+local function headerSortKeyAtPosition(x, y)
+  if type(x) ~= "number" or type(y) ~= "number" then
+    return nil
+  end
+  local contentY = y - TOUCH_CONTENT_Y_OFFSET
+  if contentY < -HEADER_HITBOX_TOP_PADDING or contentY >= (HEADER_HEIGHT + HEADER_HITBOX_BOTTOM_PADDING) then
+    return nil
+  end
+
+  local w, _ = getWindowSizeSafe()
+  if x < 0 or x >= w then
+    return nil
+  end
+  local columns = getColumnLayout(w)
+
+  local hitboxes = {
+    {
+      key = columns[1].key,
+      left = math.max(0, columns[1].x - HEADER_HITBOX_X_PADDING),
+      right = math.min(w, columns[2].x + HEADER_HITBOX_X_PADDING),
+      center = (columns[1].x + columns[2].x) / 2,
+    },
+    {
+      key = columns[2].key,
+      left = math.max(0, columns[2].x - HEADER_HITBOX_X_PADDING),
+      right = math.min(w, columns[3].x + HEADER_HITBOX_X_PADDING),
+      center = (columns[2].x + columns[3].x) / 2,
+    },
+    {
+      key = columns[3].key,
+      left = math.max(0, columns[3].x - HEADER_HITBOX_X_PADDING),
+      right = w,
+      center = (columns[3].x + w) / 2,
+    },
+  }
+
+  local bestKey = nil
+  local bestDistance = nil
+  for _, hitbox in ipairs(hitboxes) do
+    if x >= hitbox.left and x < hitbox.right then
+      local distance = math.abs(x - hitbox.center)
+      if bestDistance == nil or distance < bestDistance then
+        bestDistance = distance
+        bestKey = hitbox.key
+      end
+    end
+  end
+  return bestKey
+end
+
+local function clearHeaderTouch(widget)
+  widget.headerTouchKey = nil
+  widget.headerTouchStartX = nil
+  widget.headerTouchStartY = nil
+end
+
+local function applyHeaderSort(widget, sortKey)
+  if type(widget) ~= "table" then
+    return false
+  end
+  if sortKey ~= SORT_KEY_NAME and sortKey ~= SORT_KEY_PHYSICAL and sortKey ~= SORT_KEY_APPLICATION then
+    return false
+  end
+  if widget.sortKey == sortKey then
+    widget.sortDescending = not widget.sortDescending
+  else
+    widget.sortKey = sortKey
+    widget.sortDescending = false
+  end
+  sortSensorsInPlace(widget.sensors, widget.sortKey, widget.sortDescending and true or false)
+  widget.needsInvalidate = true
+  return true
+end
+
+local function handleHeaderTap(widget, phase, x, y)
+  if type(widget) ~= "table" then
+    return false
+  end
+
+  if phase == "start" then
+    local sortKey = headerSortKeyAtPosition(x, y)
+    if not sortKey then
+      clearHeaderTouch(widget)
+      return false
+    end
+    widget.headerTouchKey = sortKey
+    widget.headerTouchStartX = x
+    widget.headerTouchStartY = y
+    return true
+  end
+
+  if not widget.headerTouchKey then
+    return false
+  end
+
+  if phase == "move" then
+    if type(x) ~= "number" or type(y) ~= "number" then
+      clearHeaderTouch(widget)
+      return true
+    end
+    local movedX = math.abs(x - (widget.headerTouchStartX or x))
+    local movedY = math.abs(y - (widget.headerTouchStartY or y))
+    local contentY = y - TOUCH_CONTENT_Y_OFFSET
+    if
+      movedX > HEADER_TAP_MOVE_TOLERANCE
+      or movedY > HEADER_TAP_MOVE_TOLERANCE
+      or contentY < -HEADER_HITBOX_TOP_PADDING
+      or contentY >= (HEADER_HEIGHT + HEADER_HITBOX_BOTTOM_PADDING)
+    then
+      clearHeaderTouch(widget)
+    end
+    return true
+  end
+
+  if phase == "end" then
+    local sortKey = widget.headerTouchKey
+    local movedX = type(x) == "number" and math.abs(x - (widget.headerTouchStartX or x)) or (HEADER_TAP_MOVE_TOLERANCE + 1)
+    local movedY = type(y) == "number" and math.abs(y - (widget.headerTouchStartY or y)) or (HEADER_TAP_MOVE_TOLERANCE + 1)
+    local contentY = type(y) == "number" and (y - TOUCH_CONTENT_Y_OFFSET) or nil
+    local isHeaderEnd = type(contentY) == "number"
+      and contentY >= -HEADER_HITBOX_TOP_PADDING
+      and contentY < (HEADER_HEIGHT + HEADER_HITBOX_BOTTOM_PADDING)
+    clearHeaderTouch(widget)
+    if movedX <= HEADER_TAP_MOVE_TOLERANCE and movedY <= HEADER_TAP_MOVE_TOLERANCE and isHeaderEnd then
+      return applyHeaderSort(widget, sortKey)
+    end
+    return true
+  end
+
+  return false
+end
+
 local function getVisibleRows()
   return calculateVisibleRows()
 end
@@ -415,6 +646,7 @@ local function drawSensorRows(widget)
   local _, h = getWindowSizeSafe()
   local rowHeight = SCROLL_ROW_HEIGHT
   local headerHeight = HEADER_HEIGHT
+  local columns = getColumnLayout(w)
 
   -- Paint our own background so Ethos focus highlight does not bleed through.
   lcd.color(COLOR_BLACK or 0)
@@ -422,15 +654,12 @@ local function drawSensorRows(widget)
     lcd.drawFilledRectangle(0, 0, w, h)
   end
 
-  local colNameX = 0
-  local colPhysX = math.floor(w * 0.56)
-  local colAppX = math.floor(w * 0.76)
-  local rowsY = headerHeight
+  local rowsY = headerHeight + HEADER_TO_ROWS_GAP
   local visibleRows = getVisibleRows()
 
-  drawText(colNameX, 0, "Name", FONT_HEADER)
-  drawText(colPhysX, 0, "Physical ID", FONT_HEADER)
-  drawText(colAppX, 0, "Application ID", FONT_HEADER)
+  for _, column in ipairs(columns) do
+    drawText(column.x, 0, headerTitle(widget, column), FONT_HEADER)
+  end
 
   if #widget.sensors == 0 then
     drawText(0, 20, "No sensors configured.", FONT_BODY)
@@ -463,9 +692,9 @@ local function drawSensorRows(widget)
     end
     local y = rowsY + row * rowHeight
     local color = groupColor(sensor.physical, widget.groups, widget.colorCache)
-    drawText(colNameX, y, shortenText(sensor.name, 20), FONT_BODY, color)
-    drawText(colPhysX, y, sensor.physicalText, FONT_BODY, color)
-    drawText(colAppX, y, sensor.applicationText, FONT_BODY, color)
+    drawText(columns[1].x, y, shortenText(sensor.name, 20), FONT_BODY, color)
+    drawText(columns[2].x, y, sensor.physicalText, FONT_BODY, color)
+    drawText(columns[3].x, y, sensor.applicationText, FONT_BODY, color)
   end
 
   return visibleRows
@@ -491,6 +720,11 @@ local function create()
     touchStartY = nil,
     touchStartClock = nil,
     touchHoldTriggered = false,
+    headerTouchKey = nil,
+    headerTouchStartX = nil,
+    headerTouchStartY = nil,
+    sortKey = nil,
+    sortDescending = false,
     debugRefreshCount = 0,
     debugDeepScanCount = 0,
     debugCachedScanCount = 0,
@@ -715,6 +949,11 @@ local function event(widget, category, value, x, y)
   local phase = resolveTouchPhase(category, value)
   if not phase then
     return false
+  end
+
+  local headerConsumed = handleHeaderTap(widget, phase, x, y)
+  if headerConsumed then
+    return true
   end
 
   return handleTouchScroll(widget, phase, x, y, category, value)

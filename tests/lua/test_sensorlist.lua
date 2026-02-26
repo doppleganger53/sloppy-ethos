@@ -139,6 +139,96 @@ local consumedEnd = test.event(eventWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 12
 assert_true(consumedEnd, "touch end should be consumed")
 assert_true(eventWidget.touchActive == false, "touch session should deactivate")
 
+local sortableWidget = {
+  sensors = test.normalizeSensors({
+    { name = "Zulu", physicalId = "02", applicationId = "1000" },
+    { name = "Alpha", physicalId = "03", applicationId = "0001" },
+    { name = "Bravo", physicalId = "01", applicationId = "2000" },
+  }),
+  groups = {},
+  colorCache = {},
+  scrollOffset = 0,
+  touchActive = false,
+  touchLastY = nil,
+  touchAccumY = 0,
+  needsInvalidate = false,
+}
+
+local nameHeaderStart = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 10, 22)
+local nameHeaderEnd = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 10, 22)
+assert_true(nameHeaderStart and nameHeaderEnd, "name header tap should be consumed")
+assert_equal(sortableWidget.sortKey, "name", "name sort key selected")
+assert_true(sortableWidget.sortDescending == false, "name sort defaults to ascending")
+assert_equal(sortableWidget.sensors[1].name, "Alpha", "name sort ascending first row")
+assert_equal(sortableWidget.sensors[3].name, "Zulu", "name sort ascending last row")
+
+local nameHeaderStart2 = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 10, 22)
+local nameHeaderEnd2 = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 10, 22)
+assert_true(nameHeaderStart2 and nameHeaderEnd2, "second name header tap should be consumed")
+assert_true(sortableWidget.sortDescending == true, "second tap toggles to descending")
+assert_equal(sortableWidget.sensors[1].name, "Zulu", "name sort descending first row")
+assert_equal(sortableWidget.sensors[3].name, "Alpha", "name sort descending last row")
+
+local physicalHeaderStart = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 300, 22)
+local physicalHeaderEnd = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 300, 22)
+assert_true(physicalHeaderStart and physicalHeaderEnd, "physical header tap should be consumed")
+assert_equal(sortableWidget.sortKey, "physical", "physical sort key selected")
+assert_true(sortableWidget.sortDescending == false, "new key resets to ascending")
+assert_equal(sortableWidget.sensors[1].physicalText, "01", "physical sort ascending first row")
+assert_equal(sortableWidget.sensors[3].physicalText, "03", "physical sort ascending last row")
+
+local applicationHeaderStart = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 390, 22)
+local applicationHeaderEnd = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 390, 22)
+assert_true(applicationHeaderStart and applicationHeaderEnd, "application header tap should be consumed")
+assert_equal(sortableWidget.sortKey, "application", "application sort key selected")
+assert_true(sortableWidget.sortDescending == false, "application sort defaults to ascending")
+assert_equal(sortableWidget.sensors[1].applicationText, "0001", "application sort ascending first row")
+assert_equal(sortableWidget.sensors[3].applicationText, "07D0", "application sort ascending last row")
+
+local expandedHitboxWidget = {
+  sensors = test.normalizeSensors({
+    { name = "Zulu", physicalId = "02", applicationId = "1000" },
+    { name = "Alpha", physicalId = "03", applicationId = "0001" },
+    { name = "Bravo", physicalId = "01", applicationId = "2000" },
+  }),
+  groups = {},
+  colorCache = {},
+  scrollOffset = 0,
+  touchActive = false,
+  touchLastY = nil,
+  touchAccumY = 0,
+  needsInvalidate = false,
+}
+
+local physicalExpandedStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 260, 12)
+local physicalExpandedEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 260, 12)
+assert_true(physicalExpandedStart and physicalExpandedEnd, "expanded top-left physical zone should be consumed")
+assert_equal(expandedHitboxWidget.sortKey, "physical", "expanded top-left physical zone should sort physical column")
+
+local applicationExpandedStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 390, 45)
+local applicationExpandedEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 390, 45)
+assert_true(applicationExpandedStart and applicationExpandedEnd, "expanded bottom application zone should be consumed")
+assert_equal(expandedHitboxWidget.sortKey, "application", "expanded bottom application zone should sort application column")
+
+local canceledHeaderWidget = {
+  sensors = test.normalizeSensors({
+    { name = "Zulu", physicalId = "02", applicationId = "1000" },
+    { name = "Alpha", physicalId = "03", applicationId = "0001" },
+  }),
+  groups = {},
+  colorCache = {},
+  scrollOffset = 0,
+  touchActive = false,
+  touchLastY = nil,
+  touchAccumY = 0,
+  needsInvalidate = false,
+}
+local canceledHeaderStart = test.event(canceledHeaderWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 10, 22)
+local canceledHeaderMove = test.event(canceledHeaderWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_MOVE, 10, 48)
+local canceledHeaderEnd = test.event(canceledHeaderWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 10, 48)
+assert_true(canceledHeaderStart and canceledHeaderMove and canceledHeaderEnd, "header drag path should be consumed")
+assert_equal(canceledHeaderWidget.sortKey, nil, "header drag should not trigger sort toggle")
+
 _G.system = {
   getSensors = function()
     return {

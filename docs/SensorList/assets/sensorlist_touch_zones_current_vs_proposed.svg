@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500">
+  <defs>
+    <style>
+      .title { font: 700 24px 'Segoe UI', Arial, sans-serif; fill: #f5f5f5; }
+      .subtitle { font: 600 16px 'Segoe UI', Arial, sans-serif; fill: #d0d0d0; }
+      .label { font: 600 14px 'Segoe UI', Arial, sans-serif; fill: #f0f0f0; }
+      .small { font: 500 13px 'Segoe UI', Arial, sans-serif; fill: #dcdcdc; }
+      .tiny { font: 500 12px 'Consolas', monospace; fill: #c9c9c9; }
+      .hdr { font: 700 38px 'Segoe UI', Arial, sans-serif; fill: #ffffff; }
+      .panel { fill: #0f1115; stroke: #2f3542; stroke-width: 2; rx: 12; }
+      .headerband { fill: #242832; }
+      .rows { fill: #090b10; }
+      .current { fill: rgba(255, 72, 72, 0.35); stroke: #ff4848; stroke-width: 2; }
+      .proposed { fill: rgba(72, 220, 127, 0.28); stroke: #48dc7f; stroke-width: 2; }
+      .guide { stroke: #9aa4b2; stroke-width: 1; stroke-dasharray: 5 4; }
+      .legendCurrent { fill: #ff6f6f; }
+      .legendProposed { fill: #74e39a; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="500" fill="#0a0c10"/>
+  <text x="28" y="42" class="title">SensorList Header Sort Touch Zones: Current vs Proposed Expansion</text>
+  <text x="28" y="69" class="subtitle">Reference width: 480px. Current code zones in red, proposed expanded zones in green.</text>
+
+  <!-- Left panel: current -->
+  <rect x="28" y="92" width="560" height="360" class="panel"/>
+  <text x="48" y="122" class="subtitle">As-Is (Current Implementation)</text>
+  <rect x="48" y="146" width="520" height="240" class="rows"/>
+  <rect x="48" y="164" width="520" height="18" class="headerband"/>
+
+  <!-- Column guides -->
+  <line x1="316" y1="146" x2="316" y2="386" class="guide"/>
+  <line x1="412" y1="146" x2="412" y2="386" class="guide"/>
+
+  <!-- Header text -->
+  <text x="54" y="180" class="hdr" font-size="16">Name</text>
+  <text x="324" y="180" class="hdr" font-size="16">Physical ID</text>
+  <text x="420" y="180" class="hdr" font-size="16">Application ID</text>
+
+  <!-- Current hitboxes -->
+  <rect x="48" y="164" width="268" height="18" class="current"/>
+  <rect x="316" y="164" width="96" height="18" class="current"/>
+  <rect x="412" y="164" width="116" height="18" class="current"/>
+
+  <text x="54" y="414" class="tiny">Current hitbox Y: [18, 36)  (absolute touch Y [18, 36))</text>
+  <text x="54" y="434" class="tiny">Current movement tolerance: +/-8 px in X and Y before cancel</text>
+
+  <!-- Right panel: proposed -->
+  <rect x="612" y="92" width="560" height="360" class="panel"/>
+  <text x="632" y="122" class="subtitle">To-Be (Proposed Expanded Hitboxes)</text>
+  <rect x="632" y="146" width="520" height="240" class="rows"/>
+  <rect x="632" y="164" width="520" height="18" class="headerband"/>
+
+  <!-- Column guides -->
+  <line x1="900" y1="146" x2="900" y2="386" class="guide"/>
+  <line x1="996" y1="146" x2="996" y2="386" class="guide"/>
+
+  <!-- Header text -->
+  <text x="638" y="180" class="hdr" font-size="16">Name</text>
+  <text x="908" y="180" class="hdr" font-size="16">Physical ID</text>
+  <text x="1004" y="180" class="hdr" font-size="16">Application ID</text>
+
+  <!-- Proposed hitboxes -->
+  <rect x="632" y="156" width="280" height="36" class="proposed"/>
+  <rect x="888" y="156" width="120" height="36" class="proposed"/>
+  <rect x="984" y="156" width="128" height="36" class="proposed"/>
+
+  <text x="638" y="414" class="tiny">Proposed expansion: X +/-12px, top +8px, bottom +10px</text>
+  <text x="638" y="434" class="tiny">Proposed movement tolerance (recommended): +/-12 px</text>
+
+  <!-- Legend -->
+  <circle cx="40" cy="474" r="8" class="legendCurrent"/>
+  <text x="54" y="479" class="small">Current touch zones</text>
+  <circle cx="230" cy="474" r="8" class="legendProposed"/>
+  <text x="244" y="479" class="small">Proposed expanded touch zones</text>
+</svg>
