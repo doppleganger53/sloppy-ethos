@@ -40,6 +40,11 @@
 - supports custom ZIP destination via `--out-dir`.
 - Write operations fail fast with clear errors when paths are missing or unwritable.
 
+## Tooling Decision Records
+
+- Issue #22 build tooling evaluation: [Issue #22 build.py to doit migration decision](decisions/ISSUE-022-doit-migration-evaluation.md).
+- Current decision state (2026-02-26): retain `tools/build.py` as the canonical build/deploy workflow.
+
 ## Simulator Tips
 
 - If stale behavior appears after script updates, remove cached `main.luac` and reinstall the widget.
