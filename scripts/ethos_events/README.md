@@ -21,3 +21,4 @@ python tools/build.py --project ethos_events --deploy
 ```
 
 The deployed tool appears in Ethos system tools as `Ethos Events`.
+Artifact version source: `scripts/ethos_events/VERSION`.

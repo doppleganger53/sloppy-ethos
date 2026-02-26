@@ -4,18 +4,27 @@ USAGE
   python tools/build.py [options]
 
 PRIMARY ACTIONS
-  --dist                 Build dist/{ProjectName}-{version}.zip.
+  --dist                 Build install ZIP(s) in dist/.
   --deploy               Deploy scripts/{ProjectName} to simulator scripts path.
-  --clean                Remove deployed scripts/{ProjectName} from simulator scripts path.
+  --clean                Remove deployed scripts/{ProjectName} from simulator scripts path and clear dist/ (or --out-dir) artifacts.
 
 COMMON OPTIONS
-  --project, -p NAME     Project folder under scripts/. Default: SensorList.
+  --project, -p NAME     Project folder under scripts/. Repeat for multi-project dist bundles.
   --config, -c PATH      Deploy config path. Default: tools/deploy.config.json.
   --sim-radio MODEL      Resolve simulator path from ETHOS_SIM_PATHS entry for MODEL.
   --out-dir PATH         ZIP output directory. Default: dist/.
-  --version VERSION      Override VERSION file value for packaging.
+  --version VERSION      Override script VERSION for single-project --dist only.
   --no-zip               Skip ZIP creation even when --dist is provided.
   --help                 Print this command reference and exit.
+
+ZIP NAMING
+  Single-project --dist:
+    dist/{ProjectName}-{version}.zip
+    where version comes from scripts/{ProjectName}/VERSION (or --version override)
+
+  Multi-project --dist (repeat --project):
+    dist/sloppy-ethos_scripts.zip
+    multi-script bundle ZIP name is intentionally unversioned
 
 SIMULATOR PATH RESOLUTION
   With --sim-radio:
@@ -36,6 +45,9 @@ CONFIG EXAMPLE
 WORKFLOW EXAMPLES
   Build install ZIP:
     python tools/build.py --project SensorList --dist
+
+  Build multi-script install ZIP bundle:
+    python tools/build.py --project SensorList --project ethos_events --dist
 
   Deploy to default simulator path:
     python tools/build.py --project SensorList --deploy
