@@ -1,0 +1,71 @@
+# Prompt: Implement Issue #30 (SensorList X20S Simulator Startup Bug)
+
+## Canonical Issue
+
+- URL: `https://github.com/doppleganger53/sloppy-ethos/issues/30`
+- Title: `[Bug] SensorList not functioning in X20S simulator`
+- Labels: `bug`
+- Snapshot state: open on `2026-02-26`
+- Attached screenshot evidence:
+  `https://github.com/user-attachments/assets/e79aed7e-da30-48b7-810d-c612e0fdf406`
+
+## Mission
+
+Reproduce and fix the X20S simulator startup failure that prevents SensorList
+from loading in widget selection/runtime, using a root-cause fix.
+
+## Required Context
+
+- `AGENTS.md`
+- `.github/ISSUE_TEMPLATE/bug_report.md`
+- `scripts/SensorList/main.lua`
+- `docs/SensorList/SENSORLIST_ARCHITECTURE.md`
+- `deslopification/memory/SensorList.md`
+- `tests/lua/test_sensorlist.lua`
+- `tests/test_sensorlist_widget.py`
+- `tools/deploy.config.example.json`
+- `tools/build.py`
+
+## Scope
+
+- In scope:
+  - Reproduce issue on X20S simulator path/environment.
+  - Identify exact crash/failure point.
+  - Implement minimal robust fix.
+  - Add regression coverage where feasible.
+- Out of scope:
+  - Broad behavior redesign.
+  - Compatibility shims without confirmed need.
+  - Unrelated feature additions.
+
+## Debug Strategy
+
+1. Reproduce with explicit simulator target:
+   - `python tools/build.py --project SensorList --deploy --sim-radio X20S`
+2. Capture exact runtime error text and call path.
+3. Compare runtime assumptions between X20RS and X20S (callbacks/constants/window).
+4. Patch root cause with defensive handling where needed.
+5. Remove temporary debug instrumentation after confirming fix.
+
+Temporary helper scripts/log files may be created only under:
+`deslopification/memory/temp/`.
+
+## Technical Constraints
+
+- Keep widget registration and callback lifecycle valid for Ethos.
+- Avoid startup crashes when optional APIs/constants are missing.
+- Preserve current SensorList behavior outside bug fix.
+
+## Validation (Required)
+
+- `luac -p scripts/SensorList/main.lua`
+- `python -m pytest tests/test_sensorlist_widget.py -q`
+- If touching broad logic: `python -m pytest -q`
+- Manual simulator check on X20S after deploy.
+
+## Done Criteria
+
+1. SensorList loads and runs in X20S simulator without startup error.
+2. Fix is root-cause based and minimally scoped.
+3. Regression risk is covered by tests and/or explicit manual checklist.
+4. Required validation passes and session notes capture evidence.
