@@ -20,7 +20,9 @@ The widget registers through `init()` and uses the standard Ethos callbacks:
 Each widget instance owns state in the `widget` table, including:
 
 - sensor and display data:
-  - `sensors`, `groups`, `colorCache`, `lastSignature`, `lastRawCount`, `lastDebug`
+  - `sensors` (including per-row `conflictSeverity` and `conflictMarker`),
+    `groups`, `colorCache`, `conflictColorCache`, `lastSignature`, `lastRawCount`,
+    `lastDebug`
 - source-discovery cache:
   - `sourceCategory`, `sourceMaxMember`
 - scroll/redraw state:
@@ -42,10 +44,12 @@ Each widget instance owns state in the `widget` table, including:
    - fallback to `system.getSource()` category/member scans
 2. Normalize records (`normalizeSensors`) and sort deterministically by:
    physical ID, application ID, then name.
-3. Build signature (`buildSignature`) and only update widget tables when the
+3. Annotate conflict severity (`annotateConflictSeverity`) so duplicate rows are
+   marked as high (`[!]`) or lower (`[~]`) risk.
+4. Build signature (`buildSignature`) and only update widget tables when the
    signature changes.
-4. Recompute conflict group mapping (`buildPhysicalGroups`) and reset color cache.
-5. Clamp `scrollOffset` against current visible row count.
+5. Recompute conflict group mapping (`buildPhysicalGroups`) and reset color cache.
+6. Clamp `scrollOffset` against current visible row count.
 
 `allowDeepScan` gates expensive category scans:
 
@@ -57,13 +61,15 @@ Each widget instance owns state in the `widget` table, including:
 The `event()` callback handles user-driven interactions:
 
 - Long press (`EVT_TOUCH_LONG` or equivalent category) triggers explicit full
-  sensor refresh.
+  sensor refresh and best-effort completion feedback (`playHaptic` fallback to
+  `playTone`).
 - Touch phases are resolved through `resolveTouchPhase()` to normalize Ethos
   event code variants across runtime versions.
 - `handleTouchScroll()` accumulates movement and applies row-based scrolling.
 - Scroll processing is protected by per-event caps to avoid extreme jumps.
 - Touch-end can trigger long-press refresh fallback when dedicated long-press
-  events are unavailable.
+  events are unavailable, with a hold-trigger guard preventing duplicate
+  refresh/feedback for the same long-press gesture.
 
 ## Behavioral Invariants
 
