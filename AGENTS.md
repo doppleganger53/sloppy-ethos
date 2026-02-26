@@ -63,6 +63,17 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 - Include runtime environment details for both Ethos and non-Ethos bug types.
 - Use stable screenshot links (GitHub issue uploads or `raw.githubusercontent.com`), not `blob` image URLs.
 
+## Branching Conventions
+
+- `main` is the only long-lived branch.
+- Create short-lived branches from `main` using:
+  - `feature/{issue-number}-{short-slug}` for enhancements
+  - `fix/{issue-number}-{short-slug}` for bugs
+  - `docs/{issue-number}-{short-slug}` for docs/process changes
+  - `chore/{issue-number}-{short-slug}` for tooling/maintenance changes
+- Use `release/v{VERSION}` for release-prep work, then delete it after merge/release.
+- Open PRs into `main` and include linked-closing keywords when applicable.
+
 ## Release And Versioning Guardrails
 
 - Root `VERSION` is the repository version source of truth.

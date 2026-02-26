@@ -6,7 +6,7 @@
 - Title: `[Enhancement] Evaluate migration from build.py to doit task runner`
 - Labels: `enhancement`
 - Snapshot state: open on `2026-02-26`
-- Target branch (default): `enhancements` (or as user-directed for current workflow)
+- Target branch (default): `main` (or as user-directed for current workflow)
 
 ## Mission
 

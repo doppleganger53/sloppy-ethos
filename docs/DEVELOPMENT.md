@@ -53,13 +53,67 @@
 - For any documentation updates, run docs contract checks: `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`.
 - Use the VS Code Testing view to run/discover tests and trigger coverage once dependencies are installed for the selected interpreter.
 
+## Main Branch Release And Versioning Policy
+
+This repository uses `main` as the only long-lived integration branch and aligns release/version behavior with [Semantic Versioning](https://semver.org/) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+### Branch Roles And Naming
+
+- `main` is the only long-lived branch.
+- All issue work uses short-lived branches created from the latest `main`.
+- Branch naming conventions:
+  - `feature/{issue-number}-{short-slug}` for enhancements.
+  - `fix/{issue-number}-{short-slug}` for defects.
+  - `docs/{issue-number}-{short-slug}` for docs/process-only changes.
+  - `chore/{issue-number}-{short-slug}` for maintenance/tooling work.
+- Release-prep work uses short-lived branches named `release/v{VERSION}` created from `main`.
+- Every PR targets `main` and should include linked-closing keywords when applicable (for example, `Closes #29`).
+- Delete merged short-lived branches after PR merge.
+
+### Version Bump Timing
+
+- Bump `scripts/{ProjectName}/VERSION` in the same branch/PR that changes installable behavior/assets for that script.
+- Do not bump script versions for docs-only or workflow-only changes.
+- Bump root `VERSION` on `release/v{VERSION}` only, after release scope is finalized.
+- Root `VERSION` must match the final release tag value without the leading `v`.
+- Apply SemVer to root/script versions:
+  - patch for backward-compatible fixes.
+  - minor for backward-compatible features.
+  - major for breaking changes.
+
+### Optional Prerelease (`-rc.N`) Usage
+
+- `-rc.N` is optional and used only on `release/v{VERSION}` during stabilization.
+- If used, apply `-rc.N` consistently to root `VERSION` and each script `VERSION` included in that candidate build.
+- Increment `N` for each candidate (`-rc.1`, `-rc.2`, ...).
+- Use prerelease tags for candidates (`v{VERSION}-rc.N`) and publish with `--prerelease`.
+- Remove the `-rc.N` suffix before final tag/release publication.
+
 ## Release Workflow
 
-1. Confirm `VERSION` contains the repository release version, confirm `scripts/{ProjectName}/VERSION` contains the script artifact version, and update `CHANGELOG.md`.
-2. Build release artifact:
+1. Sync `main` and create release-prep branch:
+   - `git checkout main`
+   - `git pull --ff-only origin main`
+   - `git checkout -b release/v{VERSION}`
+2. Finalize release metadata on `release/v{VERSION}`:
+   - root `VERSION`
+   - touched `scripts/{ProjectName}/VERSION` files
+   - `CHANGELOG.md`
+3. Sync release branch and confirm drift:
+   - `git fetch origin`
+   - `git push -u origin release/v{VERSION}`
+   - `git pull --ff-only origin release/v{VERSION}`
+   - `git rev-list --left-right --count origin/release/v{VERSION}...release/v{VERSION}`
+4. Build release artifact(s):
    `python tools/build.py --project SensorList --dist`
-3. Validate the release branch according to touched files (see `AGENTS.md` validation matrix).
-4. Tag and push:
-   `git tag v{VERSION}`
-   `git push origin v{VERSION}`
-5. Publish GitHub release with notes from `CHANGELOG.md` and attach `dist/SensorList-{scripts/SensorList/VERSION}.zip`.
+5. Validate according to touched files (see `AGENTS.md` validation matrix).
+6. Open and merge a release-prep PR from `release/v{VERSION}` into `main`.
+7. Sync `main`, tag, and push:
+   - `git checkout main`
+   - `git pull --ff-only origin main`
+   - `git tag v{VERSION}`
+   - `git push origin v{VERSION}`
+8. Publish GitHub release notes from `CHANGELOG.md` and attach release ZIP assets (for example, `dist/SensorList-{scripts/SensorList/VERSION}.zip`).
+9. Delete release-prep branch after publication:
+   - `git push origin --delete release/v{VERSION}`
+   - `git branch -d release/v{VERSION}`
