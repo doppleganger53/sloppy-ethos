@@ -12,6 +12,7 @@
   `luac -p scripts/SensorList/main.lua`
 - Package and deploy:
   `python tools/build.py --project SensorList --dist`
+  `python tools/build.py --project SensorList --project ethos_events --dist`
   `python tools/build.py --project SensorList --deploy`
   `python tools/build.py --project ethos_events --deploy`
   `python tools/build.py --project SensorList --clean --sim-radio X20RS`
@@ -29,8 +30,9 @@
 `tools/build.py`:
 
 - validates Lua syntax for all project Lua files using `luac -p`.
-- reads package version from `VERSION` (or `--version` override).
-- produces `dist/{ProjectName}-{version}.zip`.
+- reads single-script package version from `scripts/{ProjectName}/VERSION` (or `--version` override).
+- produces single-script ZIPs as `dist/{ProjectName}-{version}.zip`.
+- supports repeatable `--project` for multi-script dist bundles and produces the unversioned bundle ZIP `dist/sloppy-ethos_scripts.zip`.
 - optionally copies `scripts/{ProjectName}` into `${ETHOS_SIM_PATHS[default_or_selected_radio]}/scripts/{ProjectName}` when `--deploy` is specified (no ZIP).
 - supports `--clean` to remove `scripts/{ProjectName}` from simulator deploy path.
 - supports `--sim-radio` to resolve model-specific simulator paths via `ETHOS_SIM_PATHS`.
@@ -53,11 +55,11 @@
 
 ## Release Workflow
 
-1. Confirm `VERSION` contains the release version and update `CHANGELOG.md`.
+1. Confirm `VERSION` contains the repository release version, confirm `scripts/{ProjectName}/VERSION` contains the script artifact version, and update `CHANGELOG.md`.
 2. Build release artifact:
    `python tools/build.py --project SensorList --dist`
 3. Validate the release branch according to touched files (see `AGENTS.md` validation matrix).
 4. Tag and push:
    `git tag v{VERSION}`
    `git push origin v{VERSION}`
-5. Publish GitHub release with notes from `CHANGELOG.md` and attach `dist/SensorList-{VERSION}.zip`.
+5. Publish GitHub release with notes from `CHANGELOG.md` and attach `dist/SensorList-{scripts/SensorList/VERSION}.zip`.

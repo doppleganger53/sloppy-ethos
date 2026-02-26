@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 HELP_FILE = Path(__file__).resolve().parent / "build_help.txt"
+BUNDLE_ZIP_BASENAME = "sloppy-ethos_scripts"
 
 
 def load_config(path: Path):
@@ -120,6 +121,33 @@ def resolve_version(repo_root: Path, explicit_version: Optional[str]):
     return normalize_version(version_file.read_text(encoding="utf-8").splitlines()[0])
 
 
+def resolve_project_version(project_dir: Path, explicit_version: Optional[str]):
+    if explicit_version:
+        return normalize_version(explicit_version)
+
+    version_file = project_dir / "VERSION"
+    if not version_file.exists():
+        sys.exit(f"Project version file not found: {version_file}")
+    return normalize_version(version_file.read_text(encoding="utf-8").splitlines()[0])
+
+
+def normalize_project_names(raw_projects: Optional[list[str]]):
+    if not raw_projects:
+        return ["SensorList"]
+
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for raw in raw_projects:
+        project = str(raw).strip()
+        if not project:
+            sys.exit("Project name cannot be empty.")
+        if project in seen:
+            sys.exit(f"Duplicate project name '{project}' supplied via --project.")
+        normalized.append(project)
+        seen.add(project)
+    return normalized
+
+
 def ensure_packaged_readme(destination: Path, project_name: str):
     package_readme = destination / "README.md"
     if package_readme.exists():
@@ -136,6 +164,29 @@ def ensure_packaged_readme(destination: Path, project_name: str):
         ),
         encoding="utf-8",
     )
+
+
+def write_bundle_manifest(
+    destination: Path, project_names: list[str], project_versions: dict[str, str], repo_version: str
+):
+    lines = [
+        "# sloppy-ethos multi-script bundle",
+        "",
+        "Included script projects:",
+        "",
+    ]
+    for project_name in project_names:
+        lines.append(f"- scripts/{project_name} (version {project_versions[project_name]})")
+    lines.extend(
+        [
+            "",
+            f"Repository version: {repo_version}",
+            "",
+            "Bundle ZIP names are intentionally unversioned.",
+            "Individual script versions are sourced from scripts/<project>/VERSION.",
+        ]
+    )
+    (destination / "README.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def build_zip(project_dir: Path, project_name: str, version: str, dist_dir: Path, repo_root: Path):
@@ -155,6 +206,38 @@ def build_zip(project_dir: Path, project_name: str, version: str, dist_dir: Path
         shutil.rmtree(staging_root, ignore_errors=True)
 
     print(f"Packaged widget ZIP: {archive_path}")
+    return Path(archive_path)
+
+
+def build_multi_project_zip(project_names: list[str], dist_dir: Path, repo_root: Path):
+    if not project_names:
+        sys.exit("At least one project is required for bundle packaging.")
+
+    dist_dir.mkdir(parents=True, exist_ok=True)
+    staging_root = repo_root / ".build-staging"
+    if staging_root.exists():
+        shutil.rmtree(staging_root, ignore_errors=True)
+
+    try:
+        staging = staging_root / "package"
+        project_versions: dict[str, str] = {}
+        for project_name in project_names:
+            project_dir = repo_root / "scripts" / project_name
+            if not project_dir.exists():
+                sys.exit(f"Project directory not found: {project_dir}")
+            destination = staging / "scripts" / project_name
+            shutil.copytree(project_dir, destination)
+            ensure_packaged_readme(destination, project_name)
+            project_versions[project_name] = resolve_project_version(project_dir, None)
+
+        repo_version = resolve_version(repo_root, None)
+        write_bundle_manifest(staging, project_names, project_versions, repo_version)
+        base_name = dist_dir / BUNDLE_ZIP_BASENAME
+        archive_path = shutil.make_archive(str(base_name), "zip", staging)
+    finally:
+        shutil.rmtree(staging_root, ignore_errors=True)
+
+    print(f"Packaged multi-script ZIP: {archive_path}")
     return Path(archive_path)
 
 
@@ -222,14 +305,27 @@ def print_help_text():
 def parse_args():
     parser = argparse.ArgumentParser(description="Build or deploy Ethos widget packages.", add_help=False)
     parser.add_argument("--help", action="store_true", help="Print build command reference.")
-    parser.add_argument("--project", "-p", default="SensorList", help="Name of the widget project.")
+    parser.add_argument(
+        "--project",
+        "-p",
+        action="append",
+        default=None,
+        help="Project folder under scripts/. Repeat for multi-project dist bundles.",
+    )
     parser.add_argument("--dist", action="store_true", help="Produce an Ethos install ZIP in dist/.")
-    parser.add_argument("--deploy", action="store_true", help="Copy the widget folder into the simulator scripts directory.")
-    parser.add_argument("--clean", action="store_true", help="Remove deployed widget folder from the simulator scripts directory.")
+    parser.add_argument(
+        "--deploy", action="store_true", help="Copy the widget folder into the simulator scripts directory."
+    )
+    parser.add_argument(
+        "--clean", action="store_true", help="Remove deployed widget folder from the simulator scripts directory."
+    )
     parser.add_argument("--sim-radio", help="Radio model key to select simulator path from ETHOS_SIM_PATHS.")
     parser.add_argument("--config", "-c", help="Path to JSON config containing ETHOS_SIM_PATHS.")
     parser.add_argument("--no-zip", action="store_true", help="Skip ZIP even when --dist is provided.")
-    parser.add_argument("--version", help="Override package version (default: read from VERSION file at repo root).")
+    parser.add_argument(
+        "--version",
+        help="Override script package version (single-project --dist only).",
+    )
     parser.add_argument(
         "--out-dir",
         help="Output directory for ZIP artifacts (default: dist/ at repo root).",
@@ -243,19 +339,34 @@ def main():
         print_help_text()
         return
 
+    projects = normalize_project_names(args.project)
+    primary_project = projects[0]
+    multi_project = len(projects) > 1
+
+    if multi_project and (args.deploy or args.clean):
+        sys.exit("Multiple --project values are supported with --dist only.")
+
+    if multi_project and args.version:
+        sys.exit("--version override is only supported for single-project --dist packaging.")
+
     repo_root = Path(__file__).resolve().parent.parent
-    project_dir = repo_root / "scripts" / args.project
+    primary_project_dir = repo_root / "scripts" / primary_project
+
     if args.dist or args.deploy:
         luac_exec = ensure_luac_available()
-        run_lua_checks(project_dir, luac_exec)
+        for project_name in projects:
+            run_lua_checks(repo_root / "scripts" / project_name, luac_exec)
 
     if not args.dist and not args.deploy and not args.clean:
         sys.exit("Nothing to do: specify --dist, --deploy, or --clean.")
 
     if args.dist and not args.no_zip:
-        version = resolve_version(repo_root, args.version)
         dist_dir = Path(args.out_dir) if args.out_dir else (repo_root / "dist")
-        build_zip(project_dir, args.project, version, dist_dir, repo_root)
+        if multi_project:
+            build_multi_project_zip(projects, dist_dir, repo_root)
+        else:
+            version = resolve_project_version(primary_project_dir, args.version)
+            build_zip(primary_project_dir, primary_project, version, dist_dir, repo_root)
 
     if args.deploy or args.clean:
         config_path = Path(args.config) if args.config else (repo_root / "tools" / "deploy.config.json")
@@ -265,9 +376,9 @@ def main():
         if args.sim_radio and not sim_path.exists():
             sys.exit(f"Simulator path for radio model '{args.sim_radio}' does not exist: {sim_path}")
         if args.clean:
-            clean_from_simulator(args.project, sim_path)
+            clean_from_simulator(primary_project, sim_path)
     if args.deploy:
-        deploy_to_simulator(project_dir, args.project, sim_path)
+        deploy_to_simulator(primary_project_dir, primary_project, sim_path)
 
 
 if __name__ == "__main__":

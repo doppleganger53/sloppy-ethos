@@ -56,10 +56,19 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
   - validation run(s)
   - follow-up items
 
+## Bug Issue Hygiene
+
+- When creating bug issues, use `.github/ISSUE_TEMPLATE/bug_report.md`.
+- Ensure the issue has the `bug` label.
+- Include runtime environment details for both Ethos and non-Ethos bug types.
+- Use stable screenshot links (GitHub issue uploads or `raw.githubusercontent.com`), not `blob` image URLs.
+
 ## Release And Versioning Guardrails
 
-- `VERSION` is the package version source of truth.
-- Dist ZIP naming must remain `dist/{ProjectName}-{version}.zip`.
+- Root `VERSION` is the repository version source of truth.
+- Script artifact versions are sourced from `scripts/{ProjectName}/VERSION`.
+- Single-script dist ZIP naming remains `dist/{ProjectName}-{version}.zip`.
+- Multi-script dist bundles are an explicit naming exception and are intentionally unversioned (`dist/sloppy-ethos_scripts.zip`).
 - Keep release steps aligned with repository documentation.
 
 ## Script-Specific Notes

@@ -33,6 +33,7 @@ or GIF walkthrough will be added in a follow-up docs update.
 
 ```powershell
 python tools/build.py --project SensorList --dist
+python tools/build.py --project SensorList --project ethos_events --dist
 python tools/build.py --project SensorList --deploy
 python tools/build.py --project ethos_events --deploy
 python tools/build.py --project SensorList --clean --sim-radio X20RS
@@ -42,7 +43,9 @@ python tools/build.py --help
 - Install the dist ZIP inside Ethos Suite for radio deployment.
 - Configure `tools/deploy.config.json` with `ETHOS_SIM_PATHS` entries before running `--deploy`/`--clean`.
 - Mark exactly one `ETHOS_SIM_PATHS` entry as `"default": true` for deploy/clean without `--sim-radio`.
-- Package version is read from `VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
+- Single-script package version is read from `scripts/{ProjectName}/VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
+- Multi-script dist bundles are an explicit naming exception and use the unversioned ZIP name: `dist/sloppy-ethos_scripts.zip`.
+- Root `VERSION` remains the repository version source of truth.
 
 ### 30-Second First Run
 
@@ -52,6 +55,9 @@ python tools/build.py --help
    - `Checking Lua syntax:`
    - `Packaged widget ZIP:`
 3. Install the generated archive from `dist/` via Ethos Suite.
+
+To build a single install ZIP with multiple scripts:
+`python tools/build.py --project SensorList --project ethos_events --dist`
 
 ## Project Layout
 
@@ -88,7 +94,8 @@ luac -p scripts/SensorList/main.lua
 ## Releases
 
 - Changelog source of truth: `CHANGELOG.md`.
-- Version source of truth: `VERSION`.
+- Repository version source of truth: `VERSION`.
+- Script artifact versions: `scripts/{ProjectName}/VERSION`.
 - Published release notes and install assets: [GitHub Releases](https://github.com/doppleganger53/sloppy-ethos/releases).
 
 ## Collaboration

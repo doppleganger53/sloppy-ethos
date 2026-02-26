@@ -21,6 +21,7 @@ DOC_FILES = [
 MANUAL_PATTERNS = (
     "luac -p",
     "python tools/build.py --project SensorList --dist",
+    "python tools/build.py --project SensorList --project ethos_events --dist",
     "python tools/build.py --project SensorList --deploy",
     "python tools/build.py --project SensorList --clean --sim-radio X20RS",
     "python tools/build.py --project ethos_events --dist",
