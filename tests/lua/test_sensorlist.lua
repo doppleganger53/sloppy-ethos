@@ -47,6 +47,38 @@ local function assert_true(value, label)
   end
 end
 
+local function makeRefreshWidget()
+  return {
+    sensors = {},
+    groups = {},
+    colorCache = {},
+    conflictColorCache = {},
+    scrollOffset = 0,
+    lastSignature = "",
+    lastRawCount = 0,
+    lastDebug = {},
+    sourceCategory = nil,
+    sourceMaxMember = 255,
+    lastInvalidate = 0,
+    needsInvalidate = false,
+    touchActive = false,
+    touchLastY = nil,
+    touchAccumY = 0,
+    touchStartY = nil,
+    touchStartClock = nil,
+    touchHoldTriggered = false,
+    headerTouchKey = nil,
+    headerTouchStartX = nil,
+    headerTouchStartY = nil,
+    sortKey = nil,
+    sortDescending = false,
+    debugRefreshCount = 0,
+    debugDeepScanCount = 0,
+    debugCachedScanCount = 0,
+    debugDeferredScanCount = 0,
+  }
+end
+
 local module = dofile("scripts/SensorList/main.lua")
 local test = module._test
 
@@ -76,6 +108,31 @@ assert_true(groups[10] == nil, "unique physical id not grouped")
 local sig1 = test.buildSignature(sensors)
 local sig2 = test.buildSignature(sensors)
 assert_equal(sig1, sig2, "stable signatures")
+
+local severitySensors = test.normalizeSensors({
+  { name = "High A", physicalId = "01", applicationId = "1000" },
+  { name = "High B", physicalId = "01", applicationId = "1000" },
+  { name = "Low A", physicalId = "02", applicationId = "1000" },
+  { name = "Low B", physicalId = "02", applicationId = "1001" },
+  { name = "Unknown A", physicalId = "03", applicationId = "1002" },
+  { name = "Unknown B", physicalId = "03" },
+  { name = "Unique", physicalId = "04", applicationId = "1003" },
+})
+test.annotateConflictSeverity(severitySensors)
+local severityByName = {}
+for _, sensor in ipairs(severitySensors) do
+  severityByName[sensor.name] = sensor
+end
+assert_equal(severityByName["High A"].conflictSeverity, "high", "duplicate physical+application high severity")
+assert_equal(severityByName["High A"].conflictMarker, "[!]", "high severity marker")
+assert_equal(severityByName["High B"].conflictSeverity, "high", "duplicate pair second row high severity")
+assert_equal(severityByName["Low A"].conflictSeverity, "low", "duplicate physical distinct app low severity")
+assert_equal(severityByName["Low A"].conflictMarker, "[~]", "low severity marker")
+assert_equal(severityByName["Low B"].conflictSeverity, "low", "duplicate physical distinct app low severity second row")
+assert_equal(severityByName["Unknown A"].conflictSeverity, "high", "duplicate physical with unknown app high severity")
+assert_equal(severityByName["Unknown B"].conflictSeverity, "high", "unknown app row high severity")
+assert_equal(severityByName["Unique"].conflictSeverity, "none", "unique physical no severity")
+assert_equal(severityByName["Unique"].conflictMarker, "", "unique row no marker")
 
 local large = {}
 for i = 1, 40 do
@@ -229,15 +286,65 @@ local canceledHeaderEnd = test.event(canceledHeaderWidget, _G.EVT_TOUCH, _G.EVT_
 assert_true(canceledHeaderStart and canceledHeaderMove and canceledHeaderEnd, "header drag path should be consumed")
 assert_equal(canceledHeaderWidget.sortKey, nil, "header drag should not trigger sort toggle")
 
+local hapticCalls = {}
+local hapticRefreshCount = 0
 _G.system = {
   getSensors = function()
+    hapticRefreshCount = hapticRefreshCount + 1
     return {
       { name = "From long press", physicalId = "01", applicationId = "1001" },
     }
   end,
+  playHaptic = function(pattern)
+    hapticCalls[#hapticCalls + 1] = pattern
+  end,
 }
-local consumedLong = test.event(eventWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_LONG, 12, 12)
-assert_true(consumedLong, "long press should be consumed")
-assert_equal(#eventWidget.sensors, 1, "long press should refresh sensors")
+local hapticWidget = makeRefreshWidget()
+local hapticStart = test.event(hapticWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 12, 120)
+hapticWidget.touchStartClock = os.clock() - 1
+local hapticLong = test.event(hapticWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_LONG, 12, 120)
+local hapticEnd = test.event(hapticWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 12, 120)
+assert_true(hapticStart and hapticLong and hapticEnd, "long-press gesture path should be consumed")
+assert_equal(hapticRefreshCount, 1, "explicit long press should refresh once")
+assert_equal(#hapticCalls, 1, "explicit long press should trigger one haptic call")
+assert_equal(hapticCalls[1], 200, "numeric haptic call should be first choice")
+assert_equal(#hapticWidget.sensors, 1, "long press should refresh sensors")
+
+local toneCalls = {}
+local toneRefreshCount = 0
+_G.system = {
+  getSensors = function()
+    toneRefreshCount = toneRefreshCount + 1
+    return {
+      { name = "From tone fallback", physicalId = "02", applicationId = "1002" },
+    }
+  end,
+  playTone = function(freq, duration, pause)
+    toneCalls[#toneCalls + 1] = { freq = freq, duration = duration, pause = pause }
+  end,
+}
+local toneWidget = makeRefreshWidget()
+local toneLong = test.event(toneWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_LONG, 18, 140)
+assert_true(toneLong, "long press should consume when using tone fallback")
+assert_equal(toneRefreshCount, 1, "tone fallback long press should refresh once")
+assert_equal(#toneCalls, 1, "tone fallback should play one tone")
+assert_equal(toneCalls[1].freq, 1800, "tone fallback frequency")
+assert_equal(toneCalls[1].duration, 80, "tone fallback duration")
+assert_equal(toneCalls[1].pause, 0, "tone fallback pause")
+
+local noFeedbackRefreshCount = 0
+_G.system = {
+  getSensors = function()
+    noFeedbackRefreshCount = noFeedbackRefreshCount + 1
+    return {
+      { name = "From silent refresh", physicalId = "03", applicationId = "1003" },
+    }
+  end,
+}
+local noFeedbackWidget = makeRefreshWidget()
+local noFeedbackLong = test.event(noFeedbackWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_LONG, 24, 150)
+assert_true(noFeedbackLong, "long press should be consumed without feedback APIs")
+assert_equal(noFeedbackRefreshCount, 1, "silent long press should refresh once")
+assert_equal(#noFeedbackWidget.sensors, 1, "silent long press should still refresh sensors")
 
 print("sensorlist lua tests passed")

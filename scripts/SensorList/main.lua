@@ -23,6 +23,14 @@ local SORT_KEY_NAME = "name"
 local SORT_KEY_PHYSICAL = "physical"
 local SORT_KEY_APPLICATION = "application"
 
+local CONFLICT_SEVERITY_NONE = "none"
+local CONFLICT_SEVERITY_LOW = "low"
+local CONFLICT_SEVERITY_HIGH = "high"
+local CONFLICT_MARKER_LOW = "[~]"
+local CONFLICT_MARKER_HIGH = "[!]"
+local COLOR_CONFLICT_LOW_RGB = { 255, 214, 102 }
+local COLOR_CONFLICT_HIGH_RGB = { 255, 107, 107 }
+
 local COLOR_PALETTE = {
   { 255, 235, 59 },
   { 129, 212, 250 },
@@ -42,6 +50,14 @@ local function safeCall(fn, ...)
     return result
   end
   return nil
+end
+
+local function safeInvoke(fn, ...)
+  if type(fn) ~= "function" then
+    return false
+  end
+  local ok = pcall(fn, ...)
+  return ok
 end
 
 local function toInt(value)
@@ -378,6 +394,65 @@ local function buildPhysicalGroups(sensors)
   return groups
 end
 
+local function pairConflictKey(physical, application)
+  return tostring(physical) .. "|" .. tostring(application)
+end
+
+local function buildConflictStats(sensors)
+  local physicalCounts = {}
+  local pairCounts = {}
+  local physicalHasUnknownApplication = {}
+  for _, sensor in ipairs(sensors) do
+    if sensor.physical ~= 65535 then
+      local physical = sensor.physical
+      physicalCounts[physical] = (physicalCounts[physical] or 0) + 1
+      if sensor.application == 65535 then
+        physicalHasUnknownApplication[physical] = true
+      end
+      local pairKey = pairConflictKey(physical, sensor.application)
+      pairCounts[pairKey] = (pairCounts[pairKey] or 0) + 1
+    end
+  end
+  return {
+    physicalCounts = physicalCounts,
+    pairCounts = pairCounts,
+    physicalHasUnknownApplication = physicalHasUnknownApplication,
+  }
+end
+
+local function conflictMarkerForSeverity(severity)
+  if severity == CONFLICT_SEVERITY_HIGH then
+    return CONFLICT_MARKER_HIGH
+  end
+  if severity == CONFLICT_SEVERITY_LOW then
+    return CONFLICT_MARKER_LOW
+  end
+  return ""
+end
+
+local function annotateConflictSeverity(sensors)
+  local stats = buildConflictStats(sensors)
+  for _, sensor in ipairs(sensors) do
+    local severity = CONFLICT_SEVERITY_NONE
+    local physical = sensor.physical
+    local duplicatePhysical = physical ~= 65535 and (stats.physicalCounts[physical] or 0) > 1
+    if duplicatePhysical then
+      if stats.physicalHasUnknownApplication[physical] then
+        severity = CONFLICT_SEVERITY_HIGH
+      else
+        local pairKey = pairConflictKey(physical, sensor.application)
+        if (stats.pairCounts[pairKey] or 0) > 1 then
+          severity = CONFLICT_SEVERITY_HIGH
+        else
+          severity = CONFLICT_SEVERITY_LOW
+        end
+      end
+    end
+    sensor.conflictSeverity = severity
+    sensor.conflictMarker = conflictMarkerForSeverity(severity)
+  end
+end
+
 local function groupColor(physical, groups, cache)
   local groupIndex = groups[physical]
   if not groupIndex then
@@ -409,6 +484,7 @@ local function refreshSensors(widget, allowDeepScan)
   widget.lastRawCount = #raw
   widget.lastDebug = debug or widget.lastDebug
   local normalized = normalizeSensors(raw)
+  annotateConflictSeverity(normalized)
   local signature = buildSignature(normalized)
   local signatureChanged = signature ~= widget.lastSignature
   local strategy = debug and debug.strategy or "unknown"
@@ -462,11 +538,31 @@ local function refreshSensors(widget, allowDeepScan)
   end
 end
 
+local function triggerRefreshFeedback()
+  if type(system) ~= "table" then
+    return false
+  end
+  if safeInvoke(system.playHaptic, 200) then
+    return true
+  end
+  if safeInvoke(system.playHaptic, ".") then
+    return true
+  end
+  if safeInvoke(system.playTone, 1800, 80, 0) then
+    return true
+  end
+  if safeInvoke(system.playTone, 1800, 80) then
+    return true
+  end
+  return false
+end
+
 local function triggerManualRefresh(widget)
   if type(widget) ~= "table" then
     return false
   end
   refreshSensors(widget, true)
+  triggerRefreshFeedback()
   widget.needsInvalidate = true
   return true
 end
@@ -641,6 +737,37 @@ local function clampOffset(widget)
   end
 end
 
+local function conflictColor(widget, severity)
+  if type(widget) ~= "table" then
+    return nil
+  end
+  if severity ~= CONFLICT_SEVERITY_LOW and severity ~= CONFLICT_SEVERITY_HIGH then
+    return nil
+  end
+  widget.conflictColorCache = widget.conflictColorCache or {}
+  if severity == CONFLICT_SEVERITY_LOW then
+    if widget.conflictColorCache.low == nil then
+      widget.conflictColorCache.low = colorFromRgb(COLOR_CONFLICT_LOW_RGB) or false
+    end
+    return widget.conflictColorCache.low ~= false and widget.conflictColorCache.low or nil
+  end
+  if widget.conflictColorCache.high == nil then
+    widget.conflictColorCache.high = colorFromRgb(COLOR_CONFLICT_HIGH_RGB) or false
+  end
+  return widget.conflictColorCache.high ~= false and widget.conflictColorCache.high or nil
+end
+
+local function sensorNameWithMarker(sensor)
+  if type(sensor) ~= "table" then
+    return ""
+  end
+  local marker = sensor.conflictMarker
+  if type(marker) == "string" and marker ~= "" then
+    return marker .. " " .. sensor.name
+  end
+  return sensor.name
+end
+
 local function drawSensorRows(widget)
   local w, _ = getWindowSizeSafe()
   local _, h = getWindowSizeSafe()
@@ -691,8 +818,8 @@ local function drawSensorRows(widget)
       break
     end
     local y = rowsY + row * rowHeight
-    local color = groupColor(sensor.physical, widget.groups, widget.colorCache)
-    drawText(columns[1].x, y, shortenText(sensor.name, 20), FONT_BODY, color)
+    local color = conflictColor(widget, sensor.conflictSeverity)
+    drawText(columns[1].x, y, shortenText(sensorNameWithMarker(sensor), 20), FONT_BODY, color)
     drawText(columns[2].x, y, sensor.physicalText, FONT_BODY, color)
     drawText(columns[3].x, y, sensor.applicationText, FONT_BODY, color)
   end
@@ -706,6 +833,7 @@ local function create()
     sensors = {},
     groups = {},
     colorCache = {},
+    conflictColorCache = {},
     scrollOffset = 0,
     lastSignature = "",
     lastRawCount = 0,
@@ -943,6 +1071,7 @@ local function event(widget, category, value, x, y)
   -- Long-press is an explicit user request to rescan all sensors.
   local isLongPress = matchesCode(value, { "EVT_TOUCH_LONG" }) or matchesCategory(category, { "EVT_TOUCH_LONG" })
   if isLongPress then
+    widget.touchHoldTriggered = true
     return triggerManualRefresh(widget)
   end
 
@@ -981,11 +1110,13 @@ local function testExports()
     toInt = toInt,
     formatHex = formatHex,
     normalizeSensors = normalizeSensors,
+    annotateConflictSeverity = annotateConflictSeverity,
     buildPhysicalGroups = buildPhysicalGroups,
     buildSignature = buildSignature,
     applyScroll = applyScroll,
     clampOffset = clampOffset,
     getSensorList = getSensorList,
+    triggerRefreshFeedback = triggerRefreshFeedback,
     event = event,
     resolveTouchPhase = resolveTouchPhase,
   }
