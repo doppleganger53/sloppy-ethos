@@ -25,7 +25,7 @@ remain tightly scoped.
 - `tests/test_docs_commands.py`
 - `tests/test_docs_contracts.py`
 - memory notes for issue #21 closure and build workflow updates
-- `deslopification/prompts/RELEASE_RESOLUTION_TEMPLATE.md`
+- `deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md`
 
 ## Branch/Worktree Gate (Required Before Editing)
 
@@ -54,7 +54,7 @@ remain tightly scoped.
 - Compatibility shim allowed only if explicitly justified with removal criteria.
 - Keep release/version guardrails aligned with existing docs and `AGENTS.md`.
 - If command/release surface changes, align preflight/tag/release checks with:
-  - `deslopification/prompts/RELEASE_RESOLUTION_TEMPLATE.md`
+  - `deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md`
 
 ## Suggested Execution Plan
 

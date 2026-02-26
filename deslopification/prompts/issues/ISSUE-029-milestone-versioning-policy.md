@@ -23,7 +23,7 @@ version increments, prerelease usage, and release-prep flow.
 - `VERSION`
 - `scripts/SensorList/VERSION`
 - `scripts/ethos_events/VERSION`
-- `deslopification/prompts/RELEASE_RESOLUTION_TEMPLATE.md`
+- `deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md`
 
 ## Branch/Worktree Gate (Required Before Editing)
 
@@ -66,7 +66,7 @@ version increments, prerelease usage, and release-prep flow.
 2. Add a short summary/reference in `README.md`.
 3. Verify policy alignment with existing `AGENTS.md` release/version guardrails.
 4. Align release-preflight/tag/release checklist wording with:
-   - `deslopification/prompts/RELEASE_RESOLUTION_TEMPLATE.md`
+   - `deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md`
 5. Update any affected docs command references if command wording changes.
 
 ## Validation (Required)
