@@ -6,6 +6,7 @@
 - Title: `[Bug] SensorList not functioning in X20S simulator`
 - Labels: `bug`
 - Snapshot state: open on `2026-02-26`
+- Target branch (default): `enhancements` (or as user-directed for current workflow)
 - Attached screenshot evidence:
   `https://github.com/user-attachments/assets/e79aed7e-da30-48b7-810d-c612e0fdf406`
 
@@ -25,6 +26,15 @@ from loading in widget selection/runtime, using a root-cause fix.
 - `tests/test_sensorlist_widget.py`
 - `tools/deploy.config.example.json`
 - `tools/build.py`
+
+## Branch/Worktree Gate (Required Before Editing)
+
+1. Confirm target branch and current branch:
+   - `git branch --show-current`
+   - `git status --short --branch`
+2. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
+3. After switching branches, sync before editing:
+   - `git pull --ff-only origin {target-branch}`
 
 ## Scope
 
@@ -55,6 +65,14 @@ Temporary helper scripts/log files may be created only under:
 - Keep widget registration and callback lifecycle valid for Ethos.
 - Avoid startup crashes when optional APIs/constants are missing.
 - Preserve current SensorList behavior outside bug fix.
+- Do not regress known-good X20RS behavior while fixing X20S.
+- Preserve system navigation/interoperability (`RTN/EXIT`, touch handling semantics).
+
+## Interaction Contract
+
+- Widget must initialize safely when simulator-specific constants/APIs differ.
+- Missing optional runtime APIs/constants should degrade safely without crash.
+- Event/touch/key handling should not consume system navigation unexpectedly.
 
 ## Validation (Required)
 
@@ -62,6 +80,13 @@ Temporary helper scripts/log files may be created only under:
 - `python -m pytest tests/test_sensorlist_widget.py -q`
 - If touching broad logic: `python -m pytest -q`
 - Manual simulator check on X20S after deploy.
+
+## Manual Acceptance Scenarios (Required)
+
+1. X20S simulator: deploy and confirm SensorList opens without startup error.
+2. X20RS simulator: confirm no regression in startup/runtime behavior.
+3. Verify core interactions still work: scroll, long-press refresh, and navigation (`RTN/EXIT`).
+4. Confirm no new simulator fallback/unhandled-event errors are introduced.
 
 ## Done Criteria
 

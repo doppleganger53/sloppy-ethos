@@ -10,6 +10,7 @@ Replace all `{...}` placeholders before execution.
 - URL: `{ISSUE_URL}`
 - Labels: `{ISSUE_LABELS}`
 - Snapshot date: `{YYYY-MM-DD}`
+- Target branch: `{TARGET_BRANCH}`
 
 ## Mission
 
@@ -35,6 +36,18 @@ You are Codex working directly in this repository.
    - `docs/DEVELOPMENT.md`
 5. Review issue body/comments and linked artifacts.
 
+## Branch And Worktree Gate (Required Before Editing)
+
+1. Confirm target branch from prompt: `{TARGET_BRANCH}`.
+2. Run:
+   - `git branch --show-current`
+   - `git status --porcelain`
+3. If branch differs from target, stop and confirm how to handle local changes before switching.
+4. If worktree is dirty, stop and confirm whether to stash, commit, or continue as-is.
+5. After any branch switch, sync and re-check:
+   - `git pull --ff-only origin {TARGET_BRANCH}`
+   - `git status --short --branch`
+
 ## Repo Context To Load
 
 - Primary implementation files: `{TARGET_FILES}`
@@ -42,6 +55,22 @@ You are Codex working directly in this repository.
 - Related docs: `{RELATED_DOC_FILES}`
 - Related memory notes: `{RELATED_MEMORY_FILES}`
 - Recent commit context (`git log --oneline -n 30`) for regressions and intent.
+- Runtime evidence/artifacts (if applicable): `{RUNTIME_ARTIFACTS}`
+
+## Interaction Contract (For Input/Event Issues)
+
+Document the runtime interaction contract before editing:
+
+- Runtime target(s): `{RUNTIME_TARGETS}`
+- Observed category/value mappings: `{EVENT_MAPPINGS}`
+- Event consume/pass-through policy: `{EVENT_CONSUMPTION_POLICY}`
+- Navigation guardrails (keys/gestures that must remain unchanged): `{NAVIGATION_GUARDRAILS}`
+
+## UI Output Contract (For UI-Facing Issues)
+
+- Visible line-prefix/tag policy: `{UI_PREFIX_POLICY}`
+- Readability expectations (font density, truncation, line budget): `{UI_READABILITY_POLICY}`
+- Empty/error/status state text requirements: `{UI_STATE_COPY}`
 
 ## Scope
 
@@ -67,6 +96,10 @@ You are Codex working directly in this repository.
 - If a compatibility layer is unavoidable:
   - explain why it is needed now;
   - define a clear removal condition.
+- If helper fallback loaders exist, preserve functional parity for:
+  - accepted options
+  - returned values
+  - output shape used by callers
 - No destructive git commands.
 - No unrelated cleanup.
 - Keep temporary analysis artifacts in `deslopification/memory/temp/`.
@@ -91,6 +124,17 @@ If a required command times out/hangs:
 2. if still failing, report exact command and failure mode;
 3. do not claim validation passed.
 
+## Manual Acceptance Scenarios (Required For UI/Input Changes)
+
+Define and execute at least one scenario for each bucket:
+
+- Positive behavior: `{MANUAL_POSITIVE_1}`
+- Negative/guardrail behavior: `{MANUAL_GUARDRAIL_1}`
+- Regression prevention behavior: `{MANUAL_REGRESSION_1}`
+- Navigation/system interoperability behavior: `{MANUAL_NAVIGATION_1}`
+
+Record results in session notes.
+
 ## Delivery Contract
 
 Return:
@@ -98,8 +142,9 @@ Return:
 1. Change summary mapped to acceptance criteria.
 2. File list with key edits and rationale.
 3. Validation commands + pass/fail results.
-4. Risks, edge cases, and follow-up items.
-5. Proposed PR title/body including `Closes #{ISSUE_NUMBER}`.
+4. Manual acceptance scenario results (if applicable).
+5. Risks, edge cases, and follow-up items.
+6. Proposed PR title/body including `Closes #{ISSUE_NUMBER}`.
 
 ## Quality Gates
 

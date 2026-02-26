@@ -6,6 +6,7 @@
 - Title: `[Enhancement] Evaluate migration from build.py to doit task runner`
 - Labels: `enhancement`
 - Snapshot state: open on `2026-02-26`
+- Target branch (default): `enhancements` (or as user-directed for current workflow)
 
 ## Mission
 
@@ -24,6 +25,16 @@ remain tightly scoped.
 - `tests/test_docs_commands.py`
 - `tests/test_docs_contracts.py`
 - memory notes for issue #21 closure and build workflow updates
+- `deslopification/prompts/RELEASE_RESOLUTION_TEMPLATE.md`
+
+## Branch/Worktree Gate (Required Before Editing)
+
+1. Confirm target branch and current branch:
+   - `git branch --show-current`
+   - `git status --short --branch`
+2. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
+3. After switching branches, sync before editing:
+   - `git pull --ff-only origin {target-branch}`
 
 ## Scope
 
@@ -42,6 +53,8 @@ remain tightly scoped.
 - Root-cause-first: do not migrate for novelty.
 - Compatibility shim allowed only if explicitly justified with removal criteria.
 - Keep release/version guardrails aligned with existing docs and `AGENTS.md`.
+- If command/release surface changes, align preflight/tag/release checks with:
+  - `deslopification/prompts/RELEASE_RESOLUTION_TEMPLATE.md`
 
 ## Suggested Execution Plan
 
@@ -52,6 +65,7 @@ remain tightly scoped.
    - preserve current user-visible commands via adapter or mapped aliases,
    - define deprecation timeline.
 4. Update docs and docs-contract tests in same session.
+5. If release flow changes, update release-preflight guidance using the release template as canonical checklist.
 
 ## Validation (Required)
 

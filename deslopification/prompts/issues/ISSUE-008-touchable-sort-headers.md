@@ -6,6 +6,7 @@
 - Title: `[Enhancement] Make sensor table headers touchable for sorting`
 - Labels: `enhancement`
 - Snapshot state: open on `2026-02-26`
+- Target branch (default): `enhancements` (or as user-directed for current workflow)
 
 ## Mission
 
@@ -25,6 +26,28 @@ Read before editing:
 - `scripts/SensorList/main.lua`
 - `tests/lua/test_sensorlist.lua`
 - `tests/test_sensorlist_widget.py`
+
+## Branch/Worktree Gate (Required Before Editing)
+
+1. Confirm target branch and current branch:
+   - `git branch --show-current`
+   - `git status --short --branch`
+2. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
+3. After switching branches, sync before editing:
+   - `git pull --ff-only origin {target-branch}`
+
+## Interaction Contract
+
+- Header-tap sorting must be touch-compatible with Ethos touch event phases (`start`/`move`/`end`).
+- Header taps must not break row scrolling/drag behavior outside header hit zones.
+- Existing long-press refresh semantics must remain unchanged.
+- Navigation key behavior (e.g., `RTN/EXIT`) must remain system-managed.
+
+## UI Output Contract
+
+- Active sort indicator should be visible on the header row without obscuring labels.
+- Indicator should remain legible at current row height and font settings.
+- No new prefix/noise text should reduce row readability.
 
 ## Scope
 
@@ -57,6 +80,14 @@ Read before editing:
    - sort toggle behavior
    - untouched-default ordering
    - no regression in touch scroll activation rules
+
+## Manual Acceptance Scenarios (Required)
+
+1. Tap each header and verify sort key changes correctly.
+2. Re-tap active header and verify ascending/descending toggle.
+3. Touch-drag in table body and verify scrolling still works (no accidental sort trigger).
+4. Long-press refresh still works and sort state remains consistent.
+5. `RTN/EXIT` navigation behavior remains unchanged.
 
 ## Validation (Required)
 

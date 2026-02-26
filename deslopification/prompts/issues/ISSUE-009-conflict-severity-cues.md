@@ -6,6 +6,7 @@
 - Title: `[Enhancement] Refine conflict display severity`
 - Labels: `enhancement`
 - Snapshot state: open on `2026-02-26`
+- Target branch (default): `enhancements` (or as user-directed for current workflow)
 
 ## Mission
 
@@ -21,6 +22,22 @@ Differentiate high-severity vs lower-severity duplicate conflicts in
 - `deslopification/prompts/SensorList-Roadmap-ConflictDisplay.md`
 - `tests/lua/test_sensorlist.lua`
 - `tests/test_sensorlist_widget.py`
+
+## Branch/Worktree Gate (Required Before Editing)
+
+1. Confirm target branch and current branch:
+   - `git branch --show-current`
+   - `git status --short --branch`
+2. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
+3. After switching branches, sync before editing:
+   - `git pull --ff-only origin {target-branch}`
+
+## UI Output Contract
+
+- Severity cues must be distinguishable without relying only on color.
+- Severity markers must remain readable at current row height/font sizes.
+- Cue text/symbols must avoid clutter that hides sensor identity fields.
+- Empty-state and non-conflict rows should retain current visual clarity.
 
 ## Scope
 
@@ -47,6 +64,13 @@ Differentiate high-severity vs lower-severity duplicate conflicts in
 3. Update row rendering with both color and non-color cue.
 4. Confirm cues remain legible at current row height/font sizes.
 5. Add tests for classification logic and regression tests for core behaviors.
+
+## Manual Acceptance Scenarios (Required)
+
+1. Verify high-severity duplicates are clearly distinguishable from lower-severity duplicates.
+2. Verify non-color cues are visible and meaningful with color cues ignored.
+3. Verify non-conflict rows remain readable and not visually over-marked.
+4. Verify scrolling/sorting/empty-state behavior remains unchanged.
 
 ## Validation (Required)
 

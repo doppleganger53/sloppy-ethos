@@ -6,6 +6,7 @@
 - Title: `[Enhancement] Sensor Values`
 - Labels: `enhancement`
 - Snapshot state: open on `2026-02-26`
+- Target branch (default): `enhancements` (or as user-directed for current workflow)
 
 ## Mission
 
@@ -22,6 +23,27 @@ Add an optional sensor-value display mode to `SensorList`:
 - `docs/SensorList/SENSORLIST_ARCHITECTURE.md`
 - `tests/lua/test_sensorlist.lua`
 - `tests/test_sensorlist_widget.py`
+
+## Branch/Worktree Gate (Required Before Editing)
+
+1. Confirm target branch and current branch:
+   - `git branch --show-current`
+   - `git status --short --branch`
+2. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
+3. After switching branches, sync before editing:
+   - `git pull --ff-only origin {target-branch}`
+
+## UI Output Contract
+
+- `Display Value = No`: preserve current 3-column readability and spacing.
+- `Display Value = Yes`: value column must be legible without collapsing key identifiers.
+- Long names/values should degrade gracefully (truncate/clip consistently, no overlap).
+- Empty-state and conflict cues must remain readable in both modes.
+
+## Interaction Contract
+
+- Touch scrolling and long-press refresh behavior must remain unchanged in both display modes.
+- Any config/toggle interaction must not conflict with existing navigation keys/system behavior.
 
 ## Scope
 
@@ -50,6 +72,13 @@ Add an optional sensor-value display mode to `SensorList`:
 4. Keep deterministic sort behavior and stable empty-state rendering.
 5. Update docs if configuration surface changes.
 6. Add/update tests for option-on/option-off rendering logic.
+
+## Manual Acceptance Scenarios (Required)
+
+1. Toggle `Display Value` OFF and verify baseline 3-column behavior is unchanged.
+2. Toggle `Display Value` ON and verify 4-column layout remains readable for long names and values.
+3. Verify scrolling and long-press refresh still behave normally in both modes.
+4. Verify conflict cues and empty-state rendering remain readable in both modes.
 
 ## Validation (Required)
 

@@ -6,6 +6,7 @@
 - Title: `[Enhancement] Define milestone branch and versioning workflow policy`
 - Labels: `enhancement`, `workflow`
 - Snapshot state: open on `2026-02-26`
+- Target branch (default): `enhancements` (or as user-directed for current workflow)
 
 ## Mission
 
@@ -22,6 +23,16 @@ version increments, prerelease usage, and release-prep flow.
 - `VERSION`
 - `scripts/SensorList/VERSION`
 - `scripts/ethos_events/VERSION`
+- `deslopification/prompts/RELEASE_RESOLUTION_TEMPLATE.md`
+
+## Branch/Worktree Gate (Required Before Editing)
+
+1. Confirm target branch and current branch:
+   - `git branch --show-current`
+   - `git status --short --branch`
+2. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
+3. After switching branches, sync before editing:
+   - `git pull --ff-only origin {target-branch}`
 
 ## Scope
 
@@ -54,7 +65,9 @@ version increments, prerelease usage, and release-prep flow.
 1. Draft policy text in `docs/DEVELOPMENT.md` with concise rules + exceptions.
 2. Add a short summary/reference in `README.md`.
 3. Verify policy alignment with existing `AGENTS.md` release/version guardrails.
-4. Update any affected docs command references if command wording changes.
+4. Align release-preflight/tag/release checklist wording with:
+   - `deslopification/prompts/RELEASE_RESOLUTION_TEMPLATE.md`
+5. Update any affected docs command references if command wording changes.
 
 ## Validation (Required)
 
@@ -65,4 +78,5 @@ version increments, prerelease usage, and release-prep flow.
 1. Policy is explicit, lightweight, and reproducible.
 2. Version bump timing is unambiguous for root and script versions.
 3. Milestone branch usage rules and prerelease rules are clear.
-4. Required validation passes and session notes are recorded.
+4. Release-preflight/tag/release checks are explicitly defined and consistent with the release template.
+5. Required validation passes and session notes are recorded.
