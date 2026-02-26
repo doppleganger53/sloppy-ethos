@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import pytest
 
 from tests.helpers import REPO_ROOT
-from tests.test_docs_commands import DOC_FILES, MANUAL_PATTERNS, discover_commands
+from tests.test_docs_commands import DOC_FILES, discover_commands, is_manual_command
 
 
 README_PATH = REPO_ROOT / "README.md"
@@ -190,4 +190,4 @@ def test_environment_dependent_doc_commands_are_manual():
 
     for command in discover_commands():
         if should_be_manual(command):
-            assert command in MANUAL_PATTERNS, f"Environment-dependent command missing in MANUAL_PATTERNS: {command}"
+            assert is_manual_command(command), f"Environment-dependent command not classified manual: {command}"
