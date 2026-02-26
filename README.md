@@ -71,7 +71,7 @@ To build a single install ZIP with multiple scripts:
 - `scripts/ethos_events/README.md`: event tracer usage notes
 - `tools/build.py`: syntax-check + packaging + simulator deploy script
 - `tools/create_todo_issues.py`: GitHub issue bootstrap for TODO backlog tracking
-- `deslopification/prompts/SensorList.md`: original implementation prompt
+- `deslopification/prompts/done/SensorList.md`: original implementation prompt
 - `docs/`: development notes and handoff documents
 - `docs/REPOSITORY_LAYOUT.md`: reference for `tools/`, `tests/`, `deslopification/`, and root artifacts
 - [docs/SensorList/SENSORLIST_ARCHITECTURE.md](docs/SensorList/SENSORLIST_ARCHITECTURE.md): SensorList lifecycle/state flow reference
