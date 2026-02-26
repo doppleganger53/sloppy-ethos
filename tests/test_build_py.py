@@ -107,6 +107,18 @@ def test_build_multi_project_zip_creates_archive(monkeypatch, tmp_path: Path):
     assert not (repo_root / ".build-staging").exists()
 
 
+def test_clean_dist_dir_removes_artifacts(tmp_path: Path):
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir()
+    (dist_dir / "widget.zip").write_text("data", encoding="utf-8")
+    extra_dir = dist_dir / "extras"
+    extra_dir.mkdir()
+    (extra_dir / "note.txt").write_text("note", encoding="utf-8")
+
+    build.clean_dist_dir(dist_dir)
+    assert not list(dist_dir.iterdir())
+
+
 def test_parse_args_defaults(monkeypatch):
     monkeypatch.setattr(build.sys, "argv", ["build.py"])
     args = build.parse_args()
@@ -235,6 +247,7 @@ def test_main_deploy_and_clean_paths(monkeypatch, tmp_path: Path):
     sim_path = tmp_path / "simulator" / "X20RS"
     sim_path.mkdir(parents=True)
     calls: dict[str, object] = {}
+    expected_dist_dir = Path(build.__file__).resolve().parent.parent / "dist"
 
     monkeypatch.setattr(
         build,
@@ -256,7 +269,9 @@ def test_main_deploy_and_clean_paths(monkeypatch, tmp_path: Path):
     monkeypatch.setattr(build, "run_lua_checks", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(build, "resolve_simulator_path", lambda *_args, **_kwargs: sim_path)
     monkeypatch.setattr(build, "clean_from_simulator", lambda project_name, resolved: calls.setdefault("clean", (project_name, resolved)))
+    monkeypatch.setattr(build, "clean_dist_dir", lambda dist_dir: calls.setdefault("clean_dist", dist_dir))
     monkeypatch.setattr(build, "deploy_to_simulator", lambda project_dir, project_name, resolved: calls.setdefault("deploy", (project_name, resolved)))
     build.main()
     assert calls["clean"] == ("SensorList", sim_path)
     assert calls["deploy"] == ("SensorList", sim_path)
+    assert calls["clean_dist"] == expected_dist_dir

@@ -40,6 +40,7 @@ python tools/build.py --project SensorList --clean --sim-radio X20RS
 python tools/build.py --help
 ```
 
+- Running --clean now clears dist/ (or the configured --out-dir) outputs along with removing the simulator scripts.
 - Install the dist ZIP inside Ethos Suite for radio deployment.
 - Configure `tools/deploy.config.json` with `ETHOS_SIM_PATHS` entries before running `--deploy`/`--clean`.
 - Mark exactly one `ETHOS_SIM_PATHS` entry as `"default": true` for deploy/clean without `--sim-radio`.

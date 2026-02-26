@@ -296,6 +296,25 @@ def clean_from_simulator(project_name: str, sim_path: Path):
     print(f"Cleaned simulator target: {target}")
 
 
+def clean_dist_dir(dist_dir: Path):
+    if not dist_dir.exists():
+        print(f"Clean skip: dist directory not found: {dist_dir}")
+        return
+    artifacts = list(dist_dir.iterdir())
+    if not artifacts:
+        print(f"Dist directory already empty: {dist_dir}")
+        return
+    for artifact in artifacts:
+        try:
+            if artifact.is_dir():
+                shutil.rmtree(artifact)
+            else:
+                artifact.unlink()
+        except OSError as exc:
+            sys.exit(f"Failed to clean dist artifact '{artifact}': {exc}")
+    print(f"Cleaned dist directory: {dist_dir}")
+
+
 def print_help_text():
     if not HELP_FILE.exists():
         sys.exit(f"Help file not found: {HELP_FILE}")
@@ -351,6 +370,7 @@ def main():
 
     repo_root = Path(__file__).resolve().parent.parent
     primary_project_dir = repo_root / "scripts" / primary_project
+    dist_dir = Path(args.out_dir) if args.out_dir else (repo_root / "dist")
 
     if args.dist or args.deploy:
         luac_exec = ensure_luac_available()
@@ -361,7 +381,6 @@ def main():
         sys.exit("Nothing to do: specify --dist, --deploy, or --clean.")
 
     if args.dist and not args.no_zip:
-        dist_dir = Path(args.out_dir) if args.out_dir else (repo_root / "dist")
         if multi_project:
             build_multi_project_zip(projects, dist_dir, repo_root)
         else:
@@ -377,6 +396,7 @@ def main():
             sys.exit(f"Simulator path for radio model '{args.sim_radio}' does not exist: {sim_path}")
         if args.clean:
             clean_from_simulator(primary_project, sim_path)
+            clean_dist_dir(dist_dir)
     if args.deploy:
         deploy_to_simulator(primary_project_dir, primary_project, sim_path)
 

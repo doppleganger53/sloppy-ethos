@@ -34,7 +34,7 @@
 - produces single-script ZIPs as `dist/{ProjectName}-{version}.zip`.
 - supports repeatable `--project` for multi-script dist bundles and produces the unversioned bundle ZIP `dist/sloppy-ethos_scripts.zip`.
 - optionally copies `scripts/{ProjectName}` into `${ETHOS_SIM_PATHS[default_or_selected_radio]}/scripts/{ProjectName}` when `--deploy` is specified (no ZIP).
-- supports `--clean` to remove `scripts/{ProjectName}` from simulator deploy path.
+- supports `--clean` to remove `scripts/{ProjectName}` from simulator deploy path and clear `dist/` (or `--out-dir`) artifacts.
 - supports `--sim-radio` to resolve model-specific simulator paths via `ETHOS_SIM_PATHS`.
 - supports `--help` to print `tools/build_help.txt` command reference.
 - supports custom ZIP destination via `--out-dir`.

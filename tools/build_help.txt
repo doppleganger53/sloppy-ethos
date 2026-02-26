@@ -6,7 +6,7 @@ USAGE
 PRIMARY ACTIONS
   --dist                 Build install ZIP(s) in dist/.
   --deploy               Deploy scripts/{ProjectName} to simulator scripts path.
-  --clean                Remove deployed scripts/{ProjectName} from simulator scripts path.
+  --clean                Remove deployed scripts/{ProjectName} from simulator scripts path and clear dist/ (or --out-dir) artifacts.
 
 COMMON OPTIONS
   --project, -p NAME     Project folder under scripts/. Repeat for multi-project dist bundles.
