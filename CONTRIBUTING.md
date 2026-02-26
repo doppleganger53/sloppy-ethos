@@ -8,6 +8,8 @@
    - `luac -p scripts/SensorList/main.lua`
    - package build:
      `python tools/build.py --project SensorList --dist`
+     or multi-script bundle build:
+     `python tools/build.py --project SensorList --project ethos_events --dist`
    - docs validation (required for any documentation changes):
      `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
    - `stylua --config-path tools/config/stylua.toml scripts` (if formatting changed)
@@ -27,6 +29,13 @@
 - If onboarding support is needed, look for
   [help wanted](https://github.com/doppleganger53/sloppy-ethos/labels/help%20wanted)
   issues.
+
+## Bug Report Quality
+
+- Use `.github/ISSUE_TEMPLATE/bug_report.md` when opening a bug.
+- Confirm the issue has the `bug` label.
+- Fill the environment section for both Ethos and non-Ethos bug types.
+- For screenshots, prefer GitHub issue-upload links or `raw.githubusercontent.com` links and avoid `blob` image URLs.
 
 ## Commit Guidance
 

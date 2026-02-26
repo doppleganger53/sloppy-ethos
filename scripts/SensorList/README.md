@@ -25,6 +25,7 @@ potential conflicts easier to identify.
 3. Transfer/sync to the radio.
 
 Installed path on radio: `scripts/SensorList`.
+Artifact version source: `scripts/SensorList/VERSION`.
 
 ## Simulator Deploy
 

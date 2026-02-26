@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import pytest
 
 from tests.helpers import REPO_ROOT
-from tests.test_docs_commands import DOC_FILES, MANUAL_PATTERNS, discover_commands
+from tests.test_docs_commands import DOC_FILES, discover_commands, is_manual_command
 
 
 README_PATH = REPO_ROOT / "README.md"
@@ -112,9 +112,24 @@ def test_zip_naming_policy_documented():
     assert "dist/{ProjectName}-{version}.zip" in _read(DEVELOPMENT_PATH)
 
 
-def test_version_file_exists_and_nonempty():
+def test_multi_script_zip_naming_exception_documented():
+    assert "dist/sloppy-ethos_scripts.zip" in _read(README_PATH)
+    assert "dist/sloppy-ethos_scripts.zip" in _read(DEVELOPMENT_PATH)
+
+
+def test_root_version_file_exists_and_nonempty():
     version_text = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
     assert version_text, "VERSION file must contain a non-empty version string."
+
+
+def test_script_version_files_exist_and_nonempty():
+    scripts_root = REPO_ROOT / "scripts"
+    for project_dir in scripts_root.iterdir():
+        if not project_dir.is_dir():
+            continue
+        version_file = project_dir / "VERSION"
+        assert version_file.exists(), f"Missing script version file: {version_file}"
+        assert version_file.read_text(encoding="utf-8").strip(), f"Empty script version file: {version_file}"
 
 
 def test_codeowners_exists():
@@ -175,4 +190,4 @@ def test_environment_dependent_doc_commands_are_manual():
 
     for command in discover_commands():
         if should_be_manual(command):
-            assert command in MANUAL_PATTERNS, f"Environment-dependent command missing in MANUAL_PATTERNS: {command}"
+            assert is_manual_command(command), f"Environment-dependent command not classified manual: {command}"

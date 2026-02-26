@@ -18,16 +18,9 @@ DOC_FILES = [
     REPO_ROOT / ".github" / "PULL_REQUEST_TEMPLATE.md",
 ]
 
-MANUAL_PATTERNS = (
+MANUAL_COMMANDS = (
     "luac -p",
-    "python tools/build.py --project SensorList --dist",
-    "python tools/build.py --project SensorList --deploy",
-    "python tools/build.py --project SensorList --clean --sim-radio X20RS",
-    "python tools/build.py --project ethos_events --dist",
-    "python tools/build.py --project ethos_events --deploy",
     "python -m pip install -r requirements/dev.txt",
-    "python -m pytest tests/test_sensorlist_widget.py",
-    "python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q",
 )
 
 
@@ -58,6 +51,18 @@ def discover_commands() -> list[str]:
     return sorted(set(commands))
 
 
+def is_manual_command(command: str) -> bool:
+    if command in MANUAL_COMMANDS:
+        return True
+    if "--dist" in command or "--deploy" in command or "--clean" in command:
+        return True
+    if command.startswith("python -m pytest"):
+        return True
+    if command.startswith("powershell "):
+        return True
+    return False
+
+
 def test_documented_commands_discovered():
     commands = discover_commands()
     assert commands, "Expected at least one command snippet in docs."
@@ -82,14 +87,12 @@ def test_command_references_existing_scripts(command: str):
 
 @pytest.mark.parametrize("command", discover_commands())
 def test_documented_command_syntax_or_execution(command: str):
-    if command in MANUAL_PATTERNS:
+    if is_manual_command(command):
         pytest.skip("Manual or environment-dependent command.")
 
     if command.startswith("luac "):
         if not command_exists("luac"):
             pytest.skip("luac not installed in this environment.")
-        if command.strip() == "luac -p":
-            pytest.skip("Command fragment requires file argument in source docs.")
         result = run_command(command.split())
         assert result.returncode == 0, result.stderr
         return
@@ -102,17 +105,12 @@ def test_documented_command_syntax_or_execution(command: str):
         return
 
     if command.startswith("python "):
-        # Only run lightweight doc commands by default.
-        if "--dist" in command or "--deploy" in command or "--clean" in command:
-            pytest.skip("Build/deploy commands are documented but environment-dependent.")
-        if command.startswith("python -m pytest"):
-            pytest.skip("pytest doc commands are manual to avoid recursive test process spawning.")
+        # Only run lightweight non-manual doc commands.
         result = run_command(command.split())
         assert result.returncode == 0, result.stderr
         return
 
-    if command.startswith("powershell "):
-        pytest.skip("PowerShell doc command treated as manual fallback.")
+    assert False, f"Unsupported documented command prefix: {command}"
 
 
 def test_documented_command_luac_skips_when_missing(monkeypatch):
@@ -123,9 +121,21 @@ def test_documented_command_luac_skips_when_missing(monkeypatch):
 
 def test_documented_command_luac_fragment_skips(monkeypatch):
     monkeypatch.setattr("tests.test_docs_commands.command_exists", lambda _name: True)
-    monkeypatch.setattr("tests.test_docs_commands.MANUAL_PATTERNS", ())
     with pytest.raises(pytest.skip.Exception):
         test_documented_command_syntax_or_execution("luac -p")
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "python tools/build.py --project WidgetX --dist",
+        "python -m pytest tests/test_any.py",
+        "python -m pip install -r requirements/dev.txt",
+        "powershell -File script.ps1",
+    ],
+)
+def test_is_manual_command_identifies_environment_dependent_commands(command: str):
+    assert is_manual_command(command) is True
 
 
 def test_documented_command_stylua_runs_with_check(monkeypatch):
@@ -145,7 +155,8 @@ def test_documented_command_stylua_runs_with_check(monkeypatch):
     "command",
     [
         "python tools/build.py --project WidgetX --dist",
-        "python -m pytest tests/test_sensorlist_widget.py",
+        "python -m pytest tests/test_any.py",
+        "python -m pip install -r requirements/dev.txt",
         "powershell -File script.ps1",
     ],
 )

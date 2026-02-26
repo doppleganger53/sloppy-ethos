@@ -28,3 +28,5 @@ The deployed tool appears in Ethos system tools as `Ethos Events`.
 - Console/debug output is still printed for each event.
 - Duplicate consecutive lines are throttled by default (`throttleSame` starts `ON`).
 - Toggle `throttleSame` at runtime by tapping the `ThrottleSame` status row in the UI.
+
+Artifact version source: `scripts/ethos_events/VERSION`.

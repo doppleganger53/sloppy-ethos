@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import importlib.util
+import runpy
+import sys
 from argparse import Namespace
 from pathlib import Path
 
@@ -25,8 +27,8 @@ def _set_main_prerequisites(monkeypatch, args: Namespace):
 
     monkeypatch.setattr(build, "parse_args", lambda: args)
 
-    def fake_resolve_version(repo_root: Path, explicit_version: str | None):
-        calls["resolve_version"] = (repo_root, explicit_version)
+    def fake_resolve_project_version(project_dir: Path, explicit_version: str | None):
+        calls["resolve_project_version"] = (project_dir, explicit_version)
         return "1.0.0"
 
     def fake_ensure_luac_available():
@@ -36,7 +38,7 @@ def _set_main_prerequisites(monkeypatch, args: Namespace):
     def fake_run_lua_checks(project_dir: Path, luac_exec: str):
         calls["run_lua_checks"] = (project_dir, luac_exec)
 
-    monkeypatch.setattr(build, "resolve_version", fake_resolve_version)
+    monkeypatch.setattr(build, "resolve_project_version", fake_resolve_project_version)
     monkeypatch.setattr(build, "ensure_luac_available", fake_ensure_luac_available)
     monkeypatch.setattr(build, "run_lua_checks", fake_run_lua_checks)
     return calls
@@ -115,6 +117,14 @@ def test_resolve_simulator_path_exits_when_model_paths_type_invalid(tmp_path: Pa
     with pytest.raises(SystemExit) as exc:
         build.resolve_simulator_path(config, "X20RS")
     assert "must be a JSON array" in str(exc.value)
+
+
+def test_resolve_simulator_path_exits_when_array_entry_not_object(tmp_path: Path):
+    config = tmp_path / "deploy.json"
+    config.write_text('{"ETHOS_SIM_PATHS":["bad-entry"]}', encoding="utf-8")
+    with pytest.raises(SystemExit) as exc:
+        build.resolve_simulator_path(config, "X20RS")
+    assert "must be an object with 'radio' and 'path' keys" in str(exc.value)
 
 
 def test_resolve_simulator_path_exits_when_model_paths_missing(tmp_path: Path):
@@ -219,6 +229,16 @@ def test_run_lua_checks_exits_when_main_missing(tmp_path: Path):
     with pytest.raises(SystemExit) as exc:
         build.run_lua_checks(project_dir, "luac")
     assert "Widget entrypoint not found" in str(exc.value)
+
+
+def test_run_lua_checks_exits_when_lua_file_discovery_empty(monkeypatch, tmp_path: Path):
+    project_dir = tmp_path / "SensorList"
+    project_dir.mkdir()
+    (project_dir / "main.lua").write_text("print('ok')\n", encoding="utf-8")
+    monkeypatch.setattr(Path, "rglob", lambda _self, _pattern: [])
+    with pytest.raises(SystemExit) as exc:
+        build.run_lua_checks(project_dir, "luac")
+    assert "No Lua files found under project directory" in str(exc.value)
 
 
 def test_build_zip_creates_archive_and_cleans_staging(monkeypatch, tmp_path: Path):
@@ -370,11 +390,31 @@ def test_clean_from_simulator_removes_existing_target(tmp_path: Path, capsys):
     assert "Cleaned simulator target:" in capsys.readouterr().out
 
 
+def test_clean_from_simulator_exits_when_sim_path_missing(tmp_path: Path):
+    with pytest.raises(SystemExit) as exc:
+        build.clean_from_simulator("SensorList", tmp_path / "missing")
+    assert "does not exist" in str(exc.value)
+
+
 def test_clean_from_simulator_noop_when_missing(tmp_path: Path, capsys):
     sim_path = tmp_path / "sim"
     sim_path.mkdir()
     build.clean_from_simulator("SensorList", sim_path)
     assert "Clean skip:" in capsys.readouterr().out
+
+
+def test_clean_from_simulator_exits_when_rmtree_fails(monkeypatch, tmp_path: Path):
+    sim_path = tmp_path / "sim"
+    target = sim_path / "scripts" / "SensorList"
+    target.mkdir(parents=True)
+    monkeypatch.setattr(
+        build.shutil,
+        "rmtree",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("blocked")),
+    )
+    with pytest.raises(SystemExit) as exc:
+        build.clean_from_simulator("SensorList", sim_path)
+    assert "Failed to clean simulator target" in str(exc.value)
 
 
 def test_print_help_text_reads_file(monkeypatch, capsys, tmp_path: Path):
@@ -385,11 +425,19 @@ def test_print_help_text_reads_file(monkeypatch, capsys, tmp_path: Path):
     assert "hello" in capsys.readouterr().out
 
 
+def test_print_help_text_exits_when_file_missing(monkeypatch, tmp_path: Path):
+    help_path = tmp_path / "missing-help.txt"
+    monkeypatch.setattr(build, "HELP_FILE", help_path)
+    with pytest.raises(SystemExit) as exc:
+        build.print_help_text()
+    assert "Help file not found" in str(exc.value)
+
+
 def test_parse_args_defaults(monkeypatch):
     monkeypatch.setattr(build.sys, "argv", ["build.py"])
     args = build.parse_args()
     assert args.help is False
-    assert args.project == "SensorList"
+    assert args.project is None
     assert args.dist is False
     assert args.deploy is False
     assert args.clean is False
@@ -425,7 +473,7 @@ def test_parse_args_flags(monkeypatch):
     )
     args = build.parse_args()
     assert args.help is True
-    assert args.project == "WidgetX"
+    assert args.project == ["WidgetX"]
     assert args.dist is True
     assert args.deploy is True
     assert args.clean is True
@@ -439,7 +487,7 @@ def test_parse_args_flags(monkeypatch):
 def test_main_requires_action(monkeypatch):
     _set_main_prerequisites(
         monkeypatch,
-        Namespace(help=False, project="SensorList", dist=False, deploy=False, clean=False, sim_radio=None, config=None, no_zip=False, version=None, out_dir=None),
+        Namespace(help=False, project=["SensorList"], dist=False, deploy=False, clean=False, sim_radio=None, config=None, no_zip=False, version=None, out_dir=None),
     )
     with pytest.raises(SystemExit) as exc:
         build.main()
@@ -449,7 +497,7 @@ def test_main_requires_action(monkeypatch):
 def test_main_dist_calls_build_zip_when_nozip_false(monkeypatch):
     calls = _set_main_prerequisites(
         monkeypatch,
-        Namespace(help=False, project="SensorList", dist=True, deploy=False, clean=False, sim_radio=None, config=None, no_zip=False, version=None, out_dir=None),
+        Namespace(help=False, project=["SensorList"], dist=True, deploy=False, clean=False, sim_radio=None, config=None, no_zip=False, version=None, out_dir=None),
     )
 
     def fake_build_zip(project_dir: Path, project_name: str, version: str, dist_dir: Path, repo_root: Path):
@@ -469,7 +517,7 @@ def test_main_dist_calls_build_zip_when_nozip_false(monkeypatch):
 def test_main_dist_skips_build_zip_when_nozip_true(monkeypatch):
     calls = _set_main_prerequisites(
         monkeypatch,
-        Namespace(help=False, project="SensorList", dist=True, deploy=False, clean=False, sim_radio=None, config=None, no_zip=True, version=None, out_dir=None),
+        Namespace(help=False, project=["SensorList"], dist=True, deploy=False, clean=False, sim_radio=None, config=None, no_zip=True, version=None, out_dir=None),
     )
     monkeypatch.setattr(build, "build_zip", lambda *_args, **_kwargs: calls.setdefault("build_zip", "called"))
     build.main()
@@ -479,7 +527,7 @@ def test_main_dist_skips_build_zip_when_nozip_true(monkeypatch):
 def test_main_dist_uses_explicit_out_dir(monkeypatch):
     calls = _set_main_prerequisites(
         monkeypatch,
-        Namespace(help=False, project="SensorList", dist=True, deploy=False, clean=False, sim_radio=None, config=None, no_zip=False, version=None, out_dir="custom-dist"),
+        Namespace(help=False, project=["SensorList"], dist=True, deploy=False, clean=False, sim_radio=None, config=None, no_zip=False, version=None, out_dir="custom-dist"),
     )
 
     def fake_build_zip(project_dir: Path, project_name: str, version: str, dist_dir: Path, repo_root: Path):
@@ -495,7 +543,7 @@ def test_main_dist_uses_explicit_out_dir(monkeypatch):
 def test_main_deploy_uses_default_config_path_when_config_missing(monkeypatch):
     calls = _set_main_prerequisites(
         monkeypatch,
-        Namespace(help=False, project="SensorList", dist=False, deploy=True, clean=False, sim_radio=None, config=None, no_zip=False, version=None, out_dir=None),
+        Namespace(help=False, project=["SensorList"], dist=False, deploy=True, clean=False, sim_radio=None, config=None, no_zip=False, version=None, out_dir=None),
     )
     sim_path = Path("C:/simulator")
 
@@ -523,7 +571,7 @@ def test_main_deploy_uses_explicit_config_path(monkeypatch):
         monkeypatch,
         Namespace(
             help=False,
-            project="SensorList",
+            project=["SensorList"],
             dist=False,
             deploy=True,
             clean=False,
@@ -548,7 +596,7 @@ def test_main_deploy_uses_explicit_config_path(monkeypatch):
 def test_main_deploy_exits_when_sim_path_unconfigured(monkeypatch):
     _set_main_prerequisites(
         monkeypatch,
-        Namespace(help=False, project="SensorList", dist=False, deploy=True, clean=False, sim_radio=None, config=None, no_zip=False, version=None, out_dir=None),
+        Namespace(help=False, project=["SensorList"], dist=False, deploy=True, clean=False, sim_radio=None, config=None, no_zip=False, version=None, out_dir=None),
     )
     monkeypatch.setattr(build, "resolve_simulator_path", lambda *_args, **_kwargs: None)
     with pytest.raises(SystemExit) as exc:
@@ -561,7 +609,7 @@ def test_main_help_exits_before_other_work(monkeypatch):
     monkeypatch.setattr(
         build,
         "parse_args",
-        lambda: Namespace(help=True, project="SensorList", dist=False, deploy=False, clean=False, sim_radio=None, config=None, no_zip=False, version=None, out_dir=None),
+        lambda: Namespace(help=True, project=["SensorList"], dist=False, deploy=False, clean=False, sim_radio=None, config=None, no_zip=False, version=None, out_dir=None),
     )
     monkeypatch.setattr(build, "print_help_text", lambda: calls.setdefault("help", True))
     monkeypatch.setattr(build, "ensure_luac_available", lambda: calls.setdefault("luac", True))
@@ -573,7 +621,7 @@ def test_main_help_exits_before_other_work(monkeypatch):
 def test_main_clean_calls_clean_from_simulator(monkeypatch, tmp_path: Path):
     calls = _set_main_prerequisites(
         monkeypatch,
-        Namespace(help=False, project="SensorList", dist=False, deploy=False, clean=True, sim_radio="X20RS", config=None, no_zip=False, version=None, out_dir=None),
+        Namespace(help=False, project=["SensorList"], dist=False, deploy=False, clean=True, sim_radio="X20RS", config=None, no_zip=False, version=None, out_dir=None),
     )
     sim_path = tmp_path / "simulator" / "X20RS"
     sim_path.mkdir(parents=True)
@@ -582,5 +630,34 @@ def test_main_clean_calls_clean_from_simulator(monkeypatch, tmp_path: Path):
     build.main()
     assert "ensure_luac_available" not in calls
     assert calls["clean"] == ("SensorList", sim_path)
+
+
+def test_main_exits_when_sim_radio_path_does_not_exist(monkeypatch, tmp_path: Path):
+    _set_main_prerequisites(
+        monkeypatch,
+        Namespace(
+            help=False,
+            project=["SensorList"],
+            dist=False,
+            deploy=True,
+            clean=False,
+            sim_radio="X20RS",
+            config=None,
+            no_zip=False,
+            version=None,
+            out_dir=None,
+        ),
+    )
+    monkeypatch.setattr(build, "resolve_simulator_path", lambda *_args, **_kwargs: tmp_path / "missing-sim")
+    with pytest.raises(SystemExit) as exc:
+        build.main()
+    assert "Simulator path for radio model 'X20RS' does not exist" in str(exc.value)
+
+
+def test_module_entrypoint_invokes_main(monkeypatch):
+    repo_root = Path(__file__).resolve().parents[1]
+    build_script = repo_root / "tools" / "build.py"
+    monkeypatch.setattr(sys, "argv", [str(build_script), "--help"])
+    runpy.run_path(str(build_script), run_name="__main__")
 
 

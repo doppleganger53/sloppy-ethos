@@ -8,6 +8,7 @@ This document explains the purpose of the top-level folders and key root files i
 
 - Source for Ethos Lua projects.
 - Current active widget: `scripts/SensorList/`.
+- Each script project contains a local `VERSION` file used for single-script dist artifact versioning.
 
 ### `tools/`
 
@@ -53,7 +54,7 @@ This document explains the purpose of the top-level folders and key root files i
 - `CONTRIBUTING.md`: contributor workflow and coding guidance.
 - `AGENTS.md`: coding-agent operating instructions for this repository.
 - `TODO.md`: current backlog and follow-up actions.
-- `VERSION`: package version source of truth.
+- `VERSION`: repository version source of truth.
 - `LICENSE`: project license (GPLv3).
 - `requirements/dev.txt`: Python test dependencies.
 - `.editorconfig`: repository-wide formatting defaults.

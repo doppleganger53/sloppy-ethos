@@ -8,9 +8,13 @@ assignees: ""
 
 ## Environment
 
-- Ethos version:
-- Radio/simulator target:
-- Script package version or ZIP name:
+- Project/area: (for example: SensorList, ethos_events, tools/build.py, docs)
+- Runtime target:
+  - Ethos path: Ethos version + radio/simulator model
+  - Non-Ethos path: OS + shell/tooling version(s)
+- Tested artifact/version:
+  - Script ZIP name or `scripts/<project>/VERSION` value
+  - Commit SHA (if testing untagged changes)
 
 ## What Happened
 
@@ -28,4 +32,6 @@ Describe what you expected to happen.
 
 ## Logs / Screenshots
 
-Include Ethos Info error entries and screenshots where possible.
+Include relevant errors and screenshots where possible.
+- Prefer direct image links from GitHub issue uploads or `raw.githubusercontent.com`.
+- Avoid GitHub `blob` image URLs because they are not stable for embeds.

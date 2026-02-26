@@ -1,4 +1,7 @@
 # TODO List
 
-- [x] Test Sensorlist v0.1.0 on physical radio & promote to full release if successful
-- [ ] Enhance build scripts with optional clean step - remove deployed scripts from simulator directory
+- [ ] Human testing of SensorList-v1.0.0 changes
+- [ ] Arduino FBus integration for accelerometer / other non-FrSky sensors
+- [ ] Add readme section for downloading built widget zips and installing via Ethos Suite
+- [ ] Update agent metadata to reflect mutable workflow in alignment with stated goals of the repo
+- [ ] Investigate custom script builds via github for end user install

@@ -1,15 +1,18 @@
 # sloppy-ethos
 
+## Goal
+
 `<human>`
 
 What started as a simple experiment to play around with agentic AI coding for a little utility widget has morphed itself into an idea to start a community repo with two main goals:
 
 - Make some handy Ethos utilities
+- Help those unfamiliar with lua to create useful scripts for themselves and others
 - Spend more time flying than coding
 
-So, if you're here to just grab a widget, script, or be amused by the slop - by all means enjoy yourself !!
+So, if you're here to just grab a widget, script, or be amused by the slop - by all means enjoy yourself!
 
-If you want to play around with  finding repeatable, low-maintenance ways to deslopify and generate decent scripts to make our RC hobbist lives easier, let see those PRs :)
+If you want to play around with finding repeatable, low-maintenance ways to deslopify and generate decent scripts / utilities to make our RC hobbist lives easier, PRs are welcome :)
 
 `</human>`
 
@@ -33,16 +36,20 @@ or GIF walkthrough will be added in a follow-up docs update.
 
 ```powershell
 python tools/build.py --project SensorList --dist
+python tools/build.py --project SensorList --project ethos_events --dist
 python tools/build.py --project SensorList --deploy
 python tools/build.py --project ethos_events --deploy
 python tools/build.py --project SensorList --clean --sim-radio X20RS
 python tools/build.py --help
 ```
 
+- Running --clean now clears dist/ (or the configured --out-dir) outputs along with removing the simulator scripts.
 - Install the dist ZIP inside Ethos Suite for radio deployment.
 - Configure `tools/deploy.config.json` with `ETHOS_SIM_PATHS` entries before running `--deploy`/`--clean`.
 - Mark exactly one `ETHOS_SIM_PATHS` entry as `"default": true` for deploy/clean without `--sim-radio`.
-- Package version is read from `VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
+- Single-script package version is read from `scripts/{ProjectName}/VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
+- Multi-script dist bundles are an explicit naming exception and use the unversioned ZIP name: `dist/sloppy-ethos_scripts.zip`.
+- Root `VERSION` remains the repository version source of truth.
 
 ### 30-Second First Run
 
@@ -52,6 +59,9 @@ python tools/build.py --help
    - `Checking Lua syntax:`
    - `Packaged widget ZIP:`
 3. Install the generated archive from `dist/` via Ethos Suite.
+
+To build a single install ZIP with multiple scripts:
+`python tools/build.py --project SensorList --project ethos_events --dist`
 
 ## Project Layout
 
@@ -88,7 +98,8 @@ luac -p scripts/SensorList/main.lua
 ## Releases
 
 - Changelog source of truth: `CHANGELOG.md`.
-- Version source of truth: `VERSION`.
+- Repository version source of truth: `VERSION`.
+- Script artifact versions: `scripts/{ProjectName}/VERSION`.
 - Published release notes and install assets: [GitHub Releases](https://github.com/doppleganger53/sloppy-ethos/releases).
 
 ## Collaboration
@@ -116,16 +127,11 @@ luac -p scripts/SensorList/main.lua
 
 - Script idea: smart switch map that pre-populates mapped switches and identifies unused switches
 - optimize agentic and human workflows in the repo
-- genericize build and test scripts for multiple scripts
 
 ### SensorList
 
-- Touch column headings to change sorting.
-- Refine conflict display behavior for `Application ID` vs `Physical ID` cases.
 - Allow defining acceptable conflicts (for example, multiple values per device such as receivers or servos).
 
 Roadmap implementation work is currently tracked in the following enhancement issues:
 
-- [#8](https://github.com/doppleganger53/sloppy-ethos/issues/8) Touchable column headers for sort control.
-- [#9](https://github.com/doppleganger53/sloppy-ethos/issues/9) Conflict display severity refinement.
 - [#10](https://github.com/doppleganger53/sloppy-ethos/issues/10) Acceptable conflict definition model.
