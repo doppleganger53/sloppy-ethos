@@ -7,11 +7,12 @@
 What started as a simple experiment to play around with agentic AI coding for a little utility widget has morphed itself into an idea to start a community repo with two main goals:
 
 - Make some handy Ethos utilities
+- Help those unfamiliar with lua to create useful scripts for themselves and others
 - Spend more time flying than coding
 
-So, if you're here to just grab a widget, script, or be amused by the slop - by all means enjoy yourself !!
+So, if you're here to just grab a widget, script, or be amused by the slop - by all means enjoy yourself!
 
-If you want to play around with finding repeatable, low-maintenance ways to deslopify and generate decent scripts / utilities to make our RC hobbist lives easier, let see those PRs :)
+If you want to play around with finding repeatable, low-maintenance ways to deslopify and generate decent scripts / utilities to make our RC hobbist lives easier, PRs are welcome :)
 
 `</human>`
 
