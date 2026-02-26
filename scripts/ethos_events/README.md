@@ -21,3 +21,10 @@ python tools/build.py --project ethos_events --deploy
 ```
 
 The deployed tool appears in Ethos system tools as `Ethos Events`.
+
+## Runtime behavior
+
+- The tool now shows recent formatted events directly in the tool UI.
+- Console/debug output is still printed for each event.
+- Duplicate consecutive lines are throttled by default (`throttleSame` starts `ON`).
+- Toggle `throttleSame` at runtime by tapping the `ThrottleSame` status row in the UI.
