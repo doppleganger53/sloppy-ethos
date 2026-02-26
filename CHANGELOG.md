@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.3.0] - 2026-02-26
+
+### Changed
+
+- Adopted a main-only branch strategy:
+  - `main` is the only long-lived branch.
+  - short-lived issue branch conventions are now explicit (`feature/`, `fix/`, `docs/`, `chore/`).
+  - release-prep branches now use `release/v{VERSION}`.
+- Updated repository workflow and contributor docs for the new branching/release model:
+  - `AGENTS.md`
+  - `docs/DEVELOPMENT.md`
+  - `CONTRIBUTING.md`
+  - `README.md`
+- Updated issue/release prompt templates and open issue prompt defaults to align with `main` as the default target branch.
+- Clarified release/version policy:
+  - root `VERSION` is bumped on release branches.
+  - script `VERSION` files remain independent and are bumped only when script artifacts/behavior change.
+  - optional `-rc.N` prerelease usage is defined for release branch stabilization.
+
 ## [0.1.1] - 2026-02-23
 
 ### Added
