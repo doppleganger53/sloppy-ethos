@@ -145,6 +145,9 @@ Return:
 4. Manual acceptance scenario results (if applicable).
 5. Risks, edge cases, and follow-up items.
 6. Proposed PR title/body including `Closes #{ISSUE_NUMBER}`.
+7. Issue closure sequencing:
+   - do not manually close the issue before PR merge;
+   - rely on merged PR closing keywords for automatic issue closure.
 
 ## Quality Gates
 
