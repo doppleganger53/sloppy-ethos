@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 from argparse import Namespace
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
@@ -117,6 +118,40 @@ def test_clean_dist_dir_removes_artifacts(tmp_path: Path):
 
     build.clean_dist_dir(dist_dir)
     assert not list(dist_dir.iterdir())
+
+
+def test_clean_dist_dir_skips_missing_directory(tmp_path: Path, capsys):
+    missing_dist_dir = tmp_path / "missing-dist"
+    build.clean_dist_dir(missing_dist_dir)
+    captured = capsys.readouterr()
+    assert "Clean skip: dist directory not found" in captured.out
+
+
+def test_clean_dist_dir_reports_already_empty(tmp_path: Path, capsys):
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir()
+    build.clean_dist_dir(dist_dir)
+    captured = capsys.readouterr()
+    assert f"Dist directory already empty: {dist_dir}" in captured.out
+
+
+def test_clean_dist_dir_exit_on_delete_error(monkeypatch, tmp_path: Path):
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir()
+    artifact = dist_dir / "widget.zip"
+    artifact.write_text("data", encoding="utf-8")
+
+    original_unlink = Path.unlink
+
+    def fake_unlink(path_obj: Path, *args, **kwargs):
+        if path_obj == artifact:
+            raise OSError("cannot remove")
+        return original_unlink(path_obj, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fake_unlink)
+    with pytest.raises(SystemExit) as exc:
+        build.clean_dist_dir(dist_dir)
+    assert "Failed to clean dist artifact" in str(exc.value)
 
 
 def test_parse_args_defaults(monkeypatch):
@@ -275,3 +310,69 @@ def test_main_deploy_and_clean_paths(monkeypatch, tmp_path: Path):
     assert calls["clean"] == ("SensorList", sim_path)
     assert calls["deploy"] == ("SensorList", sim_path)
     assert calls["clean_dist"] == expected_dist_dir
+
+
+def test_main_clean_only_uses_custom_out_dir_without_luac(monkeypatch, tmp_path: Path):
+    sim_path = tmp_path / "simulator" / "X20RS"
+    sim_path.mkdir(parents=True)
+    custom_out_dir = tmp_path / "custom-dist"
+    calls: dict[str, object] = {}
+
+    monkeypatch.setattr(
+        build,
+        "parse_args",
+        lambda: Namespace(
+            help=False,
+            project=["SensorList"],
+            dist=False,
+            deploy=False,
+            clean=True,
+            sim_radio="X20RS",
+            config=None,
+            no_zip=False,
+            version=None,
+            out_dir=str(custom_out_dir),
+        ),
+    )
+
+    luac_resolver = Mock(return_value="luac")
+    monkeypatch.setattr(build, "ensure_luac_available", luac_resolver)
+    monkeypatch.setattr(build, "run_lua_checks", lambda *_args, **_kwargs: calls.setdefault("lua_checks", True))
+    monkeypatch.setattr(build, "resolve_simulator_path", lambda *_args, **_kwargs: sim_path)
+    monkeypatch.setattr(build, "clean_from_simulator", lambda project_name, resolved: calls.setdefault("clean", (project_name, resolved)))
+    monkeypatch.setattr(build, "clean_dist_dir", lambda dist_dir: calls.setdefault("clean_dist", dist_dir))
+    monkeypatch.setattr(build, "deploy_to_simulator", lambda *_args, **_kwargs: calls.setdefault("deploy", True))
+
+    build.main()
+
+    assert calls["clean"] == ("SensorList", sim_path)
+    assert calls["clean_dist"] == custom_out_dir
+    luac_resolver.assert_not_called()
+    assert "lua_checks" not in calls
+    assert "deploy" not in calls
+
+
+def test_main_exits_when_resolved_simulator_path_is_empty(monkeypatch):
+    monkeypatch.setattr(
+        build,
+        "parse_args",
+        lambda: Namespace(
+            help=False,
+            project=["SensorList"],
+            dist=False,
+            deploy=True,
+            clean=False,
+            sim_radio=None,
+            config=None,
+            no_zip=False,
+            version=None,
+            out_dir=None,
+        ),
+    )
+    monkeypatch.setattr(build, "ensure_luac_available", lambda: "luac")
+    monkeypatch.setattr(build, "run_lua_checks", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(build, "resolve_simulator_path", lambda *_args, **_kwargs: None)
+
+    with pytest.raises(SystemExit) as exc:
+        build.main()
+    assert "Simulator path not configured." in str(exc.value)
