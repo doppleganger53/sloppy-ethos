@@ -6,7 +6,7 @@
 - Title: `[Enhancement] Add event output to UI`
 - Labels: `enhancement`
 - Snapshot state: open on `2026-02-26`
-- Target branch (default): `enhancements` (or as user-directed for current workflow)
+- Target branch (default): `main` (or as user-directed for current workflow)
 
 ## Mission
 

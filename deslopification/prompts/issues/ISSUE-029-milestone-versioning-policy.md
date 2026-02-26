@@ -6,7 +6,7 @@
 - Title: `[Enhancement] Define milestone branch and versioning workflow policy`
 - Labels: `enhancement`, `workflow`
 - Snapshot state: open on `2026-02-26`
-- Target branch (default): `enhancements` (or as user-directed for current workflow)
+- Target branch (default): `main` (or as user-directed for current workflow)
 
 ## Mission
 

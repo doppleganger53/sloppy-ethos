@@ -100,6 +100,8 @@ luac -p scripts/SensorList/main.lua
 - Changelog source of truth: `CHANGELOG.md`.
 - Repository version source of truth: `VERSION`.
 - Script artifact versions: `scripts/{ProjectName}/VERSION`.
+- Main-branch workflow, branch naming conventions, version bump timing, optional `-rc.N`, and release-prep flow:
+  [Development policy](docs/DEVELOPMENT.md#main-branch-release-and-versioning-policy).
 - Published release notes and install assets: [GitHub Releases](https://github.com/doppleganger53/sloppy-ethos/releases).
 
 ## Collaboration

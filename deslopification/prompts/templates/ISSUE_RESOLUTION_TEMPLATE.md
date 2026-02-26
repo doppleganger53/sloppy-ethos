@@ -10,7 +10,7 @@ Replace all `{...}` placeholders before execution.
 - URL: `{ISSUE_URL}`
 - Labels: `{ISSUE_LABELS}`
 - Snapshot date: `{YYYY-MM-DD}`
-- Target branch: `{TARGET_BRANCH}`
+- Target branch (default: `main`): `{TARGET_BRANCH}`
 
 ## Mission
 
@@ -38,7 +38,7 @@ You are Codex working directly in this repository.
 
 ## Branch And Worktree Gate (Required Before Editing)
 
-1. Confirm target branch from prompt: `{TARGET_BRANCH}`.
+1. Confirm target branch from prompt: `{TARGET_BRANCH}` (default should be `main`).
 2. Run:
    - `git branch --show-current`
    - `git status --porcelain`

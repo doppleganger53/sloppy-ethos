@@ -2,9 +2,15 @@
 
 ## Workflow
 
-1. Create a branch from `main`.
+1. Create a short-lived branch from the latest `main` using naming conventions:
+   - `feature/{issue-number}-{short-slug}` for enhancements
+   - `fix/{issue-number}-{short-slug}` for bugs
+   - `docs/{issue-number}-{short-slug}` for docs/process changes
+   - `chore/{issue-number}-{short-slug}` for maintenance/tooling changes
 2. Keep changes focused and scoped to one concern.
-3. Run local checks before opening a PR:
+3. If installable script behavior/assets changed, bump that script `scripts/{ProjectName}/VERSION` in the same PR. Do not bump version files for docs-only or workflow-only changes.
+4. Do not bump root `VERSION` on issue branches; root release versioning is finalized on `release/v{VERSION}`.
+5. Run local checks before opening a PR:
    - `luac -p scripts/SensorList/main.lua`
    - package build:
      `python tools/build.py --project SensorList --dist`
@@ -13,7 +19,8 @@
    - docs validation (required for any documentation changes):
      `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
    - `stylua --config-path tools/config/stylua.toml scripts` (if formatting changed)
-4. Open a PR using the repository PR template.
+6. Open a PR into `main` using the repository PR template and include linked-closing issue keywords (for example, `Closes #29`).
+7. Follow release branch/tag flow in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#main-branch-release-and-versioning-policy) and [Release Workflow](docs/DEVELOPMENT.md#release-workflow).
 
 ## Documentation Changes
 

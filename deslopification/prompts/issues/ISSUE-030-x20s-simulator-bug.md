@@ -6,7 +6,7 @@
 - Title: `[Bug] SensorList not functioning in X20S simulator`
 - Labels: `bug`
 - Snapshot state: open on `2026-02-26`
-- Target branch (default): `enhancements` (or as user-directed for current workflow)
+- Target branch (default): `main` (or as user-directed for current workflow)
 - Attached screenshot evidence:
   `https://github.com/user-attachments/assets/e79aed7e-da30-48b7-810d-c612e0fdf406`
 
