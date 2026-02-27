@@ -28,6 +28,8 @@ Historical detail remains in individual session notes referenced from
   - selective `Focus` classification for faster topical filtering.
 - `CATALOG.md` entries and distributions index note artifacts under
   `deslopification/memory/notes/**` (control files are listed separately).
+- `CATALOG.md` snapshot byte totals are computed from normalized text line
+  endings to remain stable across Windows (`CRLF`) and Linux (`LF`) checkouts.
 - Focus distribution lines in `CATALOG.md` are sourced from per-focus `.desc`
   files stored in each `notes/{category}/{focus}/` folder.
 - Session notes should use specific focus classifiers (for example,
@@ -39,6 +41,19 @@ Historical detail remains in individual session notes referenced from
   - `deslopification/memory/notes/{category}/{focus}/`.
 - Issue-linked sessions must run `tools/session_preflight.py --mode issue ...`
   and may not mutate files on `main`.
+- Release scope is explicit and required in release execution:
+  - `repo` for repository-level release work.
+  - `script` for installable script artifact releases.
+- Script manual gate issues block only matching `script` releases and should be
+  treated as out of scope for `repo` releases unless explicitly included.
+- `tools/session_preflight.py` supports release-scope guards for issue sessions:
+  - `--release-kind {repo|script}`
+  - `--project {ProjectName}` (`script` only)
+  - one or more `--script-gate-issue {N}` flags (`script` only)
+- Hybrid PR merge strategy baseline:
+  - `squash` for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`).
+  - `merge commit` for `release/v{VERSION}` PRs and lineage-sensitive cases.
+  - `rebase` is not the default merge method.
 - Non-issue sessions may run on `main`, but require user confirmation before
   file mutations.
 

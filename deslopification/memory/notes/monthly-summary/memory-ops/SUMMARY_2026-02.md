@@ -6,7 +6,7 @@ single note.
 
 ## Coverage
 
-- Date range: 2026-02-21 to 2026-02-26
+- Date range: 2026-02-21 to 2026-02-27
 - Historical detail-note baseline: 52 files before Issue #16 memory index
   additions (see `CATALOG.md` for current totals).
 
@@ -19,6 +19,11 @@ single note.
 - Standardized main-only branch conventions and release workflow around `main`
   plus short-lived issue/release branches.
 - Clarified issue hygiene and PR-driven closure behavior.
+- Added explicit release scope model (`repo` vs `script`) and script-gate
+  boundary rules to prevent gate confusion across release types.
+- Standardized hybrid PR merge strategy:
+  - `squash` as default for normal issue PRs.
+  - `merge commit` for release-prep and lineage-sensitive PRs.
 
 Primary notes:
 
@@ -26,6 +31,7 @@ Primary notes:
 - `SESSION_NOTES_2026-02-24_ROOT_CAUSE_STRATEGY_POLICY.md`
 - `SESSION_NOTES_2026-02-26_MAIN_ONLY_BRANCHING_CONVENTIONS.md`
 - `SESSION_NOTES_2026-02-26_ISSUE_22_PR_CLOSURE_GUARDRAIL.md`
+- `SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md`
 
 ### Build, Packaging, And Versioning
 

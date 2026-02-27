@@ -4,6 +4,7 @@
 
 Finish the deferred release workflow after Part 1 branch migration is complete.
 Manual testing issue #32 is the release gate and must be completed before tagging.
+This is a `script` release workflow for SensorList (not a repo-only release gate).
 
 ## Required Context
 

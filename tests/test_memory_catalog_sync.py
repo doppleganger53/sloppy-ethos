@@ -40,6 +40,14 @@ def make_entry(
     )
 
 
+def test_normalized_byte_count_is_platform_stable(tmp_path):
+    lf_file = tmp_path / "lf.md"
+    crlf_file = tmp_path / "crlf.md"
+    lf_file.write_bytes(b"line1\nline2\n")
+    crlf_file.write_bytes(b"line1\r\nline2\r\n")
+    assert tool.normalized_byte_count(lf_file) == tool.normalized_byte_count(crlf_file)
+
+
 def first_high_signal_focus() -> str:
     focuses = sorted(tool.HIGH_SIGNAL_FOCUS)
     assert focuses, "HIGH_SIGNAL_FOCUS must contain at least one focus"

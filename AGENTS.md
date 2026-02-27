@@ -97,6 +97,12 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 - Use `release/v{VERSION}` for release-prep work, then delete it after merge/release.
 - Open PRs into `main` and include linked-closing keywords when applicable.
 
+## PR Merge Strategy
+
+- Default merge method for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`) is `squash`.
+- Use `merge commit` for release-prep branches (`release/v{VERSION}`) and for PRs where branch commit lineage must be preserved.
+- `rebase` merge is not the default practice for this repository.
+
 ## Session Branch Gate
 
 - Issue-linked work is any session tied to a GitHub issue number/URL or any

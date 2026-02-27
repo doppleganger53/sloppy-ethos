@@ -15,11 +15,11 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 69
-- Total size: 102,430 bytes
-- Total lines: 2,447
+- Files: 70
+- Total size: 102,856 bytes
+- Total lines: 2,512
 - Distribution by category:
-  - session notes: 64
+  - session notes: 65
   - handoff/restart notes: 3
   - domain notes: 1
   - monthly summaries: 1
@@ -31,8 +31,8 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 7 -- docs-process ( Documentation and contributor process changes )
   - 6 -- release-versioning ( Release flow, tagging, and version policy )
   - 5 -- testing ( Automated tests and coverage changes )
+  - 5 -- workflow-policy ( Branching, policy, and workflow guardrails )
   - 4 -- issue-lifecycle ( Issue creation, validation, and closure tracking )
-  - 4 -- workflow-policy ( Branching, policy, and workflow guardrails )
   - 3 -- handoff ( Session continuity and restart handoffs )
   - 3 -- prompts ( Prompt and template asset evolution )
   - 2 -- repo ( Repository-wide governance and metadata )
@@ -41,6 +41,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 
 - Selection: newest session notes where `Focus` is one of `build-tooling`, `docs-process`, `release-versioning`, `repo`, `testing`, or `workflow-policy`; keep up to 3 per focus, then keep newest 12 overall.
 - 2026-02-27 | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V100.md](notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V100.md) | # Session Notes 2026-02-27 - Release v1.0.0
+- 2026-02-27 | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md) | # Session Notes 2026-02-27 - Issue #39 Release Scope Clarity
 - 2026-02-27 | testing | [notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage
 - 2026-02-27 | testing | [notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md](notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md) | # Session Notes 2026-02-27 - Issue #16 Catalog Test Portability
 - 2026-02-27 | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md) | # Session Notes 2026-02-27 - Issue #16 Branch Gate Hardening
@@ -51,7 +52,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - 2026-02-26 | docs-process | [notes/session-note/docs-process/SESSION_NOTES_2026-02-26_DOC_COMMANDS_MANUAL_REFACTOR.md](notes/session-note/docs-process/SESSION_NOTES_2026-02-26_DOC_COMMANDS_MANUAL_REFACTOR.md) | # Session Notes 2026-02-26 - Docs Command Manual Classification Refactor
 - 2026-02-26 | build-tooling | [notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_DIST_CLEAN.md](notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_DIST_CLEAN.md) | # Session Notes 2026-02-26 - Dist Cleanup
 - 2026-02-26 | build-tooling | [notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_BUILD_PY_COVERAGE.md](notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_BUILD_PY_COVERAGE.md) | # Session Notes 2026-02-26 - build.py Coverage Improvement
-- 2026-02-24 | testing | [notes/session-note/testing/SESSION_NOTES_2026-02-24_VSCODE_STALE_TEST_NODEID_COMPAT.md](notes/session-note/testing/SESSION_NOTES_2026-02-24_VSCODE_STALE_TEST_NODEID_COMPAT.md) | # Session Notes 2026-02-24 - VS Code Stale Test Node ID Compatibility
 
 ## Entries
 
@@ -126,3 +126,4 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-02-27 | session-note | testing | [notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md](notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md) | # Session Notes 2026-02-27 - Issue #16 Catalog Test Portability |
 | 2026-02-27 | session-note | testing | [notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage |
 | 2026-02-27 | session-note | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md) | # Session Notes 2026-02-27 - Issue #16 Branch Gate Hardening |
+| 2026-02-27 | session-note | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md) | # Session Notes 2026-02-27 - Issue #39 Release Scope Clarity |

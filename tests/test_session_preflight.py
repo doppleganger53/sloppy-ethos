@@ -33,7 +33,15 @@ def test_branch_name_mapping():
 def test_issue_mode_blocks_on_main(monkeypatch, capsys):
     monkeypatch.setattr(preflight, "get_current_branch", lambda: "main")
     monkeypatch.setattr(preflight, "is_worktree_dirty", lambda: True)
-    args = Namespace(mode="issue", issue_number="16", issue_kind="enhancement", slug="memory-optimization")
+    args = Namespace(
+        mode="issue",
+        issue_number="16",
+        issue_kind="enhancement",
+        slug="memory-optimization",
+        release_kind=None,
+        project=None,
+        script_gate_issue=[],
+    )
     result = preflight.run_preflight(args)
     output = capsys.readouterr().out
     assert result == 2
@@ -45,7 +53,15 @@ def test_issue_mode_blocks_on_main(monkeypatch, capsys):
 def test_issue_mode_passes_on_recommended_branch(monkeypatch, capsys):
     monkeypatch.setattr(preflight, "get_current_branch", lambda: "feature/16-memory-optimization")
     monkeypatch.setattr(preflight, "is_worktree_dirty", lambda: False)
-    args = Namespace(mode="issue", issue_number="16", issue_kind="enhancement", slug="memory-optimization")
+    args = Namespace(
+        mode="issue",
+        issue_number="16",
+        issue_kind="enhancement",
+        slug="memory-optimization",
+        release_kind=None,
+        project=None,
+        script_gate_issue=[],
+    )
     result = preflight.run_preflight(args)
     output = capsys.readouterr().out
     assert result == 0
@@ -56,7 +72,15 @@ def test_issue_mode_passes_on_recommended_branch(monkeypatch, capsys):
 def test_issue_mode_warns_when_branch_differs_from_recommended(monkeypatch, capsys):
     monkeypatch.setattr(preflight, "get_current_branch", lambda: "fix/16-memory-optimization")
     monkeypatch.setattr(preflight, "is_worktree_dirty", lambda: False)
-    args = Namespace(mode="issue", issue_number="16", issue_kind="enhancement", slug="memory-optimization")
+    args = Namespace(
+        mode="issue",
+        issue_number="16",
+        issue_kind="enhancement",
+        slug="memory-optimization",
+        release_kind=None,
+        project=None,
+        script_gate_issue=[],
+    )
     result = preflight.run_preflight(args)
     output = capsys.readouterr().out
     assert result == 0
@@ -67,7 +91,15 @@ def test_issue_mode_warns_when_branch_differs_from_recommended(monkeypatch, caps
 def test_non_issue_mode_allows_main_with_reminder(monkeypatch, capsys):
     monkeypatch.setattr(preflight, "get_current_branch", lambda: "main")
     monkeypatch.setattr(preflight, "is_worktree_dirty", lambda: False)
-    args = Namespace(mode="non-issue", issue_number=None, issue_kind=None, slug=None)
+    args = Namespace(
+        mode="non-issue",
+        issue_number=None,
+        issue_kind=None,
+        slug=None,
+        release_kind=None,
+        project=None,
+        script_gate_issue=[],
+    )
     result = preflight.run_preflight(args)
     output = capsys.readouterr().out
     assert result == 0
@@ -78,7 +110,15 @@ def test_non_issue_mode_allows_main_with_reminder(monkeypatch, capsys):
 def test_non_issue_mode_on_non_main_has_no_mutation_reminder(monkeypatch, capsys):
     monkeypatch.setattr(preflight, "get_current_branch", lambda: "feature/some-work")
     monkeypatch.setattr(preflight, "is_worktree_dirty", lambda: True)
-    args = Namespace(mode="non-issue", issue_number=None, issue_kind=None, slug=None)
+    args = Namespace(
+        mode="non-issue",
+        issue_number=None,
+        issue_kind=None,
+        slug=None,
+        release_kind=None,
+        project=None,
+        script_gate_issue=[],
+    )
     result = preflight.run_preflight(args)
     output = capsys.readouterr().out
     assert result == 0
@@ -89,7 +129,15 @@ def test_non_issue_mode_on_non_main_has_no_mutation_reminder(monkeypatch, capsys
 
 def test_run_preflight_returns_error_when_git_calls_fail(monkeypatch, capsys):
     monkeypatch.setattr(preflight, "get_current_branch", lambda: (_ for _ in ()).throw(RuntimeError("git failed")))
-    args = Namespace(mode="non-issue", issue_number=None, issue_kind=None, slug=None)
+    args = Namespace(
+        mode="non-issue",
+        issue_number=None,
+        issue_kind=None,
+        slug=None,
+        release_kind=None,
+        project=None,
+        script_gate_issue=[],
+    )
     result = preflight.run_preflight(args)
     output = capsys.readouterr().out
     assert result == 1
@@ -123,6 +171,33 @@ def test_parse_args_accepts_valid_issue_mode():
     assert args.issue_number == "16"
     assert args.issue_kind == "enhancement"
     assert args.slug == "memory-optimization"
+    assert args.release_kind is None
+    assert args.project is None
+    assert args.script_gate_issue == []
+
+
+def test_parse_args_accepts_valid_script_release_scope():
+    args = preflight.parse_args(
+        [
+            "--mode",
+            "issue",
+            "--issue-number",
+            "39",
+            "--issue-kind",
+            "bug",
+            "--slug",
+            "repo-release-workflow-failures",
+            "--release-kind",
+            "script",
+            "--project",
+            "SensorList",
+            "--script-gate-issue",
+            "32",
+        ]
+    )
+    assert args.release_kind == "script"
+    assert args.project == "SensorList"
+    assert args.script_gate_issue == ["32"]
 
 
 def test_parse_args_accepts_valid_non_issue_mode():
@@ -131,6 +206,9 @@ def test_parse_args_accepts_valid_non_issue_mode():
     assert args.issue_number is None
     assert args.issue_kind is None
     assert args.slug is None
+    assert args.release_kind is None
+    assert args.project is None
+    assert args.script_gate_issue == []
 
 
 def test_parse_args_requires_issue_fields_for_issue_mode():
@@ -164,7 +242,133 @@ def test_parse_args_rejects_issue_fields_for_non_issue_mode(argv):
         preflight.parse_args(argv)
 
 
+@pytest.mark.parametrize(
+    "argv",
+    [
+        [
+            "--mode",
+            "issue",
+            "--issue-number",
+            "39",
+            "--issue-kind",
+            "bug",
+            "--slug",
+            "repo-release-workflow-failures",
+            "--release-kind",
+            "repo",
+            "--script-gate-issue",
+            "32",
+        ],
+        [
+            "--mode",
+            "issue",
+            "--issue-number",
+            "39",
+            "--issue-kind",
+            "bug",
+            "--slug",
+            "repo-release-workflow-failures",
+            "--release-kind",
+            "script",
+            "--project",
+            "SensorList",
+        ],
+        [
+            "--mode",
+            "issue",
+            "--issue-number",
+            "39",
+            "--issue-kind",
+            "bug",
+            "--slug",
+            "repo-release-workflow-failures",
+            "--release-kind",
+            "script",
+            "--script-gate-issue",
+            "32",
+        ],
+        [
+            "--mode",
+            "issue",
+            "--issue-number",
+            "39",
+            "--issue-kind",
+            "bug",
+            "--slug",
+            "repo-release-workflow-failures",
+            "--project",
+            "SensorList",
+        ],
+    ],
+)
+def test_parse_args_rejects_invalid_release_scope_combinations(argv):
+    with pytest.raises(SystemExit):
+        preflight.parse_args(argv)
+
+
+def test_issue_mode_script_release_blocks_when_gate_issue_open(monkeypatch, capsys):
+    monkeypatch.setattr(preflight, "get_current_branch", lambda: "fix/39-repo-release-workflow-failures")
+    monkeypatch.setattr(preflight, "is_worktree_dirty", lambda: False)
+    monkeypatch.setattr(
+        preflight,
+        "get_issue_metadata",
+        lambda _issue_number: ("OPEN", "Manual testing of SensorList-v1.0.0 changes", "https://github.com/example/32"),
+    )
+    args = Namespace(
+        mode="issue",
+        issue_number="39",
+        issue_kind="bug",
+        slug="repo-release-workflow-failures",
+        release_kind="script",
+        project="SensorList",
+        script_gate_issue=["32"],
+    )
+    result = preflight.run_preflight(args)
+    output = capsys.readouterr().out
+    assert result == 2
+    assert "Result: BLOCKED" in output
+    assert "Script release requires all script gate issues to be CLOSED." in output
+    assert "#32" in output
+
+
+def test_issue_mode_script_release_passes_when_gate_issue_closed(monkeypatch, capsys):
+    monkeypatch.setattr(preflight, "get_current_branch", lambda: "fix/39-repo-release-workflow-failures")
+    monkeypatch.setattr(preflight, "is_worktree_dirty", lambda: False)
+    monkeypatch.setattr(
+        preflight,
+        "get_issue_metadata",
+        lambda _issue_number: ("CLOSED", "Manual testing complete", "https://github.com/example/32"),
+    )
+    args = Namespace(
+        mode="issue",
+        issue_number="39",
+        issue_kind="bug",
+        slug="repo-release-workflow-failures",
+        release_kind="script",
+        project="SensorList",
+        script_gate_issue=["32"],
+    )
+    result = preflight.run_preflight(args)
+    output = capsys.readouterr().out
+    assert result == 0
+    assert "Result: PASS" in output
+    assert "Release kind: script" in output
+    assert "Script gate issues: #32" in output
+
+
 def test_main_returns_run_preflight_exit_code(monkeypatch):
-    monkeypatch.setattr(preflight, "parse_args", lambda _argv: Namespace(mode="non-issue", issue_number=None, issue_kind=None, slug=None))
+    monkeypatch.setattr(
+        preflight,
+        "parse_args",
+        lambda _argv: Namespace(
+            mode="non-issue",
+            issue_number=None,
+            issue_kind=None,
+            slug=None,
+            release_kind=None,
+            project=None,
+            script_gate_issue=[],
+        ),
+    )
     monkeypatch.setattr(preflight, "run_preflight", lambda _args: 7)
     assert preflight.main(["--mode", "non-issue"]) == 7
