@@ -77,6 +77,25 @@
 
 This repository uses `main` as the only long-lived integration branch and aligns release/version behavior with [Semantic Versioning](https://semver.org/) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+### Release Scope Types
+
+- `repo` release:
+  - Covers repository-level delivery (workflow/docs/tooling/policy/release metadata).
+  - Root version source of truth is `VERSION`.
+  - Script-specific manual gate issues are not implicit blockers unless the release scope explicitly includes that script.
+- `script` release:
+  - Covers an installable script artifact release for a specific project (`SensorList`, `ethos_events`, or future scripts).
+  - Script version source of truth is `scripts/{ProjectName}/VERSION`.
+  - Script-specific gate issues (for example manual test gates) must be closed before tag/publish.
+
+### Tag Naming Clarity
+
+- Repository release tags: `v{VERSION}`.
+- Script release tags should include project prefix to avoid ambiguity:
+  - `sensorlist-v{VERSION}`
+  - `ethos_events-v{VERSION}`
+- Legacy tags without project prefix remain valid historical artifacts; use the scoped style for new script releases.
+
 ### Branch Roles And Naming
 
 - `main` is the only long-lived branch.
@@ -89,6 +108,12 @@ This repository uses `main` as the only long-lived integration branch and aligns
 - Release-prep work uses short-lived branches named `release/v{VERSION}` created from `main`.
 - Every PR targets `main` and should include linked-closing keywords when applicable (for example, `Closes #29`).
 - Delete merged short-lived branches after PR merge.
+
+### PR Merge Strategy
+
+- Default merge method for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`) is `squash`.
+- Use `merge commit` for release-prep PRs (`release/v{VERSION}`) and lineage-sensitive PRs where preserving branch commit structure is intentional.
+- `rebase` merge is not the repository default.
 
 ### Version Bump Timing
 
@@ -111,29 +136,52 @@ This repository uses `main` as the only long-lived integration branch and aligns
 
 ## Release Workflow
 
+### Shared Steps (All Release Kinds)
+
 1. Sync `main` and create release-prep branch:
    - `git checkout main`
    - `git pull --ff-only origin main`
    - `git checkout -b release/v{VERSION}`
-2. Finalize release metadata on `release/v{VERSION}`:
-   - root `VERSION`
-   - touched `scripts/{ProjectName}/VERSION` files
-   - `CHANGELOG.md`
+2. Run issue preflight with scope:
+   - run `tools/session_preflight.py` with:
+     - `--mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {slug} --release-kind {repo|script}`
+   - For `script` releases also include:
+     - `--project {ProjectName}`
+     - one or more `--script-gate-issue {N}` flags
 3. Sync release branch and confirm drift:
    - `git fetch origin`
    - `git push -u origin release/v{VERSION}`
    - `git pull --ff-only origin release/v{VERSION}`
    - `git rev-list --left-right --count origin/release/v{VERSION}...release/v{VERSION}`
-4. Build release artifact(s):
-   `python tools/build.py --project SensorList --dist`
-5. Validate according to touched files (see `AGENTS.md` validation matrix).
-6. Open and merge a release-prep PR from `release/v{VERSION}` into `main`.
-7. Sync `main`, tag, and push:
+4. Validate according to touched files (see `AGENTS.md` validation matrix).
+5. Open and merge a release-prep PR from `release/v{VERSION}` into `main`.
+6. Sync `main`, tag, and push:
    - `git checkout main`
    - `git pull --ff-only origin main`
    - `git tag v{VERSION}`
    - `git push origin v{VERSION}`
-8. Publish GitHub release notes from `CHANGELOG.md` and attach release ZIP assets (for example, `dist/SensorList-{scripts/SensorList/VERSION}.zip`).
-9. Delete release-prep branch after publication:
+7. Publish GitHub release notes from `CHANGELOG.md`.
+8. Delete release-prep branch after publication:
    - `git push origin --delete release/v{VERSION}`
    - `git branch -d release/v{VERSION}`
+
+### Repository Release (`release-kind=repo`)
+
+1. Finalize release metadata on `release/v{VERSION}`:
+   - root `VERSION`
+   - `CHANGELOG.md`
+   - any repo-level workflow/docs/process files
+2. Do not treat script-only manual gates as implicit blockers unless that script is in scope.
+3. Publish release notes with `gh release create v{VERSION} --title "{TITLE}" --notes-file {notes-file}`.
+
+### Script Release (`release-kind=script`)
+
+1. Finalize release metadata on `release/v{VERSION}`:
+   - root `VERSION` (if the repository release is part of this scope)
+   - touched `scripts/{ProjectName}/VERSION` file(s)
+   - `CHANGELOG.md`
+2. Require all script gate issues passed through `--script-gate-issue` to be closed before tag/publish.
+3. Build release artifact(s), for example:
+   - `python tools/build.py --project SensorList --dist`
+4. Attach script artifact(s) to the release, for example:
+   - `dist/SensorList-{scripts/SensorList/VERSION}.zip`

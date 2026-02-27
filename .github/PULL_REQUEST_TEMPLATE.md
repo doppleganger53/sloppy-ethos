@@ -29,4 +29,6 @@ Check all items that apply to touched files (see `AGENTS.md` validation matrix):
 ## Notes
 
 - Linked issue(s):
+- Expected merge strategy: `{squash|merge commit}`
+- If `merge commit`, reason:
 - Risks / follow-up items:

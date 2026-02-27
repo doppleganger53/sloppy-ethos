@@ -25,7 +25,7 @@ Implementation prompts for every GitHub issue that was open at snapshot time.
 ## Reusable Template
 
 - `../templates/ISSUE_RESOLUTION_TEMPLATE.md`
-- `../templates/RELEASE_RESOLUTION_TEMPLATE.md` (for packaging/publishing release sessions)
+- `../templates/RELEASE_RESOLUTION_TEMPLATE.md` (for repo/script release sessions with explicit scope and gate separation)
 
 Use the template for new issues and copy issue-specific context from the
 matching GitHub issue body/comments before implementation.

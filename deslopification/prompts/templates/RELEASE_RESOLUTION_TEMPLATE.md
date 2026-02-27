@@ -1,15 +1,18 @@
-# Prompt Template: Agentic Script Release
+# Prompt Template: Agentic Repo/Script Release
 
-Use this template for packaging and publishing a script release asset.
+Use this template for repository-level or script-level releases.
 Replace all `{...}` placeholders before execution.
 
 ## Release Target
 
-- Project: `{PROJECT_NAME}`
+- Release kind (`repo` or `script`): `{RELEASE_KIND}`
+- Project (`script` only; use `N/A` for repo): `{PROJECT_NAME}`
+- Blocking gate issues for this release scope: `{BLOCKING_GATE_ISSUES}`
+- Out-of-scope gate issues for this release scope: `{OUT_OF_SCOPE_GATES}`
 - Repository version source: `VERSION`
-- Artifact version source: `scripts/{PROJECT_NAME}/VERSION`
+- Script artifact version source (`script` only): `scripts/{PROJECT_NAME}/VERSION`
 - Expected repository version: `{REPO_VERSION}`
-- Expected artifact version: `{SCRIPT_VERSION}`
+- Expected artifact version (`script` only): `{SCRIPT_VERSION}`
 - Base branch: `main`
 - Release branch (recommended `release/v{REPO_VERSION}`): `{RELEASE_BRANCH}`
 - Release tag: `{RELEASE_TAG}`
@@ -19,8 +22,8 @@ Replace all `{...}` placeholders before execution.
 
 ## Mission
 
-Package and publish release `{RELEASE_TAG}` with root-cause-first handling,
-strict version/branch guardrails, and auditable validation output.
+Package and publish `{RELEASE_KIND}` release `{RELEASE_TAG}` with strict
+scope clarity, explicit gate handling, and auditable validation output.
 
 ## Mandatory Startup Workflow
 
@@ -28,10 +31,15 @@ strict version/branch guardrails, and auditable validation output.
 2. Check branch/worktree state:
    - `git branch --show-current`
    - `git status --short --branch`
-3. Confirm version sources:
+3. Run issue preflight with release scope:
+   - `python tools/session_preflight.py --mode issue --issue-number {ISSUE_NUMBER} --issue-kind {ISSUE_KIND} --slug {ISSUE_SLUG} --release-kind {RELEASE_KIND}`
+   - For `script` releases also provide:
+     - `--project {PROJECT_NAME}`
+     - one or more `--script-gate-issue {N}` flags for scope-specific manual gates
+4. Confirm version sources:
    - `VERSION`
-   - `scripts/{PROJECT_NAME}/VERSION`
-4. Cross-check workflow commands in:
+   - `scripts/{PROJECT_NAME}/VERSION` (`script` only)
+5. Cross-check workflow commands in:
    - `README.md`
    - `docs/DEVELOPMENT.md`
 
@@ -47,29 +55,39 @@ strict version/branch guardrails, and auditable validation output.
    - `git pull --ff-only origin {RELEASE_BRANCH}`
    - `git rev-list --left-right --count origin/{RELEASE_BRANCH}...{RELEASE_BRANCH}`
 
+## Release Scope Gate (Required)
+
+1. Confirm `{RELEASE_KIND}` matches the intended scope and release notes.
+2. Confirm all `{BLOCKING_GATE_ISSUES}` are closed for this scope.
+3. Confirm `{OUT_OF_SCOPE_GATES}` remain explicitly out of scope and are not used as blockers.
+4. If `{RELEASE_KIND}` is `repo`, do not treat script-only manual gates as blockers.
+5. If `{RELEASE_KIND}` is `script`, require script gate issue closure before tagging.
+
 ## Release Preflight Checks
 
-1. Confirm `VERSION` equals `{REPO_VERSION}` and `scripts/{PROJECT_NAME}/VERSION` equals `{SCRIPT_VERSION}`.
-2. Confirm `CHANGELOG.md` includes release notes for `{REPO_VERSION}`.
-3. Confirm release tag does not already exist:
+1. Confirm `VERSION` equals `{REPO_VERSION}`.
+2. If `{RELEASE_KIND}` is `script`, confirm `scripts/{PROJECT_NAME}/VERSION` equals `{SCRIPT_VERSION}`.
+3. Confirm `CHANGELOG.md` includes release notes for `{REPO_VERSION}`.
+4. Confirm release tag does not already exist:
    - `git ls-remote --tags origin {RELEASE_TAG}`
-4. Confirm release name/tag is not already published:
+5. Confirm release name/tag is not already published:
    - `gh release list --limit 100`
-5. Confirm GitHub auth availability:
+6. Confirm GitHub auth availability:
    - `gh auth status`
 
 ## Packaging And Validation
 
 Run the minimum required checks for this release action:
 
-1. `python tools/build.py --project {PROJECT_NAME} --dist`
-2. Confirm expected artifact exists:
-   - `dist/{PROJECT_NAME}-{SCRIPT_VERSION}.zip`
-3. If documentation/templates were changed in session:
-   - `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
-4. If Lua behavior changed in session:
-   - `luac -p scripts/SensorList/main.lua`
-   - `python -m pytest tests/test_sensorlist_widget.py -q`
+1. If `{RELEASE_KIND}` is `repo`:
+   - run validation based on touched files (see `AGENTS.md` matrix)
+   - if scope is broad/cross-cutting, run `python -m pytest -q`
+2. If `{RELEASE_KIND}` is `script`:
+   - `python tools/build.py --project {PROJECT_NAME} --dist`
+   - confirm expected artifact exists:
+     - `dist/{PROJECT_NAME}-{SCRIPT_VERSION}.zip`
+   - run validation based on touched files (see `AGENTS.md` matrix)
+3. Prefer `--notes-file` when publishing release notes to avoid truncation risk.
 
 ## Publish Steps
 
@@ -82,8 +100,11 @@ Run the minimum required checks for this release action:
 5. Tag merged `main` commit and push tag:
    - `git tag {RELEASE_TAG}`
    - `git push origin {RELEASE_TAG}`
-6. Create release with tag and artifact attachment:
-   - `gh release create {RELEASE_TAG} dist/{PROJECT_NAME}-{SCRIPT_VERSION}.zip --title "{RELEASE_TITLE}" --notes "{RELEASE_NOTES}" {PRERELEASE_FLAG}`
+6. Create release:
+   - For `repo` releases:
+     - `gh release create {RELEASE_TAG} --title "{RELEASE_TITLE}" --notes-file {RELEASE_NOTES_FILE} {PRERELEASE_FLAG}`
+   - For `script` releases:
+     - `gh release create {RELEASE_TAG} dist/{PROJECT_NAME}-{SCRIPT_VERSION}.zip --title "{RELEASE_TITLE}" --notes-file {RELEASE_NOTES_FILE} {PRERELEASE_FLAG}`
 7. Verify release metadata:
    - `gh release view {RELEASE_TAG} --json tagName,name,url,isDraft,isPrerelease,publishedAt`
 8. Delete release branch after publication:
@@ -95,16 +116,18 @@ Run the minimum required checks for this release action:
 Return:
 
 1. Exact commit(s) included.
-2. Exact artifact path produced.
-3. Release URL and tag.
-4. Validation commands with pass/fail results.
-5. Remaining risks/follow-up (if any).
+2. Release kind and explicit gate issue outcomes.
+3. Exact artifact path produced (`script` only).
+4. Release URL and tag.
+5. Validation commands with pass/fail results.
+6. Remaining risks/follow-up (if any).
 
 ## Session Memory Sync
 
 Record release work in `deslopification/memory/notes/{category}/{focus}/` with:
 
-- what changed
+- release kind and scope boundaries
+- blocking/out-of-scope gate issues
 - validation run(s)
 - release URL/tag
 - follow-up items

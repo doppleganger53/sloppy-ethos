@@ -20,8 +20,12 @@
      `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
    - `stylua --config-path tools/config/stylua.toml scripts` (if formatting changed)
 6. Open a PR into `main` using the repository PR template and include linked-closing issue keywords (for example, `Closes #29`).
-7. Do not manually close linked issues before merge; let GitHub close them from the merged PR closing keywords.
-8. Follow release branch/tag flow in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#main-branch-release-and-versioning-policy) and [Release Workflow](docs/DEVELOPMENT.md#release-workflow).
+7. Use the repository merge strategy policy:
+   - `squash` merge for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`).
+   - `merge commit` for release-prep PRs (`release/v{VERSION}`) or lineage-sensitive PRs.
+   - avoid `rebase` merge as default.
+8. Do not manually close linked issues before merge; let GitHub close them from the merged PR closing keywords.
+9. Follow release branch/tag flow in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#main-branch-release-and-versioning-policy) and [Release Workflow](docs/DEVELOPMENT.md#release-workflow).
 
 ## Documentation Changes
 
