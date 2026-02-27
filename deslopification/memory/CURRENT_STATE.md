@@ -26,6 +26,11 @@ Historical detail remains in individual session notes referenced from
 - `CATALOG.md` now includes both:
   - coarse `Category` classification
   - selective `Focus` classification for faster topical filtering.
+- `CATALOG.md` entries and distributions index note artifacts under
+  `deslopification/memory/notes/**` (control files are listed separately).
+- Session notes should use specific focus classifiers (for example,
+  `build-tooling`, `docs-process`, `issue-lifecycle`, `repo-governance`) and
+  avoid `general` by default.
 - New memory notes are stored under:
   - `deslopification/memory/notes/{category}/{focus}/`.
 - Issue-linked sessions must run `tools/session_preflight.py --mode issue ...`

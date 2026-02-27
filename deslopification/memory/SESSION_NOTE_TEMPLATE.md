@@ -4,6 +4,8 @@
 
 - Category: `{session-note|handoff|domain-note|monthly-summary}`
 - Focus: `{focus-slug}`
+- Focus guidance:
+  - prefer a specific focus classifier and avoid `general` when possible.
 - Store this file under:
   - `deslopification/memory/notes/{category}/{focus}/`
 

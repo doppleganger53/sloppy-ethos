@@ -19,7 +19,8 @@ PRE_OPT_BASELINE = {
     "date": "2026-02-26",
 }
 
-INDEX_FILES = {"README.md", "CATALOG.md", "CURRENT_STATE.md"}
+CONTROL_FILES = ("README.md", "CURRENT_STATE.md", "SESSION_NOTE_TEMPLATE.md")
+NOTES_ROOT = MEMORY_DIR / "notes"
 HIGH_SIGNAL_FOCUS = {
     "memory-ops",
     "workflow-policy",
@@ -29,6 +30,8 @@ HIGH_SIGNAL_FOCUS = {
     "testing",
     "prompts",
     "repo-metadata",
+    "issue-lifecycle",
+    "repo-governance",
 }
 RECENT_HIGH_SIGNAL_LIMIT = 12
 
@@ -43,60 +46,6 @@ class Entry:
     title: str
     bytes_count: int
     lines_count: int
-
-
-def classify_category(name: str) -> str:
-    if name.startswith("HANDOFF_") or name.startswith("SESSION_RESTART_"):
-        return "handoff"
-    if name == "SensorList.md":
-        return "domain-note"
-    if name.startswith("SUMMARY_"):
-        return "monthly-summary"
-    if name in INDEX_FILES:
-        return "index"
-    if name == "SESSION_NOTE_TEMPLATE.md":
-        return "template"
-    return "session-note"
-
-
-def classify_focus(name: str, title: str, category: str) -> str:
-    if category in {"index", "template", "monthly-summary"}:
-        return "memory-ops"
-    if category == "handoff":
-        return "handoff"
-
-    text = f"{name} {title}".lower()
-
-    checks = [
-        ("sensorlist", "sensorlist"),
-        ("ethos_events", "ethos-events"),
-        ("ethos events", "ethos-events"),
-        ("prompt", "prompts"),
-        ("release", "release-versioning"),
-        ("version", "release-versioning"),
-        ("milestone", "release-versioning"),
-        ("branch", "workflow-policy"),
-        ("workflow", "workflow-policy"),
-        ("policy", "workflow-policy"),
-        ("root-cause", "workflow-policy"),
-        ("build", "build-tooling"),
-        ("deploy", "build-tooling"),
-        ("dist", "build-tooling"),
-        ("doit", "build-tooling"),
-        ("tooling", "build-tooling"),
-        ("pytest", "testing"),
-        ("test", "testing"),
-        ("coverage", "testing"),
-        ("docs", "docs-process"),
-        ("readme", "docs-process"),
-        ("markdown", "docs-process"),
-        ("metadata", "repo-metadata"),
-        ("memory", "memory-ops"),
-    ]
-    for needle, focus in checks:
-        if needle in text:
-            return focus
-    return "general"
 
 
 def extract_date(name: str) -> str:
@@ -125,23 +74,23 @@ def parse_category_focus_from_path(rel_path: Path) -> tuple[str, str] | None:
 
 def collect_entries(memory_dir: Path = MEMORY_DIR) -> list[Entry]:
     entries: list[Entry] = []
+    notes_root = memory_dir / "notes"
+    if not notes_root.exists():
+        return entries
+
     for path in sorted(
-        memory_dir.rglob("*.md"),
+        notes_root.rglob("*.md"),
         key=lambda p: p.relative_to(memory_dir).as_posix(),
     ):
         rel_path = path.relative_to(memory_dir)
-        if rel_path.as_posix() == "CATALOG.md":
-            continue
         if rel_path.parts and rel_path.parts[0] == "temp":
             continue
 
         title = read_first_line(path)
         from_path = parse_category_focus_from_path(rel_path)
         if from_path is None:
-            category = classify_category(path.name)
-            focus = classify_focus(path.name, title, category)
-        else:
-            category, focus = from_path
+            continue
+        category, focus = from_path
         entries.append(
             Entry(
                 date=extract_date(path.name),
@@ -181,7 +130,7 @@ def render_catalog(entries: list[Entry]) -> str:
         by_category[item.category] = by_category.get(item.category, 0) + 1
         by_focus[item.focus] = by_focus.get(item.focus, 0) + 1
 
-    category_order = ["session-note", "handoff", "domain-note", "index", "monthly-summary", "template"]
+    category_order = ["session-note", "handoff", "domain-note", "monthly-summary"]
     category_lines = []
     for category in category_order:
         count = by_category.get(category)
@@ -191,9 +140,7 @@ def render_catalog(entries: list[Entry]) -> str:
             "session-note": "session notes",
             "handoff": "handoff/restart notes",
             "domain-note": "domain notes",
-            "index": "index files",
             "monthly-summary": "monthly summaries",
-            "template": "templates",
         }[category]
         category_lines.append(f"- {label}: {count}")
 
@@ -220,6 +167,9 @@ def render_catalog(entries: list[Entry]) -> str:
         "# Memory Catalog",
         "",
         "Index of all memory artifacts in this folder.",
+        "",
+        "Control files (not indexed in entries):",
+        *(f"- [{name}]({name})" for name in CONTROL_FILES),
         "",
         f"Pre-optimization baseline (before Issue #16 on {PRE_OPT_BASELINE['date']}):",
         "",
@@ -251,7 +201,7 @@ def render_catalog(entries: list[Entry]) -> str:
                 "- Selection: newest session notes where `Focus` is one of "
                 "`memory-ops`, `workflow-policy`, `build-tooling`, "
                 "`docs-process`, `release-versioning`, `testing`, `prompts`, "
-                "or `repo-metadata`."
+                "`repo-metadata`, `issue-lifecycle`, or `repo-governance`."
             ),
         ]
     )

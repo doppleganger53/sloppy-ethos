@@ -42,6 +42,24 @@ def test_catalog_uses_relative_paths_in_file_column():
     assert "[notes/session-note/" in rendered
 
 
+def test_catalog_lists_control_files_in_static_block():
+    rendered = tool.render_catalog(tool.collect_entries())
+    assert "Control files (not indexed in entries):" in rendered
+    assert "- [README.md](README.md)" in rendered
+    assert "- [CURRENT_STATE.md](CURRENT_STATE.md)" in rendered
+    assert "- [SESSION_NOTE_TEMPLATE.md](SESSION_NOTE_TEMPLATE.md)" in rendered
+
+
+def test_catalog_entries_table_excludes_memory_control_files():
+    rendered = tool.render_catalog(tool.collect_entries())
+    lines = rendered.splitlines()
+    start = lines.index("## Entries")
+    entries_section = "\n".join(lines[start:])
+    assert "[README.md](README.md)" not in entries_section
+    assert "[CURRENT_STATE.md](CURRENT_STATE.md)" not in entries_section
+    assert "[SESSION_NOTE_TEMPLATE.md](SESSION_NOTE_TEMPLATE.md)" not in entries_section
+
+
 def test_catalog_includes_recent_high_signal_section():
     rendered = tool.render_catalog(tool.collect_entries())
     assert "## Recent High-Signal Notes (Auto-generated)" in rendered
@@ -87,3 +105,18 @@ def test_memory_root_contains_only_index_control_markdown_files():
         for path in tool.MEMORY_DIR.glob("*.md")
     }
     assert root_markdown == allowed
+
+
+def test_session_note_general_folder_is_empty():
+    general_dir = tool.MEMORY_DIR / "notes" / "session-note" / "general"
+    if not general_dir.exists():
+        return
+    assert list(general_dir.glob("*.md")) == []
+
+
+def test_no_session_notes_use_general_focus():
+    entries = tool.collect_entries()
+    general_session_notes = [
+        item for item in entries if item.category == "session-note" and item.focus == "general"
+    ]
+    assert general_session_notes == []

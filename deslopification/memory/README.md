@@ -18,8 +18,8 @@ history. The goal is fast cold-start context without losing auditability.
 - `CURRENT_STATE.md`:
   high-signal current decisions and active workflow state.
 - `CATALOG.md`:
-  full index of all notes/handoffs with `Date`/`Category`/`Focus` plus an
-  auto-generated recent high-signal shortlist.
+  note-artifact index (`notes/**`) with `Date`/`Category`/`Focus`, plus an
+  auto-generated recent high-signal shortlist and a static control-files block.
 - `notes/{category}/{focus}/...`:
   canonical location for note artifacts, including
   `SESSION_NOTES_*.md`, `HANDOFF_*.md`, `SESSION_RESTART_*.md`,
@@ -48,6 +48,8 @@ When adding a new memory note:
 
 1. Add the note using `SESSION_NOTE_TEMPLATE.md`.
    - Place it under `notes/{category}/{focus}/`.
+   - Prefer a specific focus (for example, `build-tooling`, `docs-process`,
+     `issue-lifecycle`, `repo-governance`) over `general`.
 2. Regenerate `CATALOG.md`:
    - `python tools/update_memory_catalog.py`
 3. If the change alters durable workflow/behavior, update `CURRENT_STATE.md`.

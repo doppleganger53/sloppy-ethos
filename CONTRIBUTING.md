@@ -31,7 +31,8 @@
 - Include the docs validation command output in the PR `Verification` checklist.
 - If workflow/behavior changed, add a session note under
   `deslopification/memory/notes/{category}/{focus}/`, append it to
-  `deslopification/memory/CATALOG.md`, and update
+  `deslopification/memory/CATALOG.md`, prefer a specific focus classifier over
+  `general`, and update
   `deslopification/memory/CURRENT_STATE.md` when the change is durable.
 
 ## Good First Issues

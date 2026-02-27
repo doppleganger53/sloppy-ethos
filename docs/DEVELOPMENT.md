@@ -55,6 +55,8 @@
 - When adding notes, follow `deslopification/memory/SESSION_NOTE_TEMPLATE.md`.
 - New notes are stored under:
   `deslopification/memory/notes/{category}/{focus}/`.
+- Prefer specific focus classifiers for session notes and avoid `general` by
+  default.
 
 ## Simulator Tips
 

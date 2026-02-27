@@ -70,6 +70,8 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
   - examples:
     - `notes/session-note/{focus}/SESSION_NOTES_YYYY-MM-DD_...md`
     - `notes/handoff/handoff/HANDOFF_YYYY-MM-DD...md`
+- Use a specific `focus` classifier for session notes; avoid `general` unless a
+  note truly spans multiple unrelated domains and no existing focus fits.
 - Keep memory indexes synchronized when adding notes:
   - run `python tools/update_memory_catalog.py`
   - update `deslopification/memory/CURRENT_STATE.md` when durable workflow or
