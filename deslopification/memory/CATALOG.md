@@ -15,11 +15,11 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 70
-- Total size: 102,856 bytes
-- Total lines: 2,512
+- Files: 71
+- Total size: 104,724 bytes
+- Total lines: 2,553
 - Distribution by category:
-  - session notes: 65
+  - session notes: 66
   - handoff/restart notes: 3
   - domain notes: 1
   - monthly summaries: 1
@@ -29,7 +29,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 12 -- lua-ethos ( Ethos targeted scripts )
   - 10 -- build-tooling ( Build, deploy, packaging, and tooling workflows )
   - 7 -- docs-process ( Documentation and contributor process changes )
-  - 6 -- release-versioning ( Release flow, tagging, and version policy )
+  - 7 -- release-versioning ( Release flow, tagging, and version policy )
   - 5 -- testing ( Automated tests and coverage changes )
   - 5 -- workflow-policy ( Branching, policy, and workflow guardrails )
   - 4 -- issue-lifecycle ( Issue creation, validation, and closure tracking )
@@ -40,6 +40,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent High-Signal Notes (Auto-generated)
 
 - Selection: newest session notes where `Focus` is one of `build-tooling`, `docs-process`, `release-versioning`, `repo`, `testing`, or `workflow-policy`; keep up to 3 per focus, then keep newest 12 overall.
+- 2026-02-27 | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V101.md](notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V101.md) | # Session Notes 2026-02-27 - Release v1.0.1
 - 2026-02-27 | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V100.md](notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V100.md) | # Session Notes 2026-02-27 - Release v1.0.0
 - 2026-02-27 | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md) | # Session Notes 2026-02-27 - Issue #39 Release Scope Clarity
 - 2026-02-27 | testing | [notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage
@@ -47,7 +48,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - 2026-02-27 | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md) | # Session Notes 2026-02-27 - Issue #16 Branch Gate Hardening
 - 2026-02-26 | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-02-26_V020_MILESTONE_18_20_25.md](notes/session-note/release-versioning/SESSION_NOTES_2026-02-26_V020_MILESTONE_18_20_25.md) | # Session Notes 2026-02-26 - v0.2.0 Milestone Issues #18 #20 #25
 - 2026-02-26 | repo | [notes/session-note/repo/SESSION_NOTES_2026-02-26_REPO_METADATA_DESCRIPTION_TOPICS.md](notes/session-note/repo/SESSION_NOTES_2026-02-26_REPO_METADATA_DESCRIPTION_TOPICS.md) | # Session Notes 2026-02-26 - Repository Metadata Description and Topics
-- 2026-02-26 | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-02-26_MULTISCRIPT_ZIP_RENAME.md](notes/session-note/release-versioning/SESSION_NOTES_2026-02-26_MULTISCRIPT_ZIP_RENAME.md) | # Session Notes 2026-02-26 - Multi-script ZIP Naming Update
 - 2026-02-26 | build-tooling | [notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_ISSUE_22_DOIT_MIGRATION_EVALUATION.md](notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_ISSUE_22_DOIT_MIGRATION_EVALUATION.md) | # Session Notes 2026-02-26 - Issue #22 `build.py` to `doit` Migration Evaluation
 - 2026-02-26 | docs-process | [notes/session-note/docs-process/SESSION_NOTES_2026-02-26_DOC_COMMANDS_MANUAL_REFACTOR.md](notes/session-note/docs-process/SESSION_NOTES_2026-02-26_DOC_COMMANDS_MANUAL_REFACTOR.md) | # Session Notes 2026-02-26 - Docs Command Manual Classification Refactor
 - 2026-02-26 | build-tooling | [notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_DIST_CLEAN.md](notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_DIST_CLEAN.md) | # Session Notes 2026-02-26 - Dist Cleanup
@@ -123,6 +123,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-02-27 | session-note | memory-ops | [notes/session-note/memory-ops/SESSION_NOTES_2026-02-27_ISSUE_16_MEMORY_SYNC_AUTOMATION.md](notes/session-note/memory-ops/SESSION_NOTES_2026-02-27_ISSUE_16_MEMORY_SYNC_AUTOMATION.md) | # Session Notes 2026-02-27 - Issue #16 Memory Sync Automation |
 | 2026-02-27 | session-note | memory-ops | [notes/session-note/memory-ops/SESSION_NOTES_2026-02-27_ISSUE_16_REPO_FOCUS_UNIFICATION.md](notes/session-note/memory-ops/SESSION_NOTES_2026-02-27_ISSUE_16_REPO_FOCUS_UNIFICATION.md) | # Session Notes 2026-02-27 - Issue #16 Repo Focus Unification |
 | 2026-02-27 | session-note | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V100.md](notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V100.md) | # Session Notes 2026-02-27 - Release v1.0.0 |
+| 2026-02-27 | session-note | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V101.md](notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V101.md) | # Session Notes 2026-02-27 - Release v1.0.1 |
 | 2026-02-27 | session-note | testing | [notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md](notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md) | # Session Notes 2026-02-27 - Issue #16 Catalog Test Portability |
 | 2026-02-27 | session-note | testing | [notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage |
 | 2026-02-27 | session-note | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md) | # Session Notes 2026-02-27 - Issue #16 Branch Gate Hardening |
