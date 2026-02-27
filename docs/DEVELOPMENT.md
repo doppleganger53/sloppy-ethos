@@ -51,8 +51,10 @@
 - Current high-signal context: `deslopification/memory/CURRENT_STATE.md`.
 - Full historical index: `deslopification/memory/CATALOG.md`.
 - Monthly rollup example for compact history review:
-  `deslopification/memory/SUMMARY_2026-02.md`.
+  `deslopification/memory/notes/monthly-summary/memory-ops/SUMMARY_2026-02.md`.
 - When adding notes, follow `deslopification/memory/SESSION_NOTE_TEMPLATE.md`.
+- New notes are stored under:
+  `deslopification/memory/notes/{category}/{focus}/`.
 
 ## Simulator Tips
 

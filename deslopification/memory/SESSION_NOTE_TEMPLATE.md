@@ -1,5 +1,12 @@
 # Session Notes YYYY-MM-DD - {short topic}
 
+## Note Placement
+
+- Category: `{session-note|handoff|domain-note|monthly-summary}`
+- Focus: `{focus-slug}`
+- Store this file under:
+  - `deslopification/memory/notes/{category}/{focus}/`
+
 ## What changed
 
 - {Concise change 1}
@@ -25,3 +32,8 @@
 ## Follow-up items
 
 - {none | actionable item with owner/context}
+
+## Current State Sync
+
+- `CURRENT_STATE.md` updated: {yes|no}
+- If `no`, reason: {not a durable workflow/behavior change}

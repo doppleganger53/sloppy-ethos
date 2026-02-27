@@ -1,4 +1,4 @@
-# Current State (2026-02-26)
+# Current State (2026-02-27)
 
 This file is the high-signal memory entrypoint for cold-start sessions.
 Historical detail remains in individual session notes referenced from
@@ -21,6 +21,17 @@ Historical detail remains in individual session notes referenced from
 - Session memory updates are required for meaningful workflow/behavior changes.
 - Memory cold starts now use:
   - `README.md` -> `CURRENT_STATE.md` -> task-filtered lookup in `CATALOG.md`.
+- `CATALOG.md` must be regenerated with:
+  - `python tools/update_memory_catalog.py`.
+- `CATALOG.md` now includes both:
+  - coarse `Category` classification
+  - selective `Focus` classification for faster topical filtering.
+- New memory notes are stored under:
+  - `deslopification/memory/notes/{category}/{focus}/`.
+- Issue-linked sessions must run `tools/session_preflight.py --mode issue ...`
+  and may not mutate files on `main`.
+- Non-issue sessions may run on `main`, but require user confirmation before
+  file mutations.
 
 ## Active Tooling Decisions
 
@@ -29,22 +40,9 @@ Historical detail remains in individual session notes referenced from
   evaluation complete).
 - Prompt templates live in `deslopification/prompts/templates/`.
 
-## High-Value Recent Notes
-
-- Main-only branching and release conventions:
-  `SESSION_NOTES_2026-02-26_MAIN_ONLY_BRANCHING_CONVENTIONS.md`
-- Prompt/template hardening and relocation:
-  `SESSION_NOTES_2026-02-26_PROMPT_TEMPLATE_HARDENING.md`
-  `SESSION_NOTES_2026-02-26_PROMPT_TEMPLATE_RELOCATION.md`
-- Memory optimization baseline and index compaction:
-  `SESSION_NOTES_2026-02-26_ISSUE_16_MEMORY_OPTIMIZATION.md`
-- Build tooling evaluation (do not migrate now):
-  `SESSION_NOTES_2026-02-26_ISSUE_22_DOIT_MIGRATION_EVALUATION.md`
-- Latest repo metadata update:
-  `SESSION_NOTES_2026-02-26_REPO_METADATA_DESCRIPTION_TOPICS.md`
-
 ## How To Use With CATALOG
 
 1. Start here.
-2. Open `CATALOG.md` and filter by date+topic.
-3. Read only notes required for the current task scope.
+2. Open `CATALOG.md` and read `Recent High-Signal Notes (Auto-generated)`.
+3. If needed, continue with the full entries table filtered by `Focus` and date.
+4. Read only notes required for the current task scope.
