@@ -130,4 +130,4 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
 - Required validation commands for touched files completed in this session.
 - Workspace and `.gitignore` reviewed for environment-specific files and sensitive data risks.
-- Any potential security concern (PII, PHI, secrets, unsafe config) explicitly called out to the user.
+- Any potential security concern (PII, PHI, secrets, unsafe config, API keys, auth tokens) explicitly called out to the user.
