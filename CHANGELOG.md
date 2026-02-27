@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.0] - 2026-02-27
+
+### Changed
+
+- Root repository version bumped to `1.0.0` to close the Issue #16 memory/catalog milestone while leaving the `scripts/SensorList/VERSION` and `scripts/ethos_events/VERSION` artifacts at `0.1.1`.
+- Documented the completed memory/catalog automation and focus taxonomy updates, plus the decision record from Issue #22 confirming that `tools/build.py` remains the canonical build/deploy workflow.
+
+### Testing
+
+- `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
+- `python -m pytest tests/test_build_py.py -q`
+
 ## [0.3.0] - 2026-02-26
 
 ### Changed
