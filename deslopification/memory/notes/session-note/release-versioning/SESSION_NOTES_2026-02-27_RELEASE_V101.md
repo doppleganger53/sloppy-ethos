@@ -31,9 +31,7 @@
 
 ## Follow-up items
 
-- Push `release/v1.0.1` and open/merge the release PR into `main` with `Closes #39`, then tag/push `v1.0.1` and publish the GitHub release notes from the new changelog section.
-- Edit the existing `v1.0.0` GitHub release to mark it as bad (title + notes) explaining that `v1.0.1` replaced it after Issue #39.
-- After the release completes, delete the remote `release/v1.0.1` branch if the workflow PR delete did not already remove it.
+- None; release branch merged/removed, `v1.0.1` tagged/published, and `v1.0.0` marked bad on GitHub.
 
 ## Current State Sync
 
