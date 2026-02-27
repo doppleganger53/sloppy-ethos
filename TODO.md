@@ -5,3 +5,4 @@
 - [ ] Update agent metadata to reflect mutable workflow in alignment with stated goals of the repo
 - [ ] Investigate custom script builds via github for end user install
 - [ ] New script - SmartMapper, function mapper with pre-population of functions based on existing mixes, logic switches, trims, special functions, etc. Easily identify unused switches.
+- [ ] Increase cardinality of memory/notes/session-note category
