@@ -1,12 +1,12 @@
-# Prompt: Implement Issue #33 (Multi-script release deliverable)
+# Prompt: Implement Issue #42 (Multi-script release deliverable)
 
 ## Canonical Issue
 
-- URL: `https://github.com/doppleganger53/sloppy-ethos/issues/33`
+- URL: `https://github.com/doppleganger53/sloppy-ethos/issues/42`
 - Title: `[Enhancement] Include multi-script bundle in repo release deliverables`
 - Labels: `enhancement`
 - Snapshot state: open on `2026-02-27`
-- Target branch (default): `feature/33-multi-script-release-deliverable`
+- Target branch (default): `feature/42-multi-script-release-deliverable`
 
 ## Mission
 
@@ -26,7 +26,7 @@ Ensure the repository release explicitly includes `dist/sloppy-ethos_scripts.zip
 ## Branch/Worktree Gate (Required Before Editing)
 
 1. Run issue preflight:
-   - `python tools/session_preflight.py --mode issue --issue-number 33 --issue-kind enhancement --slug multi-script-release-deliverable`
+   - `python tools/session_preflight.py --mode issue --issue-number 42 --issue-kind enhancement --slug multi-script-release-deliverable`
 2. Confirm target branch and current branch:
    - `git branch --show-current`
    - `git status --short --branch`
