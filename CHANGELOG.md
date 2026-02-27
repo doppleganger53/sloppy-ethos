@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.1] - 2026-02-27
+
+### Changed
+
+- Closed Issue #39 with a clearer repo release-scope workflow and clarified that the release-conflating script gates are not blockers for repo-only work.
+- Marked `v1.0.0` as a bad release and documented that `v1.0.1` supersedes it without touching script artifacts (`scripts/SensorList/VERSION` and `scripts/ethos_events/VERSION` remain at `0.1.1`).
+
+### Testing
+
+- `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
+- `python -m pytest tests/test_build_py.py -q`
+
 ## [1.0.0] - 2026-02-27
 
 ### Changed
