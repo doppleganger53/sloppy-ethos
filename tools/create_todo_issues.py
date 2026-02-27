@@ -120,7 +120,7 @@ No workflow regressions; command references remain consistent with documented Py
 
 ## Validation Checklist
 1. AGENTS startup workflow remains clear.
-2. SensorList script notes are captured in `deslopification/memory/SensorList.md`.
+2. SensorList script notes are captured in `deslopification/memory/notes/domain-note/lua-ethos/SensorList.md`.
 3. No conflicting command guidance remains.
 
 ## Rollback Plan

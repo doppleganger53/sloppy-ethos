@@ -6,6 +6,7 @@
 - Title: `[Enhancement] - Memory optimization`
 - Labels: `enhancement`
 - Snapshot state: open on `2026-02-26`
+- Target branch (default): `feature/16-memory-optimization` (or as user-directed for current workflow)
 
 ## Mission
 
@@ -21,6 +22,18 @@ sessions while preserving critical historical traceability.
 - Entire `deslopification/memory/` tree
 - Current prompt assets in `deslopification/prompts/`
 - Recent history: `git log --oneline -n 60`
+
+## Branch/Worktree Gate (Required Before Editing)
+
+1. Run issue preflight:
+   - `python tools/session_preflight.py --mode issue --issue-number 16 --issue-kind enhancement --slug memory-optimization`
+2. Confirm target branch and current branch:
+   - `git branch --show-current`
+   - `git status --short --branch`
+3. If preflight blocks due to `main`, create/switch to the recommended branch before editing.
+4. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
+5. After switching branches, sync before editing:
+   - `git pull --ff-only origin {target-branch}`
 
 ## Scope
 
@@ -39,6 +52,7 @@ sessions while preserving critical historical traceability.
 - Keep root-cause-first policy intact.
 - Preserve auditability: what changed, why, and validation evidence.
 - If introducing compatibility bridge text, include removal condition.
+- Adhere to documented enhancement development workflow.
 
 ## Suggested Execution Plan
 
@@ -67,3 +81,4 @@ sessions while preserving critical historical traceability.
 2. Repo guidance remains internally consistent.
 3. Required validation passes.
 4. Session note documents changes, validations, and follow-up items.
+5. PR for enhancement should be ready for human review and merging to main.

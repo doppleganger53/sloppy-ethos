@@ -9,8 +9,10 @@ Replace all `{...}` placeholders before execution.
 - Title: `{ISSUE_TITLE}`
 - URL: `{ISSUE_URL}`
 - Labels: `{ISSUE_LABELS}`
+- Issue kind: `{ISSUE_KIND}` (`enhancement` | `bug` | `docs` | `chore`)
+- Short slug: `{SHORT_SLUG}`
 - Snapshot date: `{YYYY-MM-DD}`
-- Target branch (default: `main`): `{TARGET_BRANCH}`
+- Target branch (default by issue kind, never `main`): `{TARGET_BRANCH}`
 
 ## Mission
 
@@ -28,23 +30,29 @@ You are Codex working directly in this repository.
 
 ## Mandatory Startup Workflow
 
-1. Read latest relevant note in `deslopification/memory/`.
-2. Run `git status --short --branch`.
-3. Confirm root version from `VERSION`.
-4. Cross-check workflow commands in:
+1. Read memory entrypoint files:
+   - `deslopification/memory/README.md`
+   - `deslopification/memory/CURRENT_STATE.md`
+2. Use `deslopification/memory/CATALOG.md` to load only task-relevant note(s).
+3. Run `git status --short --branch`.
+4. Confirm root version from `VERSION`.
+5. Cross-check workflow commands in:
    - `README.md`
    - `docs/DEVELOPMENT.md`
-5. Review issue body/comments and linked artifacts.
+6. Review issue body/comments and linked artifacts.
 
 ## Branch And Worktree Gate (Required Before Editing)
 
-1. Confirm target branch from prompt: `{TARGET_BRANCH}` (default should be `main`).
-2. Run:
+1. Run issue preflight before editing:
+   - `python tools/session_preflight.py --mode issue --issue-number {ISSUE_NUMBER} --issue-kind {ISSUE_KIND} --slug {SHORT_SLUG}`
+2. Confirm target branch from prompt: `{TARGET_BRANCH}`.
+3. Run:
    - `git branch --show-current`
    - `git status --porcelain`
-3. If branch differs from target, stop and confirm how to handle local changes before switching.
-4. If worktree is dirty, stop and confirm whether to stash, commit, or continue as-is.
-5. After any branch switch, sync and re-check:
+4. If preflight blocks due to `main`, create/switch to the recommended issue branch before editing.
+5. If branch differs from target, stop and confirm how to handle local changes before switching.
+6. If worktree is dirty, stop and confirm whether to stash, commit, or continue as-is.
+7. After any branch switch, sync and re-check:
    - `git pull --ff-only origin {TARGET_BRANCH}`
    - `git status --short --branch`
 
@@ -88,7 +96,7 @@ Document the runtime interaction contract before editing:
 2. Implement the smallest coherent change-set.
 3. Add/update tests for new behavior and regressions.
 4. Update docs only when behavior/workflow changes.
-5. Record session notes in `deslopification/memory/`.
+5. Record session notes in `deslopification/memory/notes/{category}/{focus}/`.
 
 ## Implementation Constraints
 
@@ -155,6 +163,10 @@ Return:
 - Required validation completed in this session.
 - `.gitignore`/workspace reviewed for accidental sensitive artifacts.
 - Security concerns (PII/PHI/secrets/unsafe config) explicitly called out.
+- Memory sync completed:
+  - new session note added
+  - `python tools/update_memory_catalog.py` executed (or `--check` in CI/tests)
+  - `deslopification/memory/CURRENT_STATE.md` updated when durable decisions changed
 
 ## Best-Practice Anchors
 

@@ -45,6 +45,21 @@
 - Issue #22 build tooling evaluation: [Issue #22 build.py to doit migration decision](decisions/ISSUE-022-doit-migration-evaluation.md).
 - Current decision state (2026-02-26): retain `tools/build.py` as the canonical build/deploy workflow.
 
+## Session Memory Navigation
+
+- Memory entrypoint: `deslopification/memory/README.md`.
+- Current high-signal context: `deslopification/memory/CURRENT_STATE.md`.
+- Full historical index: `deslopification/memory/CATALOG.md`.
+- Monthly rollup example for compact history review:
+  `deslopification/memory/notes/monthly-summary/memory-ops/SUMMARY_2026-02.md`.
+- When adding notes, follow `deslopification/memory/SESSION_NOTE_TEMPLATE.md`.
+- New notes are stored under:
+  `deslopification/memory/notes/{category}/{focus}/`.
+- Prefer specific focus classifiers for session notes and avoid `general` by
+  default.
+- Use focus `lua-ethos` for Ethos Lua script/widget/tool notes (SensorList,
+  ethos_events, and similar future scripts).
+
 ## Simulator Tips
 
 - If stale behavior appears after script updates, remove cached `main.luac` and reinstall the widget.

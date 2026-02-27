@@ -6,7 +6,7 @@
 - Title: `[Bug] SensorList not functioning in X20S simulator`
 - Labels: `bug`
 - Snapshot state: open on `2026-02-26`
-- Target branch (default): `main` (or as user-directed for current workflow)
+- Target branch (default): `fix/30-x20s-simulator-bug` (or as user-directed for current workflow)
 - Attached screenshot evidence:
   `https://github.com/user-attachments/assets/e79aed7e-da30-48b7-810d-c612e0fdf406`
 
@@ -21,7 +21,7 @@ from loading in widget selection/runtime, using a root-cause fix.
 - `.github/ISSUE_TEMPLATE/bug_report.md`
 - `scripts/SensorList/main.lua`
 - `docs/SensorList/SENSORLIST_ARCHITECTURE.md`
-- `deslopification/memory/SensorList.md`
+- `deslopification/memory/notes/domain-note/lua-ethos/SensorList.md`
 - `tests/lua/test_sensorlist.lua`
 - `tests/test_sensorlist_widget.py`
 - `tools/deploy.config.example.json`
@@ -29,11 +29,14 @@ from loading in widget selection/runtime, using a root-cause fix.
 
 ## Branch/Worktree Gate (Required Before Editing)
 
-1. Confirm target branch and current branch:
+1. Run issue preflight:
+   - `python tools/session_preflight.py --mode issue --issue-number 30 --issue-kind bug --slug x20s-simulator-bug`
+2. Confirm target branch and current branch:
    - `git branch --show-current`
    - `git status --short --branch`
-2. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
-3. After switching branches, sync before editing:
+3. If preflight blocks due to `main`, create/switch to the recommended branch before editing.
+4. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
+5. After switching branches, sync before editing:
    - `git pull --ff-only origin {target-branch}`
 
 ## Scope

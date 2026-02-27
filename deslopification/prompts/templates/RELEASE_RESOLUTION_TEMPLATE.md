@@ -102,7 +102,7 @@ Return:
 
 ## Session Memory Sync
 
-Record release work in `deslopification/memory/` with:
+Record release work in `deslopification/memory/notes/{category}/{focus}/` with:
 
 - what changed
 - validation run(s)

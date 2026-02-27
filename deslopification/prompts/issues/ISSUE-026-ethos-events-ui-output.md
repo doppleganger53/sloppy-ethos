@@ -6,7 +6,7 @@
 - Title: `[Enhancement] Add event output to UI`
 - Labels: `enhancement`
 - Snapshot state: open on `2026-02-26`
-- Target branch (default): `main` (or as user-directed for current workflow)
+- Target branch (default): `feature/26-ethos-events-ui-output` (or as user-directed for current workflow)
 
 ## Mission
 
@@ -23,11 +23,14 @@ and make `throttleSame` behavior configurable through runtime interaction.
 
 ## Branch/Worktree Gate (Required Before Editing)
 
-1. Confirm target branch and current branch:
+1. Run issue preflight:
+   - `python tools/session_preflight.py --mode issue --issue-number 26 --issue-kind enhancement --slug ethos-events-ui-output`
+2. Confirm target branch and current branch:
    - `git branch --show-current`
    - `git status --short --branch`
-2. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
-3. After switching branches, sync before editing:
+3. If preflight blocks due to `main`, create/switch to the recommended branch before editing.
+4. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
+5. After switching branches, sync before editing:
    - `git pull --ff-only origin {target-branch}`
 
 ## Scope

@@ -6,7 +6,7 @@
 - Title: `[Enhancement] Sensor Values`
 - Labels: `enhancement`
 - Snapshot state: open on `2026-02-26`
-- Target branch (default): `main` (or as user-directed for current workflow)
+- Target branch (default): `feature/14-sensor-values-column` (or as user-directed for current workflow)
 
 ## Mission
 
@@ -26,11 +26,14 @@ Add an optional sensor-value display mode to `SensorList`:
 
 ## Branch/Worktree Gate (Required Before Editing)
 
-1. Confirm target branch and current branch:
+1. Run issue preflight:
+   - `python tools/session_preflight.py --mode issue --issue-number 14 --issue-kind enhancement --slug sensor-values-column`
+2. Confirm target branch and current branch:
    - `git branch --show-current`
    - `git status --short --branch`
-2. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
-3. After switching branches, sync before editing:
+3. If preflight blocks due to `main`, create/switch to the recommended branch before editing.
+4. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
+5. After switching branches, sync before editing:
    - `git pull --ff-only origin {target-branch}`
 
 ## UI Output Contract

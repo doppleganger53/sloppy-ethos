@@ -17,10 +17,20 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
 ## Required Startup Workflow
 
-1. Read the latest relevant note in `deslopification/memory/`.
-2. Check branch/worktree state: `git status --short --branch`.
-3. Confirm active package version from `VERSION`.
-4. Before introducing or changing workflow commands, cross-check command docs in:
+1. Read memory entrypoint files:
+   - `deslopification/memory/README.md`
+   - `deslopification/memory/CURRENT_STATE.md`
+2. Use `deslopification/memory/CATALOG.md` to open only the latest relevant
+   note(s) for the current task.
+3. Determine session type:
+   - issue-linked work (GitHub issue URL/number present, or session driven by
+     `deslopification/prompts/issues/*.md`)
+   - non-issue work
+4. For issue-linked work, run preflight before editing:
+   - `python tools/session_preflight.py --mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {short-slug}`
+5. Check branch/worktree state: `git status --short --branch`.
+6. Confirm active package version from `VERSION`.
+7. Before introducing or changing workflow commands, cross-check command docs in:
    - `README.md`
    - `docs/DEVELOPMENT.md`
 
@@ -55,6 +65,19 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
   - what changed
   - validation run(s)
   - follow-up items
+- Store new memory notes under:
+  - `deslopification/memory/notes/{category}/{focus}/`
+  - examples:
+    - `notes/session-note/{focus}/SESSION_NOTES_YYYY-MM-DD_...md`
+    - `notes/handoff/handoff/HANDOFF_YYYY-MM-DD...md`
+- Use a specific `focus` classifier for session notes; avoid `general` unless a
+  note truly spans multiple unrelated domains and no existing focus fits.
+- Use `lua-ethos` focus for notes about Ethos Lua scripts/widgets/tools
+  (including SensorList, ethos_events, and similar future scripts).
+- Keep memory indexes synchronized when adding notes:
+  - run `python tools/update_memory_catalog.py`
+  - update `deslopification/memory/CURRENT_STATE.md` when durable workflow or
+    behavior decisions change
 
 ## Bug Issue Hygiene
 
@@ -74,6 +97,16 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 - Use `release/v{VERSION}` for release-prep work, then delete it after merge/release.
 - Open PRs into `main` and include linked-closing keywords when applicable.
 
+## Session Branch Gate
+
+- Issue-linked work is any session tied to a GitHub issue number/URL or any
+  session using `deslopification/prompts/issues/*.md`.
+- Issue-linked work must not mutate repository files while on `main`.
+- If issue preflight fails on `main`, create/switch to the recommended
+  short-lived branch before editing.
+- Non-issue work may be performed on `main`, but agents must ask the user for
+  confirmation before mutating files on `main`.
+
 ## Release And Versioning Guardrails
 
 - Root `VERSION` is the repository version source of truth.
@@ -85,7 +118,7 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 ## Script-Specific Notes
 
 - SensorList-specific operating guidance lives in:
-  - `deslopification/memory/SensorList.md`
+  - `deslopification/memory/notes/domain-note/lua-ethos/SensorList.md`
 
 ## Definition Of Done (Before Commit/Push)
 

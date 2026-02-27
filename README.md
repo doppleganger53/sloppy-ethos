@@ -110,7 +110,8 @@ luac -p scripts/SensorList/main.lua
 - Use `.github/PULL_REQUEST_TEMPLATE.md` when opening PRs.
 - See `CODE_OF_CONDUCT.md` for collaboration expectations.
 - See `SECURITY.md` for responsible vulnerability reporting.
-- See `deslopification/memory/` for latest session notes.
+- Start session-memory context with `deslopification/memory/README.md`.
+- Use `deslopification/memory/CATALOG.md` for full historical note lookup.
 
 ## Troubleshooting
 
