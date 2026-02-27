@@ -76,6 +76,12 @@ def line_count(path: Path) -> int:
     return len(path.read_text(encoding="utf-8").splitlines())
 
 
+def normalized_byte_count(path: Path) -> int:
+    text = path.read_text(encoding="utf-8")
+    canonical = text.replace("\r\n", "\n").replace("\r", "\n")
+    return len(canonical.encode("utf-8"))
+
+
 def parse_category_focus_from_path(rel_path: Path) -> tuple[str, str] | None:
     parts = rel_path.parts
     if len(parts) >= 4 and parts[0] == "notes":
@@ -110,7 +116,7 @@ def collect_entries(memory_dir: Path = MEMORY_DIR) -> list[Entry]:
                 rel_path=rel_path.as_posix(),
                 name=path.name,
                 title=title,
-                bytes_count=path.stat().st_size,
+                bytes_count=normalized_byte_count(path),
                 lines_count=line_count(path),
             )
         )

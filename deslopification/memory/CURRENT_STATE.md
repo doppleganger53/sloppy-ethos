@@ -28,6 +28,8 @@ Historical detail remains in individual session notes referenced from
   - selective `Focus` classification for faster topical filtering.
 - `CATALOG.md` entries and distributions index note artifacts under
   `deslopification/memory/notes/**` (control files are listed separately).
+- `CATALOG.md` snapshot byte totals are computed from normalized text line
+  endings to remain stable across Windows (`CRLF`) and Linux (`LF`) checkouts.
 - Focus distribution lines in `CATALOG.md` are sourced from per-focus `.desc`
   files stored in each `notes/{category}/{focus}/` folder.
 - Session notes should use specific focus classifiers (for example,

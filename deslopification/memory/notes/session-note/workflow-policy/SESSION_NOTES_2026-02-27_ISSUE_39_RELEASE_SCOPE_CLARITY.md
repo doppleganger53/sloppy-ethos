@@ -19,6 +19,9 @@
   - default `squash` for normal issue PRs.
   - `merge commit` for release-prep/lineage-sensitive PRs.
   - `rebase` is not default.
+- Fixed cross-platform memory catalog drift by normalizing line endings before
+  computing byte totals in `tools/update_memory_catalog.py`, eliminating CI
+  mismatches between Windows (`CRLF`) and Linux (`LF`) checkouts.
 - Files touched:
   - `AGENTS.md`
   - `CONTRIBUTING.md`
@@ -26,7 +29,9 @@
   - `docs/DEVELOPMENT.md`
   - `.github/PULL_REQUEST_TEMPLATE.md`
   - `tools/session_preflight.py`
+  - `tools/update_memory_catalog.py`
   - `tests/test_session_preflight.py`
+  - `tests/test_memory_catalog_sync.py`
   - `deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md`
   - `deslopification/prompts/todo/SENSORLIST_V100_RELEASE_PART2.md`
   - `deslopification/prompts/issues/README.md`
