@@ -3,7 +3,7 @@
 Implementation prompts for every GitHub issue that was open at snapshot time.
 
 - Repository: `doppleganger53/sloppy-ethos`
-- Snapshot date: `2026-02-26`
+- Snapshot date: `2026-02-27`
 - Issue source: GitHub REST API (`/repos/{owner}/{repo}/issues?state=open`)
 
 ## Issue Prompts
@@ -15,6 +15,7 @@ Implementation prompts for every GitHub issue that was open at snapshot time.
 - `ISSUE-026-ethos-events-ui-output.md`
 - `ISSUE-029-milestone-versioning-policy.md`
 - `ISSUE-030-x20s-simulator-bug.md`
+- `ISSUE-033-multi-script-release-deliverable.md`
 
 ## Done/Archived Prompts
 
