@@ -8,7 +8,7 @@ history. The goal is fast cold-start context without losing auditability.
 1. Read [CURRENT_STATE.md](CURRENT_STATE.md).
 2. Use [CATALOG.md](CATALOG.md) to select only task-relevant historical notes.
 3. Read domain notes (for example,
-   [notes/domain-note/sensorlist/SensorList.md](notes/domain-note/sensorlist/SensorList.md))
+   [notes/domain-note/lua-ethos/SensorList.md](notes/domain-note/lua-ethos/SensorList.md))
    only when the task touches that area.
 4. For release/history context by month, read summary rollups (for example,
    [notes/monthly-summary/memory-ops/SUMMARY_2026-02.md](notes/monthly-summary/memory-ops/SUMMARY_2026-02.md)).
@@ -24,6 +24,8 @@ history. The goal is fast cold-start context without losing auditability.
   canonical location for note artifacts, including
   `SESSION_NOTES_*.md`, `HANDOFF_*.md`, `SESSION_RESTART_*.md`,
   `SUMMARY_YYYY-MM.md`, and domain notes.
+  each focus folder should include a `.desc` file with a brief focus summary
+  used by `CATALOG.md` snapshot output.
 - `temp/`:
   temporary analysis artifacts that are intentionally excluded from catalog
   indexing.
@@ -49,7 +51,11 @@ When adding a new memory note:
 1. Add the note using `SESSION_NOTE_TEMPLATE.md`.
    - Place it under `notes/{category}/{focus}/`.
    - Prefer a specific focus (for example, `build-tooling`, `docs-process`,
-     `issue-lifecycle`, `repo-governance`) over `general`.
+     `issue-lifecycle`, `repo`, `lua-ethos`) over `general`.
+   - Use `lua-ethos` for Ethos Lua script/widget/tool notes (for example,
+     SensorList, ethos_events, and similar future script projects).
+   - If creating a new focus folder, add a non-empty `.desc` file in that
+     folder.
 2. Regenerate `CATALOG.md`:
    - `python tools/update_memory_catalog.py`
 3. If the change alters durable workflow/behavior, update `CURRENT_STATE.md`.

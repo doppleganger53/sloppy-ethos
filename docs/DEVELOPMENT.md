@@ -57,6 +57,8 @@
   `deslopification/memory/notes/{category}/{focus}/`.
 - Prefer specific focus classifiers for session notes and avoid `general` by
   default.
+- Use focus `lua-ethos` for Ethos Lua script/widget/tool notes (SensorList,
+  ethos_events, and similar future scripts).
 
 ## Simulator Tips
 

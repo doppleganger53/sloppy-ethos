@@ -28,9 +28,13 @@ Historical detail remains in individual session notes referenced from
   - selective `Focus` classification for faster topical filtering.
 - `CATALOG.md` entries and distributions index note artifacts under
   `deslopification/memory/notes/**` (control files are listed separately).
+- Focus distribution lines in `CATALOG.md` are sourced from per-focus `.desc`
+  files stored in each `notes/{category}/{focus}/` folder.
 - Session notes should use specific focus classifiers (for example,
-  `build-tooling`, `docs-process`, `issue-lifecycle`, `repo-governance`) and
+  `build-tooling`, `docs-process`, `issue-lifecycle`, `repo`, `lua-ethos`) and
   avoid `general` by default.
+- Ethos Lua script/widget/tool notes (SensorList, ethos_events, and future
+  similar scripts) should use focus `lua-ethos`.
 - New memory notes are stored under:
   - `deslopification/memory/notes/{category}/{focus}/`.
 - Issue-linked sessions must run `tools/session_preflight.py --mode issue ...`

@@ -32,7 +32,7 @@
 - If workflow/behavior changed, add a session note under
   `deslopification/memory/notes/{category}/{focus}/`, append it to
   `deslopification/memory/CATALOG.md`, prefer a specific focus classifier over
-  `general`, and update
+  `general` (use `lua-ethos` for Ethos Lua script/widget/tool notes), and update
   `deslopification/memory/CURRENT_STATE.md` when the change is durable.
 
 ## Good First Issues

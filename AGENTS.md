@@ -72,6 +72,8 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
     - `notes/handoff/handoff/HANDOFF_YYYY-MM-DD...md`
 - Use a specific `focus` classifier for session notes; avoid `general` unless a
   note truly spans multiple unrelated domains and no existing focus fits.
+- Use `lua-ethos` focus for notes about Ethos Lua scripts/widgets/tools
+  (including SensorList, ethos_events, and similar future scripts).
 - Keep memory indexes synchronized when adding notes:
   - run `python tools/update_memory_catalog.py`
   - update `deslopification/memory/CURRENT_STATE.md` when durable workflow or
@@ -116,7 +118,7 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 ## Script-Specific Notes
 
 - SensorList-specific operating guidance lives in:
-  - `deslopification/memory/notes/domain-note/sensorlist/SensorList.md`
+  - `deslopification/memory/notes/domain-note/lua-ethos/SensorList.md`
 
 ## Definition Of Done (Before Commit/Push)
 

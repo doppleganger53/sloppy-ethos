@@ -22,18 +22,15 @@ PRE_OPT_BASELINE = {
 CONTROL_FILES = ("README.md", "CURRENT_STATE.md", "SESSION_NOTE_TEMPLATE.md")
 NOTES_ROOT = MEMORY_DIR / "notes"
 HIGH_SIGNAL_FOCUS = {
-    "memory-ops",
     "workflow-policy",
     "build-tooling",
     "docs-process",
     "release-versioning",
     "testing",
-    "prompts",
-    "repo-metadata",
-    "issue-lifecycle",
-    "repo-governance",
+    "repo",
 }
 RECENT_HIGH_SIGNAL_LIMIT = 12
+RECENT_HIGH_SIGNAL_PER_FOCUS_LIMIT = 3
 
 
 @dataclass(frozen=True)
@@ -46,6 +43,20 @@ class Entry:
     title: str
     bytes_count: int
     lines_count: int
+
+
+def read_focus_description(focus_dir: Path) -> str | None:
+    desc_path = focus_dir / ".desc"
+    if not desc_path.exists():
+        return None
+    text = desc_path.read_text(encoding="utf-8").strip()
+    if not text:
+        return None
+    for line in text.splitlines():
+        clean = line.strip()
+        if clean:
+            return clean
+    return None
 
 
 def extract_date(name: str) -> str:
@@ -114,12 +125,54 @@ def select_recent_high_signal(entries: list[Entry]) -> list[Entry]:
         and item.date != "-"
         and item.focus in HIGH_SIGNAL_FOCUS
     ]
-    return sorted(candidates, key=lambda x: (x.date, x.name), reverse=True)[
-        :RECENT_HIGH_SIGNAL_LIMIT
-    ]
+    by_focus: dict[str, list[Entry]] = {}
+    for item in candidates:
+        by_focus.setdefault(item.focus, []).append(item)
+
+    selected: list[Entry] = []
+    for focus_entries in by_focus.values():
+        ranked = sorted(
+            focus_entries,
+            key=lambda x: (x.date, x.name, x.rel_path),
+            reverse=True,
+        )
+        selected.extend(ranked[:RECENT_HIGH_SIGNAL_PER_FOCUS_LIMIT])
+
+    return sorted(
+        selected,
+        key=lambda x: (x.date, x.name, x.rel_path),
+        reverse=True,
+    )[:RECENT_HIGH_SIGNAL_LIMIT]
 
 
-def render_catalog(entries: list[Entry]) -> str:
+def format_focus_list(values: set[str]) -> str:
+    ordered = [f"`{value}`" for value in sorted(values)]
+    if not ordered:
+        return "(none)"
+    if len(ordered) == 1:
+        return ordered[0]
+    if len(ordered) == 2:
+        return f"{ordered[0]} or {ordered[1]}"
+    return f"{', '.join(ordered[:-1])}, or {ordered[-1]}"
+
+
+def collect_focus_descriptions(entries: list[Entry], memory_dir: Path = MEMORY_DIR) -> dict[str, str]:
+    by_focus: dict[str, set[str]] = {}
+    for item in entries:
+        focus_dir = memory_dir / Path(item.rel_path).parent
+        desc = read_focus_description(focus_dir)
+        if desc is None:
+            continue
+        by_focus.setdefault(item.focus, set()).add(desc)
+
+    descriptions: dict[str, str] = {}
+    for focus, values in by_focus.items():
+        ordered = sorted(values)
+        descriptions[focus] = ordered[0] if len(ordered) == 1 else " / ".join(ordered)
+    return descriptions
+
+
+def render_catalog(entries: list[Entry], memory_dir: Path = MEMORY_DIR) -> str:
     total_files = len(entries)
     total_bytes = sum(item.bytes_count for item in entries)
     total_lines = sum(item.lines_count for item in entries)
@@ -144,9 +197,11 @@ def render_catalog(entries: list[Entry]) -> str:
         }[category]
         category_lines.append(f"- {label}: {count}")
 
+    focus_descriptions = collect_focus_descriptions(entries, memory_dir)
     focus_lines = []
     for focus, count in sorted(by_focus.items(), key=lambda pair: (-pair[1], pair[0])):
-        focus_lines.append(f"- {focus}: {count}")
+        description = focus_descriptions.get(focus, "description missing")
+        focus_lines.append(f"- {count} -- {focus} ( {description} )")
 
     rows = []
     for item in sorted(entries, key=lambda x: (x.date, x.rel_path)):
@@ -156,6 +211,7 @@ def render_catalog(entries: list[Entry]) -> str:
         )
 
     recent_high_signal = select_recent_high_signal(entries)
+    high_signal_focus_text = format_focus_list(HIGH_SIGNAL_FOCUS)
     recent_lines = []
     for item in recent_high_signal:
         title = item.title.replace("|", "/")
@@ -199,9 +255,9 @@ def render_catalog(entries: list[Entry]) -> str:
             "",
             (
                 "- Selection: newest session notes where `Focus` is one of "
-                "`memory-ops`, `workflow-policy`, `build-tooling`, "
-                "`docs-process`, `release-versioning`, `testing`, `prompts`, "
-                "`repo-metadata`, `issue-lifecycle`, or `repo-governance`."
+                f"{high_signal_focus_text}; keep up to "
+                f"{RECENT_HIGH_SIGNAL_PER_FOCUS_LIMIT} per focus, then keep "
+                f"newest {RECENT_HIGH_SIGNAL_LIMIT} overall."
             ),
         ]
     )

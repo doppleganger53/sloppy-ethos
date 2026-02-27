@@ -6,6 +6,7 @@
 - Focus: `{focus-slug}`
 - Focus guidance:
   - prefer a specific focus classifier and avoid `general` when possible.
+  - use `lua-ethos` for Ethos Lua script/widget/tool notes.
 - Store this file under:
   - `deslopification/memory/notes/{category}/{focus}/`
 
