@@ -103,6 +103,12 @@ luac -p scripts/SensorList/main.lua
 - Release scope is explicit:
   - repo releases track repository-wide workflow/docs/versioning changes.
   - script releases track installable script artifacts and script-specific manual gates.
+- Repo release install deliverables include:
+  - `dist/sloppy-ethos_scripts.zip` (built via `python tools/build.py --project SensorList --project ethos_events --dist`)
+  - single-script ZIPs for each included script release asset (for example `dist/SensorList-{version}.zip` and `dist/ethos_events-{version}.zip`)
+- Release publishing checklist for repo releases:
+  - run `python tools/build.py --project SensorList --project ethos_events --dist`
+  - attach `dist/sloppy-ethos_scripts.zip` alongside the single-script ZIP assets in the GitHub release
 - Main-branch workflow, branch naming conventions, version bump timing, optional `-rc.N`, and release-prep flow:
   [Development policy](docs/DEVELOPMENT.md#main-branch-release-and-versioning-policy).
 - Published release notes and install assets: [GitHub Releases](https://github.com/doppleganger53/sloppy-ethos/releases).
@@ -133,7 +139,7 @@ luac -p scripts/SensorList/main.lua
 
 - Script idea: smart switch map that pre-populates mapped switches and identifies unused switches
 - optimize agentic and human workflows in the repo
-- [#42](https://github.com/doppleganger53/sloppy-ethos/issues/42) Include the multi-script bundle as a repo release deliverable.
+- Completed [#42](https://github.com/doppleganger53/sloppy-ethos/issues/42): repo releases now include the multi-script bundle deliverable `dist/sloppy-ethos_scripts.zip`.
 
 ### SensorList
 

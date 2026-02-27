@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- Documented Issue #42 repo release deliverables so GitHub repo releases explicitly include `dist/sloppy-ethos_scripts.zip` alongside single-script ZIP assets, including the build step `python tools/build.py --project SensorList --project ethos_events --dist`.
+
 ## [1.0.1] - 2026-02-27
 
 ### Changed
