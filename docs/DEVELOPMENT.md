@@ -45,6 +45,15 @@
 - Issue #22 build tooling evaluation: [Issue #22 build.py to doit migration decision](decisions/ISSUE-022-doit-migration-evaluation.md).
 - Current decision state (2026-02-26): retain `tools/build.py` as the canonical build/deploy workflow.
 
+## Session Memory Navigation
+
+- Memory entrypoint: `deslopification/memory/README.md`.
+- Current high-signal context: `deslopification/memory/CURRENT_STATE.md`.
+- Full historical index: `deslopification/memory/CATALOG.md`.
+- Monthly rollup example for compact history review:
+  `deslopification/memory/SUMMARY_2026-02.md`.
+- When adding notes, follow `deslopification/memory/SESSION_NOTE_TEMPLATE.md`.
+
 ## Simulator Tips
 
 - If stale behavior appears after script updates, remove cached `main.luac` and reinstall the widget.

@@ -17,10 +17,14 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
 ## Required Startup Workflow
 
-1. Read the latest relevant note in `deslopification/memory/`.
-2. Check branch/worktree state: `git status --short --branch`.
-3. Confirm active package version from `VERSION`.
-4. Before introducing or changing workflow commands, cross-check command docs in:
+1. Read memory entrypoint files:
+   - `deslopification/memory/README.md`
+   - `deslopification/memory/CURRENT_STATE.md`
+2. Use `deslopification/memory/CATALOG.md` to open only the latest relevant
+   note(s) for the current task.
+3. Check branch/worktree state: `git status --short --branch`.
+4. Confirm active package version from `VERSION`.
+5. Before introducing or changing workflow commands, cross-check command docs in:
    - `README.md`
    - `docs/DEVELOPMENT.md`
 
@@ -55,6 +59,10 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
   - what changed
   - validation run(s)
   - follow-up items
+- Keep memory indexes synchronized when adding notes:
+  - append new note entries to `deslopification/memory/CATALOG.md`
+  - update `deslopification/memory/CURRENT_STATE.md` when durable workflow or
+    behavior decisions change
 
 ## Bug Issue Hygiene
 

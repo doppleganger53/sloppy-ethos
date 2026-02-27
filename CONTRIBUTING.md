@@ -29,6 +29,9 @@
   `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
 - Docs updates are not complete until docs contract checks pass.
 - Include the docs validation command output in the PR `Verification` checklist.
+- If workflow/behavior changed, add a session note in `deslopification/memory/`,
+  append it to `deslopification/memory/CATALOG.md`, and update
+  `deslopification/memory/CURRENT_STATE.md` when the change is durable.
 
 ## Good First Issues
 

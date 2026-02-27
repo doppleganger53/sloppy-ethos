@@ -28,13 +28,16 @@ You are Codex working directly in this repository.
 
 ## Mandatory Startup Workflow
 
-1. Read latest relevant note in `deslopification/memory/`.
-2. Run `git status --short --branch`.
-3. Confirm root version from `VERSION`.
-4. Cross-check workflow commands in:
+1. Read memory entrypoint files:
+   - `deslopification/memory/README.md`
+   - `deslopification/memory/CURRENT_STATE.md`
+2. Use `deslopification/memory/CATALOG.md` to load only task-relevant note(s).
+3. Run `git status --short --branch`.
+4. Confirm root version from `VERSION`.
+5. Cross-check workflow commands in:
    - `README.md`
    - `docs/DEVELOPMENT.md`
-5. Review issue body/comments and linked artifacts.
+6. Review issue body/comments and linked artifacts.
 
 ## Branch And Worktree Gate (Required Before Editing)
 
@@ -155,6 +158,10 @@ Return:
 - Required validation completed in this session.
 - `.gitignore`/workspace reviewed for accidental sensitive artifacts.
 - Security concerns (PII/PHI/secrets/unsafe config) explicitly called out.
+- Memory sync completed:
+  - new session note added
+  - `deslopification/memory/CATALOG.md` updated
+  - `deslopification/memory/CURRENT_STATE.md` updated when durable decisions changed
 
 ## Best-Practice Anchors
 
