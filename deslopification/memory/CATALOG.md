@@ -15,11 +15,11 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 72
-- Total size: 106,591 bytes
-- Total lines: 2,596
+- Files: 73
+- Total size: 107,379 bytes
+- Total lines: 2,617
 - Distribution by category:
-  - session notes: 67
+  - session notes: 68
   - handoff/restart notes: 3
   - domain notes: 1
   - monthly summaries: 1
@@ -33,8 +33,8 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 5 -- testing ( Automated tests and coverage changes )
   - 5 -- workflow-policy ( Branching, policy, and workflow guardrails )
   - 4 -- issue-lifecycle ( Issue creation, validation, and closure tracking )
+  - 4 -- prompts ( Prompt and template asset evolution )
   - 3 -- handoff ( Session continuity and restart handoffs )
-  - 3 -- prompts ( Prompt and template asset evolution )
   - 2 -- repo ( Repository-wide governance and metadata )
 
 ## Recent High-Signal Notes (Auto-generated)
@@ -129,3 +129,4 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-02-27 | session-note | testing | [notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage |
 | 2026-02-27 | session-note | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md) | # Session Notes 2026-02-27 - Issue #16 Branch Gate Hardening |
 | 2026-02-27 | session-note | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md) | # Session Notes 2026-02-27 - Issue #39 Release Scope Clarity |
+| 2026-03-01 | session-note | prompts | [notes/session-note/prompts/SESSION_NOTES_2026-03-01_ISSUE_44_ARDUINO_FBUS_PROMPT_DRAFT.md](notes/session-note/prompts/SESSION_NOTES_2026-03-01_ISSUE_44_ARDUINO_FBUS_PROMPT_DRAFT.md) | # Session Notes 2026-03-01 - Issue #44 Arduino FBus Prompt Draft |
