@@ -16,6 +16,7 @@ Implementation prompts for every GitHub issue that was open at snapshot time.
 - `ISSUE-029-milestone-versioning-policy.md`
 - `ISSUE-030-x20s-simulator-bug.md`
 - `ISSUE-042-multi-script-release-deliverable.md`
+- `ISSUE-045-smartmapper-function-mapping-script.md`
 
 ## Done/Archived Prompts
 
