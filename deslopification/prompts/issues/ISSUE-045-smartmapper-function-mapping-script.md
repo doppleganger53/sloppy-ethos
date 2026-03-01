@@ -3,6 +3,42 @@
 Use this prompt to implement GitHub issue `#45`:
 `https://github.com/doppleganger53/sloppy-ethos/issues/45`
 
+## Canonical Issue
+
+- URL: `https://github.com/doppleganger53/sloppy-ethos/issues/45`
+- Title: `[Enhancement] SmartMapper function mapping script`
+- Labels: `enhancement`
+- Snapshot state: open on `2026-03-01`
+- Target branch (default): `feature/45-smartmapper-function-mapping-script` (or as user-directed for current workflow)
+
+## Branch/Worktree Gate (Required Before Editing)
+
+1. Run issue preflight:
+   - `python tools/session_preflight.py --mode issue --issue-number 45 --issue-kind enhancement --slug smartmapper-function-mapping-script`
+2. Confirm target branch and current branch:
+   - `git branch --show-current`
+   - `git status --short --branch`
+3. If preflight blocks due to `main`, create/switch to the recommended branch before editing.
+4. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
+5. After switching branches, sync before editing:
+   - `git pull --ff-only origin {target-branch}`
+
+## Current Status
+
+Implementation is deferred pending Ethos `1.7.x` final runtime validation.
+
+Reason:
+
+- Ethos `1.6.4` widget runtime does not expose the model-enumeration APIs needed
+  to inspect mixes, special functions, logical switches, trims, or switch
+  inventory.
+- The accessible `model.getChannel()` API exposes output-oriented channel data,
+  not the routing metadata required to reconstruct function-to-input mappings.
+
+Do not treat Ethos `1.6.4` widget context as a viable target for the full
+feature. Before resuming implementation, first validate the relevant APIs on the
+final Ethos `1.7.x` runtime.
+
 # Prompt
 
 You are generating code for a FrSky Ethos Lua widget.
@@ -21,7 +57,7 @@ Create a widget named `SmartMapper` that implements:
 
 - Radio target(s): `X20RS` (and other Ethos radios exposing comparable model
   data APIs)
-- Ethos version target: `1.6.4+`
+- Ethos version target: `1.7.x final+`
 - Project layout:
   - Script entry point: `scripts/SmartMapper/main.lua`
   - Optional images: `scripts/SmartMapper/images/`
@@ -76,6 +112,8 @@ Create a widget named `SmartMapper` that implements:
 - Primary data source(s): Ethos Lua model/configuration APIs that expose mixes,
   logic switches, trims, special functions, switch definitions, and related
   model state accessible from a widget-safe context
+- First implementation gate: verify that Ethos `1.7.x` final actually exposes
+  these APIs in the intended script context before writing feature logic
 - Fallback data source(s): cached last-known-good normalized mapping plus
   defensive placeholders when a specific subsystem cannot be enumerated
 - Handle simulator-vs-radio API differences safely.

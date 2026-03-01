@@ -15,18 +15,18 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 73
-- Total size: 107,378 bytes
-- Total lines: 2,617
+- Files: 75
+- Total size: 112,397 bytes
+- Total lines: 2,719
 - Distribution by category:
-  - session notes: 68
+  - session notes: 70
   - handoff/restart notes: 3
   - domain notes: 1
   - monthly summaries: 1
 
 - Distribution by focus:
+  - 14 -- lua-ethos ( Ethos targeted scripts )
   - 13 -- memory-ops ( Agentic context engineering )
-  - 12 -- lua-ethos ( Ethos targeted scripts )
   - 10 -- build-tooling ( Build, deploy, packaging, and tooling workflows )
   - 8 -- release-versioning ( Release flow, tagging, and version policy )
   - 7 -- docs-process ( Documentation and contributor process changes )
@@ -129,4 +129,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-02-27 | session-note | testing | [notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage |
 | 2026-02-27 | session-note | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md) | # Session Notes 2026-02-27 - Issue #16 Branch Gate Hardening |
 | 2026-02-27 | session-note | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md) | # Session Notes 2026-02-27 - Issue #39 Release Scope Clarity |
+| 2026-03-01 | session-note | lua-ethos | [notes/session-note/lua-ethos/SESSION_NOTES_2026-03-01_ISSUE_45_SMARTMAPPER_DEFERRED_PENDING_ETHOS_17X.md](notes/session-note/lua-ethos/SESSION_NOTES_2026-03-01_ISSUE_45_SMARTMAPPER_DEFERRED_PENDING_ETHOS_17X.md) | # Session Notes 2026-03-01 - Issue #45 SmartMapper Deferred Pending Ethos 1.7.x |
+| 2026-03-01 | session-note | lua-ethos | [notes/session-note/lua-ethos/SESSION_NOTES_2026-03-01_ISSUE_45_SMARTMAPPER_IMPLEMENTATION.md](notes/session-note/lua-ethos/SESSION_NOTES_2026-03-01_ISSUE_45_SMARTMAPPER_IMPLEMENTATION.md) | # Session Notes 2026-03-01 - Issue #45 SmartMapper Implementation |
 | 2026-03-01 | session-note | prompts | [notes/session-note/prompts/SESSION_NOTES_2026-03-01_ISSUE_45_SMARTMAPPER_PROMPT_DRAFT.md](notes/session-note/prompts/SESSION_NOTES_2026-03-01_ISSUE_45_SMARTMAPPER_PROMPT_DRAFT.md) | # Session Notes 2026-03-01 - Issue #45 SmartMapper Prompt Draft |
