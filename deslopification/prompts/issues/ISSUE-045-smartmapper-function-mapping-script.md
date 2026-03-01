@@ -27,6 +27,10 @@ Create a widget named `SmartMapper` that implements:
   - Optional images: `scripts/SmartMapper/images/`
   - Optional i18n: `scripts/SmartMapper/i18n/`
 
+## References
+- Open source projects for reference or code re-use (attribute appropriately)
+  - https://github.com/lthole/Ethos-switch-maps
+
 ## Ethos API Requirements (Critical)
 
 - Use Ethos-native widget registration:
@@ -61,6 +65,11 @@ Create a widget named `SmartMapper` that implements:
      only; do not auto-scroll
    - Input navigation method(s): wheel up/down, touch swipe/drag if supported by
      the current radio
+7. Function naming discovery hirearchy (if a definition is found traversing this list top to bottom, function is named, do not evaluate further):
+   - If a special function active condition for a given switch position has a play audio action - use the first filename of the audio sequence as the switch position label
+   - If a special function active condition for a given switch position has a play text action - use the text attribute as the switch position label.
+   - If a mix defines a given switch position as its input, use the mix name as the switch position label
+
 
 ## Data Access Requirements
 
