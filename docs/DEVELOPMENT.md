@@ -179,9 +179,8 @@ This repository uses `main` as the only long-lived integration branch and aligns
    - `python tools/build.py --project SensorList --project ethos_events --dist`
 3. Ensure GitHub release assets include:
    - `dist/sloppy-ethos_scripts.zip`
-   - included single-script ZIP artifacts (for example `dist/SensorList-{scripts/SensorList/VERSION}.zip` and `dist/ethos_events-{scripts/ethos_events/VERSION}.zip`)
 4. Do not treat script-only manual gates as implicit blockers unless that script is in scope.
-5. Publish release notes and install assets with `gh release create v{VERSION} dist/sloppy-ethos_scripts.zip dist/SensorList-{scripts/SensorList/VERSION}.zip dist/ethos_events-{scripts/ethos_events/VERSION}.zip --title "{TITLE}" --notes-file {RELEASE_NOTES_FILE}` after generating `{RELEASE_NOTES_FILE}` with `tools/write_release_notes.py`.
+5. Publish release notes and install assets with `gh release create v{VERSION} dist/sloppy-ethos_scripts.zip --title "{TITLE}" --notes-file {RELEASE_NOTES_FILE}` after generating `{RELEASE_NOTES_FILE}` with `tools/write_release_notes.py`.
 
 ### Script Release (`release-kind=script`)
 

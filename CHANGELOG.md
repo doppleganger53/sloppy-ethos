@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Narrowed the repo release asset policy so future repository releases attach only the consolidated bundle `dist/sloppy-ethos_scripts.zip`, not the individual script ZIP assets.
+
 ## [1.0.2] - 2026-03-02
 
 ### Changed

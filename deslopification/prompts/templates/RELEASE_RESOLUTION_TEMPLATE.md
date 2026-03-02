@@ -109,7 +109,7 @@ Run the minimum required checks for this release action:
 6. Generate `{RELEASE_NOTES_FILE}` from the matching `CHANGELOG.md` entry with the helper command for this scope.
 7. Create release:
    - For `repo` releases:
-     - `gh release create {RELEASE_TAG} --title "{RELEASE_TITLE}" --notes-file {RELEASE_NOTES_FILE} {PRERELEASE_FLAG}`
+     - `gh release create {RELEASE_TAG} dist/sloppy-ethos_scripts.zip --title "{RELEASE_TITLE}" --notes-file {RELEASE_NOTES_FILE} {PRERELEASE_FLAG}`
    - For `script` releases:
      - `gh release create {RELEASE_TAG} dist/{PROJECT_NAME}-{SCRIPT_VERSION}.zip --title "{RELEASE_TITLE}" --notes-file {RELEASE_NOTES_FILE} {PRERELEASE_FLAG}`
 8. Verify release metadata:

@@ -11,8 +11,7 @@ Historical detail remains in individual session notes referenced from
 - Script artifact versions: `scripts/{ProjectName}/VERSION`.
 - Single-script ZIP naming: `dist/{ProjectName}-{version}.zip`.
 - Multi-script ZIP naming exception: `dist/sloppy-ethos_scripts.zip`.
-- Repo release asset baseline: include `dist/sloppy-ethos_scripts.zip` alongside
-  applicable single-script ZIP artifacts.
+- Repo release asset baseline: attach only `dist/sloppy-ethos_scripts.zip`.
 
 ## Workflow Baseline
 
