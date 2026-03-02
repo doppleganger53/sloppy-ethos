@@ -29,6 +29,8 @@
   - result: `6 passed`
 - `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
   - result: `89 passed, 14 skipped`
+- `python -m pytest -q`
+  - result: `206 passed, 14 skipped`
 
 ## Follow-up items
 
