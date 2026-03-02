@@ -58,9 +58,12 @@ Historical detail remains in individual session notes referenced from
   - `--release-kind {repo|script}`
   - `--project {ProjectName}` (`script` only)
   - one or more `--script-gate-issue {N}` flags (`script` only)
+- Release-prep branch naming is scope-specific:
+  - `release/v{VERSION}` for repo releases
+  - `release/{ProjectName}-v{VERSION}` for script releases
 - Hybrid PR merge strategy baseline:
   - `squash` for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`).
-  - `merge commit` for `release/v{VERSION}` PRs and lineage-sensitive cases.
+  - `merge commit` for `release/v{VERSION}` and `release/{ProjectName}-v{VERSION}` PRs, plus lineage-sensitive cases.
   - `rebase` is not the default merge method.
 - Non-issue sessions may run on `main`, but require user confirmation before
   file mutations.

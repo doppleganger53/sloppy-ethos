@@ -94,13 +94,15 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
   - `fix/{issue-number}-{short-slug}` for bugs
   - `docs/{issue-number}-{short-slug}` for docs/process changes
   - `chore/{issue-number}-{short-slug}` for tooling/maintenance changes
-- Use `release/v{VERSION}` for release-prep work, then delete it after merge/release.
+- Use `release/v{VERSION}` for repo release-prep work.
+- Use `release/{ProjectName}-v{VERSION}` for script release-prep work.
+- Delete release-prep branches after merge/release.
 - Open PRs into `main` and include linked-closing keywords when applicable.
 
 ## PR Merge Strategy
 
 - Default merge method for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`) is `squash`.
-- Use `merge commit` for release-prep branches (`release/v{VERSION}`) and for PRs where branch commit lineage must be preserved.
+- Use `merge commit` for release-prep branches (`release/v{VERSION}` or `release/{ProjectName}-v{VERSION}`) and for PRs where branch commit lineage must be preserved.
 - `rebase` merge is not the default practice for this repository.
 
 ## Session Branch Gate
