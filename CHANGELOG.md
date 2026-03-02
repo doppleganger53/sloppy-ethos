@@ -4,9 +4,16 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-03-02
+
 ### Changed
 
 - Narrowed the repo release asset policy so future repository releases attach only the consolidated bundle `dist/sloppy-ethos_scripts.zip`, not the individual script ZIP assets.
+
+### Testing
+
+- `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
+- `python tools/build.py --project SensorList --project ethos_events --dist`
 
 ## [1.0.2] - 2026-03-02
 

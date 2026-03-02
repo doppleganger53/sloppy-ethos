@@ -15,11 +15,11 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 86
-- Total size: 132,095 bytes
-- Total lines: 3,229
+- Files: 87
+- Total size: 133,378 bytes
+- Total lines: 3,267
 - Distribution by category:
-  - session notes: 81
+  - session notes: 82
   - handoff/restart notes: 3
   - domain notes: 1
   - weekly summaries: 1
@@ -27,7 +27,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - Distribution by focus:
   - 19 -- lua-ethos ( Ethos targeted scripts )
   - 14 -- memory-ops ( Agentic context engineering )
-  - 11 -- release-versioning ( Release flow, tagging, and version policy )
+  - 12 -- release-versioning ( Release flow, tagging, and version policy )
   - 10 -- build-tooling ( Build, deploy, packaging, and tooling workflows )
   - 8 -- docs-process ( Documentation and contributor process changes )
   - 5 -- prompts ( Prompt and template asset evolution )
@@ -41,8 +41,8 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 
 - Selection: newest session notes where `Focus` is one of `build-tooling`, `docs-process`, `release-versioning`, `repo`, `testing`, or `workflow-policy`; keep up to 3 per focus, then keep newest 12 overall.
 - 2026-03-02 | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md](notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md) | # Session Notes 2026-03-02 - Repo Releases Consolidated Bundle Only
+- 2026-03-02 | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_RELEASE_V103.md](notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_RELEASE_V103.md) | # Session Notes 2026-03-02 - Release v1.0.3
 - 2026-03-02 | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_RELEASE_V102.md](notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_RELEASE_V102.md) | # Session Notes 2026-03-02 - Release v1.0.2
-- 2026-03-02 | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_RELEASE_NOTES_FILE_WORKFLOW.md](notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_RELEASE_NOTES_FILE_WORKFLOW.md) | # Session Notes 2026-03-02 - Release Notes File Workflow
 - 2026-03-02 | docs-process | [notes/session-note/docs-process/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md](notes/session-note/docs-process/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md) | # Session Notes 2026-03-02 - Contributing Good First Issue Guidance Removal
 - 2026-02-27 | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md) | # Session Notes 2026-02-27 - Issue #39 Release Scope Clarity
 - 2026-02-27 | testing | [notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session-note/testing/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage
@@ -142,4 +142,5 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-03-02 | session-note | prompts | [notes/session-note/prompts/SESSION_NOTES_2026-03-02_ISSUE_45_PROMPT_GUARDRAIL_FIX.md](notes/session-note/prompts/SESSION_NOTES_2026-03-02_ISSUE_45_PROMPT_GUARDRAIL_FIX.md) | # Session Notes 2026-03-02 - Issue #45 Prompt Guardrail Fix |
 | 2026-03-02 | session-note | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_RELEASE_NOTES_FILE_WORKFLOW.md](notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_RELEASE_NOTES_FILE_WORKFLOW.md) | # Session Notes 2026-03-02 - Release Notes File Workflow |
 | 2026-03-02 | session-note | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_RELEASE_V102.md](notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_RELEASE_V102.md) | # Session Notes 2026-03-02 - Release v1.0.2 |
+| 2026-03-02 | session-note | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_RELEASE_V103.md](notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_RELEASE_V103.md) | # Session Notes 2026-03-02 - Release v1.0.3 |
 | 2026-03-02 | session-note | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md](notes/session-note/release-versioning/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md) | # Session Notes 2026-03-02 - Repo Releases Consolidated Bundle Only |
