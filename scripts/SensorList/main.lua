@@ -8,6 +8,16 @@ local DEFAULT_WINDOW_HEIGHT = 272
 local SCROLL_ROW_HEIGHT = 16
 local HEADER_HEIGHT = 18
 local HEADER_TO_ROWS_GAP = 8
+local UNKNOWN_ID = 65535
+local CATEGORY_PROBE_MAX_MEMBER = 12
+local CATEGORY_PROBE_WARMUP = 4
+local CATEGORY_PROBE_EMPTY_BREAK = 4
+local CATEGORY_FULL_SCAN_MAX_MEMBER = 255
+local CATEGORY_FULL_SCAN_WARMUP = 24
+local CATEGORY_FULL_SCAN_EMPTY_BREAK = 16
+local CATEGORY_EXPANSION_STEP = 16
+local CATEGORY_EXPANSION_MARGIN = 4
+local DEEP_SCAN_STEP_INTERVAL = 0.05
 local DEBUG_TRACE_ENABLED = false
 local MAX_SCROLL_STEPS_PER_EVENT = 4
 local MAX_TOUCH_DELTA_PER_EVENT = 128
@@ -31,6 +41,7 @@ local COLOR_PALETTE = {
   { 165, 214, 167 },
   { 244, 143, 177 },
 }
+local ROW_BAND_RGB = { 24, 24, 24 }
 
 local function safeCall(fn, ...)
   if type(fn) ~= "function" then
@@ -117,12 +128,14 @@ local function getColumnLayout(windowWidth)
   if width < 1 then
     width = 1
   end
-  local colPhysX = math.floor(width * 0.56)
-  local colAppX = math.floor(width * 0.76)
+  local colPhysX = math.floor(width * 0.48)
+  local colAppX = math.floor(width * 0.69)
+  local colSubX = math.floor(width * 0.87)
   return {
     { key = SORT_KEY_NAME, title = "Name", x = 0 },
-    { key = SORT_KEY_PHYSICAL, title = "Physical ID", x = colPhysX },
-    { key = SORT_KEY_APPLICATION, title = "Application ID", x = colAppX },
+    { key = SORT_KEY_PHYSICAL, title = "PhysID", x = colPhysX },
+    { key = SORT_KEY_APPLICATION, title = "AppID", x = colAppX },
+    { key = nil, title = "SubID", x = colSubX },
   }
 end
 
@@ -137,19 +150,27 @@ local function shortenText(text, maxChars)
 end
 
 local function sourceName(source)
-  if source and type(source.name) == "function" then
-    return safeCall(source.name, source)
+  if not source then
+    return nil
   end
-  if type(source) == "table" then
+  local ok, value = pcall(function()
     return source.name
+  end)
+  if not ok then
+    return nil
   end
-  return nil
+  if type(value) == "function" then
+    return safeCall(value, source)
+  end
+  return value
 end
 
-local function collectFromCategory(category, maxMember)
+local function collectFromCategory(category, maxMember, warmupMember, emptyBreakThreshold)
   local sensors = {}
   local highestMember = -1
   local emptyRun = 0
+  local warmup = type(warmupMember) == "number" and warmupMember or CATEGORY_FULL_SCAN_WARMUP
+  local emptyBreak = type(emptyBreakThreshold) == "number" and emptyBreakThreshold or CATEGORY_FULL_SCAN_EMPTY_BREAK
 
   for member = 0, maxMember do
     local source = safeCall(system.getSource, { category = category, member = member })
@@ -160,7 +181,7 @@ local function collectFromCategory(category, maxMember)
       emptyRun = 0
     else
       emptyRun = emptyRun + 1
-      if member > 32 and emptyRun >= 24 then
+      if member > warmup and emptyRun >= emptyBreak then
         break
       end
     end
@@ -195,9 +216,22 @@ local function getSensorList(widget, allowDeepScan)
 
   if type(system.getSource) == "function" then
     if widget and widget.sourceCategory ~= nil then
-      local sensors, highestMember = collectFromCategory(widget.sourceCategory, widget.sourceMaxMember or 255)
+      local currentMax = math.min(widget.sourceMaxMember or CATEGORY_EXPANSION_STEP, CATEGORY_FULL_SCAN_MAX_MEMBER)
+      local sensors, highestMember = collectFromCategory(
+        widget.sourceCategory,
+        currentMax,
+        CATEGORY_FULL_SCAN_WARMUP,
+        CATEGORY_FULL_SCAN_EMPTY_BREAK
+      )
       if #sensors > 0 then
-        widget.sourceMaxMember = math.max(widget.sourceMaxMember or 0, highestMember + 8)
+        local nextMax = currentMax
+        if highestMember >= (currentMax - CATEGORY_EXPANSION_MARGIN) and currentMax < CATEGORY_FULL_SCAN_MAX_MEMBER then
+          nextMax = math.min(CATEGORY_FULL_SCAN_MAX_MEMBER, currentMax + CATEGORY_EXPANSION_STEP)
+        end
+        widget.sourceMaxMember = nextMax
+        widget.deepScanPending = nextMax > currentMax
+        widget.deepScanCategories = nil
+        widget.deepScanIndex = 1
         debug.strategy = "cached-category"
         debug.scannedCategories = 1
         return sensors, debug
@@ -209,66 +243,114 @@ local function getSensorList(widget, allowDeepScan)
       return {}, debug
     end
 
-    -- Dynamic category discovery keeps this widget portable across Ethos builds
-    -- where CATEGORY_* constants can differ.
-    local categories = {}
-    for key, value in pairs(_G) do
-      if type(key) == "string" and key:match("^CATEGORY_") and type(value) == "number" then
-        categories[#categories + 1] = { key = key, value = value }
-      end
+    if type(widget) ~= "table" then
+      debug.strategy = "deferred-deep-scan"
+      return {}, debug
     end
-    table.sort(categories, function(a, b)
-      return a.key < b.key
-    end)
+
+    if type(widget.deepScanCategories) ~= "table" then
+      -- Dynamic category discovery keeps this widget portable across Ethos builds
+      -- where CATEGORY_* constants can differ.
+      local categories = {}
+      for key, value in pairs(_G) do
+        if type(key) == "string" and key:match("^CATEGORY_") and type(value) == "number" then
+          categories[#categories + 1] = { key = key, value = value }
+        end
+      end
+      table.sort(categories, function(a, b)
+        return a.key < b.key
+      end)
+
+      local preferred = {}
+      for _, item in ipairs(categories) do
+        if item.key:find("TELEMETRY", 1, true) or item.key:find("SENSOR", 1, true) then
+          preferred[#preferred + 1] = item
+        end
+      end
+      if #preferred == 0 then
+        preferred = categories
+      end
+
+      widget.deepScanCategories = preferred
+      widget.deepScanIndex = 1
+    end
+
+    local categories = widget.deepScanCategories or {}
     debug.categoryCount = #categories
-
-    local preferred = {}
-    for _, item in ipairs(categories) do
-      if item.key:find("TELEMETRY", 1, true) or item.key:find("SENSOR", 1, true) then
-        preferred[#preferred + 1] = item
-      end
-    end
-    if #preferred == 0 then
-      preferred = categories
+    if #categories == 0 then
+      widget.deepScanPending = false
+      debug.strategy = "deep-scan"
+      return {}, debug
     end
 
-    local bestSensors = {}
-    local bestCategory = nil
-    local bestHighestMember = -1
-
-    for _, item in ipairs(preferred) do
-      debug.scannedCategories = debug.scannedCategories + 1
-      local sensors, highestMember = collectFromCategory(item.value, 255)
-      if #sensors > #bestSensors then
-        bestSensors = sensors
-        bestCategory = item.value
-        bestHighestMember = highestMember
-      end
+    local scanIndex = widget.deepScanIndex or 1
+    local item = categories[scanIndex]
+    if not item then
+      widget.deepScanPending = false
+      widget.deepScanCategories = nil
+      widget.deepScanIndex = 1
+      debug.strategy = "deep-scan"
+      return {}, debug
     end
 
-    if widget and bestCategory ~= nil then
-      widget.sourceCategory = bestCategory
-      widget.sourceMaxMember = math.max(64, bestHighestMember + 8)
+    debug.scannedCategories = 1
+    local sensors, highestMember = collectFromCategory(
+      item.value,
+      CATEGORY_PROBE_MAX_MEMBER,
+      CATEGORY_PROBE_WARMUP,
+      CATEGORY_PROBE_EMPTY_BREAK
+    )
+    widget.deepScanIndex = scanIndex + 1
+    if #sensors > 0 then
+      widget.sourceCategory = item.value
+      widget.sourceMaxMember = math.min(
+        CATEGORY_FULL_SCAN_MAX_MEMBER,
+        math.max(CATEGORY_EXPANSION_STEP, highestMember + CATEGORY_EXPANSION_STEP)
+      )
+      widget.deepScanPending = true
+      widget.deepScanCategories = nil
+      widget.deepScanIndex = 1
+      debug.strategy = "deep-scan"
+      return sensors, debug
     end
 
-    debug.strategy = "deep-scan"
-    return bestSensors, debug
+    widget.deepScanPending = widget.deepScanIndex <= #categories
+    if not widget.deepScanPending then
+      widget.deepScanCategories = nil
+      widget.deepScanIndex = 1
+    end
+    debug.strategy = "deferred-deep-scan"
+    return {}, debug
   end
 
   debug.strategy = "no-source-api"
   return {}, debug
 end
 
+local function safeReadMember(subject, key)
+  if not subject then
+    return nil, false
+  end
+  local ok, value = pcall(function()
+    return subject[key]
+  end)
+  if not ok then
+    return nil, false
+  end
+  return value, true
+end
+
 local function readCandidate(sensor, keys)
   for _, key in ipairs(keys) do
-    if type(sensor) == "table" and sensor[key] ~= nil then
-      return sensor[key]
-    end
-    local method = sensor and sensor[key]
-    if type(method) == "function" then
-      local value = safeCall(method, sensor)
-      if value ~= nil then
-        return value
+    local member, found = safeReadMember(sensor, key)
+    if found and member ~= nil then
+      if type(member) == "function" then
+        local value = safeCall(member, sensor)
+        if value ~= nil then
+          return value
+        end
+      else
+        return member
       end
     end
   end
@@ -281,6 +363,9 @@ local function compareDefaultSensors(a, b)
   end
   if a.application ~= b.application then
     return a.application < b.application
+  end
+  if a.subId ~= b.subId then
+    return a.subId < b.subId
   end
   return a.name < b.name
 end
@@ -305,6 +390,9 @@ local function compareSortedByKey(a, b, sortKey, descending)
     if a.application ~= b.application then
       return a.application < b.application
     end
+    if a.subId ~= b.subId then
+      return a.subId < b.subId
+    end
     return a.name < b.name
   end
   if sortKey == SORT_KEY_APPLICATION then
@@ -316,6 +404,9 @@ local function compareSortedByKey(a, b, sortKey, descending)
     end
     if a.physical ~= b.physical then
       return a.physical < b.physical
+    end
+    if a.subId ~= b.subId then
+      return a.subId < b.subId
     end
     return a.name < b.name
   end
@@ -353,14 +444,17 @@ local function normalizeSensors(rawSensors)
     local name = readCandidate(sensor, { "label", "name", "text", "title", "stringValue" }) or ("Sensor " .. tostring(idx))
 
     local physical = toInt(readCandidate(sensor, { "physicalId", "physicalID", "physId", "id1", "id" }))
-    local application = toInt(readCandidate(sensor, { "applicationId", "appId", "param", "subId", "id2", "instance" }))
+    local application = toInt(readCandidate(sensor, { "applicationId", "appId", "param", "id2" }))
+    local subId = toInt(readCandidate(sensor, { "subId", "subID", "id3", "instance" }))
 
     normalized[#normalized + 1] = {
       name = tostring(name),
-      physical = physical or 65535,
-      application = application or 65535,
+      physical = physical or UNKNOWN_ID,
+      application = application or UNKNOWN_ID,
+      subId = subId or UNKNOWN_ID,
       physicalText = formatHex(physical, 2),
       applicationText = formatHex(application, 4),
+      subIdText = formatHex(subId, 4),
     }
   end
 
@@ -368,26 +462,42 @@ local function normalizeSensors(rawSensors)
   return normalized
 end
 
-local function buildPhysicalGroups(sensors)
+local function sensorConflictKey(sensor)
+  if type(sensor) ~= "table" then
+    return nil
+  end
+  if sensor.physical == UNKNOWN_ID or sensor.application == UNKNOWN_ID or sensor.subId == UNKNOWN_ID then
+    return nil
+  end
+  return sensor.physicalText .. "|" .. sensor.applicationText .. "|" .. sensor.subIdText
+end
+
+local function buildConflictGroups(sensors)
   local counts = {}
   for _, sensor in ipairs(sensors) do
-    if sensor.physical ~= 65535 then
-      counts[sensor.physical] = (counts[sensor.physical] or 0) + 1
+    local conflictKey = sensorConflictKey(sensor)
+    if conflictKey then
+      counts[conflictKey] = (counts[conflictKey] or 0) + 1
     end
   end
   local groups = {}
   local nextIndex = 1
   for _, sensor in ipairs(sensors) do
-    if sensor.physical ~= 65535 and counts[sensor.physical] and counts[sensor.physical] > 1 and not groups[sensor.physical] then
-      groups[sensor.physical] = nextIndex
+    local conflictKey = sensorConflictKey(sensor)
+    if conflictKey and counts[conflictKey] and counts[conflictKey] > 1 and not groups[conflictKey] then
+      groups[conflictKey] = nextIndex
       nextIndex = nextIndex + 1
     end
   end
   return groups
 end
 
-local function groupColor(physical, groups, cache)
-  local groupIndex = groups[physical]
+local function groupColor(sensor, groups, cache)
+  local conflictKey = sensorConflictKey(sensor)
+  if not conflictKey then
+    return nil
+  end
+  local groupIndex = groups[conflictKey]
   if not groupIndex then
     return nil
   end
@@ -402,9 +512,30 @@ end
 local function buildSignature(sensors)
   local out = {}
   for _, sensor in ipairs(sensors) do
-    out[#out + 1] = sensor.name .. "|" .. sensor.physicalText .. "|" .. sensor.applicationText
+    out[#out + 1] = sensor.name .. "|" .. sensor.physicalText .. "|" .. sensor.applicationText .. "|" .. sensor.subIdText
   end
   return table.concat(out, ";")
+end
+
+local function logRuntimeError(context, err)
+  if type(print) == "function" then
+    print("SLERR " .. tostring(context) .. ": " .. tostring(err))
+  end
+end
+
+local function setWidgetError(widget, context, err)
+  logRuntimeError(context, err)
+  if type(widget) ~= "table" then
+    return
+  end
+  widget.lastError = tostring(context) .. ": " .. tostring(err)
+  widget.needsInvalidate = true
+end
+
+local function clearWidgetError(widget)
+  if type(widget) == "table" then
+    widget.lastError = nil
+  end
 end
 
 local function refreshSensors(widget, allowDeepScan)
@@ -417,9 +548,19 @@ local function refreshSensors(widget, allowDeepScan)
   widget.lastRawCount = #raw
   widget.lastDebug = debug or widget.lastDebug
   local normalized = normalizeSensors(raw)
+  local strategy = debug and debug.strategy or "unknown"
+
+  if strategy == "deferred-deep-scan" and #normalized == 0 then
+    if type(widget) == "table" and widget.sourceCategory == nil and type(system.getSource) == "function" then
+      widget.deepScanPending = true
+    end
+    clearWidgetError(widget)
+    widget.needsInvalidate = true
+    return
+  end
+
   local signature = buildSignature(normalized)
   local signatureChanged = signature ~= widget.lastSignature
-  local strategy = debug and debug.strategy or "unknown"
 
   widget.debugRefreshCount = (widget.debugRefreshCount or 0) + 1
   if strategy == "deep-scan" then
@@ -432,7 +573,7 @@ local function refreshSensors(widget, allowDeepScan)
 
   if signatureChanged then
     widget.sensors = buildDisplaySensors(widget, normalized)
-    widget.groups = buildPhysicalGroups(normalized)
+    widget.groups = buildConflictGroups(normalized)
     widget.colorCache = {}
     widget.lastSignature = signature
     widget.needsInvalidate = true
@@ -444,6 +585,8 @@ local function refreshSensors(widget, allowDeepScan)
       widget.scrollOffset = maxOffset
     end
   end
+
+  clearWidgetError(widget)
 
   if DEBUG_TRACE_ENABLED and type(print) == "function" then
     local totalMs = math.floor((os.clock() - refreshStart) * 1000 + 0.5)
@@ -493,7 +636,18 @@ local function triggerManualRefresh(widget)
   if type(widget) ~= "table" then
     return false
   end
-  refreshSensors(widget, true)
+  widget.deepScanCategories = nil
+  widget.deepScanIndex = 1
+  widget.deepScanPending = true
+  if widget.sourceCategory ~= nil then
+    widget.sourceMaxMember = CATEGORY_EXPANSION_STEP
+  end
+
+  local ok, err = pcall(refreshSensors, widget, false)
+  if not ok then
+    setWidgetError(widget, "manual-refresh", err)
+    return false
+  end
   triggerRefreshFeedback()
   widget.needsInvalidate = true
   return true
@@ -507,6 +661,26 @@ local function drawText(x, y, text, font, color)
   end
   lcd.font(font)
   lcd.drawText(x, y, text)
+end
+
+local function drawRowBand(widget, y, width, rowHeight, sensorIndex)
+  if sensorIndex % 2 ~= 0 then
+    return
+  end
+  if type(lcd.drawFilledRectangle) ~= "function" then
+    return
+  end
+
+  if type(widget) == "table" and widget.rowBandColor == nil then
+    widget.rowBandColor = colorFromRgb(ROW_BAND_RGB)
+  end
+  local bandColor = type(widget) == "table" and widget.rowBandColor or colorFromRgb(ROW_BAND_RGB)
+  if not bandColor then
+    return
+  end
+
+  lcd.color(bandColor)
+  lcd.drawFilledRectangle(0, y, width, rowHeight)
 end
 
 local function headerTitle(widget, column)
@@ -551,8 +725,8 @@ local function headerSortKeyAtPosition(x, y)
     {
       key = columns[3].key,
       left = math.max(0, columns[3].x - HEADER_HITBOX_X_PADDING),
-      right = w,
-      center = (columns[3].x + w) / 2,
+      right = math.max(columns[3].x + 1, math.min(w, columns[4].x - HEADER_HITBOX_X_PADDING)),
+      center = (columns[3].x + columns[4].x) / 2,
     },
   }
 
@@ -690,6 +864,10 @@ local function drawSensorRows(widget)
   end
 
   if #widget.sensors == 0 then
+    if widget.deepScanPending then
+      drawText(0, 20, "Scanning sensors...", FONT_BODY)
+      return visibleRows
+    end
     drawText(0, 20, "No sensors configured.", FONT_BODY)
     drawText(0, 36, "Raw sensors found: " .. tostring(widget.lastRawCount or 0), FONT_BODY)
     if widget.lastDebug then
@@ -714,18 +892,38 @@ local function drawSensorRows(widget)
 
   local start = widget.scrollOffset + 1
   for row = 0, visibleRows - 1 do
-    local sensor = widget.sensors[start + row]
+    local sensorIndex = start + row
+    local sensor = widget.sensors[sensorIndex]
     if not sensor then
       break
     end
     local y = rowsY + row * rowHeight
-    local color = groupColor(sensor.physical, widget.groups, widget.colorCache)
+    drawRowBand(widget, y, w, rowHeight, sensorIndex)
+    local color = groupColor(sensor, widget.groups, widget.colorCache)
     drawText(columns[1].x, y, shortenText(sensor.name, 20), FONT_BODY, color)
     drawText(columns[2].x, y, sensor.physicalText, FONT_BODY, color)
     drawText(columns[3].x, y, sensor.applicationText, FONT_BODY, color)
+    drawText(columns[4].x, y, sensor.subIdText, FONT_BODY, color)
   end
 
   return visibleRows
+end
+
+local function drawErrorState(widget)
+  local w, h = getWindowSizeSafe()
+
+  lcd.color(COLOR_BLACK or 0)
+  if type(lcd.drawFilledRectangle) == "function" then
+    lcd.drawFilledRectangle(0, 0, w, h)
+  end
+
+  drawText(0, 0, "SensorList error", FONT_HEADER)
+  local message = "unknown"
+  if type(widget) == "table" and widget.lastError then
+    message = tostring(widget.lastError)
+  end
+  drawText(0, HEADER_HEIGHT + 4, shortenText(message, 40), FONT_BODY)
+  drawText(0, HEADER_HEIGHT + 20, "Check serial log.", FONT_BODY)
 end
 
 -- Ethos widget API callback: constructs per-instance widget state.
@@ -753,12 +951,21 @@ local function create()
     headerTouchStartY = nil,
     sortKey = nil,
     sortDescending = false,
+    lastError = nil,
+    deepScanPending = false,
+    deepScanCategories = nil,
+    deepScanIndex = 1,
+    lastDeepScanStep = 0,
+    rowBandColor = nil,
     debugRefreshCount = 0,
     debugDeepScanCount = 0,
     debugCachedScanCount = 0,
     debugDeferredScanCount = 0,
   }
-  refreshSensors(widget, true)
+  local ok, err = pcall(refreshSensors, widget, false)
+  if not ok then
+    setWidgetError(widget, "create", err)
+  end
   return widget
 end
 
@@ -767,7 +974,22 @@ local function paint(widget)
   if type(widget) ~= "table" then
     return
   end
-  drawSensorRows(widget)
+  if widget.lastError then
+    local errorOk, errorErr = pcall(drawErrorState, widget)
+    if not errorOk then
+      logRuntimeError("paint-error-state", errorErr)
+    end
+    return
+  end
+
+  local ok, err = pcall(drawSensorRows, widget)
+  if not ok then
+    setWidgetError(widget, "paint", err)
+    local errorOk, errorErr = pcall(drawErrorState, widget)
+    if not errorOk then
+      logRuntimeError("paint-error-state", errorErr)
+    end
+  end
 end
 
 local function applyScroll(widget, delta)
@@ -954,6 +1176,15 @@ local function wakeup(widget, event)
   end
   local now = os.clock()
 
+  if widget.deepScanPending and now - (widget.lastDeepScanStep or 0) >= DEEP_SCAN_STEP_INTERVAL then
+    widget.lastDeepScanStep = now
+    local ok, err = pcall(refreshSensors, widget, true)
+    if not ok then
+      widget.deepScanPending = false
+      setWidgetError(widget, "wakeup-deep-scan", err)
+    end
+  end
+
   -- No periodic refresh: we refresh on create() and explicit long-press only.
   if widget.needsInvalidate and lcd.isVisible() and now - widget.lastInvalidate >= 0.05 then
     lcd.invalidate()
@@ -967,25 +1198,31 @@ local function event(widget, category, value, x, y)
   if type(widget) ~= "table" then
     return false
   end
+  local ok, result = pcall(function()
+    -- Long-press is an explicit user request to rescan all sensors.
+    local isLongPress = matchesCode(value, { "EVT_TOUCH_LONG" }) or matchesCategory(category, { "EVT_TOUCH_LONG" })
+    if isLongPress then
+      widget.touchHoldTriggered = true
+      return triggerManualRefresh(widget)
+    end
 
-  -- Long-press is an explicit user request to rescan all sensors.
-  local isLongPress = matchesCode(value, { "EVT_TOUCH_LONG" }) or matchesCategory(category, { "EVT_TOUCH_LONG" })
-  if isLongPress then
-    widget.touchHoldTriggered = true
-    return triggerManualRefresh(widget)
-  end
+    local phase = resolveTouchPhase(category, value)
+    if not phase then
+      return false
+    end
 
-  local phase = resolveTouchPhase(category, value)
-  if not phase then
+    local headerConsumed = handleHeaderTap(widget, phase, x, y)
+    if headerConsumed then
+      return true
+    end
+
+    return handleTouchScroll(widget, phase, x, y, category, value)
+  end)
+  if not ok then
+    setWidgetError(widget, "event", result)
     return false
   end
-
-  local headerConsumed = handleHeaderTap(widget, phase, x, y)
-  if headerConsumed then
-    return true
-  end
-
-  return handleTouchScroll(widget, phase, x, y, category, value)
+  return result
 end
 
 local function name()
@@ -1010,14 +1247,17 @@ local function testExports()
     toInt = toInt,
     formatHex = formatHex,
     normalizeSensors = normalizeSensors,
-    buildPhysicalGroups = buildPhysicalGroups,
+    buildConflictGroups = buildConflictGroups,
     buildSignature = buildSignature,
     applyScroll = applyScroll,
     clampOffset = clampOffset,
     getSensorList = getSensorList,
     triggerRefreshFeedback = triggerRefreshFeedback,
+    create = create,
     event = event,
     resolveTouchPhase = resolveTouchPhase,
+    readCandidate = readCandidate,
+    wakeup = wakeup,
   }
 end
 

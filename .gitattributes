@@ -1,7 +1,5 @@
 # Keep GitHub language stats focused on the widget's Lua source.
 # These paths are support tooling/docs and should not dominate Linguist.
-tests/** linguist-vendored
-tools/** linguist-vendored
 docs/** linguist-documentation
-deslopification/** linguist-documentation
+deslopification/** linguist-language=Markdown
 .github/** linguist-documentation
