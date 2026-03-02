@@ -17,6 +17,7 @@ color-grouped to make true duplicates easier to identify.
 - Tapping `Name`, `PhysID`, or `AppID` changes sort key and toggles ascending/descending for that column (`^` / `v` in header).
 - `SubID` is display-only and acts as the final tie-breaker for stable sort order.
 - Duplicate `PhysID` + `AppID` + `SubID` rows are color-grouped to help identify conflicts.
+- Alternating row bands improve left-to-right readability across the four columns.
 - List navigation is manual via wheel/button/touch scrolling (no forced auto-scroll).
 - Sensor discovery uses staged background expansion after initial load so large sensor lists can populate without tripping the Ethos callback instruction budget.
 - Manual long-press queues a fresh staged refresh and triggers best-effort completion feedback (`system.playHaptic` fallback to `system.playTone`).

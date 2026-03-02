@@ -41,6 +41,7 @@ local COLOR_PALETTE = {
   { 165, 214, 167 },
   { 244, 143, 177 },
 }
+local ROW_BAND_RGB = { 24, 24, 24 }
 
 local function safeCall(fn, ...)
   if type(fn) ~= "function" then
@@ -662,6 +663,26 @@ local function drawText(x, y, text, font, color)
   lcd.drawText(x, y, text)
 end
 
+local function drawRowBand(widget, y, width, rowHeight, sensorIndex)
+  if sensorIndex % 2 ~= 0 then
+    return
+  end
+  if type(lcd.drawFilledRectangle) ~= "function" then
+    return
+  end
+
+  if type(widget) == "table" and widget.rowBandColor == nil then
+    widget.rowBandColor = colorFromRgb(ROW_BAND_RGB)
+  end
+  local bandColor = type(widget) == "table" and widget.rowBandColor or colorFromRgb(ROW_BAND_RGB)
+  if not bandColor then
+    return
+  end
+
+  lcd.color(bandColor)
+  lcd.drawFilledRectangle(0, y, width, rowHeight)
+end
+
 local function headerTitle(widget, column)
   if type(column) ~= "table" then
     return ""
@@ -871,11 +892,13 @@ local function drawSensorRows(widget)
 
   local start = widget.scrollOffset + 1
   for row = 0, visibleRows - 1 do
-    local sensor = widget.sensors[start + row]
+    local sensorIndex = start + row
+    local sensor = widget.sensors[sensorIndex]
     if not sensor then
       break
     end
     local y = rowsY + row * rowHeight
+    drawRowBand(widget, y, w, rowHeight, sensorIndex)
     local color = groupColor(sensor, widget.groups, widget.colorCache)
     drawText(columns[1].x, y, shortenText(sensor.name, 20), FONT_BODY, color)
     drawText(columns[2].x, y, sensor.physicalText, FONT_BODY, color)
@@ -933,6 +956,7 @@ local function create()
     deepScanCategories = nil,
     deepScanIndex = 1,
     lastDeepScanStep = 0,
+    rowBandColor = nil,
     debugRefreshCount = 0,
     debugDeepScanCount = 0,
     debugCachedScanCount = 0,

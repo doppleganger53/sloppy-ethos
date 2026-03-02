@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 81
-- Total size: 122,250 bytes
-- Total lines: 2,993
+- Files: 82
+- Total size: 124,197 bytes
+- Total lines: 3,042
 - Distribution by category:
-  - session notes: 76
+  - session notes: 77
   - handoff/restart notes: 3
   - domain notes: 1
   - weekly summaries: 1
 
 - Distribution by focus:
-  - 17 -- lua-ethos ( Ethos targeted scripts )
+  - 18 -- lua-ethos ( Ethos targeted scripts )
   - 14 -- memory-ops ( Agentic context engineering )
   - 10 -- build-tooling ( Build, deploy, packaging, and tooling workflows )
   - 8 -- docs-process ( Documentation and contributor process changes )
@@ -134,6 +134,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-03-02 | session-note | lua-ethos | [notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_46_SENSORLIST_CONFLICT_SEVERITY_REVERT.md](notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_46_SENSORLIST_CONFLICT_SEVERITY_REVERT.md) | # Session Notes 2026-03-02 - Issue #46 SensorList Conflict Severity Revert |
 | 2026-03-02 | session-note | lua-ethos | [notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_FAILSOFT_ERROR_LOGGING.md](notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_FAILSOFT_ERROR_LOGGING.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Fail-Soft Error Logging |
 | 2026-03-02 | session-note | lua-ethos | [notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_RADIO_ACCESSOR_FIX.md](notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_RADIO_ACCESSOR_FIX.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Radio Accessor Fix |
+| 2026-03-02 | session-note | lua-ethos | [notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_ROW_BANDING.md](notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_ROW_BANDING.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Row Banding |
 | 2026-03-02 | session-note | lua-ethos | [notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_STAGED_SCAN_BUDGET_FIX.md](notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_STAGED_SCAN_BUDGET_FIX.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Staged Scan Budget Fix |
 | 2026-03-02 | session-note | lua-ethos | [notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_SUBID_CONFLICTS.md](notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_SUBID_CONFLICTS.md) | # Session Notes 2026-03-02 - Issue #48 SensorList SubID Conflicts |
 | 2026-03-02 | session-note | memory-ops | [notes/session-note/memory-ops/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md](notes/session-note/memory-ops/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md) | # Session Notes 2026-03-02 - Weekly Summary Compaction |
