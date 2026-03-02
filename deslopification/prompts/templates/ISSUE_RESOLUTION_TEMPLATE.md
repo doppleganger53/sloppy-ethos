@@ -96,7 +96,7 @@ Document the runtime interaction contract before editing:
 2. Implement the smallest coherent change-set.
 3. Add/update tests for new behavior and regressions.
 4. Update docs only when behavior/workflow changes.
-5. Record session notes in `deslopification/memory/notes/{category}/{focus}/`.
+5. Record session notes in `deslopification/memory/notes/{artifact}/{scope}/` using explicit `Artifact`, `Scope`, and `Concern` metadata.
 
 ## Implementation Constraints
 

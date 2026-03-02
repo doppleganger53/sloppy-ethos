@@ -34,10 +34,10 @@
 - Docs updates are not complete until docs contract checks pass.
 - Include the docs validation command output in the PR `Verification` checklist.
 - If workflow/behavior changed, add a session note under
-  `deslopification/memory/notes/{category}/{focus}/`, append it to
-  `deslopification/memory/CATALOG.md`, prefer a specific focus classifier over
-  `general` (use `lua-ethos` for Ethos Lua script/widget/tool notes), and update
-  `deslopification/memory/CURRENT_STATE.md` when the change is durable.
+  `deslopification/memory/notes/{artifact}/{scope}/`, regenerate
+  `deslopification/memory/CATALOG.md`, use explicit `Artifact`, `Scope`, and
+  `Concern` metadata, prefer `ethos-platform` for reusable Ethos knowledge, and
+  update `deslopification/memory/CURRENT_STATE.md` when the change is durable.
 
 ## Bug Report Quality
 

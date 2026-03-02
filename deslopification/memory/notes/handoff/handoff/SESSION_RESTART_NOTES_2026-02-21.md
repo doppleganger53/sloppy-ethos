@@ -1,5 +1,13 @@
 # Session Restart Notes (2026-02-21)
 
+## Note Placement
+
+- Artifact: `handoff`
+- Scope: `handoff`
+- Concern: `workflow`
+- Store this file under:
+  - `deslopification/memory/notes/{artifact}/{scope}/`
+
 ## Current Objective
 
 - Keep iterating on `SensorList` while maturing build/deploy workflow.
