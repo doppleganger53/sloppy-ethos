@@ -145,8 +145,8 @@ def test_readme_links_sensorlist_architecture_doc():
     assert ARCHITECTURE_PATH.exists()
 
 
-def test_contributing_has_good_first_issue_guidance():
-    assert "good first issue" in _read(CONTRIBUTING_PATH).lower()
+def test_contributing_has_workflow_section():
+    assert "## Workflow" in _read(CONTRIBUTING_PATH)
 
 
 def test_vscode_pytest_enabled_in_repo_settings():

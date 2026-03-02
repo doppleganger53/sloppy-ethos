@@ -15,21 +15,21 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 73
-- Total size: 107,378 bytes
-- Total lines: 2,617
+- Files: 75
+- Total size: 110,625 bytes
+- Total lines: 2,712
 - Distribution by category:
-  - session notes: 68
+  - session notes: 70
   - handoff/restart notes: 3
   - domain notes: 1
-  - monthly summaries: 1
+  - weekly summaries: 1
 
 - Distribution by focus:
-  - 13 -- memory-ops ( Agentic context engineering )
+  - 14 -- memory-ops ( Agentic context engineering )
   - 12 -- lua-ethos ( Ethos targeted scripts )
   - 10 -- build-tooling ( Build, deploy, packaging, and tooling workflows )
+  - 8 -- docs-process ( Documentation and contributor process changes )
   - 8 -- release-versioning ( Release flow, tagging, and version policy )
-  - 7 -- docs-process ( Documentation and contributor process changes )
   - 5 -- testing ( Automated tests and coverage changes )
   - 5 -- workflow-policy ( Branching, policy, and workflow guardrails )
   - 4 -- issue-lifecycle ( Issue creation, validation, and closure tracking )
@@ -40,6 +40,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent High-Signal Notes (Auto-generated)
 
 - Selection: newest session notes where `Focus` is one of `build-tooling`, `docs-process`, `release-versioning`, `repo`, `testing`, or `workflow-policy`; keep up to 3 per focus, then keep newest 12 overall.
+- 2026-03-02 | docs-process | [notes/session-note/docs-process/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md](notes/session-note/docs-process/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md) | # Session Notes 2026-03-02 - Contributing Good First Issue Guidance Removal
 - 2026-02-27 | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V101.md](notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V101.md) | # Session Notes 2026-02-27 - Release v1.0.1
 - 2026-02-27 | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V100.md](notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_RELEASE_V100.md) | # Session Notes 2026-02-27 - Release v1.0.0
 - 2026-02-27 | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_ISSUE_42_MULTI_SCRIPT_RELEASE_DELIVERABLE.md](notes/session-note/release-versioning/SESSION_NOTES_2026-02-27_ISSUE_42_MULTI_SCRIPT_RELEASE_DELIVERABLE.md) | # Session Notes 2026-02-27 - Issue #42 Multi-script Release Deliverable
@@ -51,17 +52,16 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - 2026-02-26 | build-tooling | [notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_ISSUE_22_DOIT_MIGRATION_EVALUATION.md](notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_ISSUE_22_DOIT_MIGRATION_EVALUATION.md) | # Session Notes 2026-02-26 - Issue #22 `build.py` to `doit` Migration Evaluation
 - 2026-02-26 | docs-process | [notes/session-note/docs-process/SESSION_NOTES_2026-02-26_DOC_COMMANDS_MANUAL_REFACTOR.md](notes/session-note/docs-process/SESSION_NOTES_2026-02-26_DOC_COMMANDS_MANUAL_REFACTOR.md) | # Session Notes 2026-02-26 - Docs Command Manual Classification Refactor
 - 2026-02-26 | build-tooling | [notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_DIST_CLEAN.md](notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_DIST_CLEAN.md) | # Session Notes 2026-02-26 - Dist Cleanup
-- 2026-02-26 | build-tooling | [notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_BUILD_PY_COVERAGE.md](notes/session-note/build-tooling/SESSION_NOTES_2026-02-26_BUILD_PY_COVERAGE.md) | # Session Notes 2026-02-26 - build.py Coverage Improvement
 
 ## Entries
 
 | Date | Category | Focus | File | Title |
 | --- | --- | --- | --- | --- |
 | - | domain-note | lua-ethos | [notes/domain-note/lua-ethos/SensorList.md](notes/domain-note/lua-ethos/SensorList.md) | # SensorList Operating Notes |
-| - | monthly-summary | memory-ops | [notes/monthly-summary/memory-ops/SUMMARY_2026-02.md](notes/monthly-summary/memory-ops/SUMMARY_2026-02.md) | # Summary 2026-02 |
 | 2026-02-21 | handoff | handoff | [notes/handoff/handoff/HANDOFF_2026-02-21.md](notes/handoff/handoff/HANDOFF_2026-02-21.md) | # Handoff - 2026-02-21 |
 | 2026-02-21 | handoff | handoff | [notes/handoff/handoff/SESSION_RESTART_NOTES_2026-02-21.md](notes/handoff/handoff/SESSION_RESTART_NOTES_2026-02-21.md) | # Session Restart Notes (2026-02-21) |
 | 2026-02-21 | session-note | release-versioning | [notes/session-note/release-versioning/SESSION_NOTES_2026-02-21_RELEASE.md](notes/session-note/release-versioning/SESSION_NOTES_2026-02-21_RELEASE.md) | # Session Notes - 2026-02-21 (Release + Packaging) |
+| 2026-02-21 | weekly-summary | memory-ops | [notes/weekly-summary/memory-ops/SUMMARY_2026-02-21_to_2026-02-27.md](notes/weekly-summary/memory-ops/SUMMARY_2026-02-21_to_2026-02-27.md) | # Weekly Summary 2026-02-21 to 2026-02-27 |
 | 2026-02-22 | handoff | handoff | [notes/handoff/handoff/HANDOFF_2026-02-22_TODO_EXECUTION.md](notes/handoff/handoff/HANDOFF_2026-02-22_TODO_EXECUTION.md) | # Handoff 2026-02-22 - TODO Execution |
 | 2026-02-23 | session-note | build-tooling | [notes/session-note/build-tooling/SESSION_NOTES_2026-02-23_LUACHECK_PATH_FIX.md](notes/session-note/build-tooling/SESSION_NOTES_2026-02-23_LUACHECK_PATH_FIX.md) | # Session Notes 2026-02-23 - VS Code Luacheck Path Fix |
 | 2026-02-23 | session-note | docs-process | [notes/session-note/docs-process/SESSION_NOTES_2026-02-23_DOCS_CONTRACTS_OPTIONAL_CONFIG.md](notes/session-note/docs-process/SESSION_NOTES_2026-02-23_DOCS_CONTRACTS_OPTIONAL_CONFIG.md) | # Session Notes 2026-02-23 - Docs Contract Optional Config Path |
@@ -130,3 +130,5 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-02-27 | session-note | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_16_BRANCH_GATE_HARDENING.md) | # Session Notes 2026-02-27 - Issue #16 Branch Gate Hardening |
 | 2026-02-27 | session-note | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md) | # Session Notes 2026-02-27 - Issue #39 Release Scope Clarity |
 | 2026-03-01 | session-note | prompts | [notes/session-note/prompts/SESSION_NOTES_2026-03-01_ISSUE_45_SMARTMAPPER_PROMPT_DRAFT.md](notes/session-note/prompts/SESSION_NOTES_2026-03-01_ISSUE_45_SMARTMAPPER_PROMPT_DRAFT.md) | # Session Notes 2026-03-01 - Issue #45 SmartMapper Prompt Draft |
+| 2026-03-02 | session-note | docs-process | [notes/session-note/docs-process/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md](notes/session-note/docs-process/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md) | # Session Notes 2026-03-02 - Contributing Good First Issue Guidance Removal |
+| 2026-03-02 | session-note | memory-ops | [notes/session-note/memory-ops/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md](notes/session-note/memory-ops/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md) | # Session Notes 2026-03-02 - Weekly Summary Compaction |

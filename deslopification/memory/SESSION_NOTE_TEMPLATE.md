@@ -2,7 +2,7 @@
 
 ## Note Placement
 
-- Category: `{session-note|handoff|domain-note|monthly-summary}`
+- Category: `{session-note|handoff|domain-note|weekly-summary}`
 - Focus: `{focus-slug}`
 - Focus guidance:
   - prefer a specific focus classifier and avoid `general` when possible.

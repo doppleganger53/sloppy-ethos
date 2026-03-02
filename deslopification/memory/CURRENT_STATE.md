@@ -1,4 +1,4 @@
-# Current State (2026-02-27)
+# Current State (2026-03-02)
 
 This file is the high-signal memory entrypoint for cold-start sessions.
 Historical detail remains in individual session notes referenced from
@@ -39,6 +39,9 @@ Historical detail remains in individual session notes referenced from
   avoid `general` by default.
 - Ethos Lua script/widget/tool notes (SensorList, ethos_events, and future
   similar scripts) should use focus `lua-ethos`.
+- Session-note compaction summaries now use weekly rollups stored under:
+  - `deslopification/memory/notes/weekly-summary/{focus}/`
+  - `SUMMARY_YYYY-MM-DD_to_YYYY-MM-DD.md`
 - New memory notes are stored under:
   - `deslopification/memory/notes/{category}/{focus}/`.
 - Issue-linked sessions must run `tools/session_preflight.py --mode issue ...`

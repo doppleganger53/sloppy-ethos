@@ -50,8 +50,8 @@
 - Memory entrypoint: `deslopification/memory/README.md`.
 - Current high-signal context: `deslopification/memory/CURRENT_STATE.md`.
 - Full historical index: `deslopification/memory/CATALOG.md`.
-- Monthly rollup example for compact history review:
-  `deslopification/memory/notes/monthly-summary/memory-ops/SUMMARY_2026-02.md`.
+- Weekly rollup example for compact history review:
+  `deslopification/memory/notes/weekly-summary/memory-ops/SUMMARY_2026-02-21_to_2026-02-27.md`.
 - When adding notes, follow `deslopification/memory/SESSION_NOTE_TEMPLATE.md`.
 - New notes are stored under:
   `deslopification/memory/notes/{category}/{focus}/`.

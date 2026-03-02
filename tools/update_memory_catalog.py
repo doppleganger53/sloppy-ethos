@@ -189,7 +189,7 @@ def render_catalog(entries: list[Entry], memory_dir: Path = MEMORY_DIR) -> str:
         by_category[item.category] = by_category.get(item.category, 0) + 1
         by_focus[item.focus] = by_focus.get(item.focus, 0) + 1
 
-    category_order = ["session-note", "handoff", "domain-note", "monthly-summary"]
+    category_order = ["session-note", "handoff", "domain-note", "weekly-summary"]
     category_lines = []
     for category in category_order:
         count = by_category.get(category)
@@ -199,7 +199,7 @@ def render_catalog(entries: list[Entry], memory_dir: Path = MEMORY_DIR) -> str:
             "session-note": "session notes",
             "handoff": "handoff/restart notes",
             "domain-note": "domain notes",
-            "monthly-summary": "monthly summaries",
+            "weekly-summary": "weekly summaries",
         }[category]
         category_lines.append(f"- {label}: {count}")
 

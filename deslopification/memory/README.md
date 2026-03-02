@@ -10,8 +10,8 @@ history. The goal is fast cold-start context without losing auditability.
 3. Read domain notes (for example,
    [notes/domain-note/lua-ethos/SensorList.md](notes/domain-note/lua-ethos/SensorList.md))
    only when the task touches that area.
-4. For release/history context by month, read summary rollups (for example,
-   [notes/monthly-summary/memory-ops/SUMMARY_2026-02.md](notes/monthly-summary/memory-ops/SUMMARY_2026-02.md)).
+4. For compact historical context by week, read summary rollups (for example,
+   [notes/weekly-summary/memory-ops/SUMMARY_2026-02-21_to_2026-02-27.md](notes/weekly-summary/memory-ops/SUMMARY_2026-02-21_to_2026-02-27.md)).
 
 ## File Roles
 
@@ -23,7 +23,7 @@ history. The goal is fast cold-start context without losing auditability.
 - `notes/{category}/{focus}/...`:
   canonical location for note artifacts, including
   `SESSION_NOTES_*.md`, `HANDOFF_*.md`, `SESSION_RESTART_*.md`,
-  `SUMMARY_YYYY-MM.md`, and domain notes.
+  `SUMMARY_YYYY-MM-DD_to_YYYY-MM-DD.md`, and domain notes.
   each focus folder should include a `.desc` file with a brief focus summary
   used by `CATALOG.md` snapshot output.
 - `temp/`:
@@ -32,8 +32,8 @@ history. The goal is fast cold-start context without losing auditability.
 - root index/control files (`README.md`, `CURRENT_STATE.md`, `CATALOG.md`,
   `SESSION_NOTE_TEMPLATE.md`):
   stable entrypoint and generation controls.
-- `notes/monthly-summary/memory-ops/SUMMARY_YYYY-MM.md`:
-  compact monthly rollups used as replacement summaries.
+- `notes/weekly-summary/memory-ops/SUMMARY_YYYY-MM-DD_to_YYYY-MM-DD.md`:
+  compact weekly rollups used as replacement summaries.
 - `SESSION_NOTE_TEMPLATE.md`:
   canonical structure for new notes.
 
@@ -59,5 +59,6 @@ When adding a new memory note:
 2. Regenerate `CATALOG.md`:
    - `python tools/update_memory_catalog.py`
 3. If the change alters durable workflow/behavior, update `CURRENT_STATE.md`.
-4. If the change affects monthly release/process narrative, update the active
-   `notes/monthly-summary/memory-ops/SUMMARY_YYYY-MM.md` rollup.
+4. If the change affects the compact weekly process narrative, update the
+   relevant `notes/weekly-summary/memory-ops/SUMMARY_YYYY-MM-DD_to_YYYY-MM-DD.md`
+   rollup.
