@@ -8,6 +8,26 @@ All notable changes to this project are documented in this file.
 
 - Documented Issue #42 repo release deliverables so GitHub repo releases explicitly include `dist/sloppy-ethos_scripts.zip` alongside single-script ZIP assets, including the build step `python tools/build.py --project SensorList --project ethos_events --dist`.
 
+## [SensorList v1.0.0] - 2026-03-02
+
+### Changed
+
+- Released the `SensorList` script artifact at `1.0.0` by closing the remaining script release gate issues and promoting the `SensorList` package version from `0.1.1` to `1.0.0`.
+- Captured the completed SensorList release scope:
+  - Issue #8 sortable headers
+  - Issue #9 conflict severity and refresh behavior
+  - Issue #17 long-press refresh feedback stabilization
+  - Issue #48 SubId display and conflict criteria improvements
+  - Issue #32 manual validation gate closed
+- Repository version remains `1.0.1`; this entry tracks the script-scoped release only.
+
+### Testing
+
+- `python tools/build.py --project SensorList --dist`
+- `luac -p scripts/SensorList/main.lua`
+- `python -m pytest tests/test_sensorlist_widget.py -q`
+- `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
+
 ## [1.0.1] - 2026-02-27
 
 ### Changed
