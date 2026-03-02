@@ -20,8 +20,7 @@ The widget registers through `init()` and uses the standard Ethos callbacks:
 Each widget instance owns state in the `widget` table, including:
 
 - sensor and display data:
-  - `sensors` (including per-row `conflictSeverity` and `conflictMarker`),
-    `groups`, `colorCache`, `conflictColorCache`, `lastSignature`, `lastRawCount`,
+  - `sensors`, `groups`, `colorCache`, `lastSignature`, `lastRawCount`,
     `lastDebug`
 - source-discovery cache:
   - `sourceCategory`, `sourceMaxMember`
@@ -44,12 +43,10 @@ Each widget instance owns state in the `widget` table, including:
    - fallback to `system.getSource()` category/member scans
 2. Normalize records (`normalizeSensors`) and sort deterministically by:
    physical ID, application ID, then name.
-3. Annotate conflict severity (`annotateConflictSeverity`) so duplicate rows are
-   marked as high (`[!]`) or lower (`[~]`) risk.
-4. Build signature (`buildSignature`) and only update widget tables when the
+3. Build signature (`buildSignature`) and only update widget tables when the
    signature changes.
-5. Recompute conflict group mapping (`buildPhysicalGroups`) and reset color cache.
-6. Clamp `scrollOffset` against current visible row count.
+4. Recompute conflict group mapping (`buildPhysicalGroups`) and reset color cache.
+5. Clamp `scrollOffset` against current visible row count.
 
 `allowDeepScan` gates expensive category scans:
 

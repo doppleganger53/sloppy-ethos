@@ -6,17 +6,15 @@ Ethos widget that lists configured sensors in a sortable table with:
 - Physical ID
 - Application ID
 
-Conflicting sensors are highlighted with severity cues so likely collisions are
-easy to distinguish from lower-risk shared-ID cases.
+Conflicting sensors that share the same Physical ID are color-grouped to make
+potential conflicts easier to identify.
 
 ## Current Behavior
 
 - Displays columns for `Name`, `Physical ID`, `Application ID`.
 - Default sort is deterministic by `Physical ID`, then `Application ID`, then name.
 - Tapping a column header changes sort key and toggles ascending/descending for that column (`^` / `v` in header).
-- Conflict severity is shown with both color and text markers in the `Name` column:
-  - `[!]` high severity: duplicate `Physical ID` + duplicate `Application ID`, or any duplicate `Physical ID` group containing unknown `Application ID` values (`--`).
-  - `[~]` lower severity: duplicate `Physical ID` with distinct known `Application ID` values.
+- Duplicate physical IDs are color-grouped to help identify conflicts.
 - List navigation is manual via wheel/button/touch scrolling (no forced auto-scroll).
 - Sensor discovery runs on initial widget load and explicit long-press refresh only (no periodic polling).
 - Manual long-press refresh triggers best-effort completion feedback (`system.playHaptic` fallback to `system.playTone`).
