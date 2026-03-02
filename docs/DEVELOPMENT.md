@@ -105,14 +105,16 @@ This repository uses `main` as the only long-lived integration branch and aligns
   - `fix/{issue-number}-{short-slug}` for defects.
   - `docs/{issue-number}-{short-slug}` for docs/process-only changes.
   - `chore/{issue-number}-{short-slug}` for maintenance/tooling work.
-- Release-prep work uses short-lived branches named `release/v{VERSION}` created from `main`.
+- Release-prep work uses short-lived branches created from `main`:
+  - repo releases use `release/v{VERSION}`
+  - script releases use `release/{ProjectName}-v{VERSION}`
 - Every PR targets `main` and should include linked-closing keywords when applicable (for example, `Closes #29`).
 - Delete merged short-lived branches after PR merge.
 
 ### PR Merge Strategy
 
 - Default merge method for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`) is `squash`.
-- Use `merge commit` for release-prep PRs (`release/v{VERSION}`) and lineage-sensitive PRs where preserving branch commit structure is intentional.
+- Use `merge commit` for release-prep PRs (`release/v{VERSION}` or `release/{ProjectName}-v{VERSION}`) and lineage-sensitive PRs where preserving branch commit structure is intentional.
 - `rebase` merge is not the repository default.
 
 ### Version Bump Timing
@@ -128,7 +130,7 @@ This repository uses `main` as the only long-lived integration branch and aligns
 
 ### Optional Prerelease (`-rc.N`) Usage
 
-- `-rc.N` is optional and used only on `release/v{VERSION}` during stabilization.
+- `-rc.N` is optional and used only on release-prep branches during stabilization (`release/v{VERSION}` for repo releases or `release/{ProjectName}-v{VERSION}` for script releases).
 - If used, apply `-rc.N` consistently to root `VERSION` and each script `VERSION` included in that candidate build.
 - Increment `N` for each candidate (`-rc.1`, `-rc.2`, ...).
 - Use prerelease tags for candidates (`v{VERSION}-rc.N`) and publish with `--prerelease`.
@@ -141,7 +143,8 @@ This repository uses `main` as the only long-lived integration branch and aligns
 1. Sync `main` and create release-prep branch:
    - `git checkout main`
    - `git pull --ff-only origin main`
-   - `git checkout -b release/v{VERSION}`
+   - repo release: `git checkout -b release/v{VERSION}`
+   - script release: `git checkout -b release/{ProjectName}-v{VERSION}`
 2. Run issue preflight with scope:
    - run `tools/session_preflight.py` with:
      - `--mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {slug} --release-kind {repo|script}`
@@ -150,21 +153,21 @@ This repository uses `main` as the only long-lived integration branch and aligns
      - one or more `--script-gate-issue {N}` flags
 3. Sync release branch and confirm drift:
    - `git fetch origin`
-   - `git push -u origin release/v{VERSION}`
-   - `git pull --ff-only origin release/v{VERSION}`
-   - `git rev-list --left-right --count origin/release/v{VERSION}...release/v{VERSION}`
+   - `git push -u origin {RELEASE_BRANCH}`
+   - `git pull --ff-only origin {RELEASE_BRANCH}`
+   - `git rev-list --left-right --count origin/{RELEASE_BRANCH}...{RELEASE_BRANCH}`
 4. Validate according to touched files (see `AGENTS.md` validation matrix).
 5. Generate the standalone release body from the matching `CHANGELOG.md` entry with `tools/write_release_notes.py` (use `--version`, plus `--project` for script releases, and write to a temporary `--output` file), then reuse that file with `gh release create --notes-file`.
-6. Open and merge a release-prep PR from `release/v{VERSION}` into `main`.
+6. Open and merge a release-prep PR from `{RELEASE_BRANCH}` into `main`.
 7. Sync `main`, tag, and push:
    - `git checkout main`
    - `git pull --ff-only origin main`
-   - `git tag v{VERSION}`
-   - `git push origin v{VERSION}`
+   - `git tag {RELEASE_TAG}`
+   - `git push origin {RELEASE_TAG}`
 8. Publish GitHub release notes from the generated notes file sourced from `CHANGELOG.md`.
 9. Delete release-prep branch after publication:
-   - `git push origin --delete release/v{VERSION}`
-   - `git branch -d release/v{VERSION}`
+   - `git push origin --delete {RELEASE_BRANCH}`
+   - `git branch -d {RELEASE_BRANCH}`
 
 ### Repository Release (`release-kind=repo`)
 
@@ -182,7 +185,7 @@ This repository uses `main` as the only long-lived integration branch and aligns
 
 ### Script Release (`release-kind=script`)
 
-1. Finalize release metadata on `release/v{VERSION}`:
+1. Finalize release metadata on `release/{ProjectName}-v{VERSION}`:
    - root `VERSION` (if the repository release is part of this scope)
    - touched `scripts/{ProjectName}/VERSION` file(s)
    - `CHANGELOG.md`

@@ -14,7 +14,7 @@ Replace all `{...}` placeholders before execution.
 - Expected repository version: `{REPO_VERSION}`
 - Expected artifact version (`script` only): `{SCRIPT_VERSION}`
 - Base branch: `main`
-- Release branch (recommended `release/v{REPO_VERSION}`): `{RELEASE_BRANCH}`
+- Release branch (repo: `release/v{REPO_VERSION}`; script: `release/{PROJECT_NAME}-v{SCRIPT_VERSION}`): `{RELEASE_BRANCH}`
 - Release tag: `{RELEASE_TAG}`
 - Release title: `{RELEASE_TITLE}`
 - Release notes file: `{RELEASE_NOTES_FILE}`
@@ -46,7 +46,7 @@ scope clarity, explicit gate handling, and auditable validation output.
 
 ## Branch/Worktree Gate (Required Before Release Actions)
 
-1. Ensure current branch is `{RELEASE_BRANCH}` (recommended format: `release/v{REPO_VERSION}`).
+1. Ensure current branch is `{RELEASE_BRANCH}` (repo: `release/v{REPO_VERSION}`; script: `release/{PROJECT_NAME}-v{SCRIPT_VERSION}`).
 2. If worktree is dirty, stop and confirm commit/stash strategy with the user.
 3. Sync refs before release:
    - `git fetch origin`

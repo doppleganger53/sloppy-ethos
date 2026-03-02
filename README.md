@@ -104,6 +104,9 @@ luac -p scripts/SensorList/main.lua
 - Release scope is explicit:
   - repo releases track repository-wide workflow/docs/versioning changes.
   - script releases track installable script artifacts and script-specific manual gates.
+- Release branch naming is scope-specific:
+  - repo releases use `release/v{VERSION}`
+  - script releases use `release/{ProjectName}-v{VERSION}`
 - Repo release install deliverables include:
   - `dist/sloppy-ethos_scripts.zip` (built via `python tools/build.py --project SensorList --project ethos_events --dist`)
   - single-script ZIPs for each included script release asset (for example `dist/SensorList-{version}.zip` and `dist/ethos_events-{version}.zip`)
