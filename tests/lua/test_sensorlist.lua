@@ -52,7 +52,6 @@ local function makeRefreshWidget()
     sensors = {},
     groups = {},
     colorCache = {},
-    conflictColorCache = {},
     scrollOffset = 0,
     lastSignature = "",
     lastRawCount = 0,
@@ -108,31 +107,6 @@ assert_true(groups[10] == nil, "unique physical id not grouped")
 local sig1 = test.buildSignature(sensors)
 local sig2 = test.buildSignature(sensors)
 assert_equal(sig1, sig2, "stable signatures")
-
-local severitySensors = test.normalizeSensors({
-  { name = "High A", physicalId = "01", applicationId = "1000" },
-  { name = "High B", physicalId = "01", applicationId = "1000" },
-  { name = "Low A", physicalId = "02", applicationId = "1000" },
-  { name = "Low B", physicalId = "02", applicationId = "1001" },
-  { name = "Unknown A", physicalId = "03", applicationId = "1002" },
-  { name = "Unknown B", physicalId = "03" },
-  { name = "Unique", physicalId = "04", applicationId = "1003" },
-})
-test.annotateConflictSeverity(severitySensors)
-local severityByName = {}
-for _, sensor in ipairs(severitySensors) do
-  severityByName[sensor.name] = sensor
-end
-assert_equal(severityByName["High A"].conflictSeverity, "high", "duplicate physical+application high severity")
-assert_equal(severityByName["High A"].conflictMarker, "[!]", "high severity marker")
-assert_equal(severityByName["High B"].conflictSeverity, "high", "duplicate pair second row high severity")
-assert_equal(severityByName["Low A"].conflictSeverity, "low", "duplicate physical distinct app low severity")
-assert_equal(severityByName["Low A"].conflictMarker, "[~]", "low severity marker")
-assert_equal(severityByName["Low B"].conflictSeverity, "low", "duplicate physical distinct app low severity second row")
-assert_equal(severityByName["Unknown A"].conflictSeverity, "high", "duplicate physical with unknown app high severity")
-assert_equal(severityByName["Unknown B"].conflictSeverity, "high", "unknown app row high severity")
-assert_equal(severityByName["Unique"].conflictSeverity, "none", "unique physical no severity")
-assert_equal(severityByName["Unique"].conflictMarker, "", "unique row no marker")
 
 local large = {}
 for i = 1, 40 do

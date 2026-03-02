@@ -15,25 +15,25 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 75
-- Total size: 110,625 bytes
-- Total lines: 2,712
+- Files: 77
+- Total size: 114,068 bytes
+- Total lines: 2,803
 - Distribution by category:
-  - session notes: 70
+  - session notes: 72
   - handoff/restart notes: 3
   - domain notes: 1
   - weekly summaries: 1
 
 - Distribution by focus:
   - 14 -- memory-ops ( Agentic context engineering )
-  - 12 -- lua-ethos ( Ethos targeted scripts )
+  - 13 -- lua-ethos ( Ethos targeted scripts )
   - 10 -- build-tooling ( Build, deploy, packaging, and tooling workflows )
   - 8 -- docs-process ( Documentation and contributor process changes )
   - 8 -- release-versioning ( Release flow, tagging, and version policy )
+  - 5 -- prompts ( Prompt and template asset evolution )
   - 5 -- testing ( Automated tests and coverage changes )
   - 5 -- workflow-policy ( Branching, policy, and workflow guardrails )
   - 4 -- issue-lifecycle ( Issue creation, validation, and closure tracking )
-  - 4 -- prompts ( Prompt and template asset evolution )
   - 3 -- handoff ( Session continuity and restart handoffs )
   - 2 -- repo ( Repository-wide governance and metadata )
 
@@ -131,4 +131,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-02-27 | session-note | workflow-policy | [notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md](notes/session-note/workflow-policy/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md) | # Session Notes 2026-02-27 - Issue #39 Release Scope Clarity |
 | 2026-03-01 | session-note | prompts | [notes/session-note/prompts/SESSION_NOTES_2026-03-01_ISSUE_45_SMARTMAPPER_PROMPT_DRAFT.md](notes/session-note/prompts/SESSION_NOTES_2026-03-01_ISSUE_45_SMARTMAPPER_PROMPT_DRAFT.md) | # Session Notes 2026-03-01 - Issue #45 SmartMapper Prompt Draft |
 | 2026-03-02 | session-note | docs-process | [notes/session-note/docs-process/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md](notes/session-note/docs-process/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md) | # Session Notes 2026-03-02 - Contributing Good First Issue Guidance Removal |
+| 2026-03-02 | session-note | lua-ethos | [notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_46_SENSORLIST_CONFLICT_SEVERITY_REVERT.md](notes/session-note/lua-ethos/SESSION_NOTES_2026-03-02_ISSUE_46_SENSORLIST_CONFLICT_SEVERITY_REVERT.md) | # Session Notes 2026-03-02 - Issue #46 SensorList Conflict Severity Revert |
 | 2026-03-02 | session-note | memory-ops | [notes/session-note/memory-ops/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md](notes/session-note/memory-ops/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md) | # Session Notes 2026-03-02 - Weekly Summary Compaction |
+| 2026-03-02 | session-note | prompts | [notes/session-note/prompts/SESSION_NOTES_2026-03-02_ISSUE_45_PROMPT_GUARDRAIL_FIX.md](notes/session-note/prompts/SESSION_NOTES_2026-03-02_ISSUE_45_PROMPT_GUARDRAIL_FIX.md) | # Session Notes 2026-03-02 - Issue #45 Prompt Guardrail Fix |

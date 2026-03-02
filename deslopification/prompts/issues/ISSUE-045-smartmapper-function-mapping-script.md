@@ -1,11 +1,30 @@
-# Draft Prompt: Implement Issue #45 (SmartMapper Function Mapping Script)
+# Prompt: Implement Issue #45 (SmartMapper Function Mapping Script)
 
-Use this prompt to implement GitHub issue `#45`:
-`https://github.com/doppleganger53/sloppy-ethos/issues/45`
+## Canonical Issue
 
-# Prompt
+- URL: `https://github.com/doppleganger53/sloppy-ethos/issues/45`
+- Title: `[Enhancement] SmartMapper function mapping script`
+- Labels: `enhancement`
+- Snapshot state: open on `2026-03-01`
+- Target branch (default): `feature/45-smartmapper-function-mapping-script` (or as user-directed for current workflow)
 
-You are generating code for a FrSky Ethos Lua widget.
+## Mission
+
+Create a widget named `SmartMapper` that inspects existing model configuration
+and builds a readable function-to-input mapping across mixes, logic switches,
+trims, special functions, and related controls.
+
+## Branch/Worktree Gate (Required Before Editing)
+
+1. Run issue preflight:
+   - `python tools/session_preflight.py --mode issue --issue-number 45 --issue-kind enhancement --slug smartmapper-function-mapping-script`
+2. Confirm target branch and current branch:
+   - `git branch --show-current`
+   - `git status --short --branch`
+3. If preflight blocks due to `main`, create/switch to the recommended branch before editing.
+4. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
+5. After switching branches, sync before editing:
+   - `git pull --ff-only origin {target-branch}`
 
 ## Goal
 
