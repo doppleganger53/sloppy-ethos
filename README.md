@@ -100,6 +100,7 @@ luac -p scripts/SensorList/main.lua
 - Changelog source of truth: `CHANGELOG.md`.
 - Repository version source of truth: `VERSION`.
 - Script artifact versions: `scripts/{ProjectName}/VERSION`.
+- Generate GitHub release note bodies from `CHANGELOG.md` with `tools/write_release_notes.py`, then publish with `gh release create --notes-file` so markdown spacing and headings render correctly.
 - Release scope is explicit:
   - repo releases track repository-wide workflow/docs/versioning changes.
   - script releases track installable script artifacts and script-specific manual gates.

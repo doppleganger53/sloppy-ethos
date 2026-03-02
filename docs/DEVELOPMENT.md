@@ -154,14 +154,15 @@ This repository uses `main` as the only long-lived integration branch and aligns
    - `git pull --ff-only origin release/v{VERSION}`
    - `git rev-list --left-right --count origin/release/v{VERSION}...release/v{VERSION}`
 4. Validate according to touched files (see `AGENTS.md` validation matrix).
-5. Open and merge a release-prep PR from `release/v{VERSION}` into `main`.
-6. Sync `main`, tag, and push:
+5. Generate the standalone release body from the matching `CHANGELOG.md` entry with `tools/write_release_notes.py` (use `--version`, plus `--project` for script releases, and write to a temporary `--output` file), then reuse that file with `gh release create --notes-file`.
+6. Open and merge a release-prep PR from `release/v{VERSION}` into `main`.
+7. Sync `main`, tag, and push:
    - `git checkout main`
    - `git pull --ff-only origin main`
    - `git tag v{VERSION}`
    - `git push origin v{VERSION}`
-7. Publish GitHub release notes from `CHANGELOG.md`.
-8. Delete release-prep branch after publication:
+8. Publish GitHub release notes from the generated notes file sourced from `CHANGELOG.md`.
+9. Delete release-prep branch after publication:
    - `git push origin --delete release/v{VERSION}`
    - `git branch -d release/v{VERSION}`
 
@@ -177,7 +178,7 @@ This repository uses `main` as the only long-lived integration branch and aligns
    - `dist/sloppy-ethos_scripts.zip`
    - included single-script ZIP artifacts (for example `dist/SensorList-{scripts/SensorList/VERSION}.zip` and `dist/ethos_events-{scripts/ethos_events/VERSION}.zip`)
 4. Do not treat script-only manual gates as implicit blockers unless that script is in scope.
-5. Publish release notes and install assets with `gh release create v{VERSION} dist/sloppy-ethos_scripts.zip dist/SensorList-{scripts/SensorList/VERSION}.zip dist/ethos_events-{scripts/ethos_events/VERSION}.zip --title "{TITLE}" --notes-file {notes-file}`.
+5. Publish release notes and install assets with `gh release create v{VERSION} dist/sloppy-ethos_scripts.zip dist/SensorList-{scripts/SensorList/VERSION}.zip dist/ethos_events-{scripts/ethos_events/VERSION}.zip --title "{TITLE}" --notes-file {RELEASE_NOTES_FILE}` after generating `{RELEASE_NOTES_FILE}` with `tools/write_release_notes.py`.
 
 ### Script Release (`release-kind=script`)
 
@@ -188,5 +189,7 @@ This repository uses `main` as the only long-lived integration branch and aligns
 2. Require all script gate issues passed through `--script-gate-issue` to be closed before tag/publish.
 3. Build release artifact(s), for example:
    - `python tools/build.py --project SensorList --dist`
-4. Attach script artifact(s) to the release, for example:
+4. Generate the script release notes file from `CHANGELOG.md` with `tools/write_release_notes.py` (use `--version`, `--project`, and `--output`) so the published GitHub release keeps the changelog markdown formatting.
+5. Attach script artifact(s) to the release, for example:
    - `dist/SensorList-{scripts/SensorList/VERSION}.zip`
+6. Publish the script release with `gh release create ... --notes-file {RELEASE_NOTES_FILE}` instead of inline `--notes`.

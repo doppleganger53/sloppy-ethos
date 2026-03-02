@@ -7,6 +7,7 @@ All notable changes to this project are documented in this file.
 ### Changed
 
 - Documented Issue #42 repo release deliverables so GitHub repo releases explicitly include `dist/sloppy-ethos_scripts.zip` alongside single-script ZIP assets, including the build step `python tools/build.py --project SensorList --project ethos_events --dist`.
+- Added `tools/write_release_notes.py` so repo and script releases can publish markdown release bodies from `CHANGELOG.md` via `--notes-file` instead of inline escaped note strings.
 
 ## [SensorList v1.0.0] - 2026-03-02
 

@@ -69,6 +69,8 @@ This is a `script` release workflow for SensorList (not a repo-only release gate
 5. Run:
    - python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q
 6. If a required command hangs, rerun once with higher timeout and report exact failure if still incomplete.
+7. Generate release notes file from the SensorList changelog entry:
+   - python tools/write_release_notes.py --version 1.0.0 --project SensorList --output .tmp/release-notes-SensorList-v1.0.0.md
 
 ## PR, Tag, and Publish
 
@@ -84,7 +86,7 @@ This is a `script` release workflow for SensorList (not a repo-only release gate
    - git tag v1.0.0
    - git push origin v1.0.0
 7. Publish release with single SensorList artifact:
-   - gh release create v1.0.0 dist/SensorList-1.0.0.zip --title "SensorList-v1.0.0" --notes "<CHANGELOG 1.0.0 notes>"
+   - gh release create v1.0.0 dist/SensorList-1.0.0.zip --title "SensorList-v1.0.0" --notes-file .tmp/release-notes-SensorList-v1.0.0.md
 8. Verify release:
    - gh release view v1.0.0 --json tagName,name,url,isDraft,isPrerelease,publishedAt
 

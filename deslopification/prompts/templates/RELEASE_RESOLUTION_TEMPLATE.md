@@ -17,6 +17,7 @@ Replace all `{...}` placeholders before execution.
 - Release branch (recommended `release/v{REPO_VERSION}`): `{RELEASE_BRANCH}`
 - Release tag: `{RELEASE_TAG}`
 - Release title: `{RELEASE_TITLE}`
+- Release notes file: `{RELEASE_NOTES_FILE}`
 - Prerelease flag for `gh release create` (use `--prerelease` for `-rc.N`, else leave empty): `{PRERELEASE_FLAG}`
 - Snapshot date: `{YYYY-MM-DD}`
 
@@ -88,6 +89,11 @@ Run the minimum required checks for this release action:
      - `dist/{PROJECT_NAME}-{SCRIPT_VERSION}.zip`
    - run validation based on touched files (see `AGENTS.md` matrix)
 3. Prefer `--notes-file` when publishing release notes to avoid truncation risk.
+4. Generate `{RELEASE_NOTES_FILE}` from `CHANGELOG.md` before publishing:
+   - For `repo` releases:
+     - `python tools/write_release_notes.py --version {REPO_VERSION} --output {RELEASE_NOTES_FILE}`
+   - For `script` releases:
+     - `python tools/write_release_notes.py --version {SCRIPT_VERSION} --project {PROJECT_NAME} --output {RELEASE_NOTES_FILE}`
 
 ## Publish Steps
 
@@ -100,14 +106,15 @@ Run the minimum required checks for this release action:
 5. Tag merged `main` commit and push tag:
    - `git tag {RELEASE_TAG}`
    - `git push origin {RELEASE_TAG}`
-6. Create release:
+6. Generate `{RELEASE_NOTES_FILE}` from the matching `CHANGELOG.md` entry with the helper command for this scope.
+7. Create release:
    - For `repo` releases:
      - `gh release create {RELEASE_TAG} --title "{RELEASE_TITLE}" --notes-file {RELEASE_NOTES_FILE} {PRERELEASE_FLAG}`
    - For `script` releases:
      - `gh release create {RELEASE_TAG} dist/{PROJECT_NAME}-{SCRIPT_VERSION}.zip --title "{RELEASE_TITLE}" --notes-file {RELEASE_NOTES_FILE} {PRERELEASE_FLAG}`
-7. Verify release metadata:
+8. Verify release metadata:
    - `gh release view {RELEASE_TAG} --json tagName,name,url,isDraft,isPrerelease,publishedAt`
-8. Delete release branch after publication:
+9. Delete release branch after publication:
    - `git push origin --delete {RELEASE_BRANCH}`
    - `git branch -d {RELEASE_BRANCH}`
 

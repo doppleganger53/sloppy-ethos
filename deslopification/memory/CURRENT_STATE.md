@@ -49,6 +49,9 @@ Historical detail remains in individual session notes referenced from
 - Release scope is explicit and required in release execution:
   - `repo` for repository-level release work.
   - `script` for installable script artifact releases.
+- GitHub release bodies should be generated from `CHANGELOG.md` with:
+  - `tools/write_release_notes.py`
+  - then published with `gh release create --notes-file` to preserve markdown formatting.
 - Script manual gate issues block only matching `script` releases and should be
   treated as out of scope for `repo` releases unless explicitly included.
 - `tools/session_preflight.py` supports release-scope guards for issue sessions:
