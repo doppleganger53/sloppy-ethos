@@ -627,9 +627,11 @@ def test_main_clean_calls_clean_from_simulator(monkeypatch, tmp_path: Path):
     sim_path.mkdir(parents=True)
     monkeypatch.setattr(build, "resolve_simulator_path", lambda *_args, **_kwargs: sim_path)
     monkeypatch.setattr(build, "clean_from_simulator", lambda project_name, resolved: calls.setdefault("clean", (project_name, resolved)))
+    monkeypatch.setattr(build, "clean_dist_dir", lambda dist_dir: calls.setdefault("clean_dist_dir", dist_dir))
     build.main()
     assert "ensure_luac_available" not in calls
     assert calls["clean"] == ("SensorList", sim_path)
+    assert calls["clean_dist_dir"] == Path(build.__file__).resolve().parent.parent / "dist"
 
 
 def test_main_exits_when_sim_radio_path_does_not_exist(monkeypatch, tmp_path: Path):
