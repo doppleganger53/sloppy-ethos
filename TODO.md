@@ -7,3 +7,4 @@
 - [ ] Investigate custom script builds via github for end user install
 - [ ] Increase cardinality of memory/notes/session-note category
 - [ ] Tighten up tests by removing non-generalized cases targeting unlikely regressions
+- [ ] Add Ethos lua reference github repos to agent metadata
