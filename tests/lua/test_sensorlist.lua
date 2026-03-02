@@ -89,20 +89,65 @@ assert_equal(test.toInt(""), nil, "empty string parse")
 assert_equal(test.formatHex(10, 2), "0A", "hex formatting")
 assert_equal(test.formatHex(nil, 2), "--", "nil formatting")
 
+local methodBackedCandidate = {
+  subId = function(_self)
+    return "0010"
+  end,
+}
+assert_equal(test.readCandidate(methodBackedCandidate, { "subId" }), "0010", "function-valued candidate is invoked")
+
+local guardedCandidate = setmetatable({}, {
+  __index = function(_table, key)
+    if key == "subId" then
+      error("direct accessor unsupported")
+    end
+    return nil
+  end,
+})
+assert_equal(test.readCandidate(guardedCandidate, { "subId" }), nil, "candidate accessor errors fail soft")
+
+local createLogs = {}
+local savedSystem = _G.system
+local savedPrint = _G.print
+_G.print = function(message)
+  createLogs[#createLogs + 1] = tostring(message)
+end
+_G.system = {
+  registerWidget = function(_) end,
+  getSensors = function()
+    return setmetatable({}, {
+      __len = function()
+        error("len fault")
+      end,
+    })
+  end,
+}
+local recoveredWidget = test.create()
+_G.system = savedSystem
+_G.print = savedPrint
+assert_true(type(recoveredWidget) == "table", "create returns widget when refresh errors")
+assert_true(type(recoveredWidget.lastError) == "string", "create stores refresh error")
+assert_true(recoveredWidget.lastError:find("create", 1, true) ~= nil, "create error context is retained")
+assert_true(#createLogs >= 1 and createLogs[1]:find("SLERR", 1, true) ~= nil, "create error is logged to serial")
+
 local sensors = test.normalizeSensors({
-  { name = "Gamma", physicalId = "0A", applicationId = "6801" },
-  { name = "Alpha", physicalId = "00", applicationId = "0001" },
-  { name = "Beta", physicalId = "00", applicationId = "0000" },
+  { name = "Gamma", physicalId = "0A", applicationId = "6801", subId = "0000" },
+  { name = "Alpha", physicalId = "00", applicationId = "0001", subId = "0001" },
+  { name = "Beta", physicalId = "00", applicationId = "0001", subId = "0000" },
+  { name = "Delta", physicalId = "00", applicationId = "0001", subId = "0000" },
 })
 
-assert_equal(#sensors, 3, "normalized count")
-assert_equal(sensors[1].name, "Beta", "sort by application id")
-assert_equal(sensors[2].name, "Alpha", "sort by application id second")
-assert_equal(sensors[3].name, "Gamma", "sort by physical id")
+assert_equal(#sensors, 4, "normalized count")
+assert_equal(sensors[1].name, "Beta", "sort by subId before name")
+assert_equal(sensors[2].name, "Delta", "same triplet sorts by name")
+assert_equal(sensors[3].name, "Alpha", "higher subId sorts later")
+assert_equal(sensors[4].name, "Gamma", "higher physical id sorts later")
+assert_equal(sensors[1].subIdText, "0000", "subId formatting")
+assert_equal(sensors[3].subIdText, "0001", "subId tie breaker retained")
 
-local groups = test.buildPhysicalGroups(sensors)
-assert_true(groups[0] ~= nil, "duplicate physical id grouped")
-assert_true(groups[10] == nil, "unique physical id not grouped")
+local groups = test.buildConflictGroups(sensors)
+assert_true(groups["00|0001|0000"] ~= nil, "duplicate conflict triplet grouped")
+assert_true(groups["00|0001|0001"] == nil, "different subId should not group")
 
 local sig1 = test.buildSignature(sensors)
 local sig2 = test.buildSignature(sensors)
@@ -114,8 +159,10 @@ for i = 1, 40 do
     name = "Sensor " .. tostring(i),
     physical = i,
     application = i,
+    subId = i,
     physicalText = string.format("%02X", i),
     applicationText = string.format("%04X", i),
+    subIdText = string.format("%04X", i),
   }
 end
 
@@ -172,9 +219,10 @@ assert_true(eventWidget.touchActive == false, "touch session should deactivate")
 
 local sortableWidget = {
   sensors = test.normalizeSensors({
-    { name = "Zulu", physicalId = "02", applicationId = "1000" },
-    { name = "Alpha", physicalId = "03", applicationId = "0001" },
-    { name = "Bravo", physicalId = "01", applicationId = "2000" },
+    { name = "Zulu", physicalId = "02", applicationId = "1000", subId = "0002" },
+    { name = "Alpha", physicalId = "03", applicationId = "0001", subId = "0001" },
+    { name = "Bravo", physicalId = "01", applicationId = "2000", subId = "0003" },
+    { name = "Delta", physicalId = "01", applicationId = "2000", subId = "0001" },
   }),
   groups = {},
   colorCache = {},
@@ -191,14 +239,14 @@ assert_true(nameHeaderStart and nameHeaderEnd, "name header tap should be consum
 assert_equal(sortableWidget.sortKey, "name", "name sort key selected")
 assert_true(sortableWidget.sortDescending == false, "name sort defaults to ascending")
 assert_equal(sortableWidget.sensors[1].name, "Alpha", "name sort ascending first row")
-assert_equal(sortableWidget.sensors[3].name, "Zulu", "name sort ascending last row")
+assert_equal(sortableWidget.sensors[4].name, "Zulu", "name sort ascending last row")
 
 local nameHeaderStart2 = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 10, 22)
 local nameHeaderEnd2 = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 10, 22)
 assert_true(nameHeaderStart2 and nameHeaderEnd2, "second name header tap should be consumed")
 assert_true(sortableWidget.sortDescending == true, "second tap toggles to descending")
 assert_equal(sortableWidget.sensors[1].name, "Zulu", "name sort descending first row")
-assert_equal(sortableWidget.sensors[3].name, "Alpha", "name sort descending last row")
+assert_equal(sortableWidget.sensors[4].name, "Alpha", "name sort descending last row")
 
 local physicalHeaderStart = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 300, 22)
 local physicalHeaderEnd = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 300, 22)
@@ -206,7 +254,9 @@ assert_true(physicalHeaderStart and physicalHeaderEnd, "physical header tap shou
 assert_equal(sortableWidget.sortKey, "physical", "physical sort key selected")
 assert_true(sortableWidget.sortDescending == false, "new key resets to ascending")
 assert_equal(sortableWidget.sensors[1].physicalText, "01", "physical sort ascending first row")
-assert_equal(sortableWidget.sensors[3].physicalText, "03", "physical sort ascending last row")
+assert_equal(sortableWidget.sensors[4].physicalText, "03", "physical sort ascending last row")
+assert_equal(sortableWidget.sensors[1].subIdText, "0001", "physical sort uses subId as final tie breaker")
+assert_equal(sortableWidget.sensors[2].subIdText, "0003", "physical sort keeps higher subId later")
 
 local applicationHeaderStart = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 390, 22)
 local applicationHeaderEnd = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 390, 22)
@@ -214,13 +264,15 @@ assert_true(applicationHeaderStart and applicationHeaderEnd, "application header
 assert_equal(sortableWidget.sortKey, "application", "application sort key selected")
 assert_true(sortableWidget.sortDescending == false, "application sort defaults to ascending")
 assert_equal(sortableWidget.sensors[1].applicationText, "0001", "application sort ascending first row")
-assert_equal(sortableWidget.sensors[3].applicationText, "07D0", "application sort ascending last row")
+assert_equal(sortableWidget.sensors[4].applicationText, "07D0", "application sort ascending last row")
+assert_equal(sortableWidget.sensors[3].subIdText, "0001", "application tie keeps lower subId first")
+assert_equal(sortableWidget.sensors[4].subIdText, "0003", "application tie keeps higher subId later")
 
 local expandedHitboxWidget = {
   sensors = test.normalizeSensors({
-    { name = "Zulu", physicalId = "02", applicationId = "1000" },
-    { name = "Alpha", physicalId = "03", applicationId = "0001" },
-    { name = "Bravo", physicalId = "01", applicationId = "2000" },
+    { name = "Zulu", physicalId = "02", applicationId = "1000", subId = "0002" },
+    { name = "Alpha", physicalId = "03", applicationId = "0001", subId = "0001" },
+    { name = "Bravo", physicalId = "01", applicationId = "2000", subId = "0003" },
   }),
   groups = {},
   colorCache = {},
@@ -241,10 +293,15 @@ local applicationExpandedEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G
 assert_true(applicationExpandedStart and applicationExpandedEnd, "expanded bottom application zone should be consumed")
 assert_equal(expandedHitboxWidget.sortKey, "application", "expanded bottom application zone should sort application column")
 
+local subIdHeaderStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 430, 22)
+local subIdHeaderEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 430, 22)
+assert_true(subIdHeaderStart and subIdHeaderEnd, "subId header touch should still be consumed as touch input")
+assert_equal(expandedHitboxWidget.sortKey, "application", "subId header should not change sort key")
+
 local canceledHeaderWidget = {
   sensors = test.normalizeSensors({
-    { name = "Zulu", physicalId = "02", applicationId = "1000" },
-    { name = "Alpha", physicalId = "03", applicationId = "0001" },
+    { name = "Zulu", physicalId = "02", applicationId = "1000", subId = "0002" },
+    { name = "Alpha", physicalId = "03", applicationId = "0001", subId = "0001" },
   }),
   groups = {},
   colorCache = {},
@@ -320,5 +377,38 @@ local noFeedbackLong = test.event(noFeedbackWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_L
 assert_true(noFeedbackLong, "long press should be consumed without feedback APIs")
 assert_equal(noFeedbackRefreshCount, 1, "silent long press should refresh once")
 assert_equal(#noFeedbackWidget.sensors, 1, "silent long press should still refresh sensors")
+
+local incrementalRefreshCalls = {}
+_G.system = {
+  getSource = function(request)
+    incrementalRefreshCalls[#incrementalRefreshCalls + 1] = request.member
+    if request.member == 15 then
+      return {
+        name = function()
+          return "Queued refresh"
+        end,
+        physicalId = function()
+          return 1
+        end,
+        applicationId = function()
+          return 0x1001
+        end,
+        subId = function()
+          return 0
+        end,
+      }
+    end
+    return nil
+  end,
+}
+local incrementalWidget = makeRefreshWidget()
+incrementalWidget.sourceCategory = 42
+incrementalWidget.sourceMaxMember = 255
+local incrementalLong = test.event(incrementalWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_LONG, 30, 160)
+assert_true(incrementalLong, "long press should queue incremental refresh")
+assert_equal(incrementalWidget.sourceMaxMember, 32, "long press resets scan window to first expansion step")
+assert_true(incrementalWidget.deepScanPending, "long press leaves deeper refresh queued")
+assert_true(#incrementalWidget.sensors >= 1, "long press still refreshes first chunk")
+assert_true(#incrementalRefreshCalls <= 20, "long press should not rescan the full category in one callback")
 
 print("sensorlist lua tests passed")

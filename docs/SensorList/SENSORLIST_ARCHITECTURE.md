@@ -14,6 +14,9 @@ The widget registers through `init()` and uses the standard Ethos callbacks:
   periodic sensor refresh.
 - `event(widget, category, value, x, y)`: dispatches touch/long-press input for
   manual refresh and scrolling.
+- Runtime faults in `create()`, `paint()`, and `event()` are trapped so the
+  widget can log `SLERR ...` to serial and attempt to render a minimal error
+  banner instead of failing silently.
 
 ## State Model
 
@@ -42,26 +45,35 @@ Each widget instance owns state in the `widget` table, including:
    - fallback to `model.getSensors()`
    - fallback to `system.getSource()` category/member scans
 2. Normalize records (`normalizeSensors`) and sort deterministically by:
-   physical ID, application ID, then name.
+   physical ID, application ID, sub ID, then name.
+   - candidate fields/methods are probed defensively so radio-only accessor
+     differences (for example `source:subId()`) fail soft instead of crashing
+     the widget.
 3. Build signature (`buildSignature`) and only update widget tables when the
    signature changes.
-4. Recompute conflict group mapping (`buildPhysicalGroups`) and reset color cache.
+4. Recompute conflict group mapping (`buildConflictGroups`) and reset color cache.
 5. Clamp `scrollOffset` against current visible row count.
 
 `allowDeepScan` gates expensive category scans:
 
 - `true`: allows dynamic category discovery and full scan.
 - `false`: avoids full scan and defers deeper work.
+- Once a category is known, the widget expands that category in bounded chunks
+  across `wakeup()` ticks so large sensor lists can finish loading without
+  exhausting the Ethos callback instruction budget.
 
 ## Event And Input Flow
 
 The `event()` callback handles user-driven interactions:
 
 - Long press (`EVT_TOUCH_LONG` or equivalent category) triggers explicit full
-  sensor refresh and best-effort completion feedback (`playHaptic` fallback to
-  `playTone`).
+  sensor refresh by resetting the staged scan window, then resumes loading over
+  later `wakeup()` ticks with best-effort completion feedback (`playHaptic`
+  fallback to `playTone`).
 - Touch phases are resolved through `resolveTouchPhase()` to normalize Ethos
   event code variants across runtime versions.
+- Header taps only sort the `Name`, `PhysID`, and `AppID` columns; `SubID`
+  remains display-only.
 - `handleTouchScroll()` accumulates movement and applies row-based scrolling.
 - Scroll processing is protected by per-event caps to avoid extreme jumps.
 - Touch-end can trigger long-press refresh fallback when dedicated long-press

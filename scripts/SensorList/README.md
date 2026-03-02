@@ -3,21 +3,23 @@
 Ethos widget that lists configured sensors in a sortable table with:
 
 - Name
-- Physical ID
-- Application ID
+- PhysID
+- AppID
+- SubID
 
-Conflicting sensors that share the same Physical ID are color-grouped to make
-potential conflicts easier to identify.
+Conflicting sensors that share the same `PhysID`, `AppID`, and `SubID` are
+color-grouped to make true duplicates easier to identify.
 
 ## Current Behavior
 
-- Displays columns for `Name`, `Physical ID`, `Application ID`.
-- Default sort is deterministic by `Physical ID`, then `Application ID`, then name.
-- Tapping a column header changes sort key and toggles ascending/descending for that column (`^` / `v` in header).
-- Duplicate physical IDs are color-grouped to help identify conflicts.
+- Displays columns for `Name`, `PhysID`, `AppID`, `SubID`.
+- Default sort is deterministic by `PhysID`, then `AppID`, then `SubID`, then name.
+- Tapping `Name`, `PhysID`, or `AppID` changes sort key and toggles ascending/descending for that column (`^` / `v` in header).
+- `SubID` is display-only and acts as the final tie-breaker for stable sort order.
+- Duplicate `PhysID` + `AppID` + `SubID` rows are color-grouped to help identify conflicts.
 - List navigation is manual via wheel/button/touch scrolling (no forced auto-scroll).
-- Sensor discovery runs on initial widget load and explicit long-press refresh only (no periodic polling).
-- Manual long-press refresh triggers best-effort completion feedback (`system.playHaptic` fallback to `system.playTone`).
+- Sensor discovery uses staged background expansion after initial load so large sensor lists can populate without tripping the Ethos callback instruction budget.
+- Manual long-press queues a fresh staged refresh and triggers best-effort completion feedback (`system.playHaptic` fallback to `system.playTone`).
 
 ## Build and Install
 
