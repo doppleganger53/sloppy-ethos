@@ -17,7 +17,7 @@ Historical detail remains in individual session notes referenced from
 ## Workflow Baseline
 
 - Root-cause-first policy is mandatory; avoid compatibility shims unless
-  explicitly justified and time-bounded.
+  explicitly justified.
 - Validation is mandatory for all changes per `AGENTS.md` matrix.
 - Documentation/process changes require docs contract validation.
 - Session memory updates are required for meaningful workflow/behavior changes.

@@ -39,14 +39,6 @@
   `general` (use `lua-ethos` for Ethos Lua script/widget/tool notes), and update
   `deslopification/memory/CURRENT_STATE.md` when the change is durable.
 
-## Good First Issues
-
-- New contributors can start with items labeled
-  [good first issue](https://github.com/doppleganger53/sloppy-ethos/labels/good%20first%20issue).
-- If onboarding support is needed, look for
-  [help wanted](https://github.com/doppleganger53/sloppy-ethos/labels/help%20wanted)
-  issues.
-
 ## Bug Report Quality
 
 - Use `.github/ISSUE_TEMPLATE/bug_report.md` when opening a bug.
