@@ -1,5 +1,13 @@
 # Handoff 2026-02-22 - TODO Execution
 
+## Note Placement
+
+- Artifact: `handoff`
+- Scope: `handoff`
+- Concern: `workflow`
+- Store this file under:
+  - `deslopification/memory/notes/{artifact}/{scope}/`
+
 ## What Changed
 
 - Normalized `TODO.md` into dependency-aware checklist IDs (`TODO-01`..`TODO-09`) with done criteria.

@@ -131,7 +131,7 @@ Return:
 
 ## Session Memory Sync
 
-Record release work in `deslopification/memory/notes/{category}/{focus}/` with:
+Record release work in `deslopification/memory/notes/{artifact}/{scope}/` with explicit `Artifact`, `Scope`, and `Concern` metadata:
 
 - release kind and scope boundaries
 - blocking/out-of-scope gate issues

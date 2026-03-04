@@ -21,7 +21,7 @@ from loading in widget selection/runtime, using a root-cause fix.
 - `.github/ISSUE_TEMPLATE/bug_report.md`
 - `scripts/SensorList/main.lua`
 - `docs/SensorList/SENSORLIST_ARCHITECTURE.md`
-- `deslopification/memory/notes/domain-note/lua-ethos/SensorList.md`
+- `deslopification/memory/notes/reference/sensorlist/SensorList.md`
 - `tests/lua/test_sensorlist.lua`
 - `tests/test_sensorlist_widget.py`
 - `tools/deploy.config.example.json`

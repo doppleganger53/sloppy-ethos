@@ -20,24 +20,39 @@ PRE_OPT_BASELINE = {
 }
 
 CONTROL_FILES = ("README.md", "CURRENT_STATE.md", "SESSION_NOTE_TEMPLATE.md")
-NOTES_ROOT = MEMORY_DIR / "notes"
-HIGH_SIGNAL_FOCUS = {
-    "workflow-policy",
-    "build-tooling",
-    "docs-process",
-    "release-versioning",
+HIGH_SIGNAL_CONCERN = {
+    "workflow",
+    "build",
+    "docs",
+    "release",
     "testing",
-    "repo",
+    "metadata",
 }
 RECENT_HIGH_SIGNAL_LIMIT = 12
-RECENT_HIGH_SIGNAL_PER_FOCUS_LIMIT = 3
+RECENT_HIGH_SIGNAL_PER_CONCERN_LIMIT = 3
+RECENT_ETHOS_PLATFORM_LIMIT = 6
+
+ALLOWED_ARTIFACTS = {"session", "reference", "summary", "handoff"}
+ALLOWED_SCOPES = {"repo", "memory", "ethos-platform", "sensorlist", "ethos-events", "handoff"}
+ALLOWED_CONCERNS = {
+    "implementation",
+    "release",
+    "build",
+    "docs",
+    "testing",
+    "workflow",
+    "prompts",
+    "issue-admin",
+    "metadata",
+}
 
 
 @dataclass(frozen=True)
 class Entry:
     date: str
-    category: str
-    focus: str
+    artifact: str
+    scope: str
+    concern: str
     rel_path: str
     name: str
     title: str
@@ -45,8 +60,8 @@ class Entry:
     lines_count: int
 
 
-def read_focus_description(focus_dir: Path) -> str | None:
-    desc_path = focus_dir / ".desc"
+def read_scope_description(scope_dir: Path) -> str | None:
+    desc_path = scope_dir / ".desc"
     if not desc_path.exists():
         return None
     text = desc_path.read_text(encoding="utf-8").strip()
@@ -82,11 +97,41 @@ def normalized_byte_count(path: Path) -> int:
     return len(canonical.encode("utf-8"))
 
 
-def parse_category_focus_from_path(rel_path: Path) -> tuple[str, str] | None:
+def parse_artifact_scope_from_path(rel_path: Path) -> tuple[str, str] | None:
     parts = rel_path.parts
     if len(parts) >= 4 and parts[0] == "notes":
         return parts[1], parts[2]
     return None
+
+
+def display_path(path: Path, memory_dir: Path = MEMORY_DIR) -> str:
+    try:
+        return path.relative_to(memory_dir).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def parse_note_metadata(path: Path, memory_dir: Path = MEMORY_DIR) -> tuple[str, str, str]:
+    text = path.read_text(encoding="utf-8")
+    matches = {
+        "artifact": re.search(r"^- Artifact: `([^`]+)`", text, flags=re.MULTILINE),
+        "scope": re.search(r"^- Scope: `([^`]+)`", text, flags=re.MULTILINE),
+        "concern": re.search(r"^- Concern: `([^`]+)`", text, flags=re.MULTILINE),
+    }
+    missing = [name for name, match in matches.items() if match is None]
+    if missing:
+        joined = ", ".join(missing)
+        raise ValueError(f"{display_path(path, memory_dir)} missing note metadata field(s): {joined}")
+    artifact = matches["artifact"].group(1)
+    scope = matches["scope"].group(1)
+    concern = matches["concern"].group(1)
+    if artifact not in ALLOWED_ARTIFACTS:
+        raise ValueError(f"{display_path(path, memory_dir)} has unknown artifact: {artifact}")
+    if scope not in ALLOWED_SCOPES:
+        raise ValueError(f"{display_path(path, memory_dir)} has unknown scope: {scope}")
+    if concern not in ALLOWED_CONCERNS:
+        raise ValueError(f"{display_path(path, memory_dir)} has unknown concern: {concern}")
+    return artifact, scope, concern
 
 
 def collect_entries(memory_dir: Path = MEMORY_DIR) -> list[Entry]:
@@ -104,15 +149,22 @@ def collect_entries(memory_dir: Path = MEMORY_DIR) -> list[Entry]:
             continue
 
         title = read_first_line(path)
-        from_path = parse_category_focus_from_path(rel_path)
+        from_path = parse_artifact_scope_from_path(rel_path)
         if from_path is None:
             continue
-        category, focus = from_path
+        artifact, scope = from_path
+        meta_artifact, meta_scope, concern = parse_note_metadata(path, memory_dir=memory_dir)
+        if meta_artifact != artifact or meta_scope != scope:
+            raise ValueError(
+                f"{rel_path.as_posix()} metadata/path mismatch: "
+                f"path={artifact}/{scope}, metadata={meta_artifact}/{meta_scope}"
+            )
         entries.append(
             Entry(
                 date=extract_date(path.name),
-                category=category,
-                focus=focus,
+                artifact=artifact,
+                scope=scope,
+                concern=concern,
                 rel_path=rel_path.as_posix(),
                 name=path.name,
                 title=title,
@@ -127,22 +179,22 @@ def select_recent_high_signal(entries: list[Entry]) -> list[Entry]:
     candidates = [
         item
         for item in entries
-        if item.category == "session-note"
+        if item.artifact == "session"
         and item.date != "-"
-        and item.focus in HIGH_SIGNAL_FOCUS
+        and item.concern in HIGH_SIGNAL_CONCERN
     ]
-    by_focus: dict[str, list[Entry]] = {}
+    by_concern: dict[str, list[Entry]] = {}
     for item in candidates:
-        by_focus.setdefault(item.focus, []).append(item)
+        by_concern.setdefault(item.concern, []).append(item)
 
     selected: list[Entry] = []
-    for focus_entries in by_focus.values():
+    for concern_entries in by_concern.values():
         ranked = sorted(
-            focus_entries,
+            concern_entries,
             key=lambda x: (x.date, x.name, x.rel_path),
             reverse=True,
         )
-        selected.extend(ranked[:RECENT_HIGH_SIGNAL_PER_FOCUS_LIMIT])
+        selected.extend(ranked[:RECENT_HIGH_SIGNAL_PER_CONCERN_LIMIT])
 
     return sorted(
         selected,
@@ -151,7 +203,21 @@ def select_recent_high_signal(entries: list[Entry]) -> list[Entry]:
     )[:RECENT_HIGH_SIGNAL_LIMIT]
 
 
-def format_focus_list(values: set[str]) -> str:
+def select_recent_ethos_platform(entries: list[Entry]) -> list[Entry]:
+    candidates = [
+        item
+        for item in entries
+        if item.scope == "ethos-platform" and item.artifact in {"session", "reference"}
+    ]
+    ranked = sorted(
+        candidates,
+        key=lambda x: (x.date != "-", x.date, x.name, x.rel_path),
+        reverse=True,
+    )
+    return ranked[:RECENT_ETHOS_PLATFORM_LIMIT]
+
+
+def format_slug_list(values: set[str]) -> str:
     ordered = [f"`{value}`" for value in sorted(values)]
     if not ordered:
         return "(none)"
@@ -162,19 +228,19 @@ def format_focus_list(values: set[str]) -> str:
     return f"{', '.join(ordered[:-1])}, or {ordered[-1]}"
 
 
-def collect_focus_descriptions(entries: list[Entry], memory_dir: Path = MEMORY_DIR) -> dict[str, str]:
-    by_focus: dict[str, set[str]] = {}
+def collect_scope_descriptions(entries: list[Entry], memory_dir: Path = MEMORY_DIR) -> dict[str, str]:
+    by_scope: dict[str, set[str]] = {}
     for item in entries:
-        focus_dir = memory_dir / Path(item.rel_path).parent
-        desc = read_focus_description(focus_dir)
+        scope_dir = memory_dir / Path(item.rel_path).parent
+        desc = read_scope_description(scope_dir)
         if desc is None:
             continue
-        by_focus.setdefault(item.focus, set()).add(desc)
+        by_scope.setdefault(item.scope, set()).add(desc)
 
     descriptions: dict[str, str] = {}
-    for focus, values in by_focus.items():
+    for scope, values in by_scope.items():
         ordered = sorted(values)
-        descriptions[focus] = ordered[0] if len(ordered) == 1 else " / ".join(ordered)
+        descriptions[scope] = ordered[0] if len(ordered) == 1 else " / ".join(ordered)
     return descriptions
 
 
@@ -183,46 +249,63 @@ def render_catalog(entries: list[Entry], memory_dir: Path = MEMORY_DIR) -> str:
     total_bytes = sum(item.bytes_count for item in entries)
     total_lines = sum(item.lines_count for item in entries)
 
-    by_category: dict[str, int] = {}
-    by_focus: dict[str, int] = {}
+    by_artifact: dict[str, int] = {}
+    by_scope: dict[str, int] = {}
+    by_concern: dict[str, int] = {}
     for item in entries:
-        by_category[item.category] = by_category.get(item.category, 0) + 1
-        by_focus[item.focus] = by_focus.get(item.focus, 0) + 1
+        by_artifact[item.artifact] = by_artifact.get(item.artifact, 0) + 1
+        by_scope[item.scope] = by_scope.get(item.scope, 0) + 1
+        by_concern[item.concern] = by_concern.get(item.concern, 0) + 1
 
-    category_order = ["session-note", "handoff", "domain-note", "weekly-summary"]
-    category_lines = []
-    for category in category_order:
-        count = by_category.get(category)
+    artifact_order = ["session", "handoff", "reference", "summary"]
+    artifact_lines = []
+    for artifact in artifact_order:
+        count = by_artifact.get(artifact)
         if count is None:
             continue
         label = {
-            "session-note": "session notes",
+            "session": "session notes",
             "handoff": "handoff/restart notes",
-            "domain-note": "domain notes",
-            "weekly-summary": "weekly summaries",
-        }[category]
-        category_lines.append(f"- {label}: {count}")
+            "reference": "reference notes",
+            "summary": "summary notes",
+        }[artifact]
+        artifact_lines.append(f"- {label}: {count}")
 
-    focus_descriptions = collect_focus_descriptions(entries, memory_dir)
-    focus_lines = []
-    for focus, count in sorted(by_focus.items(), key=lambda pair: (-pair[1], pair[0])):
-        description = focus_descriptions.get(focus, "description missing")
-        focus_lines.append(f"- {count} -- {focus} ( {description} )")
+    scope_descriptions = collect_scope_descriptions(entries, memory_dir)
+    scope_lines = []
+    for scope, count in sorted(by_scope.items(), key=lambda pair: (-pair[1], pair[0])):
+        description = scope_descriptions.get(scope, "description missing")
+        scope_lines.append(f"- {count} -- {scope} ( {description} )")
+
+    concern_lines = []
+    for concern, count in sorted(by_concern.items(), key=lambda pair: (-pair[1], pair[0])):
+        concern_lines.append(f"- {count} -- {concern}")
 
     rows = []
     for item in sorted(entries, key=lambda x: (x.date, x.rel_path)):
         title = item.title.replace("|", "/")
         rows.append(
-            f"| {item.date} | {item.category} | {item.focus} | [{item.rel_path}]({item.rel_path}) | {title} |"
+            f"| {item.date} | {item.artifact} | {item.scope} | {item.concern} | "
+            f"[{item.rel_path}]({item.rel_path}) | {title} |"
         )
 
     recent_high_signal = select_recent_high_signal(entries)
-    high_signal_focus_text = format_focus_list(HIGH_SIGNAL_FOCUS)
+    high_signal_concern_text = format_slug_list(HIGH_SIGNAL_CONCERN)
     recent_lines = []
     for item in recent_high_signal:
         title = item.title.replace("|", "/")
         recent_lines.append(
-            f"- {item.date} | {item.focus} | [{item.rel_path}]({item.rel_path}) | {title}"
+            f"- {item.date} | {item.concern} | {item.scope} | "
+            f"[{item.rel_path}]({item.rel_path}) | {title}"
+        )
+
+    recent_ethos_platform = select_recent_ethos_platform(entries)
+    ethos_lines = []
+    for item in recent_ethos_platform:
+        title = item.title.replace("|", "/")
+        ethos_lines.append(
+            f"- {item.date} | {item.artifact} | {item.concern} | "
+            f"[{item.rel_path}]({item.rel_path}) | {title}"
         )
 
     lines = [
@@ -244,25 +327,32 @@ def render_catalog(entries: list[Entry], memory_dir: Path = MEMORY_DIR) -> str:
         f"- Files: {total_files}",
         f"- Total size: {total_bytes:,} bytes",
         f"- Total lines: {total_lines:,}",
-        "- Distribution by category:",
+        "- Distribution by artifact:",
     ]
-    lines.extend(f"  {item}" for item in category_lines)
+    lines.extend(f"  {item}" for item in artifact_lines)
     lines.extend(
         [
             "",
-            "- Distribution by focus:",
+            "- Distribution by scope:",
         ]
     )
-    lines.extend(f"  {item}" for item in focus_lines)
+    lines.extend(f"  {item}" for item in scope_lines)
+    lines.extend(
+        [
+            "",
+            "- Distribution by concern:",
+        ]
+    )
+    lines.extend(f"  {item}" for item in concern_lines)
     lines.extend(
         [
             "",
             "## Recent High-Signal Notes (Auto-generated)",
             "",
             (
-                "- Selection: newest session notes where `Focus` is one of "
-                f"{high_signal_focus_text}; keep up to "
-                f"{RECENT_HIGH_SIGNAL_PER_FOCUS_LIMIT} per focus, then keep "
+                "- Selection: newest session notes where `Concern` is one of "
+                f"{high_signal_concern_text}; keep up to "
+                f"{RECENT_HIGH_SIGNAL_PER_CONCERN_LIMIT} per concern, then keep "
                 f"newest {RECENT_HIGH_SIGNAL_LIMIT} overall."
             ),
         ]
@@ -271,10 +361,23 @@ def render_catalog(entries: list[Entry], memory_dir: Path = MEMORY_DIR) -> str:
     lines.extend(
         [
             "",
+            "## Recent Ethos Platform Notes",
+            "",
+            (
+                "- Selection: newest `session` and `reference` notes where "
+                "`Scope` is `ethos-platform`; keep newest "
+                f"{RECENT_ETHOS_PLATFORM_LIMIT} overall."
+            ),
+        ]
+    )
+    lines.extend(ethos_lines if ethos_lines else ["- None."])
+    lines.extend(
+        [
+            "",
             "## Entries",
             "",
-            "| Date | Category | Focus | File | Title |",
-            "| --- | --- | --- | --- | --- |",
+            "| Date | Artifact | Scope | Concern | File | Title |",
+            "| --- | --- | --- | --- | --- | --- |",
             *rows,
             "",
         ]
