@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import zipfile
 from argparse import Namespace
 from pathlib import Path
 
@@ -253,22 +254,29 @@ def test_build_zip_creates_archive_and_cleans_staging(monkeypatch, tmp_path: Pat
     assert not (repo_root / ".build-staging").exists()
 
 
-def test_build_zip_handles_preexisting_staging_and_cleans_up(monkeypatch, tmp_path: Path):
+def test_build_zip_handles_preexisting_staging_and_cleans_up(tmp_path: Path):
     repo_root = tmp_path / "repo"
     project_dir = repo_root / "scripts" / "SensorList"
     dist_dir = repo_root / "dist"
     staging_root = repo_root / ".build-staging"
     project_dir.mkdir(parents=True)
     (project_dir / "main.lua").write_text("print('ok')\n", encoding="utf-8")
-    stale_dir = staging_root / "stale"
-    stale_dir.mkdir(parents=True)
-    (stale_dir / "old.txt").write_text("old", encoding="utf-8")
-
-    expected_archive = dist_dir / "SensorList-2.0.0.zip"
-    monkeypatch.setattr(build.shutil, "make_archive", lambda *_args: str(expected_archive))
+    stale_package = staging_root / "package"
+    (stale_package / "stale.txt").parent.mkdir(parents=True, exist_ok=True)
+    (stale_package / "stale.txt").write_text("old", encoding="utf-8")
+    (stale_package / "scripts" / "Ghost" / "ghost.lua").parent.mkdir(parents=True, exist_ok=True)
+    (stale_package / "scripts" / "Ghost" / "ghost.lua").write_text("-- stale payload\n", encoding="utf-8")
 
     archive = build.build_zip(project_dir, "SensorList", "2.0.0", dist_dir, repo_root)
-    assert archive == expected_archive
+    assert archive == dist_dir / "SensorList-2.0.0.zip"
+    assert archive.exists()
+
+    with zipfile.ZipFile(archive) as payload:
+        names = set(payload.namelist())
+
+    assert "scripts/SensorList/main.lua" in names
+    assert "stale.txt" not in names
+    assert "scripts/Ghost/ghost.lua" not in names
     assert not staging_root.exists()
 
 
