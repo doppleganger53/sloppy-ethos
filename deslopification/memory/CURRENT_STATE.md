@@ -25,24 +25,31 @@ Historical detail remains in individual session notes referenced from
 - `CATALOG.md` must be regenerated with:
   - `python tools/update_memory_catalog.py`.
 - `CATALOG.md` now includes both:
-  - coarse `Category` classification
-  - selective `Focus` classification for faster topical filtering.
+  - `Artifact` classification for note type
+  - `Scope` classification for problem surface
+  - `Concern` classification for the type of work or knowledge captured.
 - `CATALOG.md` entries and distributions index note artifacts under
   `deslopification/memory/notes/**` (control files are listed separately).
 - `CATALOG.md` snapshot byte totals are computed from normalized text line
   endings to remain stable across Windows (`CRLF`) and Linux (`LF`) checkouts.
-- Focus distribution lines in `CATALOG.md` are sourced from per-focus `.desc`
-  files stored in each `notes/{category}/{focus}/` folder.
-- Session notes should use specific focus classifiers (for example,
-  `build-tooling`, `docs-process`, `issue-lifecycle`, `repo`, `lua-ethos`) and
-  avoid `general` by default.
-- Ethos Lua script/widget/tool notes (SensorList, ethos_events, and future
-  similar scripts) should use focus `lua-ethos`.
-- Session-note compaction summaries now use weekly rollups stored under:
-  - `deslopification/memory/notes/weekly-summary/{focus}/`
+- Scope distribution lines in `CATALOG.md` are sourced from per-scope `.desc`
+  files stored in each `notes/{artifact}/{scope}/` folder.
+- Session notes should use explicit `Artifact`, `Scope`, and `Concern`
+  metadata, with path and metadata aligned.
+- Reusable Ethos runtime/API/simulator knowledge belongs under scope
+  `ethos-platform`.
+- Script-local notes should use script scopes such as `sensorlist` or
+  `ethos-events`.
+- If a change yields both reusable Ethos knowledge and script-local detail,
+  prefer split notes over one mixed note.
+- Session compaction summaries use weekly rollups stored under:
+  - `deslopification/memory/notes/summary/{scope}/`
   - `SUMMARY_YYYY-MM-DD_to_YYYY-MM-DD.md`
 - New memory notes are stored under:
-  - `deslopification/memory/notes/{category}/{focus}/`.
+  - `deslopification/memory/notes/{artifact}/{scope}/`.
+- `CATALOG.md` includes:
+  - concern-based `Recent High-Signal Notes`
+  - `Recent Ethos Platform Notes` for quick reusable Ethos retrieval.
 - Issue-linked sessions must run `tools/session_preflight.py --mode issue ...`
   and may not mutate files on `main`.
 - Release scope is explicit and required in release execution:
@@ -78,5 +85,7 @@ Historical detail remains in individual session notes referenced from
 
 1. Start here.
 2. Open `CATALOG.md` and read `Recent High-Signal Notes (Auto-generated)`.
-3. If needed, continue with the full entries table filtered by `Focus` and date.
-4. Read only notes required for the current task scope.
+3. For Ethos work, also read `Recent Ethos Platform Notes`.
+4. If needed, continue with the full entries table filtered by `Scope`,
+   `Concern`, and date.
+5. Read only notes required for the current task scope.

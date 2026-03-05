@@ -50,15 +50,19 @@
 - Memory entrypoint: `deslopification/memory/README.md`.
 - Current high-signal context: `deslopification/memory/CURRENT_STATE.md`.
 - Full historical index: `deslopification/memory/CATALOG.md`.
+- Reusable Ethos reference:
+  `deslopification/memory/notes/reference/ethos-platform/EthosPlatform.md`.
 - Weekly rollup example for compact history review:
-  `deslopification/memory/notes/weekly-summary/memory-ops/SUMMARY_2026-02-21_to_2026-02-27.md`.
+  `deslopification/memory/notes/summary/memory/SUMMARY_2026-02-21_to_2026-02-27.md`.
 - When adding notes, follow `deslopification/memory/SESSION_NOTE_TEMPLATE.md`.
 - New notes are stored under:
-  `deslopification/memory/notes/{category}/{focus}/`.
-- Prefer specific focus classifiers for session notes and avoid `general` by
-  default.
-- Use focus `lua-ethos` for Ethos Lua script/widget/tool notes (SensorList,
-  ethos_events, and similar future scripts).
+  `deslopification/memory/notes/{artifact}/{scope}/`.
+- Notes must declare explicit `Artifact`, `Scope`, and `Concern` metadata.
+- Use `ethos-platform` for reusable Ethos runtime/API/simulator knowledge.
+- Use script scopes such as `sensorlist` or `ethos-events` only for
+  script-local behavior or release history.
+- If a session yields both reusable Ethos knowledge and script-local detail,
+  prefer two short notes over one mixed note.
 
 ## Simulator Tips
 

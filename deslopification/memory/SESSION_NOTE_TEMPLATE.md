@@ -2,13 +2,11 @@
 
 ## Note Placement
 
-- Category: `{session-note|handoff|domain-note|weekly-summary}`
-- Focus: `{focus-slug}`
-- Focus guidance:
-  - prefer a specific focus classifier and avoid `general` when possible.
-  - use `lua-ethos` for Ethos Lua script/widget/tool notes.
+- Artifact: `{session|reference|summary|handoff}`
+- Scope: `{repo|memory|ethos-platform|sensorlist|ethos-events|handoff}`
+- Concern: `{implementation|release|build|docs|testing|workflow|prompts|issue-admin|metadata}`
 - Store this file under:
-  - `deslopification/memory/notes/{category}/{focus}/`
+  - `deslopification/memory/notes/{artifact}/{scope}/`
 
 ## What changed
 

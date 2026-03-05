@@ -66,14 +66,20 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
   - validation run(s)
   - follow-up items
 - Store new memory notes under:
-  - `deslopification/memory/notes/{category}/{focus}/`
+  - `deslopification/memory/notes/{artifact}/{scope}/`
   - examples:
-    - `notes/session-note/{focus}/SESSION_NOTES_YYYY-MM-DD_...md`
+    - `notes/session/{scope}/SESSION_NOTES_YYYY-MM-DD_...md`
+    - `notes/reference/{scope}/{Topic}.md`
     - `notes/handoff/handoff/HANDOFF_YYYY-MM-DD...md`
-- Use a specific `focus` classifier for session notes; avoid `general` unless a
-  note truly spans multiple unrelated domains and no existing focus fits.
-- Use `lua-ethos` focus for notes about Ethos Lua scripts/widgets/tools
-  (including SensorList, ethos_events, and similar future scripts).
+- Every note must declare explicit `Artifact`, `Scope`, and `Concern`
+  metadata, and the path is the source of truth for `Artifact` and `Scope`.
+- Prefer the most reusable `scope` that fits the note.
+- Use `ethos-platform` for reusable Ethos runtime/API/simulator knowledge,
+  even when discovered while working on one script.
+- Use script scopes such as `sensorlist` and `ethos-events` only for
+  script-local behavior, architecture, or release history.
+- If a session yields both reusable Ethos knowledge and script-local detail,
+  split it into two short notes when both retrieval paths matter.
 - Keep memory indexes synchronized when adding notes:
   - run `python tools/update_memory_catalog.py`
   - update `deslopification/memory/CURRENT_STATE.md` when durable workflow or
@@ -125,8 +131,10 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
 ## Script-Specific Notes
 
+- Reusable Ethos operating guidance lives in:
+  - `deslopification/memory/notes/reference/ethos-platform/EthosPlatform.md`
 - SensorList-specific operating guidance lives in:
-  - `deslopification/memory/notes/domain-note/lua-ethos/SensorList.md`
+  - `deslopification/memory/notes/reference/sensorlist/SensorList.md`
 
 ## Definition Of Done (Before Commit/Push)
 

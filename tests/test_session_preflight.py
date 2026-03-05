@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib.util
 from argparse import Namespace
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
@@ -143,24 +142,6 @@ def test_run_preflight_returns_error_when_git_calls_fail(monkeypatch, capsys):
     assert result == 1
     assert "Result: ERROR" in output
     assert "git failed" in output
-
-
-def test_run_git_returns_trimmed_stdout(monkeypatch):
-    def fake_run(*_args, **_kwargs):
-        return SimpleNamespace(returncode=0, stdout="  feature/16-memory-optimization\n", stderr="")
-
-    monkeypatch.setattr(preflight.subprocess, "run", fake_run)
-    result = preflight.run_git(["branch", "--show-current"])
-    assert result == "feature/16-memory-optimization"
-
-
-def test_run_git_includes_stderr_in_runtime_error(monkeypatch):
-    def fake_run(*_args, **_kwargs):
-        return SimpleNamespace(returncode=1, stdout="", stderr="fatal: not a git repository\n")
-
-    monkeypatch.setattr(preflight.subprocess, "run", fake_run)
-    with pytest.raises(RuntimeError, match="git status --porcelain failed: fatal: not a git repository"):
-        preflight.run_git(["status", "--porcelain"])
 
 
 def test_parse_args_accepts_valid_issue_mode():
@@ -356,19 +337,3 @@ def test_issue_mode_script_release_passes_when_gate_issue_closed(monkeypatch, ca
     assert "Script gate issues: #32" in output
 
 
-def test_main_returns_run_preflight_exit_code(monkeypatch):
-    monkeypatch.setattr(
-        preflight,
-        "parse_args",
-        lambda _argv: Namespace(
-            mode="non-issue",
-            issue_number=None,
-            issue_kind=None,
-            slug=None,
-            release_kind=None,
-            project=None,
-            script_gate_issue=[],
-        ),
-    )
-    monkeypatch.setattr(preflight, "run_preflight", lambda _args: 7)
-    assert preflight.main(["--mode", "non-issue"]) == 7

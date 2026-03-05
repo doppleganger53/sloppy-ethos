@@ -21,7 +21,7 @@ Ensure the repository release explicitly includes `dist/sloppy-ethos_scripts.zip
 - `tools/build_help.txt` (command reference for multi-script bundles)
 - `CHANGELOG.md` (release notes for repo releases)
 - `deslopification/prompts/todo/SENSORLIST_V100_RELEASE_PART2.md` (prior release workflow for script-only artifacts)
-- `deslopification/memory/notes/session-note/release-versioning/SESSION_NOTES_2026-02-26_MULTISCRIPT_ZIP_RENAME.md` (context on the fixed `dist/sloppy-ethos_scripts.zip` naming)
+- `deslopification/memory/notes/session/repo/SESSION_NOTES_2026-02-26_MULTISCRIPT_ZIP_RENAME.md` (context on the fixed `dist/sloppy-ethos_scripts.zip` naming)
 
 ## Branch/Worktree Gate (Required Before Editing)
 
