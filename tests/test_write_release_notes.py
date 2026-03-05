@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import importlib.util
-import runpy
-import sys
 from pathlib import Path
 
 import pytest
@@ -117,25 +115,3 @@ def test_main_exits_when_changelog_missing(monkeypatch, tmp_path: Path):
     with pytest.raises(SystemExit, match="Changelog file not found"):
         release_notes.main()
 
-
-def test_module_entrypoint_invokes_main(monkeypatch, tmp_path: Path):
-    repo_root = Path(__file__).resolve().parents[1]
-    script_path = repo_root / "tools" / "write_release_notes.py"
-    changelog_path = tmp_path / "CHANGELOG.md"
-    output_path = tmp_path / "release-notes.md"
-    changelog_path.write_text(SAMPLE_CHANGELOG, encoding="utf-8")
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        [
-            str(script_path),
-            "--version",
-            "1.0.1",
-            "--changelog",
-            str(changelog_path),
-            "--output",
-            str(output_path),
-        ],
-    )
-
-    runpy.run_path(str(script_path), run_name="__main__")

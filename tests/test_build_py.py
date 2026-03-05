@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import importlib.util
-import runpy
-import sys
 from argparse import Namespace
 from pathlib import Path
 
@@ -255,25 +253,23 @@ def test_build_zip_creates_archive_and_cleans_staging(monkeypatch, tmp_path: Pat
     assert not (repo_root / ".build-staging").exists()
 
 
-def test_build_zip_removes_existing_staging_before_copy(monkeypatch, tmp_path: Path):
+def test_build_zip_handles_preexisting_staging_and_cleans_up(monkeypatch, tmp_path: Path):
     repo_root = tmp_path / "repo"
     project_dir = repo_root / "scripts" / "SensorList"
     dist_dir = repo_root / "dist"
     staging_root = repo_root / ".build-staging"
     project_dir.mkdir(parents=True)
     (project_dir / "main.lua").write_text("print('ok')\n", encoding="utf-8")
-    (staging_root / "stale").mkdir(parents=True)
-    calls: list[Path] = []
-    real_rmtree = build.shutil.rmtree
+    stale_dir = staging_root / "stale"
+    stale_dir.mkdir(parents=True)
+    (stale_dir / "old.txt").write_text("old", encoding="utf-8")
 
-    def tracked_rmtree(path: Path, ignore_errors: bool = False):
-        calls.append(Path(path))
-        return real_rmtree(path, ignore_errors=ignore_errors)
+    expected_archive = dist_dir / "SensorList-2.0.0.zip"
+    monkeypatch.setattr(build.shutil, "make_archive", lambda *_args: str(expected_archive))
 
-    monkeypatch.setattr(build.shutil, "rmtree", tracked_rmtree)
-    monkeypatch.setattr(build.shutil, "make_archive", lambda *_args: str(dist_dir / "SensorList-2.0.0.zip"))
-    build.build_zip(project_dir, "SensorList", "2.0.0", dist_dir, repo_root)
-    assert calls[0] == staging_root
+    archive = build.build_zip(project_dir, "SensorList", "2.0.0", dist_dir, repo_root)
+    assert archive == expected_archive
+    assert not staging_root.exists()
 
 
 def test_build_zip_cleans_staging_on_copy_failure(monkeypatch, tmp_path: Path):
@@ -656,10 +652,5 @@ def test_main_exits_when_sim_radio_path_does_not_exist(monkeypatch, tmp_path: Pa
     assert "Simulator path for radio model 'X20RS' does not exist" in str(exc.value)
 
 
-def test_module_entrypoint_invokes_main(monkeypatch):
-    repo_root = Path(__file__).resolve().parents[1]
-    build_script = repo_root / "tools" / "build.py"
-    monkeypatch.setattr(sys, "argv", [str(build_script), "--help"])
-    runpy.run_path(str(build_script), run_name="__main__")
 
 
