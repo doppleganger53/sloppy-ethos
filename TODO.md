@@ -5,5 +5,5 @@
 - [ ] Add readme section for downloading built widget zips and installing via Ethos Suite
 - [ ] Update agent metadata to reflect mutable workflow in alignment with stated goals of the repo
 - [ ] Investigate custom script builds via github for end user install
-- [ ] Tighten up tests by removing non-generalized cases targeting unlikely regressions
+- [x] Tighten up tests by removing non-generalized cases targeting unlikely regressions
 - [ ] Add Ethos lua reference github repos to agent metadata

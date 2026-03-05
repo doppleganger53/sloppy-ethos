@@ -118,13 +118,6 @@ def test_documented_command_luac_skips_when_missing(monkeypatch):
     with pytest.raises(pytest.skip.Exception):
         test_documented_command_syntax_or_execution("luac -p scripts/SensorList/main.lua")
 
-
-def test_documented_command_luac_fragment_skips(monkeypatch):
-    monkeypatch.setattr("tests.test_docs_commands.command_exists", lambda _name: True)
-    with pytest.raises(pytest.skip.Exception):
-        test_documented_command_syntax_or_execution("luac -p")
-
-
 @pytest.mark.parametrize(
     "command",
     [
@@ -154,6 +147,7 @@ def test_documented_command_stylua_runs_with_check(monkeypatch):
 @pytest.mark.parametrize(
     "command",
     [
+        "luac -p",
         "python tools/build.py --project WidgetX --dist",
         "python -m pytest tests/test_any.py",
         "python -m pip install -r requirements/dev.txt",
