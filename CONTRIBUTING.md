@@ -1,5 +1,15 @@
 # Contributing
 
+## Repository Goals And Workflow Mutability
+
+- Repository goals:
+  - Build practical Ethos utilities and scripts.
+  - Keep Lua contribution workflow approachable for non-experts.
+  - Prioritize repeatable, low-maintenance workflows that reduce process overhead.
+- Workflow/process guidance is intentionally mutable:
+  - Propose workflow changes via issue-linked updates.
+  - Keep policy wording synchronized across `AGENTS.md`, `README.md`, `docs/DEVELOPMENT.md`, and this file when process expectations change.
+
 ## Workflow
 
 1. Create a short-lived branch from the latest `main` using naming conventions:
