@@ -71,6 +71,7 @@ local function makeRefreshWidget()
     headerTouchStartY = nil,
     sortKey = nil,
     sortDescending = false,
+    showValue = false,
     debugRefreshCount = 0,
     debugDeepScanCount = 0,
     debugCachedScanCount = 0,
@@ -131,8 +132,8 @@ assert_true(recoveredWidget.lastError:find("create", 1, true) ~= nil, "create er
 assert_true(#createLogs >= 1 and createLogs[1]:find("SLERR", 1, true) ~= nil, "create error is logged to serial")
 
 local sensors = test.normalizeSensors({
-  { name = "Gamma", physicalId = "0A", applicationId = "6801", subId = "0000" },
-  { name = "Alpha", physicalId = "00", applicationId = "0001", subId = "0001" },
+  { name = "Gamma", physicalId = "0A", applicationId = "6801", subId = "0000", value = 7.25 },
+  { name = "Alpha", physicalId = "00", applicationId = "0001", subId = "0001", stringValue = "12.5V" },
   { name = "Beta", physicalId = "00", applicationId = "0001", subId = "0000" },
   { name = "Delta", physicalId = "00", applicationId = "0001", subId = "0000" },
 })
@@ -144,14 +145,24 @@ assert_equal(sensors[3].name, "Alpha", "higher subId sorts later")
 assert_equal(sensors[4].name, "Gamma", "higher physical id sorts later")
 assert_equal(sensors[1].subIdText, "0000", "subId formatting")
 assert_equal(sensors[3].subIdText, "0001", "subId tie breaker retained")
+assert_equal(sensors[3].valueText, "12.5V", "string values are preserved")
+assert_equal(sensors[4].valueText, "7.25", "numeric values are compact-formatted")
 
 local groups = test.buildConflictGroups(sensors)
 assert_true(groups["00|0001|0000"] ~= nil, "duplicate conflict triplet grouped")
 assert_true(groups["00|0001|0001"] == nil, "different subId should not group")
 
 local sig1 = test.buildSignature(sensors)
-local sig2 = test.buildSignature(sensors)
-assert_equal(sig1, sig2, "stable signatures")
+local sigStable = test.buildSignature(sensors)
+assert_equal(sig1, sigStable, "stable signatures")
+local sensorsWithChangedValue = test.normalizeSensors({
+  { name = "Gamma", physicalId = "0A", applicationId = "6801", subId = "0000", value = 8.25 },
+  { name = "Alpha", physicalId = "00", applicationId = "0001", subId = "0001", stringValue = "12.5V" },
+  { name = "Beta", physicalId = "00", applicationId = "0001", subId = "0000" },
+  { name = "Delta", physicalId = "00", applicationId = "0001", subId = "0000" },
+})
+local sigChanged = test.buildSignature(sensorsWithChangedValue)
+assert_true(sig1 ~= sigChanged, "signature includes value changes")
 
 local large = {}
 for i = 1, 40 do
@@ -227,6 +238,7 @@ local sortableWidget = {
   groups = {},
   colorCache = {},
   scrollOffset = 0,
+  showValue = false,
   touchActive = false,
   touchLastY = nil,
   touchAccumY = 0,
@@ -277,24 +289,30 @@ local expandedHitboxWidget = {
   groups = {},
   colorCache = {},
   scrollOffset = 0,
+  showValue = true,
   touchActive = false,
   touchLastY = nil,
   touchAccumY = 0,
   needsInvalidate = false,
 }
 
-local physicalExpandedStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 260, 12)
-local physicalExpandedEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 260, 12)
+local valueLayoutHitboxes = test.getColumnLayout(480, true)
+local physicalExpandedX = valueLayoutHitboxes[2].x + 20
+local applicationExpandedX = valueLayoutHitboxes[3].x + 20
+local subIdExpandedX = valueLayoutHitboxes[4].x + 20
+
+local physicalExpandedStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, physicalExpandedX, 12)
+local physicalExpandedEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, physicalExpandedX, 12)
 assert_true(physicalExpandedStart and physicalExpandedEnd, "expanded top-left physical zone should be consumed")
 assert_equal(expandedHitboxWidget.sortKey, "physical", "expanded top-left physical zone should sort physical column")
 
-local applicationExpandedStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 390, 45)
-local applicationExpandedEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 390, 45)
+local applicationExpandedStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, applicationExpandedX, 45)
+local applicationExpandedEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, applicationExpandedX, 45)
 assert_true(applicationExpandedStart and applicationExpandedEnd, "expanded bottom application zone should be consumed")
 assert_equal(expandedHitboxWidget.sortKey, "application", "expanded bottom application zone should sort application column")
 
-local subIdHeaderStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 430, 22)
-local subIdHeaderEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 430, 22)
+local subIdHeaderStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, subIdExpandedX, 22)
+local subIdHeaderEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, subIdExpandedX, 22)
 assert_true(subIdHeaderStart and subIdHeaderEnd, "subId header touch should still be consumed as touch input")
 assert_equal(expandedHitboxWidget.sortKey, "application", "subId header should not change sort key")
 
@@ -306,6 +324,7 @@ local canceledHeaderWidget = {
   groups = {},
   colorCache = {},
   scrollOffset = 0,
+  showValue = false,
   touchActive = false,
   touchLastY = nil,
   touchAccumY = 0,
@@ -316,6 +335,84 @@ local canceledHeaderMove = test.event(canceledHeaderWidget, _G.EVT_TOUCH, _G.EVT
 local canceledHeaderEnd = test.event(canceledHeaderWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 10, 48)
 assert_true(canceledHeaderStart and canceledHeaderMove and canceledHeaderEnd, "header drag path should be consumed")
 assert_equal(canceledHeaderWidget.sortKey, nil, "header drag should not trigger sort toggle")
+
+local storageReads = { displayValue = 1 }
+local storageWrites = {}
+_G.storage = {
+  read = function(key)
+    return storageReads[key]
+  end,
+  write = function(key, value)
+    storageWrites[key] = value
+  end,
+}
+
+local persistedWidget = makeRefreshWidget()
+persistedWidget.showValue = false
+persistedWidget.needsInvalidate = false
+test.read(persistedWidget)
+assert_true(persistedWidget.showValue == true, "read loads persisted show-value option")
+assert_true(persistedWidget.needsInvalidate == true, "read invalidates after loading persisted option")
+test.write(persistedWidget)
+assert_equal(storageWrites.displayValue, 1, "write persists show-value option")
+
+local capturedChoices = {}
+_G.form = {
+  addLine = function(label)
+    return { label = label }
+  end,
+  addChoiceField = function(line, _unused, choices, getter, setter)
+    capturedChoices.line = line
+    capturedChoices.choices = choices
+    capturedChoices.getter = getter
+    capturedChoices.setter = setter
+  end,
+}
+local configuredWidget = makeRefreshWidget()
+test.configure(configuredWidget)
+assert_equal(capturedChoices.line.label, "Display Value", "configure adds display-value line")
+assert_equal(capturedChoices.getter(), 0, "configure getter reflects current option state")
+capturedChoices.setter(1)
+assert_true(configuredWidget.showValue == true, "configure setter enables show-value option")
+assert_true(configuredWidget.needsInvalidate == true, "configure setter invalidates widget")
+
+local layoutOff = test.getColumnLayout(480, false)
+local layoutOn = test.getColumnLayout(480, true)
+assert_equal(#layoutOff, 4, "baseline layout has four columns")
+assert_equal(#layoutOn, 5, "show-value layout adds a fifth column")
+assert_true(layoutOn[2].x < layoutOff[2].x, "show-value layout compresses id columns")
+
+local drawnText = {}
+local savedDrawText = _G.lcd.drawText
+_G.lcd.drawText = function(x, y, text)
+  drawnText[#drawnText + 1] = { x = x, y = y, text = text }
+end
+local renderWidget = makeRefreshWidget()
+renderWidget.showValue = true
+renderWidget.sensors = test.normalizeSensors({
+  {
+    name = "Telemetry Name That Is Long",
+    physicalId = "01",
+    applicationId = "1000",
+    subId = "0001",
+    stringValue = "123.456789V",
+  },
+})
+test.drawSensorRows(renderWidget)
+_G.lcd.drawText = savedDrawText
+
+local sawValueHeader = false
+local sawTruncatedValue = false
+for _, call in ipairs(drawnText) do
+  if call.text == "Value" then
+    sawValueHeader = true
+  end
+  if call.text == "123.45..." then
+    sawTruncatedValue = true
+  end
+end
+assert_true(sawValueHeader, "show-value paint renders value header")
+assert_true(sawTruncatedValue, "show-value paint truncates long value text")
 
 local hapticCalls = {}
 local hapticRefreshCount = 0

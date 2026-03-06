@@ -15,11 +15,11 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 94
-- Total size: 154,573 bytes
-- Total lines: 4,144
+- Files: 95
+- Total size: 156,304 bytes
+- Total lines: 4,184
 - Distribution by artifact:
-  - session notes: 88
+  - session notes: 89
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
@@ -27,14 +27,14 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - Distribution by scope:
   - 52 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 15 -- memory ( Memory system structure and retrieval policy )
-  - 13 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
+  - 14 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
   - 4 -- ethos-events ( ethos_events-specific behavior, release history, and operating notes )
   - 3 -- handoff ( Session continuity and restart handoffs )
 
 - Distribution by concern:
   - 23 -- workflow
-  - 21 -- implementation
+  - 22 -- implementation
   - 14 -- release
   - 10 -- build
   - 9 -- docs
@@ -167,3 +167,4 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-03-02 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_SUBID_CONFLICTS.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_SUBID_CONFLICTS.md) | # Session Notes 2026-03-02 - Issue #48 SensorList SubID Conflicts |
 | 2026-03-02 | session | sensorlist | release | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md) | # Session Notes 2026-03-02 - SensorList-v1.0.0 Release |
 | 2026-03-05 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md) | # Session Notes 2026-03-05 - Issue #54 Low-Signal Test Pruning |
+| 2026-03-06 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-06_ISSUE_14_SENSOR_VALUES_COLUMN.md](notes/session/sensorlist/SESSION_NOTES_2026-03-06_ISSUE_14_SENSOR_VALUES_COLUMN.md) | # Session Notes 2026-03-06 - Issue #14 Sensor Values Column |

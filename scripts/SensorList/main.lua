@@ -32,6 +32,7 @@ local HEADER_HITBOX_BOTTOM_PADDING = 10
 local SORT_KEY_NAME = "name"
 local SORT_KEY_PHYSICAL = "physical"
 local SORT_KEY_APPLICATION = "application"
+local DISPLAY_VALUE_STORAGE_KEY = "displayValue"
 
 local COLOR_PALETTE = {
   { 255, 235, 59 },
@@ -97,6 +98,61 @@ local function formatHex(value, width)
   return string.format("%0" .. tostring(width) .. "X", numeric)
 end
 
+local function normalizeBoolean(value, defaultValue)
+  if type(value) == "boolean" then
+    return value
+  end
+  if type(value) == "number" then
+    return value ~= 0
+  end
+  if type(value) == "string" then
+    local normalized = value:lower():gsub("^%s+", ""):gsub("%s+$", "")
+    if normalized == "1" or normalized == "true" or normalized == "yes" or normalized == "on" then
+      return true
+    end
+    if normalized == "0" or normalized == "false" or normalized == "no" or normalized == "off" then
+      return false
+    end
+  end
+  return defaultValue and true or false
+end
+
+local function formatNumberCompact(value)
+  if type(value) ~= "number" then
+    return nil
+  end
+  if value ~= value then
+    return nil
+  end
+  if math.type and math.type(value) == "integer" then
+    return tostring(value)
+  end
+  local text = string.format("%.3f", value)
+  text = text:gsub("(%..-)0+$", "%1")
+  text = text:gsub("%.$", "")
+  return text
+end
+
+local function formatSensorValue(value)
+  if value == nil then
+    return "--"
+  end
+  if type(value) == "string" then
+    local trimmed = value:gsub("^%s+", ""):gsub("%s+$", "")
+    if trimmed == "" then
+      return "--"
+    end
+    return trimmed
+  end
+  if type(value) == "number" then
+    return formatNumberCompact(value) or "--"
+  end
+  if type(value) == "boolean" then
+    return value and "Yes" or "No"
+  end
+  return tostring(value)
+end
+
 local function colorFromRgb(rgb)
   if type(lcd.RGB) ~= "function" then
     return nil
@@ -123,16 +179,30 @@ local function calculateVisibleRows()
   return rows
 end
 
-local function getColumnLayout(windowWidth)
+local function getColumnLayout(windowWidth, showValue)
   local width = type(windowWidth) == "number" and windowWidth or DEFAULT_WINDOW_WIDTH
   if width < 1 then
     width = 1
   end
+  if showValue then
+    local colPhysX = math.floor(width * 0.38)
+    local colAppX = math.floor(width * 0.54)
+    local colSubX = math.floor(width * 0.69)
+    local colValueX = math.floor(width * 0.83)
+    return {
+      { key = SORT_KEY_NAME, title = "Name", x = 0, maxChars = 15 },
+      { key = SORT_KEY_PHYSICAL, title = "PhysID", x = colPhysX },
+      { key = SORT_KEY_APPLICATION, title = "AppID", x = colAppX },
+      { key = nil, title = "SubID", x = colSubX },
+      { key = nil, title = "Value", x = colValueX, maxChars = 9 },
+    }
+  end
+
   local colPhysX = math.floor(width * 0.48)
   local colAppX = math.floor(width * 0.69)
   local colSubX = math.floor(width * 0.87)
   return {
-    { key = SORT_KEY_NAME, title = "Name", x = 0 },
+    { key = SORT_KEY_NAME, title = "Name", x = 0, maxChars = 20 },
     { key = SORT_KEY_PHYSICAL, title = "PhysID", x = colPhysX },
     { key = SORT_KEY_APPLICATION, title = "AppID", x = colAppX },
     { key = nil, title = "SubID", x = colSubX },
@@ -442,6 +512,16 @@ local function normalizeSensors(rawSensors)
   local normalized = {}
   for idx, sensor in ipairs(rawSensors) do
     local name = readCandidate(sensor, { "label", "name", "text", "title", "stringValue" }) or ("Sensor " .. tostring(idx))
+    local valueText = readCandidate(sensor, { "formattedValue", "valueText", "displayValue", "sensorValue" })
+    if valueText == nil then
+      local stringValue = readCandidate(sensor, { "stringValue" })
+      if type(stringValue) == "string" and stringValue ~= tostring(name) then
+        valueText = stringValue
+      end
+    end
+    if valueText == nil then
+      valueText = readCandidate(sensor, { "value", "getValue" })
+    end
 
     local physical = toInt(readCandidate(sensor, { "physicalId", "physicalID", "physId", "id1", "id" }))
     local application = toInt(readCandidate(sensor, { "applicationId", "appId", "param", "id2" }))
@@ -455,6 +535,7 @@ local function normalizeSensors(rawSensors)
       physicalText = formatHex(physical, 2),
       applicationText = formatHex(application, 4),
       subIdText = formatHex(subId, 4),
+      valueText = formatSensorValue(valueText),
     }
   end
 
@@ -512,7 +593,15 @@ end
 local function buildSignature(sensors)
   local out = {}
   for _, sensor in ipairs(sensors) do
-    out[#out + 1] = sensor.name .. "|" .. sensor.physicalText .. "|" .. sensor.applicationText .. "|" .. sensor.subIdText
+    out[#out + 1] = sensor.name
+      .. "|"
+      .. sensor.physicalText
+      .. "|"
+      .. sensor.applicationText
+      .. "|"
+      .. sensor.subIdText
+      .. "|"
+      .. sensor.valueText
   end
   return table.concat(out, ";")
 end
@@ -653,6 +742,52 @@ local function triggerManualRefresh(widget)
   return true
 end
 
+local function configure(widget)
+  if type(widget) ~= "table" or type(form) ~= "table" then
+    return
+  end
+  if type(form.addLine) ~= "function" or type(form.addChoiceField) ~= "function" then
+    return
+  end
+  local line = form.addLine("Display Value")
+  form.addChoiceField(
+    line,
+    nil,
+    {
+      { "No", 0 },
+      { "Yes", 1 },
+    },
+    function()
+      return widget.showValue and 1 or 0
+    end,
+    function(value)
+      widget.showValue = normalizeBoolean(value, false)
+      widget.needsInvalidate = true
+    end
+  )
+end
+
+local function read(widget)
+  if type(widget) ~= "table" then
+    return
+  end
+  if type(storage) ~= "table" or type(storage.read) ~= "function" then
+    return
+  end
+  widget.showValue = normalizeBoolean(safeCall(storage.read, DISPLAY_VALUE_STORAGE_KEY), false)
+  widget.needsInvalidate = true
+end
+
+local function write(widget)
+  if type(widget) ~= "table" then
+    return
+  end
+  if type(storage) ~= "table" or type(storage.write) ~= "function" then
+    return
+  end
+  safeInvoke(storage.write, DISPLAY_VALUE_STORAGE_KEY, widget.showValue and 1 or 0)
+end
+
 local function drawText(x, y, text, font, color)
   if color then
     lcd.color(color)
@@ -687,14 +822,14 @@ local function headerTitle(widget, column)
   if type(column) ~= "table" then
     return ""
   end
-  if type(widget) ~= "table" or widget.sortKey ~= column.key then
+  if column.key == nil or type(widget) ~= "table" or widget.sortKey ~= column.key then
     return column.title
   end
   local arrow = widget.sortDescending and " v" or " ^"
   return column.title .. arrow
 end
 
-local function headerSortKeyAtPosition(x, y)
+local function headerSortKeyAtPosition(widget, x, y)
   if type(x) ~= "number" or type(y) ~= "number" then
     return nil
   end
@@ -707,7 +842,7 @@ local function headerSortKeyAtPosition(x, y)
   if x < 0 or x >= w then
     return nil
   end
-  local columns = getColumnLayout(w)
+  local columns = getColumnLayout(w, type(widget) == "table" and widget.showValue)
 
   local hitboxes = {
     {
@@ -774,7 +909,7 @@ local function handleHeaderTap(widget, phase, x, y)
   end
 
   if phase == "start" then
-    local sortKey = headerSortKeyAtPosition(x, y)
+    local sortKey = headerSortKeyAtPosition(widget, x, y)
     if not sortKey then
       clearHeaderTouch(widget)
       return false
@@ -848,7 +983,7 @@ local function drawSensorRows(widget)
   local _, h = getWindowSizeSafe()
   local rowHeight = SCROLL_ROW_HEIGHT
   local headerHeight = HEADER_HEIGHT
-  local columns = getColumnLayout(w)
+  local columns = getColumnLayout(w, type(widget) == "table" and widget.showValue)
 
   -- Paint our own background so Ethos focus highlight does not bleed through.
   lcd.color(COLOR_BLACK or 0)
@@ -900,10 +1035,13 @@ local function drawSensorRows(widget)
     local y = rowsY + row * rowHeight
     drawRowBand(widget, y, w, rowHeight, sensorIndex)
     local color = groupColor(sensor, widget.groups, widget.colorCache)
-    drawText(columns[1].x, y, shortenText(sensor.name, 20), FONT_BODY, color)
+    drawText(columns[1].x, y, shortenText(sensor.name, columns[1].maxChars or 20), FONT_BODY, color)
     drawText(columns[2].x, y, sensor.physicalText, FONT_BODY, color)
     drawText(columns[3].x, y, sensor.applicationText, FONT_BODY, color)
     drawText(columns[4].x, y, sensor.subIdText, FONT_BODY, color)
+    if columns[5] then
+      drawText(columns[5].x, y, shortenText(sensor.valueText, columns[5].maxChars or 9), FONT_BODY, color)
+    end
   end
 
   return visibleRows
@@ -951,6 +1089,7 @@ local function create()
     headerTouchStartY = nil,
     sortKey = nil,
     sortDescending = false,
+    showValue = false,
     lastError = nil,
     deepScanPending = false,
     deepScanCategories = nil,
@@ -1235,9 +1374,12 @@ local function init()
     key = "slist",
     name = name,
     create = create,
+    configure = configure,
     paint = paint,
     wakeup = wakeup,
     event = event,
+    read = read,
+    write = write,
     persistent = false,
   })
 end
@@ -1258,6 +1400,11 @@ local function testExports()
     resolveTouchPhase = resolveTouchPhase,
     readCandidate = readCandidate,
     wakeup = wakeup,
+    configure = configure,
+    read = read,
+    write = write,
+    getColumnLayout = getColumnLayout,
+    drawSensorRows = drawSensorRows,
   }
 end
 
