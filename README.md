@@ -124,6 +124,7 @@ luac -p scripts/SensorList/main.lua
 - See `SECURITY.md` for responsible vulnerability reporting.
 - Start session-memory context with `deslopification/memory/README.md`.
 - Use `deslopification/memory/CATALOG.md` for full historical note lookup.
+- Workflow/process guidance is intentionally mutable; issue-linked workflow updates must keep `AGENTS.md`, `CONTRIBUTING.md`, and `docs/DEVELOPMENT.md` synchronized.
 
 ## Troubleshooting
 

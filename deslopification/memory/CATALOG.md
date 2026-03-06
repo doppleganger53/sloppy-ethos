@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 94
-- Total size: 154,573 bytes
-- Total lines: 4,144
+- Files: 96
+- Total size: 157,165 bytes
+- Total lines: 4,228
 - Distribution by artifact:
-  - session notes: 88
+  - session notes: 90
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 52 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 54 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 13 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -33,19 +33,20 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 3 -- handoff ( Session continuity and restart handoffs )
 
 - Distribution by concern:
-  - 23 -- workflow
+  - 24 -- workflow
   - 21 -- implementation
   - 14 -- release
   - 10 -- build
   - 9 -- docs
   - 6 -- testing
+  - 5 -- issue-admin
   - 5 -- prompts
-  - 4 -- issue-admin
   - 2 -- metadata
 
 ## Recent High-Signal Notes (Auto-generated)
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
+- 2026-03-05 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_MUTABLE_WORKFLOW_AGENT_METADATA.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_MUTABLE_WORKFLOW_AGENT_METADATA.md) | # Session Notes 2026-03-05 - Issue #56 Mutable Workflow Agent Metadata
 - 2026-03-05 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md) | # Session Notes 2026-03-05 - Issue #54 Low-Signal Test Pruning
 - 2026-03-02 | workflow | memory | [notes/session/memory/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md](notes/session/memory/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md) | # Session Notes 2026-03-02 - Weekly Summary Compaction
 - 2026-03-02 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md) | # Session Notes 2026-03-02 - SensorList-v1.0.0 Release
@@ -53,7 +54,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - 2026-03-02 | release | repo | [notes/session/repo/SESSION_NOTES_2026-03-02_RELEASE_V103.md](notes/session/repo/SESSION_NOTES_2026-03-02_RELEASE_V103.md) | # Session Notes 2026-03-02 - Release v1.0.3
 - 2026-03-02 | workflow | memory | [notes/session/memory/SESSION_NOTES_2026-03-02_MEMORY_TAXONOMY_REFACTOR.md](notes/session/memory/SESSION_NOTES_2026-03-02_MEMORY_TAXONOMY_REFACTOR.md) | # Session Notes 2026-03-02 - Memory Taxonomy Refactor
 - 2026-03-02 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md](notes/session/repo/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md) | # Session Notes 2026-03-02 - Contributing Good First Issue Guidance Removal
-- 2026-02-27 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md) | # Session Notes 2026-02-27 - Issue #39 Release Scope Clarity
 - 2026-02-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage
 - 2026-02-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md) | # Session Notes 2026-02-27 - Issue #16 Catalog Test Portability
 - 2026-02-26 | metadata | repo | [notes/session/repo/SESSION_NOTES_2026-02-26_REPO_METADATA_DESCRIPTION_TOPICS.md](notes/session/repo/SESSION_NOTES_2026-02-26_REPO_METADATA_DESCRIPTION_TOPICS.md) | # Session Notes 2026-02-26 - Repository Metadata Description and Topics
@@ -167,3 +167,5 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-03-02 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_SUBID_CONFLICTS.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_SUBID_CONFLICTS.md) | # Session Notes 2026-03-02 - Issue #48 SensorList SubID Conflicts |
 | 2026-03-02 | session | sensorlist | release | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md) | # Session Notes 2026-03-02 - SensorList-v1.0.0 Release |
 | 2026-03-05 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md) | # Session Notes 2026-03-05 - Issue #54 Low-Signal Test Pruning |
+| 2026-03-05 | session | repo | issue-admin | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_AGENT_METADATA_TODO_TRACKING.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_AGENT_METADATA_TODO_TRACKING.md) | # Session Notes 2026-03-05 - Issue #56 Agent Metadata TODO Tracking |
+| 2026-03-05 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_MUTABLE_WORKFLOW_AGENT_METADATA.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_MUTABLE_WORKFLOW_AGENT_METADATA.md) | # Session Notes 2026-03-05 - Issue #56 Mutable Workflow Agent Metadata |
