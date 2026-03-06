@@ -12,8 +12,8 @@
 
 Add an optional sensor-value display mode to `SensorList`:
 
-- `Display Value = No`: current 3-column behavior
-- `Display Value = Yes`: add a 4th value column
+- `Display Value = No`: current 4-column behavior
+- `Display Value = Yes`: add a 5th value column
 
 ## Required Context
 
@@ -87,7 +87,7 @@ Add an optional sensor-value display mode to `SensorList`:
 
 - `luac -p scripts/SensorList/main.lua`
 - `python -m pytest tests/test_sensorlist_widget.py -q`
-- If docs change:  
+- If docs change:
   `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
 
 ## Done Criteria
