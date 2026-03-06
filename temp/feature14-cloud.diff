@@ -1,0 +1,1352 @@
+diff --git a/deslopification/memory/CATALOG.md b/deslopification/memory/CATALOG.md
+index 44d4841a3a93960053ca4bed7d35e8dfff840c7f..0448e8ebe3d717ff03ae530065ef636056439118 100644
+--- a/deslopification/memory/CATALOG.md
++++ b/deslopification/memory/CATALOG.md
+@@ -1,62 +1,62 @@
+ # Memory Catalog
+ 
+ Index of all memory artifacts in this folder.
+ 
+ Control files (not indexed in entries):
+ - [README.md](README.md)
+ - [CURRENT_STATE.md](CURRENT_STATE.md)
+ - [SESSION_NOTE_TEMPLATE.md](SESSION_NOTE_TEMPLATE.md)
+ 
+ Pre-optimization baseline (before Issue #16 on 2026-02-26):
+ 
+ - Files: 52
+ - Total size: 69,293 bytes
+ - Total lines: 1,249
+ 
+ Current snapshot (auto-generated, excludes `CATALOG.md`):
+ 
+-- Files: 94
+-- Total size: 154,573 bytes
+-- Total lines: 4,144
++- Files: 95
++- Total size: 156,852 bytes
++- Total lines: 4,193
+ - Distribution by artifact:
+-  - session notes: 88
++  - session notes: 89
+   - handoff/restart notes: 3
+   - reference notes: 2
+   - summary notes: 1
+ 
+ - Distribution by scope:
+   - 52 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+   - 15 -- memory ( Memory system structure and retrieval policy )
+-  - 13 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
++  - 14 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
+   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
+   - 4 -- ethos-events ( ethos_events-specific behavior, release history, and operating notes )
+   - 3 -- handoff ( Session continuity and restart handoffs )
+ 
+ - Distribution by concern:
+   - 23 -- workflow
+-  - 21 -- implementation
++  - 22 -- implementation
+   - 14 -- release
+   - 10 -- build
+   - 9 -- docs
+   - 6 -- testing
+   - 5 -- prompts
+   - 4 -- issue-admin
+   - 2 -- metadata
+ 
+ ## Recent High-Signal Notes (Auto-generated)
+ 
+ - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
+ - 2026-03-05 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md) | # Session Notes 2026-03-05 - Issue #54 Low-Signal Test Pruning
+ - 2026-03-02 | workflow | memory | [notes/session/memory/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md](notes/session/memory/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md) | # Session Notes 2026-03-02 - Weekly Summary Compaction
+ - 2026-03-02 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md) | # Session Notes 2026-03-02 - SensorList-v1.0.0 Release
+ - 2026-03-02 | release | repo | [notes/session/repo/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md](notes/session/repo/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md) | # Session Notes 2026-03-02 - Repo Releases Consolidated Bundle Only
+ - 2026-03-02 | release | repo | [notes/session/repo/SESSION_NOTES_2026-03-02_RELEASE_V103.md](notes/session/repo/SESSION_NOTES_2026-03-02_RELEASE_V103.md) | # Session Notes 2026-03-02 - Release v1.0.3
+ - 2026-03-02 | workflow | memory | [notes/session/memory/SESSION_NOTES_2026-03-02_MEMORY_TAXONOMY_REFACTOR.md](notes/session/memory/SESSION_NOTES_2026-03-02_MEMORY_TAXONOMY_REFACTOR.md) | # Session Notes 2026-03-02 - Memory Taxonomy Refactor
+ - 2026-03-02 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md](notes/session/repo/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md) | # Session Notes 2026-03-02 - Contributing Good First Issue Guidance Removal
+ - 2026-02-27 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md) | # Session Notes 2026-02-27 - Issue #39 Release Scope Clarity
+ - 2026-02-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage
+ - 2026-02-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md) | # Session Notes 2026-02-27 - Issue #16 Catalog Test Portability
+ - 2026-02-26 | metadata | repo | [notes/session/repo/SESSION_NOTES_2026-02-26_REPO_METADATA_DESCRIPTION_TOPICS.md](notes/session/repo/SESSION_NOTES_2026-02-26_REPO_METADATA_DESCRIPTION_TOPICS.md) | # Session Notes 2026-02-26 - Repository Metadata Description and Topics
+ - 2026-02-26 | build | repo | [notes/session/repo/SESSION_NOTES_2026-02-26_ISSUE_22_DOIT_MIGRATION_EVALUATION.md](notes/session/repo/SESSION_NOTES_2026-02-26_ISSUE_22_DOIT_MIGRATION_EVALUATION.md) | # Session Notes 2026-02-26 - Issue #22 `build.py` to `doit` Migration Evaluation
+ 
+ ## Recent Ethos Platform Notes
+@@ -145,25 +145,26 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
+ | 2026-02-27 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage |
+ | 2026-02-27 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_39_RELEASE_SCOPE_CLARITY.md) | # Session Notes 2026-02-27 - Issue #39 Release Scope Clarity |
+ | 2026-02-27 | session | repo | release | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_42_MULTI_SCRIPT_RELEASE_DELIVERABLE.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_42_MULTI_SCRIPT_RELEASE_DELIVERABLE.md) | # Session Notes 2026-02-27 - Issue #42 Multi-script Release Deliverable |
+ | 2026-02-27 | session | repo | release | [notes/session/repo/SESSION_NOTES_2026-02-27_RELEASE_V100.md](notes/session/repo/SESSION_NOTES_2026-02-27_RELEASE_V100.md) | # Session Notes 2026-02-27 - Release v1.0.0 |
+ | 2026-02-27 | session | repo | release | [notes/session/repo/SESSION_NOTES_2026-02-27_RELEASE_V101.md](notes/session/repo/SESSION_NOTES_2026-02-27_RELEASE_V101.md) | # Session Notes 2026-02-27 - Release v1.0.1 |
+ | 2026-03-01 | session | repo | prompts | [notes/session/repo/SESSION_NOTES_2026-03-01_ISSUE_45_SMARTMAPPER_PROMPT_DRAFT.md](notes/session/repo/SESSION_NOTES_2026-03-01_ISSUE_45_SMARTMAPPER_PROMPT_DRAFT.md) | # Session Notes 2026-03-01 - Issue #45 SmartMapper Prompt Draft |
+ | 2026-03-02 | session | ethos-platform | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_FAILSOFT_ERROR_LOGGING.md](notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_FAILSOFT_ERROR_LOGGING.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Fail-Soft Error Logging |
+ | 2026-03-02 | session | ethos-platform | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_RADIO_ACCESSOR_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_RADIO_ACCESSOR_FIX.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Radio Accessor Fix |
+ | 2026-03-02 | session | ethos-platform | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_STAGED_SCAN_BUDGET_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_STAGED_SCAN_BUDGET_FIX.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Staged Scan Budget Fix |
+ | 2026-03-02 | session | memory | workflow | [notes/session/memory/SESSION_NOTES_2026-03-02_MEMORY_TAXONOMY_REFACTOR.md](notes/session/memory/SESSION_NOTES_2026-03-02_MEMORY_TAXONOMY_REFACTOR.md) | # Session Notes 2026-03-02 - Memory Taxonomy Refactor |
+ | 2026-03-02 | session | memory | workflow | [notes/session/memory/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md](notes/session/memory/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md) | # Session Notes 2026-03-02 - Weekly Summary Compaction |
+ | 2026-03-02 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md](notes/session/repo/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md) | # Session Notes 2026-03-02 - Contributing Good First Issue Guidance Removal |
+ | 2026-03-02 | session | repo | prompts | [notes/session/repo/SESSION_NOTES_2026-03-02_ISSUE_45_PROMPT_GUARDRAIL_FIX.md](notes/session/repo/SESSION_NOTES_2026-03-02_ISSUE_45_PROMPT_GUARDRAIL_FIX.md) | # Session Notes 2026-03-02 - Issue #45 Prompt Guardrail Fix |
+ | 2026-03-02 | session | repo | release | [notes/session/repo/SESSION_NOTES_2026-03-02_RELEASE_NOTES_FILE_WORKFLOW.md](notes/session/repo/SESSION_NOTES_2026-03-02_RELEASE_NOTES_FILE_WORKFLOW.md) | # Session Notes 2026-03-02 - Release Notes File Workflow |
+ | 2026-03-02 | session | repo | release | [notes/session/repo/SESSION_NOTES_2026-03-02_RELEASE_V102.md](notes/session/repo/SESSION_NOTES_2026-03-02_RELEASE_V102.md) | # Session Notes 2026-03-02 - Release v1.0.2 |
+ | 2026-03-02 | session | repo | release | [notes/session/repo/SESSION_NOTES_2026-03-02_RELEASE_V103.md](notes/session/repo/SESSION_NOTES_2026-03-02_RELEASE_V103.md) | # Session Notes 2026-03-02 - Release v1.0.3 |
+ | 2026-03-02 | session | repo | release | [notes/session/repo/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md](notes/session/repo/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md) | # Session Notes 2026-03-02 - Repo Releases Consolidated Bundle Only |
+ | 2026-03-02 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_46_SENSORLIST_CONFLICT_SEVERITY_REVERT.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_46_SENSORLIST_CONFLICT_SEVERITY_REVERT.md) | # Session Notes 2026-03-02 - Issue #46 SensorList Conflict Severity Revert |
+ | 2026-03-02 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_FAILSOFT_ERROR_LOGGING_EXTRACT_WIDGET_ERROR_PATH.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_FAILSOFT_ERROR_LOGGING_EXTRACT_WIDGET_ERROR_PATH.md) | # Session Notes 2026-03-02 - SensorList Fail-Soft Error Logging (Widget Error Path Extract) |
+ | 2026-03-02 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_RADIO_ACCESSOR_FIX_EXTRACT_SENSORLIST_IMPACT.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_RADIO_ACCESSOR_FIX_EXTRACT_SENSORLIST_IMPACT.md) | # Session Notes 2026-03-02 - SensorList Radio Accessor Fix (SensorList Impact Extract) |
+ | 2026-03-02 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_ROW_BANDING.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_ROW_BANDING.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Row Banding |
+ | 2026-03-02 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_STAGED_SCAN_BUDGET_FIX_EXTRACT_SENSORLIST_REFRESH_FLOW.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_STAGED_SCAN_BUDGET_FIX_EXTRACT_SENSORLIST_REFRESH_FLOW.md) | # Session Notes 2026-03-02 - SensorList Staged Scan Budget Fix (Refresh Flow Extract) |
+ | 2026-03-02 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_SUBID_CONFLICTS.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_SUBID_CONFLICTS.md) | # Session Notes 2026-03-02 - Issue #48 SensorList SubID Conflicts |
+ | 2026-03-02 | session | sensorlist | release | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md) | # Session Notes 2026-03-02 - SensorList-v1.0.0 Release |
+ | 2026-03-05 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md) | # Session Notes 2026-03-05 - Issue #54 Low-Signal Test Pruning |
++| 2026-03-06 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-06_ISSUE_14_SENSOR_VALUES_COLUMN.md](notes/session/sensorlist/SESSION_NOTES_2026-03-06_ISSUE_14_SENSOR_VALUES_COLUMN.md) | # Session Notes 2026-03-06 - Issue #14 Sensor Values Column |
+diff --git a/deslopification/memory/notes/session/sensorlist/SESSION_NOTES_2026-03-06_ISSUE_14_SENSOR_VALUES_COLUMN.md b/deslopification/memory/notes/session/sensorlist/SESSION_NOTES_2026-03-06_ISSUE_14_SENSOR_VALUES_COLUMN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..08c1bcd5f7060c56df457f26b57eec0884650739
+--- /dev/null
++++ b/deslopification/memory/notes/session/sensorlist/SESSION_NOTES_2026-03-06_ISSUE_14_SENSOR_VALUES_COLUMN.md
+@@ -0,0 +1,49 @@
++# Session Notes 2026-03-06 - Issue #14 Sensor Values Column
++
++## Note Placement
++
++- Artifact: `session`
++- Scope: `sensorlist`
++- Concern: `implementation`
++- Store this file under:
++  - `deslopification/memory/notes/{artifact}/{scope}/`
++
++## What changed
++
++- Added a new SensorList widget option `Display Value` and wired `configure/read/write` callbacks so the option toggles a value column at runtime.
++- Extended the row normalization path to optionally capture `valueText` from sensor value-like fields (`stringValue`, `textValue`, `value`, `formattedValue`) with `--` fallback when unavailable.
++- Added dual layout logic:
++  - default mode keeps the current four-column table (`Name`, `PhysID`, `AppID`, `SubID`)
++  - value mode renders a fifth `Value` column and uses tighter truncation so IDs remain legible.
++- Kept sorting behavior unchanged: only `Name`, `PhysID`, and `AppID` are sortable; `SubID` and `Value` remain display-only.
++- Updated SensorList docs and Lua unit coverage for option parsing, column layout selection, value extraction fallback, and header-touch behavior with the value column enabled.
++- Files touched:
++  - `scripts/SensorList/main.lua`
++  - `tests/lua/test_sensorlist.lua`
++  - `scripts/SensorList/README.md`
++  - `docs/SensorList/SENSORLIST_ARCHITECTURE.md`
++
++## Why
++
++- Root cause or objective:
++  - Issue #14 requested an optional sensor value display while preserving existing behavior when disabled.
++- Scope guardrails:
++  - Preserved existing touch scrolling, long-press refresh flow, conflict coloring, and base table layout when `Display Value` is off.
++
++## Validation run(s)
++
++- `luac -p scripts/SensorList/main.lua`
++  - result: failed in this environment (`luac: command not found`)
++- `python -m pytest tests/test_sensorlist_widget.py -q`
++  - result: pass (`5 passed, 1 skipped`)
++- `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
++  - result: pass (`90 passed, 15 skipped`)
++
++## Follow-up items
++
++- Validate visual readability of the five-column mode on-target Ethos hardware/simulator because this environment cannot render the widget UI.
++
++## Current State Sync
++
++- `CURRENT_STATE.md` updated: no
++- If `no`, reason: this change is a script-specific enhancement and does not modify repository-wide workflow or policy decisions.
+diff --git a/docs/SensorList/SENSORLIST_ARCHITECTURE.md b/docs/SensorList/SENSORLIST_ARCHITECTURE.md
+index 0413de3ba1866fe37036ac9bd202de6fdec9d568..cfce2ff7cf88928a615717c984b02da0515fdd04 100644
+--- a/docs/SensorList/SENSORLIST_ARCHITECTURE.md
++++ b/docs/SensorList/SENSORLIST_ARCHITECTURE.md
+@@ -1,89 +1,92 @@
+ # SensorList Architecture
+ 
+ This document captures the runtime lifecycle, state model, and event/data flow
+ for `scripts/SensorList/main.lua`.
+ 
+ ## Widget Lifecycle
+ 
+ The widget registers through `init()` and uses the standard Ethos callbacks:
+ 
+ - `create()`: allocates per-instance widget state and performs initial deep
+   sensor refresh.
+-- `paint(widget)`: draws table headers and visible sensor rows.
++- `paint(widget)`: draws table headers and visible sensor rows, switching between four-column and five-column layouts based on the `Display Value` option.
+ - `wakeup(widget, event)`: rate-limited invalidate scheduling; does not perform
+   periodic sensor refresh.
+ - `event(widget, category, value, x, y)`: dispatches touch/long-press input for
+   manual refresh and scrolling.
+ - Runtime faults in `create()`, `paint()`, and `event()` are trapped so the
+   widget can log `SLERR ...` to serial and attempt to render a minimal error
+   banner instead of failing silently.
+ 
+ ## State Model
+ 
+ Each widget instance owns state in the `widget` table, including:
+ 
+ - sensor and display data:
+   - `sensors`, `groups`, `colorCache`, `lastSignature`, `lastRawCount`,
+-    `lastDebug`
++    `lastDebug`, `displayValue`
+ - source-discovery cache:
+   - `sourceCategory`, `sourceMaxMember`
+ - scroll/redraw state:
+   - `scrollOffset`, `needsInvalidate`, `lastInvalidate`
+ - touch interaction state:
+   - `touchActive`, `touchLastY`, `touchAccumY`, `touchStartY`, `touchStartClock`,
+     `touchHoldTriggered`
+ - debug counters:
+   - `debugRefreshCount`, `debugDeepScanCount`, `debugCachedScanCount`,
+     `debugDeferredScanCount`
+ 
+ ## Data And Refresh Flow
+ 
+ `refreshSensors(widget, allowDeepScan)` is the central refresh pipeline:
+ 
+ 1. Source discovery via `getSensorList()`:
+    - prefer `system.getSensors()`
+    - fallback to `model.getSensors()`
+    - fallback to `system.getSource()` category/member scans
+ 2. Normalize records (`normalizeSensors`) and sort deterministically by:
+    physical ID, application ID, sub ID, then name.
+    - candidate fields/methods are probed defensively so radio-only accessor
+      differences (for example `source:subId()`) fail soft instead of crashing
+      the widget.
++   - when `displayValue` is enabled, normalized rows also include `valueText`
++     from available value-like fields (`stringValue`, `textValue`, `value`,
++     `formattedValue`) with `--` fallback when unavailable.
+ 3. Build signature (`buildSignature`) and only update widget tables when the
+    signature changes.
+ 4. Recompute conflict group mapping (`buildConflictGroups`) and reset color cache.
+ 5. Clamp `scrollOffset` against current visible row count.
+ 
+ `allowDeepScan` gates expensive category scans:
+ 
+ - `true`: allows dynamic category discovery and full scan.
+ - `false`: avoids full scan and defers deeper work.
+ - Once a category is known, the widget expands that category in bounded chunks
+   across `wakeup()` ticks so large sensor lists can finish loading without
+   exhausting the Ethos callback instruction budget.
+ 
+ ## Event And Input Flow
+ 
+ The `event()` callback handles user-driven interactions:
+ 
+ - Long press (`EVT_TOUCH_LONG` or equivalent category) triggers explicit full
+   sensor refresh by resetting the staged scan window, then resumes loading over
+   later `wakeup()` ticks with best-effort completion feedback (`playHaptic`
+   fallback to `playTone`).
+ - Touch phases are resolved through `resolveTouchPhase()` to normalize Ethos
+   event code variants across runtime versions.
+ - Header taps only sort the `Name`, `PhysID`, and `AppID` columns; `SubID`
+-  remains display-only.
++  and optional `Value` columns remain display-only.
+ - `handleTouchScroll()` accumulates movement and applies row-based scrolling.
+ - Scroll processing is protected by per-event caps to avoid extreme jumps.
+ - Touch-end can trigger long-press refresh fallback when dedicated long-press
+   events are unavailable, with a hold-trigger guard preventing duplicate
+   refresh/feedback for the same long-press gesture.
+ 
+ ## Behavioral Invariants
+ 
+ - No periodic sensor polling in `wakeup()`.
+ - Manual refresh happens on `create()` and explicit long-press only.
+ - Sorting remains deterministic for stable visual ordering.
+ - Ethos API calls are guarded through `safeCall()` to fail soft on missing or
+   variant runtime functions.
+diff --git a/scripts/SensorList/README.md b/scripts/SensorList/README.md
+index 126077c2e0caee06ae84862280aae1084c40e3c1..782c8b045e1a0ba413e655dc02436302ec4a94dc 100644
+--- a/scripts/SensorList/README.md
++++ b/scripts/SensorList/README.md
+@@ -1,39 +1,41 @@
+ # SensorList
+ 
+ Ethos widget that lists configured sensors in a sortable table with:
+ 
+ - Name
+ - PhysID
+ - AppID
+ - SubID
++- Optional Value (configurable)
+ 
+ Conflicting sensors that share the same `PhysID`, `AppID`, and `SubID` are
+ color-grouped to make true duplicates easier to identify.
+ 
+ ## Current Behavior
+ 
+-- Displays columns for `Name`, `PhysID`, `AppID`, `SubID`.
++- Displays columns for `Name`, `PhysID`, `AppID`, `SubID`; optional `Value` column can be toggled via widget option `Display Value`.
+ - Default sort is deterministic by `PhysID`, then `AppID`, then `SubID`, then name.
+ - Tapping `Name`, `PhysID`, or `AppID` changes sort key and toggles ascending/descending for that column (`^` / `v` in header).
+ - `SubID` is display-only and acts as the final tie-breaker for stable sort order.
++- When `Display Value` is enabled, the widget renders a fifth `Value` column and shortens name/value text to keep identifiers readable.
+ - Duplicate `PhysID` + `AppID` + `SubID` rows are color-grouped to help identify conflicts.
+ - Alternating row bands improve left-to-right readability across the four columns.
+ - List navigation is manual via wheel/button/touch scrolling (no forced auto-scroll).
+ - Sensor discovery uses staged background expansion after initial load so large sensor lists can populate without tripping the Ethos callback instruction budget.
+ - Manual long-press queues a fresh staged refresh and triggers best-effort completion feedback (`system.playHaptic` fallback to `system.playTone`).
+ 
+ ## Build and Install
+ 
+ 1. Build the install ZIP from repository root:
+    `python tools/build.py --project SensorList --dist`
+ 2. In Ethos Suite, run the Lua install/import action and select the ZIP from `dist/`.
+ 3. Transfer/sync to the radio.
+ 
+ Installed path on radio: `scripts/SensorList`.
+ Artifact version source: `scripts/SensorList/VERSION`.
+ 
+ ## Simulator Deploy
+ 
+ - Deploy script files into simulator scripts directory:
+   `python tools/build.py --project SensorList --deploy`
+ - Configure simulator paths via `tools/deploy.config.json` `ETHOS_SIM_PATHS`, with one entry marked `"default": true`.
+diff --git a/scripts/SensorList/main.lua b/scripts/SensorList/main.lua
+index 6a712160bfb724e5516973ce3151f515a9069041..9fb18e4f7a4b938fba8c867062f4819c7b2e507c 100644
+--- a/scripts/SensorList/main.lua
++++ b/scripts/SensorList/main.lua
+@@ -11,50 +11,53 @@ local HEADER_TO_ROWS_GAP = 8
+ local UNKNOWN_ID = 65535
+ local CATEGORY_PROBE_MAX_MEMBER = 12
+ local CATEGORY_PROBE_WARMUP = 4
+ local CATEGORY_PROBE_EMPTY_BREAK = 4
+ local CATEGORY_FULL_SCAN_MAX_MEMBER = 255
+ local CATEGORY_FULL_SCAN_WARMUP = 24
+ local CATEGORY_FULL_SCAN_EMPTY_BREAK = 16
+ local CATEGORY_EXPANSION_STEP = 16
+ local CATEGORY_EXPANSION_MARGIN = 4
+ local DEEP_SCAN_STEP_INTERVAL = 0.05
+ local DEBUG_TRACE_ENABLED = false
+ local MAX_SCROLL_STEPS_PER_EVENT = 4
+ local MAX_TOUCH_DELTA_PER_EVENT = 128
+ local LONG_PRESS_SECONDS = 0.8
+ local LONG_PRESS_MOVE_TOLERANCE = 4
+ local HEADER_TAP_MOVE_TOLERANCE = 12
+ local TOUCH_CONTENT_Y_OFFSET = 18
+ local HEADER_HITBOX_X_PADDING = 12
+ local HEADER_HITBOX_TOP_PADDING = 8
+ local HEADER_HITBOX_BOTTOM_PADDING = 10
+ 
+ local SORT_KEY_NAME = "name"
+ local SORT_KEY_PHYSICAL = "physical"
+ local SORT_KEY_APPLICATION = "application"
+ 
++local OPTION_DISPLAY_VALUE = "displayValue"
++local VALUE_TEXT_MISSING = "--"
++
+ local COLOR_PALETTE = {
+   { 255, 235, 59 },
+   { 129, 212, 250 },
+   { 255, 171, 145 },
+   { 179, 157, 219 },
+   { 165, 214, 167 },
+   { 244, 143, 177 },
+ }
+ local ROW_BAND_RGB = { 24, 24, 24 }
+ 
+ local function safeCall(fn, ...)
+   if type(fn) ~= "function" then
+     return nil
+   end
+   -- Ethos APIs vary by firmware/runtime; optional calls must fail soft.
+   local ok, result = pcall(fn, ...)
+   if ok then
+     return result
+   end
+   return nil
+ end
+ 
+ local function safeInvoke(fn, ...)
+   if type(fn) ~= "function" then
+     return false
+@@ -101,55 +104,70 @@ local function colorFromRgb(rgb)
+   if type(lcd.RGB) ~= "function" then
+     return nil
+   end
+   return safeCall(lcd.RGB, rgb[1], rgb[2], rgb[3])
+ end
+ 
+ local function getWindowSizeSafe()
+   if type(lcd.getWindowSize) == "function" then
+     local ok, w, h = pcall(lcd.getWindowSize)
+     if ok and type(w) == "number" and w > 0 and type(h) == "number" and h > 0 then
+       return w, h
+     end
+   end
+   return DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT
+ end
+ 
+ local function calculateVisibleRows()
+   local _, h = getWindowSizeSafe()
+   local rows = math.floor((h - HEADER_HEIGHT - HEADER_TO_ROWS_GAP) / SCROLL_ROW_HEIGHT)
+   if rows < 1 then
+     return 1
+   end
+   return rows
+ end
+ 
+-local function getColumnLayout(windowWidth)
++local function getColumnLayout(windowWidth, showValue)
+   local width = type(windowWidth) == "number" and windowWidth or DEFAULT_WINDOW_WIDTH
+   if width < 1 then
+     width = 1
+   end
++
++  if showValue then
++    local colPhysX = math.floor(width * 0.40)
++    local colAppX = math.floor(width * 0.57)
++    local colSubX = math.floor(width * 0.72)
++    local colValueX = math.floor(width * 0.86)
++    return {
++      { key = SORT_KEY_NAME, title = "Name", x = 0 },
++      { key = SORT_KEY_PHYSICAL, title = "PhysID", x = colPhysX },
++      { key = SORT_KEY_APPLICATION, title = "AppID", x = colAppX },
++      { key = nil, title = "SubID", x = colSubX },
++      { key = nil, title = "Value", x = colValueX },
++    }
++  end
++
+   local colPhysX = math.floor(width * 0.48)
+   local colAppX = math.floor(width * 0.69)
+   local colSubX = math.floor(width * 0.87)
+   return {
+     { key = SORT_KEY_NAME, title = "Name", x = 0 },
+     { key = SORT_KEY_PHYSICAL, title = "PhysID", x = colPhysX },
+     { key = SORT_KEY_APPLICATION, title = "AppID", x = colAppX },
+     { key = nil, title = "SubID", x = colSubX },
+   }
+ end
+ 
+ local function shortenText(text, maxChars)
+   if #text <= maxChars then
+     return text
+   end
+   if maxChars <= 3 then
+     return text:sub(1, maxChars)
+   end
+   return text:sub(1, maxChars - 3) .. "..."
+ end
+ 
+ local function sourceName(source)
+   if not source then
+     return nil
+   end
+@@ -335,50 +353,78 @@ local function safeReadMember(subject, key)
+     return subject[key]
+   end)
+   if not ok then
+     return nil, false
+   end
+   return value, true
+ end
+ 
+ local function readCandidate(sensor, keys)
+   for _, key in ipairs(keys) do
+     local member, found = safeReadMember(sensor, key)
+     if found and member ~= nil then
+       if type(member) == "function" then
+         local value = safeCall(member, sensor)
+         if value ~= nil then
+           return value
+         end
+       else
+         return member
+       end
+     end
+   end
+   return nil
+ end
+ 
++local function parseOptionBool(value)
++  if value == true or value == 1 then
++    return true
++  end
++  if value == false or value == 0 or value == nil then
++    return false
++  end
++  if type(value) == "string" then
++    local lowered = value:lower()
++    if lowered == "true" or lowered == "yes" or lowered == "on" or lowered == "1" then
++      return true
++    end
++  end
++  return false
++end
++
++local function formatSensorValue(sensor)
++  local value = readCandidate(sensor, { "stringValue", "textValue", "value", "formattedValue" })
++  if value == nil then
++    return VALUE_TEXT_MISSING
++  end
++  local text = tostring(value)
++  if text == "" then
++    return VALUE_TEXT_MISSING
++  end
++  return text
++end
++
+ local function compareDefaultSensors(a, b)
+   if a.physical ~= b.physical then
+     return a.physical < b.physical
+   end
+   if a.application ~= b.application then
+     return a.application < b.application
+   end
+   if a.subId ~= b.subId then
+     return a.subId < b.subId
+   end
+   return a.name < b.name
+ end
+ 
+ local function compareSortedByKey(a, b, sortKey, descending)
+   if sortKey == SORT_KEY_NAME then
+     if a.name ~= b.name then
+       if descending then
+         return a.name > b.name
+       end
+       return a.name < b.name
+     end
+     return compareDefaultSensors(a, b)
+   end
+   if sortKey == SORT_KEY_PHYSICAL then
+     if a.physical ~= b.physical then
+@@ -416,67 +462,68 @@ end
+ local function sortSensorsInPlace(sensors, sortKey, descending)
+   if type(sensors) ~= "table" or #sensors < 2 then
+     return
+   end
+   table.sort(sensors, function(a, b)
+     return compareSortedByKey(a, b, sortKey, descending)
+   end)
+ end
+ 
+ local function cloneSensors(sensors)
+   local out = {}
+   for idx, sensor in ipairs(sensors) do
+     out[idx] = sensor
+   end
+   return out
+ end
+ 
+ local function buildDisplaySensors(widget, normalized)
+   local display = cloneSensors(normalized)
+   if type(widget) == "table" and widget.sortKey then
+     sortSensorsInPlace(display, widget.sortKey, widget.sortDescending and true or false)
+   end
+   return display
+ end
+ 
+-local function normalizeSensors(rawSensors)
++local function normalizeSensors(rawSensors, showValue)
+   local normalized = {}
+   for idx, sensor in ipairs(rawSensors) do
+     local name = readCandidate(sensor, { "label", "name", "text", "title", "stringValue" }) or ("Sensor " .. tostring(idx))
+ 
+     local physical = toInt(readCandidate(sensor, { "physicalId", "physicalID", "physId", "id1", "id" }))
+     local application = toInt(readCandidate(sensor, { "applicationId", "appId", "param", "id2" }))
+     local subId = toInt(readCandidate(sensor, { "subId", "subID", "id3", "instance" }))
+ 
+     normalized[#normalized + 1] = {
+       name = tostring(name),
+       physical = physical or UNKNOWN_ID,
+       application = application or UNKNOWN_ID,
+       subId = subId or UNKNOWN_ID,
+       physicalText = formatHex(physical, 2),
+       applicationText = formatHex(application, 4),
+       subIdText = formatHex(subId, 4),
++      valueText = showValue and formatSensorValue(sensor) or VALUE_TEXT_MISSING,
+     }
+   end
+ 
+   sortSensorsInPlace(normalized, nil, false)
+   return normalized
+ end
+ 
+ local function sensorConflictKey(sensor)
+   if type(sensor) ~= "table" then
+     return nil
+   end
+   if sensor.physical == UNKNOWN_ID or sensor.application == UNKNOWN_ID or sensor.subId == UNKNOWN_ID then
+     return nil
+   end
+   return sensor.physicalText .. "|" .. sensor.applicationText .. "|" .. sensor.subIdText
+ end
+ 
+ local function buildConflictGroups(sensors)
+   local counts = {}
+   for _, sensor in ipairs(sensors) do
+     local conflictKey = sensorConflictKey(sensor)
+     if conflictKey then
+       counts[conflictKey] = (counts[conflictKey] or 0) + 1
+     end
+   end
+@@ -490,86 +537,86 @@ local function buildConflictGroups(sensors)
+     end
+   end
+   return groups
+ end
+ 
+ local function groupColor(sensor, groups, cache)
+   local conflictKey = sensorConflictKey(sensor)
+   if not conflictKey then
+     return nil
+   end
+   local groupIndex = groups[conflictKey]
+   if not groupIndex then
+     return nil
+   end
+   if cache[groupIndex] then
+     return cache[groupIndex]
+   end
+   local paletteIndex = ((groupIndex - 1) % #COLOR_PALETTE) + 1
+   cache[groupIndex] = colorFromRgb(COLOR_PALETTE[paletteIndex])
+   return cache[groupIndex]
+ end
+ 
+ local function buildSignature(sensors)
+   local out = {}
+   for _, sensor in ipairs(sensors) do
+-    out[#out + 1] = sensor.name .. "|" .. sensor.physicalText .. "|" .. sensor.applicationText .. "|" .. sensor.subIdText
++    out[#out + 1] = sensor.name .. "|" .. sensor.physicalText .. "|" .. sensor.applicationText .. "|" .. sensor.subIdText .. "|" .. tostring(sensor.valueText or VALUE_TEXT_MISSING)
+   end
+   return table.concat(out, ";")
+ end
+ 
+ local function logRuntimeError(context, err)
+   if type(print) == "function" then
+     print("SLERR " .. tostring(context) .. ": " .. tostring(err))
+   end
+ end
+ 
+ local function setWidgetError(widget, context, err)
+   logRuntimeError(context, err)
+   if type(widget) ~= "table" then
+     return
+   end
+   widget.lastError = tostring(context) .. ": " .. tostring(err)
+   widget.needsInvalidate = true
+ end
+ 
+ local function clearWidgetError(widget)
+   if type(widget) == "table" then
+     widget.lastError = nil
+   end
+ end
+ 
+ local function refreshSensors(widget, allowDeepScan)
+   if type(widget) ~= "table" then
+     return
+   end
+   local refreshStart = os.clock()
+   local raw, debug = getSensorList(widget, allowDeepScan)
+   local afterSource = os.clock()
+   widget.lastRawCount = #raw
+   widget.lastDebug = debug or widget.lastDebug
+-  local normalized = normalizeSensors(raw)
++  local normalized = normalizeSensors(raw, widget.displayValue and true or false)
+   local strategy = debug and debug.strategy or "unknown"
+ 
+   if strategy == "deferred-deep-scan" and #normalized == 0 then
+     if type(widget) == "table" and widget.sourceCategory == nil and type(system.getSource) == "function" then
+       widget.deepScanPending = true
+     end
+     clearWidgetError(widget)
+     widget.needsInvalidate = true
+     return
+   end
+ 
+   local signature = buildSignature(normalized)
+   local signatureChanged = signature ~= widget.lastSignature
+ 
+   widget.debugRefreshCount = (widget.debugRefreshCount or 0) + 1
+   if strategy == "deep-scan" then
+     widget.debugDeepScanCount = (widget.debugDeepScanCount or 0) + 1
+   elseif strategy == "cached-category" then
+     widget.debugCachedScanCount = (widget.debugCachedScanCount or 0) + 1
+   elseif strategy == "deferred-deep-scan" then
+     widget.debugDeferredScanCount = (widget.debugDeferredScanCount or 0) + 1
+   end
+ 
+   if signatureChanged then
+     widget.sensors = buildDisplaySensors(widget, normalized)
+@@ -672,64 +719,64 @@ local function drawRowBand(widget, y, width, rowHeight, sensorIndex)
+   end
+ 
+   if type(widget) == "table" and widget.rowBandColor == nil then
+     widget.rowBandColor = colorFromRgb(ROW_BAND_RGB)
+   end
+   local bandColor = type(widget) == "table" and widget.rowBandColor or colorFromRgb(ROW_BAND_RGB)
+   if not bandColor then
+     return
+   end
+ 
+   lcd.color(bandColor)
+   lcd.drawFilledRectangle(0, y, width, rowHeight)
+ end
+ 
+ local function headerTitle(widget, column)
+   if type(column) ~= "table" then
+     return ""
+   end
+   if type(widget) ~= "table" or widget.sortKey ~= column.key then
+     return column.title
+   end
+   local arrow = widget.sortDescending and " v" or " ^"
+   return column.title .. arrow
+ end
+ 
+-local function headerSortKeyAtPosition(x, y)
++local function headerSortKeyAtPosition(widget, x, y)
+   if type(x) ~= "number" or type(y) ~= "number" then
+     return nil
+   end
+   local contentY = y - TOUCH_CONTENT_Y_OFFSET
+   if contentY < -HEADER_HITBOX_TOP_PADDING or contentY >= (HEADER_HEIGHT + HEADER_HITBOX_BOTTOM_PADDING) then
+     return nil
+   end
+ 
+   local w, _ = getWindowSizeSafe()
+   if x < 0 or x >= w then
+     return nil
+   end
+-  local columns = getColumnLayout(w)
++  local columns = getColumnLayout(w, type(widget) == "table" and widget.displayValue)
+ 
+   local hitboxes = {
+     {
+       key = columns[1].key,
+       left = math.max(0, columns[1].x - HEADER_HITBOX_X_PADDING),
+       right = math.min(w, columns[2].x + HEADER_HITBOX_X_PADDING),
+       center = (columns[1].x + columns[2].x) / 2,
+     },
+     {
+       key = columns[2].key,
+       left = math.max(0, columns[2].x - HEADER_HITBOX_X_PADDING),
+       right = math.min(w, columns[3].x + HEADER_HITBOX_X_PADDING),
+       center = (columns[2].x + columns[3].x) / 2,
+     },
+     {
+       key = columns[3].key,
+       left = math.max(0, columns[3].x - HEADER_HITBOX_X_PADDING),
+       right = math.max(columns[3].x + 1, math.min(w, columns[4].x - HEADER_HITBOX_X_PADDING)),
+       center = (columns[3].x + columns[4].x) / 2,
+     },
+   }
+ 
+   local bestKey = nil
+   local bestDistance = nil
+   for _, hitbox in ipairs(hitboxes) do
+@@ -752,51 +799,51 @@ end
+ 
+ local function applyHeaderSort(widget, sortKey)
+   if type(widget) ~= "table" then
+     return false
+   end
+   if sortKey ~= SORT_KEY_NAME and sortKey ~= SORT_KEY_PHYSICAL and sortKey ~= SORT_KEY_APPLICATION then
+     return false
+   end
+   if widget.sortKey == sortKey then
+     widget.sortDescending = not widget.sortDescending
+   else
+     widget.sortKey = sortKey
+     widget.sortDescending = false
+   end
+   sortSensorsInPlace(widget.sensors, widget.sortKey, widget.sortDescending and true or false)
+   widget.needsInvalidate = true
+   return true
+ end
+ 
+ local function handleHeaderTap(widget, phase, x, y)
+   if type(widget) ~= "table" then
+     return false
+   end
+ 
+   if phase == "start" then
+-    local sortKey = headerSortKeyAtPosition(x, y)
++    local sortKey = headerSortKeyAtPosition(widget, x, y)
+     if not sortKey then
+       clearHeaderTouch(widget)
+       return false
+     end
+     widget.headerTouchKey = sortKey
+     widget.headerTouchStartX = x
+     widget.headerTouchStartY = y
+     return true
+   end
+ 
+   if not widget.headerTouchKey then
+     return false
+   end
+ 
+   if phase == "move" then
+     if type(x) ~= "number" or type(y) ~= "number" then
+       clearHeaderTouch(widget)
+       return true
+     end
+     local movedX = math.abs(x - (widget.headerTouchStartX or x))
+     local movedY = math.abs(y - (widget.headerTouchStartY or y))
+     local contentY = y - TOUCH_CONTENT_Y_OFFSET
+     if
+       movedX > HEADER_TAP_MOVE_TOLERANCE
+       or movedY > HEADER_TAP_MOVE_TOLERANCE
+@@ -826,51 +873,51 @@ local function handleHeaderTap(widget, phase, x, y)
+   return false
+ end
+ 
+ local function getVisibleRows()
+   return calculateVisibleRows()
+ end
+ 
+ local function getMaxOffset(widget)
+   return math.max(0, #widget.sensors - getVisibleRows())
+ end
+ 
+ local function clampOffset(widget)
+   local maxOffset = getMaxOffset(widget)
+   if widget.scrollOffset < 0 then
+     widget.scrollOffset = 0
+   elseif widget.scrollOffset > maxOffset then
+     widget.scrollOffset = maxOffset
+   end
+ end
+ 
+ local function drawSensorRows(widget)
+   local w, _ = getWindowSizeSafe()
+   local _, h = getWindowSizeSafe()
+   local rowHeight = SCROLL_ROW_HEIGHT
+   local headerHeight = HEADER_HEIGHT
+-  local columns = getColumnLayout(w)
++  local columns = getColumnLayout(w, type(widget) == "table" and widget.displayValue)
+ 
+   -- Paint our own background so Ethos focus highlight does not bleed through.
+   lcd.color(COLOR_BLACK or 0)
+   if type(lcd.drawFilledRectangle) == "function" then
+     lcd.drawFilledRectangle(0, 0, w, h)
+   end
+ 
+   local rowsY = headerHeight + HEADER_TO_ROWS_GAP
+   local visibleRows = getVisibleRows()
+ 
+   for _, column in ipairs(columns) do
+     drawText(column.x, 0, headerTitle(widget, column), FONT_HEADER)
+   end
+ 
+   if #widget.sensors == 0 then
+     if widget.deepScanPending then
+       drawText(0, 20, "Scanning sensors...", FONT_BODY)
+       return visibleRows
+     end
+     drawText(0, 20, "No sensors configured.", FONT_BODY)
+     drawText(0, 36, "Raw sensors found: " .. tostring(widget.lastRawCount or 0), FONT_BODY)
+     if widget.lastDebug then
+       local d = widget.lastDebug
+       drawText(
+         0,
+@@ -878,101 +925,105 @@ local function drawSensorRows(widget)
+         "API S:" .. tostring(d.hasSystemGetSensors and 1 or 0)
+           .. " M:" .. tostring(d.hasModelGetSensors and 1 or 0)
+           .. " Src:" .. tostring(d.hasSystemGetSource and 1 or 0),
+         FONT_BODY
+       )
+       drawText(
+         0,
+         68,
+         "Categories: " .. tostring(d.categoryCount or 0) .. " scanned: " .. tostring(d.scannedCategories or 0),
+         FONT_BODY
+       )
+     end
+     return visibleRows
+   end
+ 
+   local start = widget.scrollOffset + 1
+   for row = 0, visibleRows - 1 do
+     local sensorIndex = start + row
+     local sensor = widget.sensors[sensorIndex]
+     if not sensor then
+       break
+     end
+     local y = rowsY + row * rowHeight
+     drawRowBand(widget, y, w, rowHeight, sensorIndex)
+     local color = groupColor(sensor, widget.groups, widget.colorCache)
+-    drawText(columns[1].x, y, shortenText(sensor.name, 20), FONT_BODY, color)
++    drawText(columns[1].x, y, shortenText(sensor.name, widget.displayValue and 14 or 20), FONT_BODY, color)
+     drawText(columns[2].x, y, sensor.physicalText, FONT_BODY, color)
+     drawText(columns[3].x, y, sensor.applicationText, FONT_BODY, color)
+     drawText(columns[4].x, y, sensor.subIdText, FONT_BODY, color)
++    if widget.displayValue and columns[5] then
++      drawText(columns[5].x, y, shortenText(sensor.valueText or VALUE_TEXT_MISSING, 12), FONT_BODY, color)
++    end
+   end
+ 
+   return visibleRows
+ end
+ 
+ local function drawErrorState(widget)
+   local w, h = getWindowSizeSafe()
+ 
+   lcd.color(COLOR_BLACK or 0)
+   if type(lcd.drawFilledRectangle) == "function" then
+     lcd.drawFilledRectangle(0, 0, w, h)
+   end
+ 
+   drawText(0, 0, "SensorList error", FONT_HEADER)
+   local message = "unknown"
+   if type(widget) == "table" and widget.lastError then
+     message = tostring(widget.lastError)
+   end
+   drawText(0, HEADER_HEIGHT + 4, shortenText(message, 40), FONT_BODY)
+   drawText(0, HEADER_HEIGHT + 20, "Check serial log.", FONT_BODY)
+ end
+ 
+ -- Ethos widget API callback: constructs per-instance widget state.
+ local function create()
+   local widget = {
+     sensors = {},
+     groups = {},
+     colorCache = {},
+     scrollOffset = 0,
+     lastSignature = "",
+     lastRawCount = 0,
+     lastDebug = {},
+     sourceCategory = nil,
+     sourceMaxMember = 255,
+     lastInvalidate = 0,
+     needsInvalidate = true,
+     touchActive = false,
+     touchLastY = nil,
+     touchAccumY = 0,
+     touchStartY = nil,
+     touchStartClock = nil,
+     touchHoldTriggered = false,
+     headerTouchKey = nil,
+     headerTouchStartX = nil,
+     headerTouchStartY = nil,
+     sortKey = nil,
+     sortDescending = false,
++    displayValue = false,
+     lastError = nil,
+     deepScanPending = false,
+     deepScanCategories = nil,
+     deepScanIndex = 1,
+     lastDeepScanStep = 0,
+     rowBandColor = nil,
+     debugRefreshCount = 0,
+     debugDeepScanCount = 0,
+     debugCachedScanCount = 0,
+     debugDeferredScanCount = 0,
+   }
+   local ok, err = pcall(refreshSensors, widget, false)
+   if not ok then
+     setWidgetError(widget, "create", err)
+   end
+   return widget
+ end
+ 
+ -- Ethos widget API callback: draws current widget frame.
+ local function paint(widget)
+   if type(widget) ~= "table" then
+     return
+   end
+   if widget.lastError then
+     local errorOk, errorErr = pcall(drawErrorState, widget)
+@@ -1203,67 +1254,109 @@ local function event(widget, category, value, x, y)
+     local isLongPress = matchesCode(value, { "EVT_TOUCH_LONG" }) or matchesCategory(category, { "EVT_TOUCH_LONG" })
+     if isLongPress then
+       widget.touchHoldTriggered = true
+       return triggerManualRefresh(widget)
+     end
+ 
+     local phase = resolveTouchPhase(category, value)
+     if not phase then
+       return false
+     end
+ 
+     local headerConsumed = handleHeaderTap(widget, phase, x, y)
+     if headerConsumed then
+       return true
+     end
+ 
+     return handleTouchScroll(widget, phase, x, y, category, value)
+   end)
+   if not ok then
+     setWidgetError(widget, "event", result)
+     return false
+   end
+   return result
+ end
+ 
++local function configure(widget)
++  local current = type(widget) == "table" and (widget.displayValue and 1 or 0) or 0
++  return {
++    {
++      key = OPTION_DISPLAY_VALUE,
++      name = "Display Value",
++      type = rawget(_G, "OPTION_BOOL") or rawget(_G, "BOOL") or 0,
++      default = 0,
++      value = current,
++    },
++  }
++end
++
++local function read(widget)
++  if type(widget) ~= "table" then
++    return { [OPTION_DISPLAY_VALUE] = 0 }
++  end
++  return { [OPTION_DISPLAY_VALUE] = widget.displayValue and 1 or 0 }
++end
++
++local function write(widget, settings)
++  if type(widget) ~= "table" or type(settings) ~= "table" then
++    return
++  end
++  local nextValue = parseOptionBool(settings[OPTION_DISPLAY_VALUE])
++  if widget.displayValue == nextValue then
++    return
++  end
++  widget.displayValue = nextValue
++  widget.lastSignature = ""
++  widget.needsInvalidate = true
++  local ok, err = pcall(refreshSensors, widget, false)
++  if not ok then
++    setWidgetError(widget, "write", err)
++  end
++end
++
+ local function name()
+   return WIDGET_NAME
+ end
+ 
+ -- Ethos widget API registration entrypoint.
+ local function init()
+   system.registerWidget({
+     key = "slist",
+     name = name,
+     create = create,
+     paint = paint,
+     wakeup = wakeup,
+     event = event,
++    configure = configure,
++    read = read,
++    write = write,
+     persistent = false,
+   })
+ end
+ 
+ local function testExports()
+   return {
+     toInt = toInt,
+     formatHex = formatHex,
+     normalizeSensors = normalizeSensors,
+     buildConflictGroups = buildConflictGroups,
+     buildSignature = buildSignature,
+     applyScroll = applyScroll,
+     clampOffset = clampOffset,
+     getSensorList = getSensorList,
+     triggerRefreshFeedback = triggerRefreshFeedback,
+     create = create,
+     event = event,
+     resolveTouchPhase = resolveTouchPhase,
+     readCandidate = readCandidate,
+     wakeup = wakeup,
++    getColumnLayout = getColumnLayout,
++    parseOptionBool = parseOptionBool,
+   }
+ end
+ 
+ local module = { init = init }
+ if rawget(_G, "__SENSORLIST_TEST__") then
+   module._test = testExports()
+ end
+ 
+ return module
+diff --git a/tests/lua/test_sensorlist.lua b/tests/lua/test_sensorlist.lua
+index bfa4ff3173e1cfc84eda916b1f07af7214ca50f0..7732952d2e75ef40de847046482db16a244bca1b 100644
+--- a/tests/lua/test_sensorlist.lua
++++ b/tests/lua/test_sensorlist.lua
+@@ -49,124 +49,146 @@ end
+ 
+ local function makeRefreshWidget()
+   return {
+     sensors = {},
+     groups = {},
+     colorCache = {},
+     scrollOffset = 0,
+     lastSignature = "",
+     lastRawCount = 0,
+     lastDebug = {},
+     sourceCategory = nil,
+     sourceMaxMember = 255,
+     lastInvalidate = 0,
+     needsInvalidate = false,
+     touchActive = false,
+     touchLastY = nil,
+     touchAccumY = 0,
+     touchStartY = nil,
+     touchStartClock = nil,
+     touchHoldTriggered = false,
+     headerTouchKey = nil,
+     headerTouchStartX = nil,
+     headerTouchStartY = nil,
+     sortKey = nil,
+     sortDescending = false,
++    displayValue = false,
+     debugRefreshCount = 0,
+     debugDeepScanCount = 0,
+     debugCachedScanCount = 0,
+     debugDeferredScanCount = 0,
+   }
+ end
+ 
+ local module = dofile("scripts/SensorList/main.lua")
+ local test = module._test
+ 
+ assert_true(type(test) == "table", "expected _test export table")
+ 
+ assert_equal(test.toInt("0x0A"), 10, "hex string parse")
+ assert_equal(test.toInt("15.9"), 15, "decimal floor")
+ assert_equal(test.toInt(""), nil, "empty string parse")
+ assert_equal(test.formatHex(10, 2), "0A", "hex formatting")
+ assert_equal(test.formatHex(nil, 2), "--", "nil formatting")
+ 
++assert_true(test.parseOptionBool(true), "bool true parses")
++assert_true(test.parseOptionBool(1), "numeric true parses")
++assert_true(test.parseOptionBool("yes"), "string yes parses")
++assert_true(test.parseOptionBool("ON"), "string ON parses")
++assert_true(not test.parseOptionBool(0), "numeric false parses")
++assert_true(not test.parseOptionBool("off"), "string off parses")
++
++local compactColumns = test.getColumnLayout(480, false)
++assert_equal(#compactColumns, 4, "default layout has four columns")
++assert_equal(compactColumns[4].title, "SubID", "default layout ends at subid")
++local valueColumns = test.getColumnLayout(480, true)
++assert_equal(#valueColumns, 5, "value layout has five columns")
++assert_equal(valueColumns[5].title, "Value", "value layout adds value column")
++
+ local methodBackedCandidate = {
+   subId = function(_self)
+     return "0010"
+   end,
+ }
+ assert_equal(test.readCandidate(methodBackedCandidate, { "subId" }), "0010", "function-valued candidate is invoked")
+ 
+ local guardedCandidate = setmetatable({}, {
+   __index = function(_table, key)
+     if key == "subId" then
+       error("direct accessor unsupported")
+     end
+     return nil
+   end,
+ })
+ assert_equal(test.readCandidate(guardedCandidate, { "subId" }), nil, "candidate accessor errors fail soft")
+ 
+ local createLogs = {}
+ local savedSystem = _G.system
+ local savedPrint = _G.print
+ _G.print = function(message)
+   createLogs[#createLogs + 1] = tostring(message)
+ end
+ _G.system = {
+   registerWidget = function(_) end,
+   getSensors = function()
+     return setmetatable({}, {
+       __len = function()
+         error("len fault")
+       end,
+     })
+   end,
+ }
+ local recoveredWidget = test.create()
+ _G.system = savedSystem
+ _G.print = savedPrint
+ assert_true(type(recoveredWidget) == "table", "create returns widget when refresh errors")
+ assert_true(type(recoveredWidget.lastError) == "string", "create stores refresh error")
+ assert_true(recoveredWidget.lastError:find("create", 1, true) ~= nil, "create error context is retained")
+ assert_true(#createLogs >= 1 and createLogs[1]:find("SLERR", 1, true) ~= nil, "create error is logged to serial")
+ 
+ local sensors = test.normalizeSensors({
+   { name = "Gamma", physicalId = "0A", applicationId = "6801", subId = "0000" },
+   { name = "Alpha", physicalId = "00", applicationId = "0001", subId = "0001" },
+   { name = "Beta", physicalId = "00", applicationId = "0001", subId = "0000" },
+   { name = "Delta", physicalId = "00", applicationId = "0001", subId = "0000" },
+-})
++}, false)
+ 
+ assert_equal(#sensors, 4, "normalized count")
+ assert_equal(sensors[1].name, "Beta", "sort by subId before name")
+ assert_equal(sensors[2].name, "Delta", "same triplet sorts by name")
+ assert_equal(sensors[3].name, "Alpha", "higher subId sorts later")
+ assert_equal(sensors[4].name, "Gamma", "higher physical id sorts later")
+ assert_equal(sensors[1].subIdText, "0000", "subId formatting")
+ assert_equal(sensors[3].subIdText, "0001", "subId tie breaker retained")
+ 
++local sensorsWithValues = test.normalizeSensors({
++  { name = "Valued", physicalId = "01", applicationId = "0001", subId = "0001", stringValue = "12.3V" },
++  { name = "Missing", physicalId = "01", applicationId = "0002", subId = "0001" },
++}, true)
++assert_equal(sensorsWithValues[1].valueText, "12.3V", "value text captured when enabled")
++assert_equal(sensorsWithValues[2].valueText, "--", "missing value falls back when enabled")
++
+ local groups = test.buildConflictGroups(sensors)
+ assert_true(groups["00|0001|0000"] ~= nil, "duplicate conflict triplet grouped")
+ assert_true(groups["00|0001|0001"] == nil, "different subId should not group")
+ 
+ local sig1 = test.buildSignature(sensors)
+ local sig2 = test.buildSignature(sensors)
+ assert_equal(sig1, sig2, "stable signatures")
+ 
+ local large = {}
+ for i = 1, 40 do
+   large[i] = {
+     name = "Sensor " .. tostring(i),
+     physical = i,
+     application = i,
+     subId = i,
+     physicalText = string.format("%02X", i),
+     applicationText = string.format("%04X", i),
+     subIdText = string.format("%04X", i),
+   }
+ end
+ 
+ local widget = { sensors = large, scrollOffset = 0 }
+ local moved = test.applyScroll(widget, 2)
+ assert_true(moved, "scroll should move")
+ test.clampOffset(widget)
+@@ -201,130 +223,136 @@ local moveOnlyWidget = {
+   needsInvalidate = false,
+ }
+ local consumedMoveWithoutStart = test.event(moveOnlyWidget, _G.EVT_TOUCH, 16642, 20, 220)
+ assert_true(consumedMoveWithoutStart == false, "move without start should be ignored")
+ assert_true(moveOnlyWidget.touchActive == false, "move without start should not activate touch session")
+ 
+ local consumedStart = test.event(eventWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 12, 120)
+ assert_true(consumedStart, "touch start should be consumed")
+ assert_true(eventWidget.touchActive, "touch session should activate")
+ 
+ local consumedMove = test.event(eventWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_MOVE, 12, -900)
+ assert_true(consumedMove, "touch move should be consumed")
+ assert_true(eventWidget.scrollOffset >= 0, "move should keep offset in valid range")
+ assert_true(math.abs(eventWidget.touchAccumY) < 16, "accumulator remains bounded")
+ 
+ local consumedEnd = test.event(eventWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 12, -900)
+ assert_true(consumedEnd, "touch end should be consumed")
+ assert_true(eventWidget.touchActive == false, "touch session should deactivate")
+ 
+ local sortableWidget = {
+   sensors = test.normalizeSensors({
+     { name = "Zulu", physicalId = "02", applicationId = "1000", subId = "0002" },
+     { name = "Alpha", physicalId = "03", applicationId = "0001", subId = "0001" },
+     { name = "Bravo", physicalId = "01", applicationId = "2000", subId = "0003" },
+     { name = "Delta", physicalId = "01", applicationId = "2000", subId = "0001" },
+-  }),
++  }, false),
+   groups = {},
+   colorCache = {},
+   scrollOffset = 0,
+   touchActive = false,
+   touchLastY = nil,
+   touchAccumY = 0,
+   needsInvalidate = false,
+ }
+ 
+ local nameHeaderStart = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 10, 22)
+ local nameHeaderEnd = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 10, 22)
+ assert_true(nameHeaderStart and nameHeaderEnd, "name header tap should be consumed")
+ assert_equal(sortableWidget.sortKey, "name", "name sort key selected")
+ assert_true(sortableWidget.sortDescending == false, "name sort defaults to ascending")
+ assert_equal(sortableWidget.sensors[1].name, "Alpha", "name sort ascending first row")
+ assert_equal(sortableWidget.sensors[4].name, "Zulu", "name sort ascending last row")
+ 
+ local nameHeaderStart2 = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 10, 22)
+ local nameHeaderEnd2 = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 10, 22)
+ assert_true(nameHeaderStart2 and nameHeaderEnd2, "second name header tap should be consumed")
+ assert_true(sortableWidget.sortDescending == true, "second tap toggles to descending")
+ assert_equal(sortableWidget.sensors[1].name, "Zulu", "name sort descending first row")
+ assert_equal(sortableWidget.sensors[4].name, "Alpha", "name sort descending last row")
+ 
+ local physicalHeaderStart = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 300, 22)
+ local physicalHeaderEnd = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 300, 22)
+ assert_true(physicalHeaderStart and physicalHeaderEnd, "physical header tap should be consumed")
+ assert_equal(sortableWidget.sortKey, "physical", "physical sort key selected")
+ assert_true(sortableWidget.sortDescending == false, "new key resets to ascending")
+ assert_equal(sortableWidget.sensors[1].physicalText, "01", "physical sort ascending first row")
+ assert_equal(sortableWidget.sensors[4].physicalText, "03", "physical sort ascending last row")
+ assert_equal(sortableWidget.sensors[1].subIdText, "0001", "physical sort uses subId as final tie breaker")
+ assert_equal(sortableWidget.sensors[2].subIdText, "0003", "physical sort keeps higher subId later")
+ 
+ local applicationHeaderStart = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 390, 22)
+ local applicationHeaderEnd = test.event(sortableWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 390, 22)
+ assert_true(applicationHeaderStart and applicationHeaderEnd, "application header tap should be consumed")
+ assert_equal(sortableWidget.sortKey, "application", "application sort key selected")
+ assert_true(sortableWidget.sortDescending == false, "application sort defaults to ascending")
+ assert_equal(sortableWidget.sensors[1].applicationText, "0001", "application sort ascending first row")
+ assert_equal(sortableWidget.sensors[4].applicationText, "07D0", "application sort ascending last row")
+ assert_equal(sortableWidget.sensors[3].subIdText, "0001", "application tie keeps lower subId first")
+ assert_equal(sortableWidget.sensors[4].subIdText, "0003", "application tie keeps higher subId later")
+ 
+ local expandedHitboxWidget = {
+   sensors = test.normalizeSensors({
+     { name = "Zulu", physicalId = "02", applicationId = "1000", subId = "0002" },
+     { name = "Alpha", physicalId = "03", applicationId = "0001", subId = "0001" },
+     { name = "Bravo", physicalId = "01", applicationId = "2000", subId = "0003" },
+-  }),
++  }, false),
+   groups = {},
+   colorCache = {},
+   scrollOffset = 0,
+   touchActive = false,
+   touchLastY = nil,
+   touchAccumY = 0,
+   needsInvalidate = false,
+ }
+ 
+ local physicalExpandedStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 260, 12)
+ local physicalExpandedEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 260, 12)
+ assert_true(physicalExpandedStart and physicalExpandedEnd, "expanded top-left physical zone should be consumed")
+ assert_equal(expandedHitboxWidget.sortKey, "physical", "expanded top-left physical zone should sort physical column")
+ 
+ local applicationExpandedStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 390, 45)
+ local applicationExpandedEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 390, 45)
+ assert_true(applicationExpandedStart and applicationExpandedEnd, "expanded bottom application zone should be consumed")
+ assert_equal(expandedHitboxWidget.sortKey, "application", "expanded bottom application zone should sort application column")
+ 
+ local subIdHeaderStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 430, 22)
+ local subIdHeaderEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 430, 22)
+ assert_true(subIdHeaderStart and subIdHeaderEnd, "subId header touch should still be consumed as touch input")
+ assert_equal(expandedHitboxWidget.sortKey, "application", "subId header should not change sort key")
+ 
++expandedHitboxWidget.displayValue = true
++local valueHeaderStart = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 450, 22)
++local valueHeaderEnd = test.event(expandedHitboxWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 450, 22)
++assert_true(valueHeaderStart and valueHeaderEnd, "value header touch should still be consumed as touch input")
++assert_equal(expandedHitboxWidget.sortKey, "application", "value header should not change sort key")
++
+ local canceledHeaderWidget = {
+   sensors = test.normalizeSensors({
+     { name = "Zulu", physicalId = "02", applicationId = "1000", subId = "0002" },
+     { name = "Alpha", physicalId = "03", applicationId = "0001", subId = "0001" },
+-  }),
++  }, false),
+   groups = {},
+   colorCache = {},
+   scrollOffset = 0,
+   touchActive = false,
+   touchLastY = nil,
+   touchAccumY = 0,
+   needsInvalidate = false,
+ }
+ local canceledHeaderStart = test.event(canceledHeaderWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_FIRST, 10, 22)
+ local canceledHeaderMove = test.event(canceledHeaderWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_MOVE, 10, 48)
+ local canceledHeaderEnd = test.event(canceledHeaderWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_BREAK, 10, 48)
+ assert_true(canceledHeaderStart and canceledHeaderMove and canceledHeaderEnd, "header drag path should be consumed")
+ assert_equal(canceledHeaderWidget.sortKey, nil, "header drag should not trigger sort toggle")
+ 
+ local hapticCalls = {}
+ local hapticRefreshCount = 0
+ _G.system = {
+   getSensors = function()
+     hapticRefreshCount = hapticRefreshCount + 1
+     return {
+       { name = "From long press", physicalId = "01", applicationId = "1001" },
+     }
+   end,
+   playHaptic = function(pattern)
+     hapticCalls[#hapticCalls + 1] = pattern
