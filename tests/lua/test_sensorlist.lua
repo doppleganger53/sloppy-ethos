@@ -59,6 +59,7 @@ local function makeRefreshWidget()
     sourceCategory = nil,
     sourceMaxMember = 255,
     lastInvalidate = 0,
+    lastValueRefresh = 0,
     needsInvalidate = false,
     touchActive = false,
     touchLastY = nil,
@@ -474,6 +475,65 @@ local noFeedbackLong = test.event(noFeedbackWidget, _G.EVT_TOUCH, _G.EVT_TOUCH_L
 assert_true(noFeedbackLong, "long press should be consumed without feedback APIs")
 assert_equal(noFeedbackRefreshCount, 1, "silent long press should refresh once")
 assert_equal(#noFeedbackWidget.sensors, 1, "silent long press should still refresh sensors")
+
+local savedClock = os.clock
+local wakeupClock = 0
+os.clock = function()
+  return wakeupClock
+end
+
+local pollingValues = { "11.1V", "11.3V" }
+local pollingRefreshCount = 0
+_G.system = {
+  getSensors = function()
+    pollingRefreshCount = pollingRefreshCount + 1
+    return {
+      {
+        name = "Live value",
+        physicalId = "01",
+        applicationId = "1004",
+        subId = "0001",
+        stringValue = pollingValues[pollingRefreshCount] or pollingValues[#pollingValues],
+      },
+    }
+  end,
+}
+local pollingWidget = makeRefreshWidget()
+pollingWidget.showValue = true
+test.wakeup(pollingWidget)
+assert_equal(pollingRefreshCount, 0, "show-value wakeup should not poll before interval")
+wakeupClock = 0.19
+test.wakeup(pollingWidget)
+assert_equal(pollingRefreshCount, 0, "show-value wakeup should wait for 5hz interval")
+wakeupClock = 0.2
+test.wakeup(pollingWidget)
+assert_equal(pollingRefreshCount, 1, "show-value wakeup should poll at 5hz")
+assert_equal(pollingWidget.sensors[1].valueText, "11.1V", "first periodic wakeup refresh captures value text")
+wakeupClock = 0.39
+test.wakeup(pollingWidget)
+assert_equal(pollingRefreshCount, 1, "show-value wakeup should not over-poll between intervals")
+wakeupClock = 0.4
+test.wakeup(pollingWidget)
+assert_equal(pollingRefreshCount, 2, "show-value wakeup should continue polling at 5hz")
+assert_equal(pollingWidget.sensors[1].valueText, "11.3V", "later periodic wakeup refresh updates value text")
+
+local idleRefreshCount = 0
+_G.system = {
+  getSensors = function()
+    idleRefreshCount = idleRefreshCount + 1
+    return {
+      { name = "Hidden value", physicalId = "02", applicationId = "1005", subId = "0001", stringValue = "9.9V" },
+    }
+  end,
+}
+local idleWidget = makeRefreshWidget()
+wakeupClock = 0.2
+test.wakeup(idleWidget)
+wakeupClock = 0.4
+test.wakeup(idleWidget)
+assert_equal(idleRefreshCount, 0, "wakeup should stay idle when show-value polling is disabled")
+
+os.clock = savedClock
 
 local incrementalRefreshCalls = {}
 _G.system = {

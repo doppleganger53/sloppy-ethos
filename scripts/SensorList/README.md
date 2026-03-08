@@ -18,7 +18,8 @@ color-grouped to make true duplicates easier to identify.
 - Default sort is deterministic by `PhysID`, then `AppID`, then `SubID`, then name.
 - Tapping `Name`, `PhysID`, or `AppID` changes sort key and toggles ascending/descending for that column (`^` / `v` in header).
 - `SubID` is display-only and acts as the final tie-breaker for stable sort order.
-- `Value` is display-only and shows the best available formatted/string/numeric sensor value at refresh time, falling back to `--` when unavailable.
+- `Value` is display-only and shows the best available formatted/string/numeric sensor value, falling back to `--` when unavailable.
+- With `Display Value = Yes`, visible sensor values are refreshed during `wakeup()` at roughly 5 Hz.
 - Duplicate `PhysID` + `AppID` + `SubID` rows are color-grouped to help identify conflicts.
 - Alternating row bands improve left-to-right readability across the visible columns.
 - List navigation is manual via wheel/button/touch scrolling (no forced auto-scroll).

@@ -18,6 +18,7 @@ local CATEGORY_FULL_SCAN_EMPTY_BREAK = 16
 local CATEGORY_EXPANSION_STEP = 16
 local CATEGORY_EXPANSION_MARGIN = 4
 local DEEP_SCAN_STEP_INTERVAL = 0.05
+local VALUE_REFRESH_INTERVAL = 0.2
 local DEBUG_TRACE_ENABLED = false
 local MAX_SCROLL_STEPS_PER_EVENT = 4
 local MAX_TOUCH_DELTA_PER_EVENT = 128
@@ -1095,6 +1096,7 @@ local function create()
     deepScanCategories = nil,
     deepScanIndex = 1,
     lastDeepScanStep = 0,
+    lastValueRefresh = 0,
     rowBandColor = nil,
     debugRefreshCount = 0,
     debugDeepScanCount = 0,
@@ -1321,10 +1323,20 @@ local function wakeup(widget, event)
     if not ok then
       widget.deepScanPending = false
       setWidgetError(widget, "wakeup-deep-scan", err)
+    elseif widget.showValue then
+      widget.lastValueRefresh = now
     end
   end
 
-  -- No periodic refresh: we refresh on create() and explicit long-press only.
+  local shouldRefreshValues = widget.showValue and now - (widget.lastValueRefresh or 0) >= VALUE_REFRESH_INTERVAL
+  if shouldRefreshValues then
+    widget.lastValueRefresh = now
+    local ok, err = pcall(refreshSensors, widget, false)
+    if not ok then
+      setWidgetError(widget, "wakeup-value-refresh", err)
+    end
+  end
+
   if widget.needsInvalidate and lcd.isVisible() and now - widget.lastInvalidate >= 0.05 then
     lcd.invalidate()
     widget.lastInvalidate = now

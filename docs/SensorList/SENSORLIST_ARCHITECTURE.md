@@ -11,8 +11,9 @@ The widget registers through `init()` and uses the standard Ethos callbacks:
   sensor refresh.
 - `configure(widget)`: exposes the `Display Value` widget option.
 - `paint(widget)`: draws table headers and visible sensor rows.
-- `wakeup(widget, event)`: rate-limited invalidate scheduling; does not perform
-  periodic sensor refresh.
+- `wakeup(widget, event)`: advances staged sensor discovery, rate-limits redraw
+  invalidation, and refreshes displayed sensor values at roughly 5 Hz when the
+  `Display Value` option is enabled.
 - `event(widget, category, value, x, y)`: dispatches touch/long-press input for
   manual refresh and scrolling.
 - `read(widget)` / `write(widget)`: persist the `Display Value` option through
@@ -55,7 +56,8 @@ Each widget instance owns state in the `widget` table, including:
    - best-effort value text is captured at refresh time from formatted/string
      or numeric members so paint-time rendering stays cheap.
 3. Build signature (`buildSignature`) and only update widget tables when the
-   signature changes, including value-text changes from manual refresh.
+   signature changes, including value-text changes from manual refresh and
+   periodic value polling.
 4. Recompute conflict group mapping (`buildConflictGroups`) and reset color cache.
 5. Clamp `scrollOffset` against current visible row count.
 
@@ -87,8 +89,9 @@ The `event()` callback handles user-driven interactions:
 
 ## Behavioral Invariants
 
-- No periodic sensor polling in `wakeup()`.
-- Manual refresh happens on `create()` and explicit long-press only.
+- Periodic `wakeup()` polling runs at roughly 5 Hz only while `Display Value`
+  is enabled.
+- Manual long-press remains the explicit full rescan path.
 - Sorting remains deterministic for stable visual ordering.
 - The default layout remains four columns unless `Display Value` is enabled.
 - Ethos API calls are guarded through `safeCall()` to fail soft on missing or
