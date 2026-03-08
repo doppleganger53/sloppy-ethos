@@ -77,6 +77,21 @@
 - For any documentation updates, run docs contract checks: `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`.
 - Use the VS Code Testing view to run/discover tests and trigger coverage once dependencies are installed for the selected interpreter.
 
+## Lua Coverage In VS Code
+
+- Install the recommended workspace extension: `Coverage Gutters`.
+- Install Lua coverage tools with LuaRocks:
+  - `luarocks install luacov`
+  - `luarocks install luacov-reporter-lcov`
+- The workspace includes `.luacov` config that targets `scripts/SensorList/main.lua` and writes reports under `coverage/lua/`.
+- Run the VS Code task:
+  - `Lua Coverage Refresh (SensorList)`
+- That task sequence:
+  - clears the prior Lua coverage outputs
+  - runs `tests/lua/test_sensorlist.lua` through `lua -lluacov`
+  - generates an LCOV-style report via `luacov -r lcov`
+- Coverage Gutters is configured in `.vscode/settings.json` to pick up `luacov.report.out` from the workspace coverage output folder.
+
 ## Main Branch Release And Versioning Policy
 
 This repository uses `main` as the only long-lived integration branch and aligns release/version behavior with [Semantic Versioning](https://semver.org/) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).

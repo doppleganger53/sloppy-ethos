@@ -79,6 +79,10 @@ Historical detail remains in individual session notes referenced from
 - Canonical build/deploy workflow remains `tools/build.py`.
 - `build.py` to `doit` migration decision: retain `build.py` (Issue #22
   evaluation complete).
+- Optional VS Code Lua coverage workflow is now wired through:
+  - `Coverage Gutters` workspace recommendation in `.vscode/extensions.json`
+  - `.luacov` output under `coverage/lua/`
+  - `Lua Coverage Refresh (SensorList)` task sequence in `.vscode/tasks.json`
 - Prompt templates live in `deslopification/prompts/templates/`.
 
 ## How To Use With CATALOG

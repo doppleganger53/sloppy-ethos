@@ -95,6 +95,15 @@ luac -p scripts/SensorList/main.lua
 - Execute the sensor-list test file: `python -m pytest tests/test_sensorlist_widget.py`.
 - VS Code Test Explorer coverage runs require `pytest-cov`, which is included in `requirements/dev.txt`.
 
+### Lua Coverage In VS Code
+
+- Install the recommended VS Code extension: `Coverage Gutters`.
+- Install Lua coverage tools with LuaRocks:
+  - `luarocks install luacov`
+  - `luarocks install luacov-reporter-lcov`
+- Run the VS Code task `Lua Coverage Refresh (SensorList)`.
+- Coverage output is written to `coverage/lua/luacov.report.out` and the workspace is configured to let Coverage Gutters display it.
+
 ## Releases
 
 - Changelog source of truth: `CHANGELOG.md`.

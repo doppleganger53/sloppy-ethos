@@ -46,3 +46,11 @@ Artifact version source: `scripts/SensorList/VERSION`.
 - Deploy script files into simulator scripts directory:
   `python tools/build.py --project SensorList --deploy`
 - Configure simulator paths via `tools/deploy.config.json` `ETHOS_SIM_PATHS`, with one entry marked `"default": true`.
+
+## Lua Coverage In VS Code
+
+- Install the recommended `Coverage Gutters` extension in VS Code.
+- Install Lua coverage tooling with LuaRocks:
+  - `luarocks install luacov`
+  - `luarocks install luacov-reporter-lcov`
+- Run the VS Code task `Lua Coverage Refresh (SensorList)` to generate `coverage/lua/luacov.report.out` for editor gutter coverage.
