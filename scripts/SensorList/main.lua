@@ -20,6 +20,7 @@ local CATEGORY_EXPANSION_MARGIN = 4
 local DEEP_SCAN_STEP_INTERVAL = 0.05
 local VALUE_REFRESH_INTERVAL = 0.2
 local DEBUG_TRACE_ENABLED = false
+local VALUE_DEBUG_ENABLED = false
 local MAX_SCROLL_STEPS_PER_EVENT = 4
 local MAX_TOUCH_DELTA_PER_EVENT = 128
 local LONG_PRESS_SECONDS = 0.8
@@ -34,6 +35,12 @@ local SORT_KEY_NAME = "name"
 local SORT_KEY_PHYSICAL = "physical"
 local SORT_KEY_APPLICATION = "application"
 local DISPLAY_VALUE_STORAGE_KEY = "displayValue"
+local TELEMETRY_CATEGORY_KEYS = {
+  "CATEGORY_TELEMETRY_SENSOR",
+  "CATEGORY_TELEMETRY",
+  "CATEGORY_SENSOR",
+  "CATEGORY_SENSORS",
+}
 
 local COLOR_PALETTE = {
   { 255, 235, 59 },
@@ -509,27 +516,180 @@ local function buildDisplaySensors(widget, normalized)
   return display
 end
 
-local function readSensorValueText(sensor)
-  if type(sensor) ~= "table" then
-    return "--"
-  end
-
-  local valueText = readCandidate(sensor, { "formattedValue", "valueText", "displayValue", "sensorValue" })
-  if valueText == nil then
-    local stringValue = readCandidate(sensor, { "stringValue" })
-    local name = readCandidate(sensor, { "label", "name", "text", "title" })
-    if type(stringValue) == "string" and stringValue ~= tostring(name) then
-      valueText = stringValue
-    end
-  end
-  if valueText == nil then
-    valueText = readCandidate(sensor, { "value", "getValue" })
-  end
-
-  return formatSensorValue(valueText)
+local function sensorRowKey(name, physicalText, applicationText, subIdText)
+  return tostring(name) .. "|" .. tostring(physicalText) .. "|" .. tostring(applicationText) .. "|" .. tostring(subIdText)
 end
 
-local function normalizeSensors(rawSensors)
+local function logValueDebug(message)
+  if VALUE_DEBUG_ENABLED and type(print) == "function" then
+    print("SLVAL " .. tostring(message))
+  end
+end
+
+local function formatDebugValue(value)
+  local valueType = type(value)
+  if value == nil then
+    return "<nil>"
+  end
+  if valueType == "string" then
+    local collapsed = value:gsub("%s+", " ")
+    if #collapsed > 40 then
+      collapsed = collapsed:sub(1, 37) .. "..."
+    end
+    return '"' .. collapsed .. '"'
+  end
+  if valueType == "number" or valueType == "boolean" then
+    return tostring(value)
+  end
+  if valueType == "function" then
+    return "<function>"
+  end
+  if valueType == "table" then
+    return "<table>"
+  end
+  return "<" .. valueType .. ">"
+end
+
+local function formatDebugRequest(request)
+  if type(request) == "string" then
+    return request
+  end
+  if type(request) ~= "table" then
+    return formatDebugValue(request)
+  end
+
+  local parts = {}
+  for key, value in pairs(request) do
+    parts[#parts + 1] = tostring(key) .. "=" .. formatDebugValue(value)
+  end
+  table.sort(parts)
+  return "{" .. table.concat(parts, ", ") .. "}"
+end
+
+local function copyTableShallow(input)
+  local out = {}
+  if type(input) ~= "table" then
+    return out
+  end
+  for key, value in pairs(input) do
+    out[key] = value
+  end
+  return out
+end
+
+local function readResolvedCandidate(sensor, key)
+  local member, found = safeReadMember(sensor, key)
+  if not found or member == nil then
+    return nil, false
+  end
+  if type(member) == "function" then
+    return safeCall(member, sensor), true
+  end
+  return member, true
+end
+
+local function readSensorValueText(sensor)
+  if sensor == nil then
+    return "--", "no-source"
+  end
+
+  for _, key in ipairs({ "formattedValue", "valueText", "displayValue", "sensorValue" }) do
+    local valueText, found = readResolvedCandidate(sensor, key)
+    if found and valueText ~= nil then
+      return formatSensorValue(valueText), key
+    end
+  end
+
+  local stringValue, stringFound = readResolvedCandidate(sensor, "stringValue")
+  if stringFound and type(stringValue) == "string" then
+    local name = readCandidate(sensor, { "label", "name", "text", "title" })
+    if stringValue ~= tostring(name) then
+      return formatSensorValue(stringValue), "stringValue"
+    end
+  end
+
+  for _, key in ipairs({ "value", "getValue" }) do
+    local valueText, found = readResolvedCandidate(sensor, key)
+    if found and valueText ~= nil then
+      return formatSensorValue(valueText), key
+    end
+  end
+
+  return "--", "none"
+end
+
+local function resolveTelemetryCategory(widget)
+  if type(widget) == "table" and type(widget.sourceCategory) == "number" then
+    return widget.sourceCategory
+  end
+  for _, key in ipairs(TELEMETRY_CATEGORY_KEYS) do
+    local value = rawget(_G, key)
+    if type(value) == "number" then
+      return value
+    end
+  end
+  return nil
+end
+
+local function buildValueSourceRequests(widget, sensor)
+  if type(system) ~= "table" or type(system.getSource) ~= "function" or type(sensor) ~= "table" then
+    return {}
+  end
+
+  local category = resolveTelemetryCategory(widget)
+  local requests = {}
+
+  local base = {}
+  if type(category) == "number" then
+    base.category = category
+  end
+  if sensor.application ~= UNKNOWN_ID then
+    base.appId = sensor.application
+    base.applicationId = sensor.application
+  end
+  if sensor.subId ~= UNKNOWN_ID then
+    base.subId = sensor.subId
+    base.subID = sensor.subId
+  end
+  if sensor.physical ~= UNKNOWN_ID then
+    base.physicalId = sensor.physical
+    base.physId = sensor.physical
+    base.primId = sensor.physical
+    base.id1 = sensor.physical
+  end
+
+  if next(base) ~= nil then
+    requests[#requests + 1] = copyTableShallow(base)
+    if type(sensor.name) == "string" and sensor.name ~= "" then
+      local withName = copyTableShallow(base)
+      withName.name = sensor.name
+      requests[#requests + 1] = withName
+    end
+  end
+
+  if type(category) == "number" and type(sensor.name) == "string" and sensor.name ~= "" then
+    requests[#requests + 1] = { category = category, name = sensor.name }
+  end
+  if type(sensor.name) == "string" and sensor.name ~= "" then
+    requests[#requests + 1] = sensor.name
+  end
+
+  return requests
+end
+
+local function resolveValueSource(widget, sensor)
+  local attempts = {}
+  for _, request in ipairs(buildValueSourceRequests(widget, sensor)) do
+    local source = safeCall(system.getSource, request)
+    attempts[#attempts + 1] = formatDebugRequest(request) .. " -> " .. (source ~= nil and "hit" or "miss")
+    if source ~= nil then
+      return source, attempts
+    end
+  end
+  return nil, attempts
+end
+
+local function normalizeSensors(rawSensors, widget)
   local normalized = {}
   for idx, sensor in ipairs(rawSensors) do
     local name = readCandidate(sensor, { "label", "name", "text", "title", "stringValue" }) or ("Sensor " .. tostring(idx))
@@ -538,8 +698,7 @@ local function normalizeSensors(rawSensors)
     local application = toInt(readCandidate(sensor, { "applicationId", "appId", "param", "id2" }))
     local subId = toInt(readCandidate(sensor, { "subId", "subID", "id3", "instance" }))
 
-    normalized[#normalized + 1] = {
-      source = sensor,
+    local normalizedSensor = {
       name = tostring(name),
       physical = physical or UNKNOWN_ID,
       application = application or UNKNOWN_ID,
@@ -547,8 +706,12 @@ local function normalizeSensors(rawSensors)
       physicalText = formatHex(physical, 2),
       applicationText = formatHex(application, 4),
       subIdText = formatHex(subId, 4),
-      valueText = readSensorValueText(sensor),
     }
+
+    normalizedSensor.source = resolveValueSource(widget, normalizedSensor) or sensor
+    normalizedSensor.valueText = select(1, readSensorValueText(normalizedSensor.source))
+
+    normalized[#normalized + 1] = normalizedSensor
   end
 
   sortSensorsInPlace(normalized, nil, false)
@@ -648,7 +811,7 @@ local function refreshSensors(widget, allowDeepScan)
   local afterSource = os.clock()
   widget.lastRawCount = #raw
   widget.lastDebug = debug or widget.lastDebug
-  local normalized = normalizeSensors(raw)
+  local normalized = normalizeSensors(raw, widget)
   local strategy = debug and debug.strategy or "unknown"
 
   if strategy == "deferred-deep-scan" and #normalized == 0 then
@@ -740,23 +903,44 @@ local function refreshVisibleSensorValues(widget)
 
   local firstIndex = math.max(1, (widget.scrollOffset or 0) + 1)
   local lastIndex = math.min(#widget.sensors, firstIndex + calculateVisibleRows() - 1)
-  local changed = false
+  if firstIndex > lastIndex then
+    return false
+  end
 
+  local changed = false
   for idx = firstIndex, lastIndex do
     local sensor = widget.sensors[idx]
-    if type(sensor) == "table" and sensor.source then
-      local nextValueText = readSensorValueText(sensor.source)
-      if nextValueText ~= sensor.valueText then
+    if type(sensor) == "table" then
+      local liveSource, attempts = resolveValueSource(widget, sensor)
+      if liveSource ~= nil then
+        sensor.source = liveSource
+      end
+      local previousValueText = sensor.valueText
+      local nextValueText, accessor = readSensorValueText(sensor.source)
+      if nextValueText ~= previousValueText then
         sensor.valueText = nextValueText
         changed = true
+      end
+      if liveSource == nil or nextValueText == "--" or nextValueText ~= previousValueText then
+        logValueDebug(
+          string.format(
+            "row=%d key=%s requests=%s source=%s accessor=%s value=%s",
+            idx,
+            sensorRowKey(sensor.name, sensor.physicalText, sensor.applicationText, sensor.subIdText),
+            table.concat(attempts or {}, " | "),
+            formatDebugValue(sourceName(sensor.source)),
+            tostring(accessor),
+            formatDebugValue(nextValueText)
+          )
+        )
       end
     end
   end
 
   if changed then
     widget.needsInvalidate = true
-    clearWidgetError(widget)
   end
+  clearWidgetError(widget)
 
   return changed
 end
@@ -1370,6 +1554,7 @@ local function wakeup(widget, event)
   local shouldRefreshValues = widget.showValue
     and type(widget.sensors) == "table"
     and #widget.sensors > 0
+    and lcd.isVisible()
     and now - (widget.lastValueRefresh or 0) >= VALUE_REFRESH_INTERVAL
   if shouldRefreshValues then
     widget.lastValueRefresh = now

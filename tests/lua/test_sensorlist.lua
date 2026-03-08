@@ -481,61 +481,86 @@ local wakeupClock = 0
 os.clock = function()
   return wakeupClock
 end
+local savedIsVisible = _G.lcd.isVisible
 
-local liveValueIndex = 1
-local liveSource = {
-  name = "Live value",
-  physicalId = "01",
-  applicationId = "1004",
-  subId = "0001",
-  stringValue = function()
-    if liveValueIndex == 1 then
-      return "11.1V"
-    end
-    return "11.3V"
-  end,
-}
-local pollingRefreshCount = 0
+local pollingSourceRequests = {}
 _G.system = {
-  getSensors = function()
-    pollingRefreshCount = pollingRefreshCount + 1
-    return {}
+  getSource = function(request)
+    pollingSourceRequests[#pollingSourceRequests + 1] = request
+    if type(request) ~= "table" then
+      return nil
+    end
+    if request.category ~= 42 then
+      return nil
+    end
+    if request.appId == 0x1004 or request.applicationId == 0x1004 or request.name == "Live value" then
+      return {
+        name = "Live value",
+        physicalId = "01",
+        applicationId = "1004",
+        subId = "0001",
+        stringValue = "11.3V",
+      }
+    end
+    return nil
   end,
 }
 local pollingWidget = makeRefreshWidget()
 pollingWidget.showValue = true
-pollingWidget.sensors = test.normalizeSensors({ liveSource })
+pollingWidget.sensors = test.normalizeSensors({
+  {
+    name = "Live value",
+    physicalId = "01",
+    applicationId = "1004",
+    subId = "0001",
+    stringValue = "11.1V",
+  },
+})
+local originalVisibleRow = pollingWidget.sensors[1]
+_G.CATEGORY_TELEMETRY = 42
+pollingWidget.sourceCategory = 42
+pollingSourceRequests = {}
 test.wakeup(pollingWidget)
-assert_equal(pollingRefreshCount, 0, "show-value wakeup should not poll before interval")
+assert_equal(#pollingSourceRequests, 0, "show-value wakeup should not poll before interval")
 wakeupClock = 0.19
 test.wakeup(pollingWidget)
-assert_equal(pollingRefreshCount, 0, "show-value wakeup should wait for 5hz interval")
-liveValueIndex = 2
+assert_equal(#pollingSourceRequests, 0, "show-value wakeup should wait for 5hz interval")
 wakeupClock = 0.2
 test.wakeup(pollingWidget)
-assert_equal(pollingRefreshCount, 0, "show-value wakeup should not trigger full sensor discovery")
+assert_true(#pollingSourceRequests >= 1, "show-value wakeup should resolve a live source at 5hz")
+assert_true(pollingWidget.sensors[1] == originalVisibleRow, "value polling should not rebuild the display row list")
 assert_equal(pollingWidget.sensors[1].valueText, "11.3V", "periodic wakeup refresh updates visible value text")
+local requestCountAfterFirstPoll = #pollingSourceRequests
 wakeupClock = 0.39
 test.wakeup(pollingWidget)
-assert_equal(pollingRefreshCount, 0, "show-value wakeup should stay on the cheap value-refresh path between intervals")
+assert_equal(#pollingSourceRequests, requestCountAfterFirstPoll, "show-value wakeup should not over-poll between intervals")
 
-local idleRefreshCount = 0
+local idleSourceRequests = {}
 _G.system = {
-  getSensors = function()
-    idleRefreshCount = idleRefreshCount + 1
-    return {
-      { name = "Hidden value", physicalId = "02", applicationId = "1005", subId = "0001", stringValue = "9.9V" },
-    }
+  getSource = function(request)
+    idleSourceRequests[#idleSourceRequests + 1] = request
+    return nil
   end,
 }
 local idleWidget = makeRefreshWidget()
+idleWidget.showValue = true
+idleWidget.sensors = test.normalizeSensors({
+  { name = "Hidden value", physicalId = "02", applicationId = "1005", subId = "0001", stringValue = "9.9V" },
+})
+idleWidget.sourceCategory = 42
+idleSourceRequests = {}
+_G.lcd.isVisible = function()
+  return false
+end
 wakeupClock = 0.2
 test.wakeup(idleWidget)
 wakeupClock = 0.4
 test.wakeup(idleWidget)
-assert_equal(idleRefreshCount, 0, "wakeup should stay idle when show-value polling is disabled")
+assert_equal(#idleSourceRequests, 0, "wakeup should stay idle when the widget is not visible")
 
 os.clock = savedClock
+_G.lcd.isVisible = savedIsVisible
+_G.CATEGORY_TELEMETRY = nil
 
 local incrementalRefreshCalls = {}
 _G.system = {

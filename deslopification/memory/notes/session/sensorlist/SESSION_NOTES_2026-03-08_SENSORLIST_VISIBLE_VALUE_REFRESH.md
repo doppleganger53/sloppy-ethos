@@ -10,9 +10,9 @@
 
 ## What changed
 
-- Replaced the 5 Hz `wakeup()` full-refresh path with a cheaper visible-row value refresh that re-reads value text from cached sensor source references.
-- Kept the existing sensor discovery and manual/deep refresh flows intact; only the periodic value update path changed.
-- Updated Lua regression coverage to prove the value-refresh path updates displayed values without calling back into full sensor discovery.
+- Replaced the 5 Hz `wakeup()` full-refresh path with a cheaper visible-row value refresh that resolves live telemetry `source` handles and updates only value text on the existing rows.
+- Limited the periodic value refresh path to visible widgets only; whole-list sensor discovery remains confined to initialization and the existing manual/deep refresh flows.
+- Updated Lua regression coverage to prove the value-refresh path updates displayed values without rebuilding the sensor row list and stays idle while the widget is hidden.
 - Files touched:
   - `scripts/SensorList/main.lua`
   - `tests/lua/test_sensorlist.lua`
@@ -30,10 +30,14 @@
   - result: pass
 - `python -m pytest tests/test_sensorlist_widget.py -q`
   - result: pass (`6 passed`)
+- Ethos Suite simulator verification after deploy
+  - result: pass
+- Physical X20RS verification
+  - result: pass
 
 ## Follow-up items
 
-- Re-test on the simulator and the X20RS runtime to confirm the cheaper visible-row refresh path resolves the instruction-budget failure in both environments.
+- None.
 
 ## Current State Sync
 
