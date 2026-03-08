@@ -482,40 +482,42 @@ os.clock = function()
   return wakeupClock
 end
 
-local pollingValues = { "11.1V", "11.3V" }
+local liveValueIndex = 1
+local liveSource = {
+  name = "Live value",
+  physicalId = "01",
+  applicationId = "1004",
+  subId = "0001",
+  stringValue = function()
+    if liveValueIndex == 1 then
+      return "11.1V"
+    end
+    return "11.3V"
+  end,
+}
 local pollingRefreshCount = 0
 _G.system = {
   getSensors = function()
     pollingRefreshCount = pollingRefreshCount + 1
-    return {
-      {
-        name = "Live value",
-        physicalId = "01",
-        applicationId = "1004",
-        subId = "0001",
-        stringValue = pollingValues[pollingRefreshCount] or pollingValues[#pollingValues],
-      },
-    }
+    return {}
   end,
 }
 local pollingWidget = makeRefreshWidget()
 pollingWidget.showValue = true
+pollingWidget.sensors = test.normalizeSensors({ liveSource })
 test.wakeup(pollingWidget)
 assert_equal(pollingRefreshCount, 0, "show-value wakeup should not poll before interval")
 wakeupClock = 0.19
 test.wakeup(pollingWidget)
 assert_equal(pollingRefreshCount, 0, "show-value wakeup should wait for 5hz interval")
+liveValueIndex = 2
 wakeupClock = 0.2
 test.wakeup(pollingWidget)
-assert_equal(pollingRefreshCount, 1, "show-value wakeup should poll at 5hz")
-assert_equal(pollingWidget.sensors[1].valueText, "11.1V", "first periodic wakeup refresh captures value text")
+assert_equal(pollingRefreshCount, 0, "show-value wakeup should not trigger full sensor discovery")
+assert_equal(pollingWidget.sensors[1].valueText, "11.3V", "periodic wakeup refresh updates visible value text")
 wakeupClock = 0.39
 test.wakeup(pollingWidget)
-assert_equal(pollingRefreshCount, 1, "show-value wakeup should not over-poll between intervals")
-wakeupClock = 0.4
-test.wakeup(pollingWidget)
-assert_equal(pollingRefreshCount, 2, "show-value wakeup should continue polling at 5hz")
-assert_equal(pollingWidget.sensors[1].valueText, "11.3V", "later periodic wakeup refresh updates value text")
+assert_equal(pollingRefreshCount, 0, "show-value wakeup should stay on the cheap value-refresh path between intervals")
 
 local idleRefreshCount = 0
 _G.system = {

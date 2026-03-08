@@ -15,26 +15,26 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 98
-- Total size: 161,371 bytes
-- Total lines: 4,320
+- Files: 99
+- Total size: 162,986 bytes
+- Total lines: 4,361
 - Distribution by artifact:
-  - session notes: 92
+  - session notes: 93
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
   - 54 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 16 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
-  - 15 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
   - 4 -- ethos-events ( ethos_events-specific behavior, release history, and operating notes )
   - 3 -- handoff ( Session continuity and restart handoffs )
 
 - Distribution by concern:
+  - 24 -- implementation
   - 24 -- workflow
-  - 23 -- implementation
   - 14 -- release
   - 11 -- build
   - 9 -- docs
@@ -171,3 +171,4 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-03-07 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-07_ISSUE_58_SENSORLIST_VALUE_POLLING.md](notes/session/sensorlist/SESSION_NOTES_2026-03-07_ISSUE_58_SENSORLIST_VALUE_POLLING.md) | # Session Notes 2026-03-07 - Issue #58 SensorList Value Polling |
 | 2026-03-08 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-03-08_BUILD_CLEAN_ORDER_FIX.md](notes/session/repo/SESSION_NOTES_2026-03-08_BUILD_CLEAN_ORDER_FIX.md) | # Session Notes 2026-03-08 - Build Clean Order Fix |
 | 2026-03-08 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md](notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md) | # Session Notes 2026-03-08 - VS Code Lua Coverage Workflow |
+| 2026-03-08 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-08_SENSORLIST_VISIBLE_VALUE_REFRESH.md](notes/session/sensorlist/SESSION_NOTES_2026-03-08_SENSORLIST_VISIBLE_VALUE_REFRESH.md) | # Session Notes 2026-03-08 - SensorList Visible Value Refresh |

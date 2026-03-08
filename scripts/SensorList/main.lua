@@ -509,26 +509,37 @@ local function buildDisplaySensors(widget, normalized)
   return display
 end
 
+local function readSensorValueText(sensor)
+  if type(sensor) ~= "table" then
+    return "--"
+  end
+
+  local valueText = readCandidate(sensor, { "formattedValue", "valueText", "displayValue", "sensorValue" })
+  if valueText == nil then
+    local stringValue = readCandidate(sensor, { "stringValue" })
+    local name = readCandidate(sensor, { "label", "name", "text", "title" })
+    if type(stringValue) == "string" and stringValue ~= tostring(name) then
+      valueText = stringValue
+    end
+  end
+  if valueText == nil then
+    valueText = readCandidate(sensor, { "value", "getValue" })
+  end
+
+  return formatSensorValue(valueText)
+end
+
 local function normalizeSensors(rawSensors)
   local normalized = {}
   for idx, sensor in ipairs(rawSensors) do
     local name = readCandidate(sensor, { "label", "name", "text", "title", "stringValue" }) or ("Sensor " .. tostring(idx))
-    local valueText = readCandidate(sensor, { "formattedValue", "valueText", "displayValue", "sensorValue" })
-    if valueText == nil then
-      local stringValue = readCandidate(sensor, { "stringValue" })
-      if type(stringValue) == "string" and stringValue ~= tostring(name) then
-        valueText = stringValue
-      end
-    end
-    if valueText == nil then
-      valueText = readCandidate(sensor, { "value", "getValue" })
-    end
 
     local physical = toInt(readCandidate(sensor, { "physicalId", "physicalID", "physId", "id1", "id" }))
     local application = toInt(readCandidate(sensor, { "applicationId", "appId", "param", "id2" }))
     local subId = toInt(readCandidate(sensor, { "subId", "subID", "id3", "instance" }))
 
     normalized[#normalized + 1] = {
+      source = sensor,
       name = tostring(name),
       physical = physical or UNKNOWN_ID,
       application = application or UNKNOWN_ID,
@@ -536,7 +547,7 @@ local function normalizeSensors(rawSensors)
       physicalText = formatHex(physical, 2),
       applicationText = formatHex(application, 4),
       subIdText = formatHex(subId, 4),
-      valueText = formatSensorValue(valueText),
+      valueText = readSensorValueText(sensor),
     }
   end
 
@@ -720,6 +731,34 @@ local function triggerRefreshFeedback()
     return true
   end
   return false
+end
+
+local function refreshVisibleSensorValues(widget)
+  if type(widget) ~= "table" or type(widget.sensors) ~= "table" or #widget.sensors == 0 then
+    return false
+  end
+
+  local firstIndex = math.max(1, (widget.scrollOffset or 0) + 1)
+  local lastIndex = math.min(#widget.sensors, firstIndex + calculateVisibleRows() - 1)
+  local changed = false
+
+  for idx = firstIndex, lastIndex do
+    local sensor = widget.sensors[idx]
+    if type(sensor) == "table" and sensor.source then
+      local nextValueText = readSensorValueText(sensor.source)
+      if nextValueText ~= sensor.valueText then
+        sensor.valueText = nextValueText
+        changed = true
+      end
+    end
+  end
+
+  if changed then
+    widget.needsInvalidate = true
+    clearWidgetError(widget)
+  end
+
+  return changed
 end
 
 local function triggerManualRefresh(widget)
@@ -1328,10 +1367,13 @@ local function wakeup(widget, event)
     end
   end
 
-  local shouldRefreshValues = widget.showValue and now - (widget.lastValueRefresh or 0) >= VALUE_REFRESH_INTERVAL
+  local shouldRefreshValues = widget.showValue
+    and type(widget.sensors) == "table"
+    and #widget.sensors > 0
+    and now - (widget.lastValueRefresh or 0) >= VALUE_REFRESH_INTERVAL
   if shouldRefreshValues then
     widget.lastValueRefresh = now
-    local ok, err = pcall(refreshSensors, widget, false)
+    local ok, err = pcall(refreshVisibleSensorValues, widget)
     if not ok then
       setWidgetError(widget, "wakeup-value-refresh", err)
     end
@@ -1401,12 +1443,14 @@ local function testExports()
     toInt = toInt,
     formatHex = formatHex,
     normalizeSensors = normalizeSensors,
+    readSensorValueText = readSensorValueText,
     buildConflictGroups = buildConflictGroups,
     buildSignature = buildSignature,
     applyScroll = applyScroll,
     clampOffset = clampOffset,
     getSensorList = getSensorList,
     triggerRefreshFeedback = triggerRefreshFeedback,
+    refreshVisibleSensorValues = refreshVisibleSensorValues,
     create = create,
     event = event,
     resolveTouchPhase = resolveTouchPhase,
