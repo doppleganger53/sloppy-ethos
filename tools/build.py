@@ -380,13 +380,6 @@ def main():
     if not args.dist and not args.deploy and not args.clean:
         sys.exit("Nothing to do: specify --dist, --deploy, or --clean.")
 
-    if args.dist and not args.no_zip:
-        if multi_project:
-            build_multi_project_zip(projects, dist_dir, repo_root)
-        else:
-            version = resolve_project_version(primary_project_dir, args.version)
-            build_zip(primary_project_dir, primary_project, version, dist_dir, repo_root)
-
     if args.deploy or args.clean:
         config_path = Path(args.config) if args.config else (repo_root / "tools" / "deploy.config.json")
         sim_path = resolve_simulator_path(config_path, args.sim_radio)
@@ -399,6 +392,13 @@ def main():
             clean_dist_dir(dist_dir)
     if args.deploy:
         deploy_to_simulator(primary_project_dir, primary_project, sim_path)
+
+    if args.dist and not args.no_zip:
+        if multi_project:
+            build_multi_project_zip(projects, dist_dir, repo_root)
+        else:
+            version = resolve_project_version(primary_project_dir, args.version)
+            build_zip(primary_project_dir, primary_project, version, dist_dir, repo_root)
 
 
 if __name__ == "__main__":

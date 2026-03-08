@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 97
-- Total size: 160,182 bytes
-- Total lines: 4,282
+- Files: 98
+- Total size: 161,371 bytes
+- Total lines: 4,320
 - Distribution by artifact:
-  - session notes: 91
+  - session notes: 92
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 53 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 54 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 15 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -36,7 +36,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 24 -- workflow
   - 23 -- implementation
   - 14 -- release
-  - 10 -- build
+  - 11 -- build
   - 9 -- docs
   - 6 -- testing
   - 5 -- prompts
@@ -47,6 +47,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
 - 2026-03-08 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md](notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md) | # Session Notes 2026-03-08 - VS Code Lua Coverage Workflow
+- 2026-03-08 | build | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_BUILD_CLEAN_ORDER_FIX.md](notes/session/repo/SESSION_NOTES_2026-03-08_BUILD_CLEAN_ORDER_FIX.md) | # Session Notes 2026-03-08 - Build Clean Order Fix
 - 2026-03-05 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md) | # Session Notes 2026-03-05 - Issue #54 Low-Signal Test Pruning
 - 2026-03-02 | workflow | memory | [notes/session/memory/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md](notes/session/memory/SESSION_NOTES_2026-03-02_WEEKLY_SUMMARY_COMPACTION.md) | # Session Notes 2026-03-02 - Weekly Summary Compaction
 - 2026-03-02 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md) | # Session Notes 2026-03-02 - SensorList-v1.0.0 Release
@@ -57,7 +58,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - 2026-02-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage
 - 2026-02-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md) | # Session Notes 2026-02-27 - Issue #16 Catalog Test Portability
 - 2026-02-26 | metadata | repo | [notes/session/repo/SESSION_NOTES_2026-02-26_REPO_METADATA_DESCRIPTION_TOPICS.md](notes/session/repo/SESSION_NOTES_2026-02-26_REPO_METADATA_DESCRIPTION_TOPICS.md) | # Session Notes 2026-02-26 - Repository Metadata Description and Topics
-- 2026-02-26 | build | repo | [notes/session/repo/SESSION_NOTES_2026-02-26_ISSUE_22_DOIT_MIGRATION_EVALUATION.md](notes/session/repo/SESSION_NOTES_2026-02-26_ISSUE_22_DOIT_MIGRATION_EVALUATION.md) | # Session Notes 2026-02-26 - Issue #22 `build.py` to `doit` Migration Evaluation
 
 ## Recent Ethos Platform Notes
 
@@ -169,4 +169,5 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-03-05 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md) | # Session Notes 2026-03-05 - Issue #54 Low-Signal Test Pruning |
 | 2026-03-06 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-06_ISSUE_14_SENSOR_VALUES_COLUMN.md](notes/session/sensorlist/SESSION_NOTES_2026-03-06_ISSUE_14_SENSOR_VALUES_COLUMN.md) | # Session Notes 2026-03-06 - Issue #14 Sensor Values Column |
 | 2026-03-07 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-07_ISSUE_58_SENSORLIST_VALUE_POLLING.md](notes/session/sensorlist/SESSION_NOTES_2026-03-07_ISSUE_58_SENSORLIST_VALUE_POLLING.md) | # Session Notes 2026-03-07 - Issue #58 SensorList Value Polling |
+| 2026-03-08 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-03-08_BUILD_CLEAN_ORDER_FIX.md](notes/session/repo/SESSION_NOTES_2026-03-08_BUILD_CLEAN_ORDER_FIX.md) | # Session Notes 2026-03-08 - Build Clean Order Fix |
 | 2026-03-08 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md](notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md) | # Session Notes 2026-03-08 - VS Code Lua Coverage Workflow |
