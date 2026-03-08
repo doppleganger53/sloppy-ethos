@@ -47,6 +47,7 @@ python tools/build.py --help
 - Install the dist ZIP inside Ethos Suite for radio deployment.
 - Configure `tools/deploy.config.json` with `ETHOS_SIM_PATHS` entries before running `--deploy`/`--clean`.
 - Mark exactly one `ETHOS_SIM_PATHS` entry as `"default": true` for deploy/clean without `--sim-radio`.
+- During simulator debugging sessions, deploy the touched script before closing out the session so runtime verification uses the current build.
 - Single-script package version is read from `scripts/{ProjectName}/VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
 - Multi-script dist bundles are an explicit naming exception and use the unversioned ZIP name: `dist/sloppy-ethos_scripts.zip`.
 - Root `VERSION` remains the repository version source of truth.

@@ -73,6 +73,9 @@ Historical detail remains in individual session notes referenced from
   - `rebase` is not the default merge method.
 - Non-issue sessions may run on `main`, but require user confirmation before
   file mutations.
+- Simulator debugging sessions for Lua behavior now require a deploy step
+  before session closeout, with the touched script deployed via
+  `tools/build.py --project {ProjectName} --deploy`.
 
 ## Active Tooling Decisions
 

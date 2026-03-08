@@ -18,6 +18,13 @@
   `python tools/build.py --project SensorList --clean --sim-radio X20RS`
   `python tools/build.py --help`
 
+## Debugging Session Rule
+
+- When a session is actively debugging simulator-visible Lua behavior, deploy the touched script before closing out the session.
+- For SensorList debugging, the minimum closeout command is:
+  `python tools/build.py --project SensorList --deploy`
+- Add `--dist` only when you also need a fresh install ZIP; deploy is the required debugging-session step.
+
 ## Configuring Simulator Path
 
 - Copy `tools/deploy.config.example.json` to `tools/deploy.config.json` and populate `ETHOS_SIM_PATHS`.

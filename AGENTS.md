@@ -37,6 +37,10 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 ## Validation Policy
 
 - Validation is mandatory for any change.
+- Debugging-session work on simulator-visible Lua behavior must deploy the touched script to the configured Ethos simulator before session closeout.
+- Treat a session as a debugging session when the goal is to reproduce, inspect, or verify runtime behavior in the simulator rather than only editing docs or static tooling.
+- Minimum debug deploy command for SensorList:
+  - `python tools/build.py --project SensorList --deploy`
 - Run the minimum test/check commands based on the files touched:
 
 ### Validation Matrix
@@ -139,5 +143,6 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 ## Definition Of Done (Before Commit/Push)
 
 - Required validation commands for touched files completed in this session.
+- If the session was a simulator debugging session for a Lua script, the updated script was deployed to the simulator in this session.
 - Workspace and `.gitignore` reviewed for environment-specific files and sensitive data risks.
 - Any potential security concern (PII, PHI, secrets, unsafe config, API keys, auth tokens) explicitly called out to the user.
