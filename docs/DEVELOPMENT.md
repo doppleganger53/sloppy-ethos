@@ -1,5 +1,14 @@
 # Development Notes
 
+## Repository Goals And Workflow Mutability
+
+- Repository goals:
+  - Build practical Ethos utilities and scripts.
+  - Keep Lua contribution workflow approachable for non-experts.
+  - Prioritize repeatable, low-maintenance workflows that reduce process overhead.
+- Workflow/process guidance is intentionally mutable and can evolve through issue-linked updates.
+- `AGENTS.md` is the operational policy source of truth for agent execution guardrails; keep `README.md`, `CONTRIBUTING.md`, and this file synchronized when workflow policy changes.
+
 ## Prerequisites
 
 - Python 3.9+
@@ -17,6 +26,13 @@
   `python tools/build.py --project ethos_events --deploy`
   `python tools/build.py --project SensorList --clean --sim-radio X20RS`
   `python tools/build.py --help`
+
+## Debugging Session Rule
+
+- When a session is actively debugging simulator-visible Lua behavior, deploy the touched script before closing out the session.
+- For SensorList debugging, the minimum closeout command is:
+  `python tools/build.py --project SensorList --deploy`
+- Add `--dist` only when you also need a fresh install ZIP; deploy is the required debugging-session step.
 
 ## Configuring Simulator Path
 
@@ -76,6 +92,21 @@
 - Run the Lua-driven sensor list test file through pytest: `python -m pytest tests/test_sensorlist_widget.py`.
 - For any documentation updates, run docs contract checks: `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`.
 - Use the VS Code Testing view to run/discover tests and trigger coverage once dependencies are installed for the selected interpreter.
+
+## Lua Coverage In VS Code
+
+- Install the recommended workspace extension: `Coverage Gutters`.
+- Install Lua coverage tools with LuaRocks:
+  - `luarocks install luacov`
+  - `luarocks install luacov-reporter-lcov`
+- The workspace includes `.luacov` config that targets `scripts/SensorList/main.lua` and writes reports under `coverage/lua/`.
+- Run the VS Code task:
+  - `Lua Coverage Refresh (SensorList)`
+- That task sequence:
+  - clears the prior Lua coverage outputs
+  - runs `tests/lua/test_sensorlist.lua` through `lua -lluacov`
+  - generates an LCOV-style report via `luacov -r lcov`
+- Coverage Gutters is configured in `.vscode/settings.json` to pick up `luacov.report.out` from the workspace coverage output folder.
 
 ## Main Branch Release And Versioning Policy
 

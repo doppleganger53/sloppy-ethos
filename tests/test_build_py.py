@@ -638,6 +638,37 @@ def test_main_clean_calls_clean_from_simulator(monkeypatch, tmp_path: Path):
     assert calls["clean_dist_dir"] == Path(build.__file__).resolve().parent.parent / "dist"
 
 
+def test_main_clean_deploy_dist_runs_clean_first(monkeypatch, tmp_path: Path):
+    _set_main_prerequisites(
+        monkeypatch,
+        Namespace(
+            help=False,
+            project=["SensorList"],
+            dist=True,
+            deploy=True,
+            clean=True,
+            sim_radio="X20RS",
+            config=None,
+            no_zip=False,
+            version=None,
+            out_dir=None,
+        ),
+    )
+    sim_path = tmp_path / "simulator" / "X20RS"
+    sim_path.mkdir(parents=True)
+    call_order: list[str] = []
+
+    monkeypatch.setattr(build, "resolve_simulator_path", lambda *_args, **_kwargs: sim_path)
+    monkeypatch.setattr(build, "clean_from_simulator", lambda *_args, **_kwargs: call_order.append("clean"))
+    monkeypatch.setattr(build, "clean_dist_dir", lambda *_args, **_kwargs: call_order.append("clean-dist"))
+    monkeypatch.setattr(build, "deploy_to_simulator", lambda *_args, **_kwargs: call_order.append("deploy"))
+    monkeypatch.setattr(build, "build_zip", lambda *_args, **_kwargs: call_order.append("dist"))
+
+    build.main()
+
+    assert call_order == ["clean", "clean-dist", "deploy", "dist"]
+
+
 def test_main_exits_when_sim_radio_path_does_not_exist(monkeypatch, tmp_path: Path):
     _set_main_prerequisites(
         monkeypatch,

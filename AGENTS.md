@@ -2,6 +2,18 @@
 
 Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
+## Repository Goals And Mutable Workflow Model
+
+- Repository goals:
+  - Build practical Ethos utilities and scripts.
+  - Keep Lua contribution workflow approachable for non-experts.
+  - Prioritize repeatable, low-maintenance workflows that help contributors spend more time flying and less time on process overhead.
+- Workflow model is intentionally mutable:
+  - Agent workflow/process metadata is allowed to evolve when repository goals, tooling, or contributor needs change.
+  - Workflow mutations must be issue-linked, documented, and kept consistent across `AGENTS.md`, `CONTRIBUTING.md`, `README.md`, and `docs/DEVELOPMENT.md` in the same session.
+- Stability rule:
+  - Treat this file as the operational policy source of truth for agent execution guardrails; when policy changes, synchronize related contributor docs immediately.
+
 ## Priority And Scope
 
 - These rules are repository-wide and apply to every task in this workspace.
@@ -37,6 +49,10 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 ## Validation Policy
 
 - Validation is mandatory for any change.
+- Debugging-session work on simulator-visible Lua behavior must deploy the touched script to the configured Ethos simulator before session closeout.
+- Treat a session as a debugging session when the goal is to reproduce, inspect, or verify runtime behavior in the simulator rather than only editing docs or static tooling.
+- Minimum debug deploy command for SensorList:
+  - `python tools/build.py --project SensorList --deploy`
 - Run the minimum test/check commands based on the files touched:
 
 ### Validation Matrix
@@ -139,5 +155,6 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 ## Definition Of Done (Before Commit/Push)
 
 - Required validation commands for touched files completed in this session.
+- If the session was a simulator debugging session for a Lua script, the updated script was deployed to the simulator in this session.
 - Workspace and `.gitignore` reviewed for environment-specific files and sensitive data risks.
 - Any potential security concern (PII, PHI, secrets, unsafe config, API keys, auth tokens) explicitly called out to the user.

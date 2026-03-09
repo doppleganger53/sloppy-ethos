@@ -1,0 +1,11 @@
+return {
+  statsfile = "coverage/lua/luacov.stats.out",
+  reportfile = "coverage/lua/luacov.report.out",
+  includeuntestedfiles = true,
+  include = {
+    "scripts/SensorList/main.lua",
+  },
+  exclude = {
+    "tests/",
+  },
+}

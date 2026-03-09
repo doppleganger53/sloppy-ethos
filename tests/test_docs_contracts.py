@@ -20,6 +20,7 @@ REQUIRED_EXTERNAL_LINKS = (
     ("Visual Studio Code", "https://code.visualstudio.com/"),
     ("OpenAI Codex", "https://openai.com/codex/"),
 )
+MUTABLE_WORKFLOW_PHRASE = "Workflow/process guidance is intentionally mutable"
 
 
 def _read(path: Path) -> str:
@@ -147,6 +148,13 @@ def test_readme_links_sensorlist_architecture_doc():
 
 def test_contributing_has_workflow_section():
     assert "## Workflow" in _read(CONTRIBUTING_PATH)
+
+
+def test_mutable_workflow_policy_is_documented_across_agent_and_contributor_docs():
+    assert MUTABLE_WORKFLOW_PHRASE in _read(README_PATH)
+    assert MUTABLE_WORKFLOW_PHRASE in _read(DEVELOPMENT_PATH)
+    assert MUTABLE_WORKFLOW_PHRASE in _read(CONTRIBUTING_PATH)
+    assert "Workflow model is intentionally mutable" in _read(REPO_ROOT / "AGENTS.md")
 
 
 def test_vscode_pytest_enabled_in_repo_settings():

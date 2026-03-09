@@ -17,6 +17,9 @@ Historical detail remains in individual session notes referenced from
 
 - Root-cause-first policy is mandatory; avoid compatibility shims unless
   explicitly justified.
+- Workflow/process guidance is intentionally mutable; issue-linked policy
+  changes must keep `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, and
+  `docs/DEVELOPMENT.md` synchronized in the same session.
 - Validation is mandatory for all changes per `AGENTS.md` matrix.
 - Documentation/process changes require docs contract validation.
 - Session memory updates are required for meaningful workflow/behavior changes.
@@ -73,12 +76,19 @@ Historical detail remains in individual session notes referenced from
   - `rebase` is not the default merge method.
 - Non-issue sessions may run on `main`, but require user confirmation before
   file mutations.
+- Simulator debugging sessions for Lua behavior now require a deploy step
+  before session closeout, with the touched script deployed via
+  `tools/build.py --project {ProjectName} --deploy`.
 
 ## Active Tooling Decisions
 
 - Canonical build/deploy workflow remains `tools/build.py`.
 - `build.py` to `doit` migration decision: retain `build.py` (Issue #22
   evaluation complete).
+- Optional VS Code Lua coverage workflow is now wired through:
+  - `Coverage Gutters` workspace recommendation in `.vscode/extensions.json`
+  - `.luacov` output under `coverage/lua/`
+  - `Lua Coverage Refresh (SensorList)` task sequence in `.vscode/tasks.json`
 - Prompt templates live in `deslopification/prompts/templates/`.
 
 ## How To Use With CATALOG

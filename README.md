@@ -47,6 +47,7 @@ python tools/build.py --help
 - Install the dist ZIP inside Ethos Suite for radio deployment.
 - Configure `tools/deploy.config.json` with `ETHOS_SIM_PATHS` entries before running `--deploy`/`--clean`.
 - Mark exactly one `ETHOS_SIM_PATHS` entry as `"default": true` for deploy/clean without `--sim-radio`.
+- During simulator debugging sessions, deploy the touched script before closing out the session so runtime verification uses the current build.
 - Single-script package version is read from `scripts/{ProjectName}/VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
 - Multi-script dist bundles are an explicit naming exception and use the unversioned ZIP name: `dist/sloppy-ethos_scripts.zip`.
 - Root `VERSION` remains the repository version source of truth.
@@ -95,6 +96,15 @@ luac -p scripts/SensorList/main.lua
 - Execute the sensor-list test file: `python -m pytest tests/test_sensorlist_widget.py`.
 - VS Code Test Explorer coverage runs require `pytest-cov`, which is included in `requirements/dev.txt`.
 
+### Lua Coverage In VS Code
+
+- Install the recommended VS Code extension: `Coverage Gutters`.
+- Install Lua coverage tools with LuaRocks:
+  - `luarocks install luacov`
+  - `luarocks install luacov-reporter-lcov`
+- Run the VS Code task `Lua Coverage Refresh (SensorList)`.
+- Coverage output is written to `coverage/lua/luacov.report.out` and the workspace is configured to let Coverage Gutters display it.
+
 ## Releases
 
 - Changelog source of truth: `CHANGELOG.md`.
@@ -124,6 +134,7 @@ luac -p scripts/SensorList/main.lua
 - See `SECURITY.md` for responsible vulnerability reporting.
 - Start session-memory context with `deslopification/memory/README.md`.
 - Use `deslopification/memory/CATALOG.md` for full historical note lookup.
+- Workflow/process guidance is intentionally mutable; issue-linked workflow updates must keep `AGENTS.md`, `CONTRIBUTING.md`, and `docs/DEVELOPMENT.md` synchronized.
 
 ## Troubleshooting
 
