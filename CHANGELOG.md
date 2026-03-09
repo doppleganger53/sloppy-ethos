@@ -4,6 +4,22 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [SensorList v1.0.1] - 2026-03-09
+
+### Changed
+
+- Released the `SensorList` script artifact at `1.0.1`, anchored on Issue #14, adding an optional persisted `Display Value` column while preserving the default four-column layout when the option is disabled.
+- Included the Issue #58 stabilization fix so visible value updates no longer use the unsafe `wakeup()` full-refresh path and instead refresh only the displayed row values without rebuilding the full sensor list.
+- Issue #32 manual validation gate was already closed before release publication.
+- Repository version remains `1.0.3`; this entry tracks the script-scoped release only.
+
+### Testing
+
+- `luac -p scripts/SensorList/main.lua`
+- `python -m pytest tests/test_sensorlist_widget.py -q`
+- `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
+- `python tools/build.py --project SensorList --dist`
+
 ## [1.0.3] - 2026-03-02
 
 ### Changed
