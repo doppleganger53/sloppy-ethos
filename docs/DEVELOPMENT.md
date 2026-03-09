@@ -1,5 +1,14 @@
 # Development Notes
 
+## Repository Goals And Workflow Mutability
+
+- Repository goals:
+  - Build practical Ethos utilities and scripts.
+  - Keep Lua contribution workflow approachable for non-experts.
+  - Prioritize repeatable, low-maintenance workflows that reduce process overhead.
+- Workflow/process guidance is intentionally mutable and can evolve through issue-linked updates.
+- `AGENTS.md` is the operational policy source of truth for agent execution guardrails; keep `README.md`, `CONTRIBUTING.md`, and this file synchronized when workflow policy changes.
+
 ## Prerequisites
 
 - Python 3.9+

@@ -2,6 +2,18 @@
 
 Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
+## Repository Goals And Mutable Workflow Model
+
+- Repository goals:
+  - Build practical Ethos utilities and scripts.
+  - Keep Lua contribution workflow approachable for non-experts.
+  - Prioritize repeatable, low-maintenance workflows that help contributors spend more time flying and less time on process overhead.
+- Workflow model is intentionally mutable:
+  - Agent workflow/process metadata is allowed to evolve when repository goals, tooling, or contributor needs change.
+  - Workflow mutations must be issue-linked, documented, and kept consistent across `AGENTS.md`, `CONTRIBUTING.md`, `README.md`, and `docs/DEVELOPMENT.md` in the same session.
+- Stability rule:
+  - Treat this file as the operational policy source of truth for agent execution guardrails; when policy changes, synchronize related contributor docs immediately.
+
 ## Priority And Scope
 
 - These rules are repository-wide and apply to every task in this workspace.
