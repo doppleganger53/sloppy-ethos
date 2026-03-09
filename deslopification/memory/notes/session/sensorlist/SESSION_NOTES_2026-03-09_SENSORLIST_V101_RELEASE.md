@@ -15,6 +15,9 @@
 - Rebuilt the script artifact from the release branch for publication:
   - `dist/SensorList-1.0.1.zip`
 - Generated standalone release notes for GitHub publication with `tools/write_release_notes.py`.
+- Published tag and GitHub release:
+  - tag: `SensorList-v1.0.1`
+  - release URL: `https://github.com/doppleganger53/sloppy-ethos/releases/tag/SensorList-v1.0.1`
 - Files touched:
   - `CHANGELOG.md`
   - `deslopification/memory/notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md`
@@ -43,12 +46,13 @@
 - `python tools/write_release_notes.py --version 1.0.1 --project SensorList --output .tmp/release-notes-SensorList-v1.0.1.md`
   - result: passed
   - artifact: `.tmp/release-notes-SensorList-v1.0.1.md`
+- `gh release view SensorList-v1.0.1 --json tagName,name,url,isDraft,isPrerelease,publishedAt`
+  - result: passed
+  - release: `https://github.com/doppleganger53/sloppy-ethos/releases/tag/SensorList-v1.0.1`
 
 ## Follow-up items
 
-- Publish tag `SensorList-v1.0.1` and GitHub release `SensorList-v1.0.1` with asset `dist/SensorList-1.0.1.zip`.
-- Verify the release metadata and record the published release URL.
-- Delete `release/SensorList-v1.0.1` after publication.
+- None. The GitHub release is published and the local/remote release branch no longer exists.
 
 ## Current State Sync
 
