@@ -9,11 +9,15 @@ The widget registers through `init()` and uses the standard Ethos callbacks:
 
 - `create()`: allocates per-instance widget state and performs initial deep
   sensor refresh.
+- `configure(widget)`: exposes the `Display Value` widget option.
 - `paint(widget)`: draws table headers and visible sensor rows.
-- `wakeup(widget, event)`: rate-limited invalidate scheduling; does not perform
-  periodic sensor refresh.
+- `wakeup(widget, event)`: advances staged sensor discovery, rate-limits redraw
+  invalidation, and refreshes displayed sensor values at roughly 5 Hz when the
+  `Display Value` option is enabled.
 - `event(widget, category, value, x, y)`: dispatches touch/long-press input for
   manual refresh and scrolling.
+- `read(widget)` / `write(widget)`: persist the `Display Value` option through
+  Ethos widget storage when available.
 - Runtime faults in `create()`, `paint()`, and `event()` are trapped so the
   widget can log `SLERR ...` to serial and attempt to render a minimal error
   banner instead of failing silently.
@@ -24,7 +28,7 @@ Each widget instance owns state in the `widget` table, including:
 
 - sensor and display data:
   - `sensors`, `groups`, `colorCache`, `lastSignature`, `lastRawCount`,
-    `lastDebug`
+    `lastDebug`, `showValue`
 - source-discovery cache:
   - `sourceCategory`, `sourceMaxMember`
 - scroll/redraw state:
@@ -49,8 +53,11 @@ Each widget instance owns state in the `widget` table, including:
    - candidate fields/methods are probed defensively so radio-only accessor
      differences (for example `source:subId()`) fail soft instead of crashing
      the widget.
+   - best-effort value text is captured at refresh time from formatted/string
+     or numeric members so paint-time rendering stays cheap.
 3. Build signature (`buildSignature`) and only update widget tables when the
-   signature changes.
+   signature changes, including value-text changes from manual refresh and
+   periodic value polling.
 4. Recompute conflict group mapping (`buildConflictGroups`) and reset color cache.
 5. Clamp `scrollOffset` against current visible row count.
 
@@ -73,7 +80,7 @@ The `event()` callback handles user-driven interactions:
 - Touch phases are resolved through `resolveTouchPhase()` to normalize Ethos
   event code variants across runtime versions.
 - Header taps only sort the `Name`, `PhysID`, and `AppID` columns; `SubID`
-  remains display-only.
+  and optional `Value` remain display-only.
 - `handleTouchScroll()` accumulates movement and applies row-based scrolling.
 - Scroll processing is protected by per-event caps to avoid extreme jumps.
 - Touch-end can trigger long-press refresh fallback when dedicated long-press
@@ -82,8 +89,10 @@ The `event()` callback handles user-driven interactions:
 
 ## Behavioral Invariants
 
-- No periodic sensor polling in `wakeup()`.
-- Manual refresh happens on `create()` and explicit long-press only.
+- Periodic `wakeup()` polling runs at roughly 5 Hz only while `Display Value`
+  is enabled.
+- Manual long-press remains the explicit full rescan path.
 - Sorting remains deterministic for stable visual ordering.
+- The default layout remains four columns unless `Display Value` is enabled.
 - Ethos API calls are guarded through `safeCall()` to fail soft on missing or
   variant runtime functions.

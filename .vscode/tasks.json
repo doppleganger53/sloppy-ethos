@@ -66,6 +66,58 @@
         "reveal": "always"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Lua Coverage Clean",
+      "type": "shell",
+      "command": "if (!(Test-Path 'coverage/lua')) { New-Item -ItemType Directory -Path 'coverage/lua' | Out-Null }; Remove-Item 'coverage/lua/luacov.stats.out','coverage/lua/luacov.report.out' -Force -ErrorAction SilentlyContinue",
+      "group": "test",
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Lua Coverage Run (SensorList)",
+      "type": "shell",
+      "command": "lua",
+      "args": [
+        "-lluacov",
+        "tests/lua/test_sensorlist.lua"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Lua Coverage Report (SensorList)",
+      "type": "shell",
+      "command": "luacov",
+      "args": [
+        "-r",
+        "lcov"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Lua Coverage Refresh (SensorList)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Lua Coverage Clean",
+        "Lua Coverage Run (SensorList)",
+        "Lua Coverage Report (SensorList)"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
     }
   ]
 }

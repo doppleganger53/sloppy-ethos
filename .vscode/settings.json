@@ -13,5 +13,9 @@
   "python.testing.pytestArgs": [
     "tests"
   ],
-  "python.testing.cwd": "${workspaceFolder}"
+  "python.testing.cwd": "${workspaceFolder}",
+  "coverage-gutters.coverageBaseDir": "${workspaceFolder}",
+  "coverage-gutters.coverageFileNames": [
+    "luacov.report.out"
+  ]
 }
