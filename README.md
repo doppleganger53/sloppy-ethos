@@ -25,6 +25,12 @@ Ethos Lua widget workspace. Current active project: `SensorList`.
 - Packaging flow produces Ethos-installable ZIP archives.
 - Manual list scrolling is implemented via wheel/button events.
 
+## Download Latest Script Releases
+
+- [Download SensorList (v1.0.1)](https://github.com/doppleganger53/sloppy-ethos/releases/download/SensorList-v1.0.1/SensorList-1.0.1.zip)
+- [Download ethos_events (v0.1.0)](https://github.com/doppleganger53/sloppy-ethos/releases/download/ethos_events-v0.1.0/ethos_events-0.1.0.zip)
+
+
 ## Visual Overview
 
 Visual onboarding media is intentionally placeholder-only for now. A screenshot

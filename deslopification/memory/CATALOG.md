@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 103
-- Total size: 169,688 bytes
-- Total lines: 4,550
+- Files: 105
+- Total size: 172,227 bytes
+- Total lines: 4,629
 - Distribution by artifact:
-  - session notes: 97
+  - session notes: 99
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 57 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 59 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -37,7 +37,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 24 -- implementation
   - 15 -- release
   - 11 -- build
-  - 9 -- docs
+  - 11 -- docs
   - 6 -- testing
   - 5 -- issue-admin
   - 5 -- prompts
@@ -47,6 +47,8 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
 - 2026-03-09 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md) | # Session Notes 2026-03-09 - SensorList-v1.0.1 Release
+- 2026-03-09 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-09_ISSUE_62_README_GUIDANCE_RELOCATION.md](notes/session/repo/SESSION_NOTES_2026-03-09_ISSUE_62_README_GUIDANCE_RELOCATION.md) | # Session Notes 2026-03-09 - Issue #62 README Guidance Relocation
+- 2026-03-09 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-09_ISSUE_62_README_DOWNLOAD_LINKS.md](notes/session/repo/SESSION_NOTES_2026-03-09_ISSUE_62_README_DOWNLOAD_LINKS.md) | # Session Notes 2026-03-09 - Issue #62 README Download Links
 - 2026-03-08 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md](notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md) | # Session Notes 2026-03-08 - VS Code Lua Coverage Workflow
 - 2026-03-08 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md](notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md) | # Session Notes 2026-03-08 - Debug Sessions Require Deploy
 - 2026-03-08 | build | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_BUILD_CLEAN_ORDER_FIX.md](notes/session/repo/SESSION_NOTES_2026-03-08_BUILD_CLEAN_ORDER_FIX.md) | # Session Notes 2026-03-08 - Build Clean Order Fix
@@ -56,8 +58,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - 2026-03-02 | release | repo | [notes/session/repo/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md](notes/session/repo/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md) | # Session Notes 2026-03-02 - Repo Releases Consolidated Bundle Only
 - 2026-03-02 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md](notes/session/repo/SESSION_NOTES_2026-03-02_GOOD_FIRST_ISSUE_GUIDANCE_REMOVAL.md) | # Session Notes 2026-03-02 - Contributing Good First Issue Guidance Removal
 - 2026-02-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage
-- 2026-02-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_CATALOG_TEST_PORTABILITY.md) | # Session Notes 2026-02-27 - Issue #16 Catalog Test Portability
-- 2026-02-26 | metadata | repo | [notes/session/repo/SESSION_NOTES_2026-02-26_REPO_METADATA_DESCRIPTION_TOPICS.md](notes/session/repo/SESSION_NOTES_2026-02-26_REPO_METADATA_DESCRIPTION_TOPICS.md) | # Session Notes 2026-02-26 - Repository Metadata Description and Topics
 
 ## Recent Ethos Platform Notes
 
@@ -175,4 +175,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-03-08 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md](notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md) | # Session Notes 2026-03-08 - Debug Sessions Require Deploy |
 | 2026-03-08 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md](notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md) | # Session Notes 2026-03-08 - VS Code Lua Coverage Workflow |
 | 2026-03-08 | session | sensorlist | implementation | [notes/session/sensorlist/SESSION_NOTES_2026-03-08_SENSORLIST_VISIBLE_VALUE_REFRESH.md](notes/session/sensorlist/SESSION_NOTES_2026-03-08_SENSORLIST_VISIBLE_VALUE_REFRESH.md) | # Session Notes 2026-03-08 - SensorList Visible Value Refresh |
+| 2026-03-09 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-03-09_ISSUE_62_README_DOWNLOAD_LINKS.md](notes/session/repo/SESSION_NOTES_2026-03-09_ISSUE_62_README_DOWNLOAD_LINKS.md) | # Session Notes 2026-03-09 - Issue #62 README Download Links |
+| 2026-03-09 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-03-09_ISSUE_62_README_GUIDANCE_RELOCATION.md](notes/session/repo/SESSION_NOTES_2026-03-09_ISSUE_62_README_GUIDANCE_RELOCATION.md) | # Session Notes 2026-03-09 - Issue #62 README Guidance Relocation |
 | 2026-03-09 | session | sensorlist | release | [notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md) | # Session Notes 2026-03-09 - SensorList-v1.0.1 Release |
