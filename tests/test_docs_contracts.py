@@ -162,6 +162,23 @@ def test_vscode_pytest_enabled_in_repo_settings():
     assert settings.get("python.testing.pytestEnabled") is True
 
 
+
+
+def test_readme_download_links_match_script_versions():
+    readme_text = _read(README_PATH)
+    assert "## Download Latest Script Releases" in readme_text
+
+    scripts_root = REPO_ROOT / "scripts"
+    for project_dir in scripts_root.iterdir():
+        if not project_dir.is_dir():
+            continue
+        project_name = project_dir.name
+        version = (project_dir / "VERSION").read_text(encoding="utf-8").strip()
+        expected_asset = f"{project_name}-{version}.zip"
+        assert expected_asset in readme_text, (
+            f"README download links must include latest {project_name} asset {expected_asset}."
+        )
+        assert "/releases/download/" in readme_text
 def test_required_recommended_links_present_in_readme():
     readme_text = _read(README_PATH)
     links = set(_extract_markdown_links(readme_text))
