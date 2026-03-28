@@ -9,3 +9,5 @@ Install with Ethos Suite:
 3. Place matching map bitmaps in `/bitmaps/GPS/` and metadata JSON files in `/documents/user/`.
 
 Boundary edits are stored per map in `/documents/user/<map-stem>.boundries.json`.
+
+Map functionality derived from: [AccuMap](https://github.com/MartinovEm/Ethos-GPS-AccuMap)
