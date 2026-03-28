@@ -57,6 +57,9 @@ Use `{REFERENCE_PROJECT}` as a starting point. Obey LICENSE and document appropr
 
 1. Add dropdown to select 'Boundry Warning' Options:
     1. None (Default) - no behavior change
+    2. Audio - audio beep repeating every 2 seconds
+    3. Haptic - full-strength haptic vibration on all haptic feedback devices available
+    4. Both - Audio and Haptic both triggered
 2. Add dropdown to select 'Warning Type' Options:
     1. Momentary - warning is played once
     2. Constant - warning is played continuously until aircraft position is no longer exceeding boundry
@@ -111,3 +114,4 @@ Return:
 2.  Short explanation of architecture and data flow.
 3.  Explicit test checklist (simulator + radio when applicable).
 4.  Any assumptions made due to API/version uncertainty.
+5. Anything else required based on project workflow/conventions
