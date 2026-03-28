@@ -12,3 +12,4 @@ __pycache__/
 .markdownlint*
 coverage/lua/luacov.stats.out
 coverage/lua/luacov.report.out
+referenceProjects/
