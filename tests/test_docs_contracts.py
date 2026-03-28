@@ -35,6 +35,21 @@ def _extract_markdown_links(text: str) -> list[tuple[str, str]]:
     return [(label.strip(), target.strip()) for label, target in re.findall(r"\[([^\]]+)\]\(([^)]+)\)", text)]
 
 
+def _extract_section(text: str, heading: str) -> str:
+    lines = text.splitlines()
+    capture = False
+    collected: list[str] = []
+    for line in lines:
+        if line.strip() == heading:
+            capture = True
+            continue
+        if capture and line.startswith("## "):
+            break
+        if capture:
+            collected.append(line)
+    return "\n".join(collected).strip()
+
+
 def _looks_like_local_file_reference(token: str) -> bool:
     if "://" in token or " " in token:
         return False
@@ -167,18 +182,39 @@ def test_vscode_pytest_enabled_in_repo_settings():
 def test_readme_download_links_match_script_versions():
     readme_text = _read(README_PATH)
     assert "## Download Latest Script Releases" in readme_text
+    section = _extract_section(readme_text, "## Download Latest Script Releases")
+    assert "/releases/download/" in section
+
+    links = _extract_markdown_links(section)
+    assert links, "README download section must contain at least one published script release link."
 
     scripts_root = REPO_ROOT / "scripts"
+    known_versions = {}
     for project_dir in scripts_root.iterdir():
         if not project_dir.is_dir():
             continue
         project_name = project_dir.name
-        version = (project_dir / "VERSION").read_text(encoding="utf-8").strip()
-        expected_asset = f"{project_name}-{version}.zip"
-        assert expected_asset in readme_text, (
-            f"README download links must include latest {project_name} asset {expected_asset}."
+        known_versions[project_name] = (project_dir / "VERSION").read_text(encoding="utf-8").strip()
+
+    seen_projects: set[str] = set()
+    for label, target in links:
+        asset_name = Path(urlparse(target).path).name
+        if not asset_name.endswith(".zip"):
+            continue
+        matched_project = None
+        for project_name, version in known_versions.items():
+            expected_asset = f"{project_name}-{version}.zip"
+            if asset_name == expected_asset:
+                matched_project = project_name
+                break
+        assert matched_project is not None, (
+            f"README download link asset {asset_name} must match a published script version from scripts/{{ProjectName}}/VERSION."
         )
-        assert "/releases/download/" in readme_text
+        assert matched_project not in seen_projects, (
+            f"README download section should not contain duplicate published links for {matched_project}."
+        )
+        seen_projects.add(matched_project)
+
 def test_required_recommended_links_present_in_readme():
     readme_text = _read(README_PATH)
     links = set(_extract_markdown_links(readme_text))

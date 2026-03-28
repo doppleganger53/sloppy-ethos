@@ -70,6 +70,7 @@ Historical detail remains in individual session notes referenced from
 - Release-prep branch naming is scope-specific:
   - `release/v{VERSION}` for repo releases
   - `release/{ProjectName}-v{VERSION}` for script releases
+- `README.md` `Download Latest Script Releases` should list only currently published single-script GitHub release assets; unreleased scripts under `scripts/` may be absent from that section.
 - Hybrid PR merge strategy baseline:
   - `squash` for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`).
   - `merge commit` for `release/v{VERSION}` and `release/{ProjectName}-v{VERSION}` PRs, plus lineage-sensitive cases.

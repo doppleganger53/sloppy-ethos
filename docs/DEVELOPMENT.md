@@ -230,3 +230,5 @@ This repository uses `main` as the only long-lived integration branch and aligns
 5. Attach script artifact(s) to the release, for example:
    - `dist/SensorList-{scripts/SensorList/VERSION}.zip`
 6. Publish the script release with `gh release create ... --notes-file {RELEASE_NOTES_FILE}` instead of inline `--notes`.
+7. After the script release is published, update `README.md` `Download Latest Script Releases` so it reflects the newly published asset.
+   - Do not add unreleased script ZIP names to that README section before the GitHub release exists.

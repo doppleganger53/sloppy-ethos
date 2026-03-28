@@ -143,6 +143,7 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 - Script artifact versions are sourced from `scripts/{ProjectName}/VERSION`.
 - Single-script dist ZIP naming remains `dist/{ProjectName}-{version}.zip`.
 - Multi-script dist bundles are an explicit naming exception and are intentionally unversioned (`dist/sloppy-ethos_scripts.zip`).
+- `README.md` `Download Latest Script Releases` is a published-release surface, not a preview of unreleased script directories.
 - Keep release steps aligned with repository documentation.
 
 ## Script-Specific Notes

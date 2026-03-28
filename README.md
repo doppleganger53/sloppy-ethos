@@ -27,6 +27,9 @@ Ethos Lua widget workspace. Current active project: `SensorList`.
 
 ## Download Latest Script Releases
 
+This section tracks currently published single-script GitHub release assets.
+Unreleased scripts may exist under `scripts/` without appearing here yet.
+
 - [Download SensorList (v1.0.1)](https://github.com/doppleganger53/sloppy-ethos/releases/download/SensorList-v1.0.1/SensorList-1.0.1.zip)
 - [Download ethos_events (v0.1.0)](https://github.com/doppleganger53/sloppy-ethos/releases/download/ethos_events-v0.1.0/ethos_events-0.1.0.zip)
 
