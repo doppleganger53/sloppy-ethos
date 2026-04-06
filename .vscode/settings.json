@@ -18,5 +18,6 @@
   "coverage-gutters.coverageFileNames": [
     "luacov.report.out"
   ],
-  "C_Cpp.errorSquiggles": "disabled"
+  "C_Cpp.errorSquiggles": "disabled",
+  "stylua.targetReleaseVersion": "latest"
 }

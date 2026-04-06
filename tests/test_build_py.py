@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import zipfile
 from argparse import Namespace
 from pathlib import Path
@@ -43,6 +44,35 @@ def _set_main_prerequisites(monkeypatch, args: Namespace):
     return calls
 
 
+def _create_boundrymap_project(tmp_path: Path):
+    repo_root = tmp_path / "repo"
+    project_dir = repo_root / "scripts" / "BoundryMap"
+    map_dir = project_dir / "maps" / "WJRC"
+    map_dir.mkdir(parents=True)
+    (project_dir / "main.lua").write_text("print('ok')\n", encoding="utf-8")
+    (project_dir / "VERSION").write_text("0.1.1\n", encoding="utf-8")
+    (map_dir / "WJRC.bmp").write_text("bmp-bytes\n", encoding="utf-8")
+    (map_dir / "WJRC.json").write_text('{"map":"WJRC"}\n', encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "radioFiles": [
+                    {
+                        "source": "maps/WJRC/WJRC.bmp",
+                        "destination": "bitmaps/GPS/WJRC.bmp",
+                    },
+                    {
+                        "source": "maps/WJRC/WJRC.json",
+                        "destination": "documents/user/WJRC.json",
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    return repo_root, project_dir
+
+
 def test_normalize_version_valid():
     assert build.normalize_version("1.2.3") == "1.2.3"
     assert build.normalize_version("release_candidate-1") == "release_candidate-1"
@@ -69,6 +99,41 @@ def test_resolve_version_missing_file(tmp_path: Path):
     with pytest.raises(SystemExit) as exc:
         build.resolve_version(tmp_path, None)
     assert "Version file not found" in str(exc.value)
+
+
+def test_resolve_project_install_spec_reads_optional_radio_files(tmp_path: Path):
+    _repo_root, project_dir = _create_boundrymap_project(tmp_path)
+
+    install_spec = build.resolve_project_install_spec(project_dir, "BoundryMap")
+
+    assert install_spec.project_name == "BoundryMap"
+    assert install_spec.manifest_relative == Path("build.json")
+    assert install_spec.script_destination == Path("scripts") / "BoundryMap"
+    assert install_spec.script_exclusions == (
+        Path("build.json"),
+        Path("maps") / "WJRC" / "WJRC.bmp",
+        Path("maps") / "WJRC" / "WJRC.json",
+    )
+    assert [radio_file.destination.as_posix() for radio_file in install_spec.radio_files] == [
+        "bitmaps/GPS/WJRC.bmp",
+        "documents/user/WJRC.json",
+    ]
+
+
+def test_resolve_project_install_spec_rejects_scripts_destination(tmp_path: Path):
+    project_dir = tmp_path / "BoundryMap"
+    map_dir = project_dir / "maps"
+    map_dir.mkdir(parents=True)
+    (map_dir / "demo.bmp").write_text("bmp\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps({"radioFiles": [{"source": "maps/demo.bmp", "destination": "scripts/demo.bmp"}]}),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        build.resolve_project_install_spec(project_dir, "BoundryMap")
+
+    assert "must be outside scripts/" in str(exc.value)
 
 
 def test_load_config_missing_file(tmp_path: Path):
@@ -254,6 +319,23 @@ def test_build_zip_creates_archive_and_cleans_staging(monkeypatch, tmp_path: Pat
     assert not (repo_root / ".build-staging").exists()
 
 
+def test_build_zip_includes_optional_radio_files_and_excludes_build_inputs(tmp_path: Path):
+    repo_root, project_dir = _create_boundrymap_project(tmp_path)
+    dist_dir = repo_root / "dist"
+
+    archive = build.build_zip(project_dir, "BoundryMap", "0.1.1", dist_dir, repo_root)
+
+    with zipfile.ZipFile(archive) as payload:
+        names = set(payload.namelist())
+
+    assert "scripts/BoundryMap/main.lua" in names
+    assert "bitmaps/GPS/WJRC.bmp" in names
+    assert "documents/user/WJRC.json" in names
+    assert "scripts/BoundryMap/build.json" not in names
+    assert "scripts/BoundryMap/maps/WJRC/WJRC.bmp" not in names
+    assert "scripts/BoundryMap/maps/WJRC/WJRC.json" not in names
+
+
 def test_build_zip_handles_preexisting_staging_and_cleans_up(tmp_path: Path):
     repo_root = tmp_path / "repo"
     project_dir = repo_root / "scripts" / "SensorList"
@@ -356,6 +438,7 @@ def test_deploy_to_simulator_success_copies_and_prints(monkeypatch, capsys, tmp_
         called["src"] = src
         called["dst"] = dst
         called["dirs_exist_ok"] = dirs_exist_ok
+        dst.mkdir(parents=True, exist_ok=True)
         return None
 
     monkeypatch.setattr(build.shutil, "copytree", fake_copytree)
@@ -384,32 +467,54 @@ def test_deploy_to_simulator_wraps_oserror_with_formatted_message(monkeypatch, t
     assert "Failed to deploy 'SensorList'" in str(exc.value)
 
 
+def test_deploy_to_simulator_copies_optional_radio_files(tmp_path: Path):
+    _repo_root, project_dir = _create_boundrymap_project(tmp_path)
+    sim_path = tmp_path / "sim"
+    sim_path.mkdir()
+
+    build.deploy_to_simulator(project_dir, "BoundryMap", sim_path)
+
+    assert (sim_path / "scripts" / "BoundryMap" / "main.lua").exists()
+    assert not (sim_path / "scripts" / "BoundryMap" / "build.json").exists()
+    assert not (sim_path / "scripts" / "BoundryMap" / "maps" / "WJRC" / "WJRC.bmp").exists()
+    assert (sim_path / "bitmaps" / "GPS" / "WJRC.bmp").read_text(encoding="utf-8") == "bmp-bytes\n"
+    assert (sim_path / "documents" / "user" / "WJRC.json").read_text(encoding="utf-8") == '{"map":"WJRC"}\n'
+
+
 def test_clean_from_simulator_removes_existing_target(tmp_path: Path, capsys):
+    project_dir = tmp_path / "project"
     sim_path = tmp_path / "sim"
     target = sim_path / "scripts" / "SensorList"
+    project_dir.mkdir()
     target.mkdir(parents=True)
     (target / "main.lua").write_text("print('ok')\n", encoding="utf-8")
-    build.clean_from_simulator("SensorList", sim_path)
+    build.clean_from_simulator(project_dir, "SensorList", sim_path)
     assert not target.exists()
     assert "Cleaned simulator target:" in capsys.readouterr().out
 
 
 def test_clean_from_simulator_exits_when_sim_path_missing(tmp_path: Path):
+    project_dir = tmp_path / "project"
+    project_dir.mkdir()
     with pytest.raises(SystemExit) as exc:
-        build.clean_from_simulator("SensorList", tmp_path / "missing")
+        build.clean_from_simulator(project_dir, "SensorList", tmp_path / "missing")
     assert "does not exist" in str(exc.value)
 
 
 def test_clean_from_simulator_noop_when_missing(tmp_path: Path, capsys):
+    project_dir = tmp_path / "project"
     sim_path = tmp_path / "sim"
+    project_dir.mkdir()
     sim_path.mkdir()
-    build.clean_from_simulator("SensorList", sim_path)
+    build.clean_from_simulator(project_dir, "SensorList", sim_path)
     assert "Clean skip:" in capsys.readouterr().out
 
 
 def test_clean_from_simulator_exits_when_rmtree_fails(monkeypatch, tmp_path: Path):
+    project_dir = tmp_path / "project"
     sim_path = tmp_path / "sim"
     target = sim_path / "scripts" / "SensorList"
+    project_dir.mkdir()
     target.mkdir(parents=True)
     monkeypatch.setattr(
         build.shutil,
@@ -417,8 +522,32 @@ def test_clean_from_simulator_exits_when_rmtree_fails(monkeypatch, tmp_path: Pat
         lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("blocked")),
     )
     with pytest.raises(SystemExit) as exc:
-        build.clean_from_simulator("SensorList", sim_path)
+        build.clean_from_simulator(project_dir, "SensorList", sim_path)
     assert "Failed to clean simulator target" in str(exc.value)
+
+
+def test_clean_from_simulator_removes_optional_radio_files_but_keeps_unmanaged_files(tmp_path: Path):
+    _repo_root, project_dir = _create_boundrymap_project(tmp_path)
+    sim_path = tmp_path / "sim"
+    script_target = sim_path / "scripts" / "BoundryMap"
+    bitmap_target = sim_path / "bitmaps" / "GPS" / "WJRC.bmp"
+    metadata_target = sim_path / "documents" / "user" / "WJRC.json"
+    boundary_target = sim_path / "documents" / "user" / "WJRC.boundries.json"
+
+    script_target.mkdir(parents=True)
+    bitmap_target.parent.mkdir(parents=True)
+    metadata_target.parent.mkdir(parents=True)
+    (script_target / "main.lua").write_text("print('ok')\n", encoding="utf-8")
+    bitmap_target.write_text("bmp\n", encoding="utf-8")
+    metadata_target.write_text("{}\n", encoding="utf-8")
+    boundary_target.write_text('{"boundary":[]}\n', encoding="utf-8")
+
+    build.clean_from_simulator(project_dir, "BoundryMap", sim_path)
+
+    assert not script_target.exists()
+    assert not bitmap_target.exists()
+    assert not metadata_target.exists()
+    assert boundary_target.exists()
 
 
 def test_print_help_text_reads_file(monkeypatch, capsys, tmp_path: Path):
@@ -630,11 +759,18 @@ def test_main_clean_calls_clean_from_simulator(monkeypatch, tmp_path: Path):
     sim_path = tmp_path / "simulator" / "X20RS"
     sim_path.mkdir(parents=True)
     monkeypatch.setattr(build, "resolve_simulator_path", lambda *_args, **_kwargs: sim_path)
-    monkeypatch.setattr(build, "clean_from_simulator", lambda project_name, resolved: calls.setdefault("clean", (project_name, resolved)))
+    monkeypatch.setattr(
+        build,
+        "clean_from_simulator",
+        lambda project_dir, project_name, resolved: calls.setdefault("clean", (project_dir, project_name, resolved)),
+    )
     monkeypatch.setattr(build, "clean_dist_dir", lambda dist_dir: calls.setdefault("clean_dist_dir", dist_dir))
     build.main()
     assert "ensure_luac_available" not in calls
-    assert calls["clean"] == ("SensorList", sim_path)
+    project_dir, project_name, resolved = calls["clean"]
+    assert project_name == "SensorList"
+    assert resolved == sim_path
+    assert project_dir == Path(build.__file__).resolve().parent.parent / "scripts" / "SensorList"
     assert calls["clean_dist_dir"] == Path(build.__file__).resolve().parent.parent / "dist"
 
 

@@ -5,8 +5,8 @@ USAGE
 
 PRIMARY ACTIONS
   --dist                 Build install ZIP(s) in dist/.
-  --deploy               Deploy scripts/{ProjectName} to simulator scripts path.
-  --clean                Remove deployed scripts/{ProjectName} from simulator scripts path and clear dist/ (or --out-dir) artifacts.
+  --deploy               Deploy scripts/{ProjectName} and optional manifest-declared radio files to the simulator path.
+  --clean                Remove deployed scripts/{ProjectName}, manifest-declared radio files, and clear dist/ (or --out-dir) artifacts.
 
 COMMON OPTIONS
   --project, -p NAME     Project folder under scripts/. Repeat for multi-project dist bundles.
@@ -25,6 +25,18 @@ ZIP NAMING
   Multi-project --dist (repeat --project):
     dist/sloppy-ethos_scripts.zip
     multi-script bundle ZIP name is intentionally unversioned
+
+PROJECT BUILD MANIFEST
+  Projects may include a local build.json file with a radioFiles array:
+    {
+      "radioFiles": [
+        { "source": "maps/WJRC/WJRC.bmp", "destination": "bitmaps/GPS/WJRC.bmp" },
+        { "source": "maps/WJRC/WJRC.json", "destination": "documents/user/WJRC.json" }
+      ]
+    }
+  source paths are relative to the project directory under scripts/.
+  destination paths are relative to the radio root and must stay outside scripts/.
+  Declared radio files are packaged into ZIPs and are deployed/cleaned with the project.
 
 SIMULATOR PATH RESOLUTION
   With --sim-radio:
@@ -45,6 +57,9 @@ CONFIG EXAMPLE
 WORKFLOW EXAMPLES
   Build install ZIP:
     python tools/build.py --project SensorList --dist
+
+  Build BoundryMap ZIP including its example map assets:
+    python tools/build.py --project BoundryMap --dist
 
   Build multi-script install ZIP bundle:
     python tools/build.py --project SensorList --project ethos_events --dist

@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 108
-- Total size: 176,594 bytes
-- Total lines: 4,749
+- Files: 109
+- Total size: 179,234 bytes
+- Total lines: 4,806
 - Distribution by artifact:
-  - session notes: 102
+  - session notes: 103
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 62 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 63 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -37,7 +37,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 25 -- implementation
   - 15 -- release
   - 13 -- docs
-  - 11 -- build
+  - 12 -- build
   - 6 -- testing
   - 5 -- issue-admin
   - 5 -- prompts
@@ -47,6 +47,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
 - 2026-03-28 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md](notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md) | # Session Notes 2026-03-28 - README Published Script Link Policy
+- 2026-03-28 | build | repo | [notes/session/repo/SESSION_NOTES_2026-03-28_OPTIONAL_RADIO_FILE_BUILD_MANIFEST.md](notes/session/repo/SESSION_NOTES_2026-03-28_OPTIONAL_RADIO_FILE_BUILD_MANIFEST.md) | # Session Notes 2026-03-28 - Optional Radio File Build Manifest
 - 2026-03-28 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_LICENSE_DERIVATION.md](notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_LICENSE_DERIVATION.md) | # Session Notes 2026-03-28 - BoundryMap License Derivation Notice
 - 2026-03-09 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md) | # Session Notes 2026-03-09 - SensorList-v1.0.1 Release
 - 2026-03-09 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-09_ISSUE_62_README_GUIDANCE_RELOCATION.md](notes/session/repo/SESSION_NOTES_2026-03-09_ISSUE_62_README_GUIDANCE_RELOCATION.md) | # Session Notes 2026-03-09 - Issue #62 README Guidance Relocation
@@ -57,7 +58,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - 2026-03-05 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md) | # Session Notes 2026-03-05 - Issue #54 Low-Signal Test Pruning
 - 2026-03-02 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md) | # Session Notes 2026-03-02 - SensorList-v1.0.0 Release
 - 2026-03-02 | release | repo | [notes/session/repo/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md](notes/session/repo/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md) | # Session Notes 2026-03-02 - Repo Releases Consolidated Bundle Only
-- 2026-02-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md](notes/session/repo/SESSION_NOTES_2026-02-27_ISSUE_16_SESSION_PREFLIGHT_TEST_COVERAGE.md) | # Session Notes 2026-02-27 - Issue #16 session_preflight test coverage
 
 ## Recent Ethos Platform Notes
 
@@ -180,4 +180,5 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-03-09 | session | sensorlist | release | [notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md) | # Session Notes 2026-03-09 - SensorList-v1.0.1 Release |
 | 2026-03-28 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_INITIAL_IMPLEMENTATION.md](notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_INITIAL_IMPLEMENTATION.md) | # Session Notes 2026-03-28 - BoundryMap Initial Implementation |
 | 2026-03-28 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_LICENSE_DERIVATION.md](notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_LICENSE_DERIVATION.md) | # Session Notes 2026-03-28 - BoundryMap License Derivation Notice |
+| 2026-03-28 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-03-28_OPTIONAL_RADIO_FILE_BUILD_MANIFEST.md](notes/session/repo/SESSION_NOTES_2026-03-28_OPTIONAL_RADIO_FILE_BUILD_MANIFEST.md) | # Session Notes 2026-03-28 - Optional Radio File Build Manifest |
 | 2026-03-28 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md](notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md) | # Session Notes 2026-03-28 - README Published Script Link Policy |

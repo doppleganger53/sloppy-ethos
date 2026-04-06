@@ -5,11 +5,40 @@ import re
 import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
 HELP_FILE = Path(__file__).resolve().parent / "build_help.txt"
 BUNDLE_ZIP_BASENAME = "sloppy-ethos_scripts"
+PROJECT_BUILD_FILE = "build.json"
+
+
+@dataclass(frozen=True)
+class RadioFile:
+    source: Path
+    source_relative: Path
+    destination: Path
+
+
+@dataclass(frozen=True)
+class ProjectInstallSpec:
+    project_dir: Path
+    project_name: str
+    radio_files: tuple[RadioFile, ...]
+    manifest_relative: Optional[Path] = None
+
+    @property
+    def script_destination(self) -> Path:
+        return Path("scripts") / self.project_name
+
+    @property
+    def script_exclusions(self) -> tuple[Path, ...]:
+        exclusions: list[Path] = []
+        if self.manifest_relative is not None:
+            exclusions.append(self.manifest_relative)
+        exclusions.extend(radio_file.source_relative for radio_file in self.radio_files)
+        return tuple(exclusions)
 
 
 def load_config(path: Path):
@@ -19,6 +48,20 @@ def load_config(path: Path):
         return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         sys.exit(f"Failed to parse config at {path}: {exc}")
+
+
+def load_json_object(path: Path, description: str):
+    if not path.exists():
+        return None
+
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        sys.exit(f"Failed to parse {description} at {path}: {exc}")
+
+    if not isinstance(payload, dict):
+        sys.exit(f"{description.capitalize()} at {path} must contain a JSON object.")
+    return payload
 
 
 def _normalize_model_paths(raw_model_paths, config_path: Path):
@@ -148,6 +191,71 @@ def normalize_project_names(raw_projects: Optional[list[str]]):
     return normalized
 
 
+def _normalize_relative_manifest_path(raw_value: object, field_name: str, manifest_path: Path, index: int):
+    if not isinstance(raw_value, str) or not raw_value.strip():
+        sys.exit(f"{manifest_path} radioFiles[{index}] must include a non-empty '{field_name}' string.")
+
+    normalized = raw_value.strip().replace("\\", "/")
+    if re.match(r"^[A-Za-z]:", normalized) or normalized.startswith("/"):
+        sys.exit(f"{manifest_path} radioFiles[{index}] '{field_name}' must be a relative path.")
+
+    parts = [part for part in normalized.split("/") if part and part != "."]
+    if not parts or any(part == ".." for part in parts):
+        sys.exit(
+            f"{manifest_path} radioFiles[{index}] '{field_name}' must stay within the project directory."
+        )
+    return Path(*parts)
+
+
+def resolve_project_install_spec(project_dir: Path, project_name: str):
+    manifest_path = project_dir / PROJECT_BUILD_FILE
+    manifest = load_json_object(manifest_path, "project build manifest")
+    if manifest is None:
+        return ProjectInstallSpec(project_dir=project_dir, project_name=project_name, radio_files=tuple())
+
+    raw_radio_files = manifest.get("radioFiles", [])
+    if not isinstance(raw_radio_files, list):
+        sys.exit(f"'{manifest_path}' key 'radioFiles' must be a JSON array when present.")
+
+    radio_files: list[RadioFile] = []
+    seen_destinations: set[str] = set()
+    for index, entry in enumerate(raw_radio_files, start=1):
+        if not isinstance(entry, dict):
+            sys.exit(f"{manifest_path} radioFiles[{index}] must be an object with 'source' and 'destination'.")
+
+        source_relative = _normalize_relative_manifest_path(entry.get("source"), "source", manifest_path, index)
+        destination = _normalize_relative_manifest_path(
+            entry.get("destination"), "destination", manifest_path, index
+        )
+        if destination.parts[0].lower() == "scripts":
+            sys.exit(
+                f"{manifest_path} radioFiles[{index}] destination '{destination.as_posix()}' must be outside scripts/."
+            )
+
+        source = project_dir / source_relative
+        if not source.exists():
+            sys.exit(f"{manifest_path} radioFiles[{index}] source file not found: {source}")
+        if not source.is_file():
+            sys.exit(f"{manifest_path} radioFiles[{index}] source must be a file: {source}")
+
+        destination_key = destination.as_posix().lower()
+        if destination_key in seen_destinations:
+            sys.exit(
+                f"{manifest_path} radioFiles contains duplicate destination '{destination.as_posix()}'."
+            )
+        seen_destinations.add(destination_key)
+        radio_files.append(
+            RadioFile(source=source, source_relative=source_relative, destination=destination)
+        )
+
+    return ProjectInstallSpec(
+        project_dir=project_dir,
+        project_name=project_name,
+        radio_files=tuple(radio_files),
+        manifest_relative=Path(PROJECT_BUILD_FILE),
+    )
+
+
 def ensure_packaged_readme(destination: Path, project_name: str):
     package_readme = destination / "README.md"
     if package_readme.exists():
@@ -189,6 +297,50 @@ def write_bundle_manifest(
     (destination / "README.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def prune_script_exclusions(script_destination: Path, exclusions: tuple[Path, ...]):
+    for relative_path in exclusions:
+        target = script_destination / relative_path
+        if target.is_dir():
+            shutil.rmtree(target, ignore_errors=True)
+        elif target.exists():
+            target.unlink()
+
+        current = target.parent
+        while current != script_destination and current.exists():
+            try:
+                current.rmdir()
+            except OSError:
+                break
+            current = current.parent
+
+
+def copy_radio_files(radio_files: tuple[RadioFile, ...], destination_root: Path):
+    for radio_file in radio_files:
+        target = destination_root / radio_file.destination
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(radio_file.source, target)
+
+
+def stage_project_files(install_spec: ProjectInstallSpec, destination_root: Path, dirs_exist_ok: bool = False):
+    script_destination = destination_root / install_spec.script_destination
+    shutil.copytree(install_spec.project_dir, script_destination, dirs_exist_ok=dirs_exist_ok)
+    prune_script_exclusions(script_destination, install_spec.script_exclusions)
+    ensure_packaged_readme(script_destination, install_spec.project_name)
+    copy_radio_files(install_spec.radio_files, destination_root)
+
+
+def ensure_unique_radio_destinations(project_name: str, radio_files: tuple[RadioFile, ...], seen: dict[str, str]):
+    for radio_file in radio_files:
+        key = radio_file.destination.as_posix().lower()
+        previous_owner = seen.get(key)
+        if previous_owner is not None:
+            sys.exit(
+                "Radio file destination conflict while bundling projects: "
+                f"'{radio_file.destination.as_posix()}' declared by both '{previous_owner}' and '{project_name}'."
+            )
+        seen[key] = project_name
+
+
 def build_zip(project_dir: Path, project_name: str, version: str, dist_dir: Path, repo_root: Path):
     dist_dir.mkdir(parents=True, exist_ok=True)
     staging_root = repo_root / ".build-staging"
@@ -198,9 +350,8 @@ def build_zip(project_dir: Path, project_name: str, version: str, dist_dir: Path
     try:
         base_name = dist_dir / f"{project_name}-{version}"
         staging = staging_root / "package"
-        destination = staging / "scripts" / project_name
-        shutil.copytree(project_dir, destination)
-        ensure_packaged_readme(destination, project_name)
+        install_spec = resolve_project_install_spec(project_dir, project_name)
+        stage_project_files(install_spec, staging)
         archive_path = shutil.make_archive(str(base_name), "zip", staging)
     finally:
         shutil.rmtree(staging_root, ignore_errors=True)
@@ -221,13 +372,14 @@ def build_multi_project_zip(project_names: list[str], dist_dir: Path, repo_root:
     try:
         staging = staging_root / "package"
         project_versions: dict[str, str] = {}
+        seen_radio_destinations: dict[str, str] = {}
         for project_name in project_names:
             project_dir = repo_root / "scripts" / project_name
             if not project_dir.exists():
                 sys.exit(f"Project directory not found: {project_dir}")
-            destination = staging / "scripts" / project_name
-            shutil.copytree(project_dir, destination)
-            ensure_packaged_readme(destination, project_name)
+            install_spec = resolve_project_install_spec(project_dir, project_name)
+            ensure_unique_radio_destinations(project_name, install_spec.radio_files, seen_radio_destinations)
+            stage_project_files(install_spec, staging)
             project_versions[project_name] = resolve_project_version(project_dir, None)
 
         repo_version = resolve_version(repo_root, None)
@@ -273,27 +425,36 @@ def format_deploy_error(target: Path, exc: OSError):
 def deploy_to_simulator(project_dir: Path, project_name: str, sim_path: Path):
     if not sim_path.exists():
         sys.exit(f"Simulator path '{sim_path}' does not exist.")
-    target = sim_path / "scripts" / project_name
+    install_spec = resolve_project_install_spec(project_dir, project_name)
+    target = sim_path / install_spec.script_destination
     target.parent.mkdir(parents=True, exist_ok=True)
     try:
-        shutil.copytree(project_dir, target, dirs_exist_ok=True)
+        stage_project_files(install_spec, sim_path, dirs_exist_ok=True)
     except OSError as exc:
         sys.exit(format_deploy_error(target, exc))
     print(f"Deployed {project_name} -> {target}")
 
 
-def clean_from_simulator(project_name: str, sim_path: Path):
+def clean_from_simulator(project_dir: Path, project_name: str, sim_path: Path):
     if not sim_path.exists():
         sys.exit(f"Simulator path '{sim_path}' does not exist.")
-    target = sim_path / "scripts" / project_name
-    if not target.exists():
-        print(f"Clean skip: simulator target not found: {target}")
-        return
-    try:
-        shutil.rmtree(target)
-    except OSError as exc:
-        sys.exit(f"Failed to clean simulator target '{target}': {exc}")
-    print(f"Cleaned simulator target: {target}")
+    install_spec = resolve_project_install_spec(project_dir, project_name)
+
+    targets: list[Path] = [sim_path / install_spec.script_destination]
+    targets.extend(sim_path / radio_file.destination for radio_file in install_spec.radio_files)
+
+    for target in targets:
+        if not target.exists():
+            print(f"Clean skip: simulator target not found: {target}")
+            continue
+        try:
+            if target.is_dir():
+                shutil.rmtree(target)
+            else:
+                target.unlink()
+        except OSError as exc:
+            sys.exit(f"Failed to clean simulator target '{target}': {exc}")
+        print(f"Cleaned simulator target: {target}")
 
 
 def clean_dist_dir(dist_dir: Path):
@@ -388,7 +549,7 @@ def main():
         if args.sim_radio and not sim_path.exists():
             sys.exit(f"Simulator path for radio model '{args.sim_radio}' does not exist: {sim_path}")
         if args.clean:
-            clean_from_simulator(primary_project, sim_path)
+            clean_from_simulator(primary_project_dir, primary_project, sim_path)
             clean_dist_dir(dist_dir)
     if args.deploy:
         deploy_to_simulator(primary_project_dir, primary_project, sim_path)
