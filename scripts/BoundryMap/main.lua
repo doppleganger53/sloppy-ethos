@@ -1512,7 +1512,7 @@ end
 
 local function init()
   system.registerWidget({
-    key = "boundrymap",
+    key = "bdymap",
     name = "BoundryMap",
     title = false,
     create = create,
