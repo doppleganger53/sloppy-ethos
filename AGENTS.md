@@ -1,61 +1,89 @@
 # AGENTS.md
 
-Repository-level operating policy for Codex sessions in `sloppy-ethos`.
+Repository-level operating policy for agent sessions in `sloppy-ethos`.
 
-## Repository Goals And Mutable Workflow Model
+## Scope and precedence
+
+- This file applies repository-wide unless a closer `AGENTS.md` exists.
+- Nested contracts are active in:
+  - `scripts/SensorList/AGENTS.md`
+  - `scripts/ethos_events/AGENTS.md`
+  - `tools/AGENTS.md`
+- Keep changes scoped to the user request. Do not perform unrelated cleanup or broad refactors.
+- Preserve existing behavior unless the task explicitly requests behavior changes.
+
+## Repository goals and workflow model
 
 - Repository goals:
   - Build practical Ethos utilities and scripts.
   - Keep Lua contribution workflow approachable for non-experts.
   - Prioritize repeatable, low-maintenance workflows that help contributors spend more time flying and less time on process overhead.
 - Workflow model is intentionally mutable:
-  - Agent workflow/process metadata is allowed to evolve when repository goals, tooling, or contributor needs change.
+  - Workflow/process metadata can evolve when repository goals or contributor needs change.
   - Workflow mutations must be issue-linked, documented, and kept consistent across `AGENTS.md`, `CONTRIBUTING.md`, `README.md`, and `docs/DEVELOPMENT.md` in the same session.
 - Stability rule:
-  - Treat this file as the operational policy source of truth for agent execution guardrails; when policy changes, synchronize related contributor docs immediately.
+  - Treat this file as the operational policy source of truth for agent execution guardrails.
 
-## Priority And Scope
-
-- These rules are repository-wide and apply to every task in this workspace.
-- Keep changes scoped to the user request. Do not perform unrelated cleanup or broad refactors.
-- Preserve existing behavior unless the task explicitly requests behavior changes.
-
-## Root-Cause Strategy
+## Root-cause strategy
 
 - Prefer root-cause fixes over compatibility shims, legacy aliases, or temporary band-aids.
-- Diagnose and clear local state issues first (for example: IDE/test discovery caches) when failures are caused by stale metadata rather than code defects.
-- Only introduce compatibility layers when explicitly requested or when a real external compatibility requirement is confirmed.
+- Diagnose and clear local state issues first (for example stale IDE/test metadata) when failures are environmental.
+- Introduce compatibility layers only when explicitly requested or when a real external compatibility requirement is confirmed.
 - If a compatibility layer is approved, document why it is needed and define a removal condition in session notes.
 
-## Required Startup Workflow
+## Required startup workflow
 
 1. Read memory entrypoint files:
    - `deslopification/memory/README.md`
    - `deslopification/memory/CURRENT_STATE.md`
-2. Use `deslopification/memory/CATALOG.md` to open only the latest relevant
-   note(s) for the current task.
-3. Determine session type:
-   - issue-linked work (GitHub issue URL/number present, or session driven by
-     `deslopification/prompts/issues/*.md`)
-   - non-issue work
-4. For issue-linked work, run preflight before editing:
-   - `python tools/session_preflight.py --mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {short-slug}`
-5. Check branch/worktree state: `git status --short --branch`.
-6. Confirm active package version from `VERSION`.
-7. Before introducing or changing workflow commands, cross-check command docs in:
+2. Use `deslopification/memory/CATALOG.md` to open only task-relevant notes.
+3. Check branch/worktree state:
+   - `git status --short --branch`
+4. Confirm active repository version from `VERSION`.
+5. Before introducing or changing workflow commands, cross-check:
    - `README.md`
    - `docs/DEVELOPMENT.md`
+6. Determine session type:
+   - issue-linked work: tied to a GitHub issue URL/number or explicitly run through `tools/session_start.py issue {N}`
+   - non-issue work: all other sessions
 
-## Validation Policy
+## Session branch gate and preflight
 
-- Validation is mandatory for any change.
-- Debugging-session work on simulator-visible Lua behavior must deploy the touched script to the configured Ethos simulator before session closeout.
-- Treat a session as a debugging session when the goal is to reproduce, inspect, or verify runtime behavior in the simulator rather than only editing docs or static tooling.
-- Minimum debug deploy command for SensorList:
+- Issue-linked work must not mutate repository files while on `main`.
+- Recommended issue startup:
+  - `python tools/session_start.py issue {N}`
+- Explicit issue preflight contract (automation/power-user path):
+  - `python tools/session_preflight.py --mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {short-slug}`
+- If issue preflight blocks on `main`, create/switch to the recommended short-lived issue branch before editing.
+- Non-issue work may run on `main`, but agents must ask the user before mutating files on `main`.
+- Optional strict branch enforcement for issue sessions:
+  - `python tools/session_preflight.py ... --strict-branch-match`
+
+## Branching and merge strategy
+
+- `main` is the only long-lived branch.
+- Use short-lived branches from `main`:
+  - `feature/{issue-number}-{short-slug}` for enhancements
+  - `fix/{issue-number}-{short-slug}` for bugs
+  - `docs/{issue-number}-{short-slug}` for docs/process changes
+  - `chore/{issue-number}-{short-slug}` for maintenance/tooling changes
+- Release-prep branches:
+  - `release/v{VERSION}` for repo release work
+  - `release/{ProjectName}-v{VERSION}` for script release work
+- Open PRs into `main` and include issue-closing keywords when applicable.
+- Default merge strategy:
+  - `squash` for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`)
+  - `merge commit` for release-prep branches and lineage-sensitive PRs
+  - `rebase` is not the repository default
+
+## Validation policy
+
+- Validation is mandatory for every change.
+- Debugging-session work on simulator-visible Lua behavior must deploy the touched script to the configured Ethos simulator before closeout.
+- For SensorList debugging, minimum deploy command:
   - `python tools/build.py --project SensorList --deploy`
-- Run the minimum test/check commands based on the files touched:
 
-### Validation Matrix
+### Validation matrix
 
 - Documentation changes (`README.md`, `docs/`, `CONTRIBUTING.md`, PR/issue templates):
   - `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
@@ -67,94 +95,59 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 - Broad or cross-cutting changes:
   - `python -m pytest -q`
 
-## Timeout And Failure Handling
+### Timeout/failure handling
 
-- If a required validation command times out or hangs:
-  1. rerun once with a higher timeout;
-  2. if it still fails, report the exact command and failure mode to the user;
-  3. do not claim validation passed when it did not complete.
+If a required validation command times out or hangs:
 
-## Documentation And Memory Sync
+1. rerun once with a higher timeout;
+2. if it still fails, report the exact command and failure mode;
+3. do not claim validation passed when validation did not complete.
+
+## Prompt and issue-intake policy
+
+- Template-first prompting is the active model:
+  - `deslopification/prompts/templates/ISSUE_RESOLUTION_TEMPLATE.md`
+  - `deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md`
+- Snapshot issue prompts under `deslopification/prompts/issues/archive/` and `deslopification/prompts/issues/done/` are historical references only.
+- Issue intake should map to preflight kinds:
+  - `bug`, `docs`, `enhancement`, `chore`
+- Maintenance/refactor intake is governed under `chore` branch-prefix policy.
+
+## Documentation and memory sync
 
 - When workflow, behavior, or contributor process changes, update docs in the same session.
-- Record meaningful work in `deslopification/memory/` using:
+- Record meaningful work in `deslopification/memory/` with:
   - what changed
   - validation run(s)
   - follow-up items
-- Store new memory notes under:
+- Store new notes under:
   - `deslopification/memory/notes/{artifact}/{scope}/`
-  - examples:
-    - `notes/session/{scope}/SESSION_NOTES_YYYY-MM-DD_...md`
-    - `notes/reference/{scope}/{Topic}.md`
-    - `notes/handoff/handoff/HANDOFF_YYYY-MM-DD...md`
-- Every note must declare explicit `Artifact`, `Scope`, and `Concern`
-  metadata, and the path is the source of truth for `Artifact` and `Scope`.
-- Prefer the most reusable `scope` that fits the note.
-- Use `ethos-platform` for reusable Ethos runtime/API/simulator knowledge,
-  even when discovered while working on one script.
-- Use script scopes such as `sensorlist` and `ethos-events` only for
-  script-local behavior, architecture, or release history.
-- If a session yields both reusable Ethos knowledge and script-local detail,
-  split it into two short notes when both retrieval paths matter.
+- Every note must declare explicit `Artifact`, `Scope`, and `Concern` metadata.
+- Prefer reusable scopes:
+  - use `ethos-platform` for reusable Ethos runtime/API/simulator knowledge
+  - use script scopes (for example `sensorlist`, `ethos-events`) only for script-local behavior/history
 - Keep memory indexes synchronized when adding notes:
-  - run `python tools/update_memory_catalog.py`
-  - update `deslopification/memory/CURRENT_STATE.md` when durable workflow or
-    behavior decisions change
+  - `python tools/update_memory_catalog.py`
+  - update `deslopification/memory/CURRENT_STATE.md` when durable workflow/behavior decisions change
 
-## Bug Issue Hygiene
+## Bug issue hygiene
 
-- When creating bug issues, use `.github/ISSUE_TEMPLATE/bug_report.md`.
-- Ensure the issue has the `bug` label.
+- Use `.github/ISSUE_TEMPLATE/bug_report.md` for bug reports.
+- Ensure bug issues carry the `bug` label.
 - Include runtime environment details for both Ethos and non-Ethos bug types.
 - Use stable screenshot links (GitHub issue uploads or `raw.githubusercontent.com`), not `blob` image URLs.
 
-## Branching Conventions
-
-- `main` is the only long-lived branch.
-- Create short-lived branches from `main` using:
-  - `feature/{issue-number}-{short-slug}` for enhancements
-  - `fix/{issue-number}-{short-slug}` for bugs
-  - `docs/{issue-number}-{short-slug}` for docs/process changes
-  - `chore/{issue-number}-{short-slug}` for tooling/maintenance changes
-- Use `release/v{VERSION}` for repo release-prep work.
-- Use `release/{ProjectName}-v{VERSION}` for script release-prep work.
-- Delete release-prep branches after merge/release.
-- Open PRs into `main` and include linked-closing keywords when applicable.
-
-## PR Merge Strategy
-
-- Default merge method for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`) is `squash`.
-- Use `merge commit` for release-prep branches (`release/v{VERSION}` or `release/{ProjectName}-v{VERSION}`) and for PRs where branch commit lineage must be preserved.
-- `rebase` merge is not the default practice for this repository.
-
-## Session Branch Gate
-
-- Issue-linked work is any session tied to a GitHub issue number/URL or any
-  session using `deslopification/prompts/issues/*.md`.
-- Issue-linked work must not mutate repository files while on `main`.
-- If issue preflight fails on `main`, create/switch to the recommended
-  short-lived branch before editing.
-- Non-issue work may be performed on `main`, but agents must ask the user for
-  confirmation before mutating files on `main`.
-
-## Release And Versioning Guardrails
+## Release and versioning guardrails
 
 - Root `VERSION` is the repository version source of truth.
 - Script artifact versions are sourced from `scripts/{ProjectName}/VERSION`.
-- Single-script dist ZIP naming remains `dist/{ProjectName}-{version}.zip`.
-- Multi-script dist bundles are an explicit naming exception and are intentionally unversioned (`dist/sloppy-ethos_scripts.zip`).
-- Keep release steps aligned with repository documentation.
+- Single-script ZIP naming: `dist/{ProjectName}-{version}.zip`.
+- Multi-script bundle naming exception: `dist/sloppy-ethos_scripts.zip` (unversioned by design).
+- Keep release steps aligned with repository docs and release templates.
 
-## Script-Specific Notes
-
-- Reusable Ethos operating guidance lives in:
-  - `deslopification/memory/notes/reference/ethos-platform/EthosPlatform.md`
-- SensorList-specific operating guidance lives in:
-  - `deslopification/memory/notes/reference/sensorlist/SensorList.md`
-
-## Definition Of Done (Before Commit/Push)
+## Definition of done (before commit/push)
 
 - Required validation commands for touched files completed in this session.
-- If the session was a simulator debugging session for a Lua script, the updated script was deployed to the simulator in this session.
+- If this was a simulator debugging session for Lua behavior, updated script deployed in this session.
 - Workspace and `.gitignore` reviewed for environment-specific files and sensitive data risks.
-- Any potential security concern (PII, PHI, secrets, unsafe config, API keys, auth tokens) explicitly called out to the user.
+- Any potential security concern (PII, PHI, secrets, unsafe config, API keys, auth tokens) explicitly called out.

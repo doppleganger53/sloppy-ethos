@@ -1,33 +1,24 @@
-# Open Issue Prompt Pack
+# Issue Prompt Artifacts
 
-Implementation prompts for every GitHub issue that was open at snapshot time.
+## Template-first workflow
 
-- Repository: `doppleganger53/sloppy-ethos`
-- Snapshot date: `2026-02-27`
-- Issue source: GitHub REST API (`/repos/{owner}/{repo}/issues?state=open`)
-
-## Issue Prompts
-
-- `ISSUE-010-acceptable-conflict-definitions.md`
-- `ISSUE-014-sensor-values-column.md`
-- `ISSUE-016-memory-optimization.md`
-- `ISSUE-022-doit-migration-evaluation.md`
-- `ISSUE-026-ethos-events-ui-output.md`
-- `ISSUE-029-milestone-versioning-policy.md`
-- `ISSUE-030-x20s-simulator-bug.md`
-- `ISSUE-042-multi-script-release-deliverable.md`
-- `ISSUE-045-smartmapper-function-mapping-script.md`
-
-## Done/Archived Prompts
-
-- `done/ISSUE-008-touchable-sort-headers.md`
-- `done/ISSUE-009-conflict-severity-cues.md`
-- `done/ISSUE-017-refresh-haptic-feedback.md`
-
-## Reusable Template
+Active issue implementation uses reusable templates and live issue metadata:
 
 - `../templates/ISSUE_RESOLUTION_TEMPLATE.md`
-- `../templates/RELEASE_RESOLUTION_TEMPLATE.md` (for repo/script release sessions with explicit scope and gate separation)
+- `../templates/RELEASE_RESOLUTION_TEMPLATE.md`
 
-Use the template for new issues and copy issue-specific context from the
-matching GitHub issue body/comments before implementation.
+Use `tools/session_start.py issue {N}` to infer issue kind/slug from GitHub
+issue metadata, then run explicit `tools/session_preflight.py` when needed for
+automation or strict overrides.
+
+## Archived issue snapshots
+
+Issue-specific prompt snapshots are historical artifacts only and are not the
+source of truth for current issue state:
+
+- `deslopification/prompts/issues/archive/` is the canonical archive location
+- `archive/` contains point-in-time issue prompt captures
+- `done/` contains prompts for completed issue work
+
+If a snapshot is still useful for background context, copy only reusable
+details into the current template-driven workflow.

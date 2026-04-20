@@ -27,6 +27,33 @@
   `python tools/build.py --project SensorList --clean --sim-radio X20RS`
   `python tools/build.py --help`
 
+## Issue Session Startup
+
+- Guided issue startup for newcomers lives in `tools/session_start.py`.
+- Explicit preflight contract for automation and advanced/manual control lives in
+  `tools/session_preflight.py`.
+- Issue session branch kinds map to:
+  - `feature/` for enhancements
+  - `fix/` for bugs
+  - `docs/` for documentation work
+  - `chore/` for maintenance/refactor/workflow/test work
+
+## Prompt Workflow
+
+- Template-first prompting is the active model:
+  - `deslopification/prompts/templates/ISSUE_RESOLUTION_TEMPLATE.md`
+  - `deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md`
+- Issue snapshots under `deslopification/prompts/issues/archive/` are historical references, not live execution contracts.
+
+## Governance Layers
+
+- Local/session governance:
+  - startup and branch gating through `session_start` and `session_preflight`
+  - documented in root and nested `AGENTS.md` files
+- GitHub-side governance:
+  - `main` branch PR+CI merge requirements
+  - no strict branch-name restrictions (lower contributor friction)
+
 ## Debugging Session Rule
 
 - When a session is actively debugging simulator-visible Lua behavior, deploy the touched script before closing out the session.
@@ -181,6 +208,7 @@ This repository uses `main` as the only long-lived integration branch and aligns
    - repo release: `git checkout -b release/v{VERSION}`
    - script release: `git checkout -b release/{ProjectName}-v{VERSION}`
 2. Run issue preflight with scope:
+   - preferred: guided issue startup through `tools/session_start.py`, then explicit preflight as needed
    - run `tools/session_preflight.py` with:
      - `--mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {slug} --release-kind {repo|script}`
    - For `script` releases also include:

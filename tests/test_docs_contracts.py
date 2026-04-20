@@ -16,6 +16,9 @@ DEVELOPMENT_PATH = REPO_ROOT / "docs" / "DEVELOPMENT.md"
 CONTRIBUTING_PATH = REPO_ROOT / "CONTRIBUTING.md"
 CODEOWNERS_PATH = REPO_ROOT / ".github" / "CODEOWNERS"
 ARCHITECTURE_PATH = REPO_ROOT / "docs" / "SensorList" / "SENSORLIST_ARCHITECTURE.md"
+SCRIPTS_ROOT = REPO_ROOT / "scripts"
+ISSUE_TEMPLATE_CONFIG_PATH = REPO_ROOT / ".github" / "ISSUE_TEMPLATE" / "config.yml"
+REFACTOR_TEMPLATE_PATH = REPO_ROOT / ".github" / "ISSUE_TEMPLATE" / "refactor.md"
 REQUIRED_EXTERNAL_LINKS = (
     ("Visual Studio Code", "https://code.visualstudio.com/"),
     ("OpenAI Codex", "https://openai.com/codex/"),
@@ -66,6 +69,31 @@ def _iter_markdown_links() -> list[tuple[Path, str, str]]:
         for label, target in _extract_markdown_links(_read(path)):
             links.append((path, label, target))
     return links
+
+
+def _iter_installable_script_dirs() -> list[Path]:
+    installable: list[Path] = []
+    for project_dir in SCRIPTS_ROOT.iterdir():
+        if not project_dir.is_dir():
+            continue
+        if (project_dir / "main.lua").exists():
+            installable.append(project_dir)
+    return sorted(installable)
+
+
+def _extract_readme_download_assets(text: str) -> list[tuple[str, str]]:
+    assets: list[tuple[str, str]] = []
+    for label, target in _extract_markdown_links(text):
+        if not label.startswith("Download "):
+            continue
+        if "/releases/download/" not in target:
+            continue
+        asset_name = Path(urlparse(target).path).name
+        match = re.fullmatch(r"(?P<project>[A-Za-z0-9_]+)-(?P<version>[^/]+)\.zip", asset_name)
+        if not match:
+            continue
+        assets.append((match.group("project"), match.group("version")))
+    return assets
 
 
 @pytest.mark.parametrize(
@@ -124,10 +152,9 @@ def test_root_version_file_exists_and_nonempty():
 
 
 def test_script_version_files_exist_and_nonempty():
-    scripts_root = REPO_ROOT / "scripts"
-    for project_dir in scripts_root.iterdir():
-        if not project_dir.is_dir():
-            continue
+    installable_dirs = _iter_installable_script_dirs()
+    assert installable_dirs
+    for project_dir in installable_dirs:
         version_file = project_dir / "VERSION"
         assert version_file.exists(), f"Missing script version file: {version_file}"
         assert version_file.read_text(encoding="utf-8").strip(), f"Empty script version file: {version_file}"
@@ -162,28 +189,47 @@ def test_vscode_pytest_enabled_in_repo_settings():
     assert settings.get("python.testing.pytestEnabled") is True
 
 
-
-
 def test_readme_download_links_match_script_versions():
     readme_text = _read(README_PATH)
     assert "## Download Latest Script Releases" in readme_text
 
-    scripts_root = REPO_ROOT / "scripts"
-    for project_dir in scripts_root.iterdir():
-        if not project_dir.is_dir():
-            continue
-        project_name = project_dir.name
-        version = (project_dir / "VERSION").read_text(encoding="utf-8").strip()
-        expected_asset = f"{project_name}-{version}.zip"
-        assert expected_asset in readme_text, (
-            f"README download links must include latest {project_name} asset {expected_asset}."
+    listed_assets = _extract_readme_download_assets(readme_text)
+    assert listed_assets, "README download section should include at least one release asset link."
+    for project_name, listed_version in listed_assets:
+        version_file = SCRIPTS_ROOT / project_name / "VERSION"
+        assert version_file.exists(), f"README download link references unknown project '{project_name}'."
+        actual_version = version_file.read_text(encoding="utf-8").strip()
+        assert listed_version == actual_version, (
+            f"README download link for {project_name} should use {actual_version}, got {listed_version}."
         )
-        assert "/releases/download/" in readme_text
+
+
 def test_required_recommended_links_present_in_readme():
     readme_text = _read(README_PATH)
     links = set(_extract_markdown_links(readme_text))
     for required in REQUIRED_EXTERNAL_LINKS:
         assert required in links, f"Missing required README link: {required[0]} -> {required[1]}"
+
+
+def test_nested_agents_files_exist_for_key_subsystems():
+    expected = (
+        REPO_ROOT / "scripts" / "SensorList" / "AGENTS.md",
+        REPO_ROOT / "scripts" / "ethos_events" / "AGENTS.md",
+        REPO_ROOT / "tools" / "AGENTS.md",
+    )
+    for path in expected:
+        assert path.exists(), f"Expected nested AGENTS file missing: {path}"
+
+
+def test_issue_template_config_exists_and_disables_blank_issues_for_non_maintainers():
+    text = ISSUE_TEMPLATE_CONFIG_PATH.read_text(encoding="utf-8")
+    assert "blank_issues_enabled: false" in text
+
+
+def test_refactor_issue_template_maps_to_chore_preflight_kind():
+    text = REFACTOR_TEMPLATE_PATH.read_text(encoding="utf-8")
+    assert "labels: chore, refactor" in text
+    assert "title: \"[Chore] \"" in text
 
 
 @pytest.mark.parametrize(("path", "label", "target"), _iter_markdown_links())

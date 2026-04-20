@@ -43,16 +43,18 @@ You are Codex working directly in this repository.
 
 ## Branch And Worktree Gate (Required Before Editing)
 
-1. Run issue preflight before editing:
+1. Preferred guided startup (infers issue kind + slug from GitHub issue metadata):
+   - `python tools/session_start.py issue {ISSUE_NUMBER}`
+2. Explicit preflight path (required for automation or when setting fields manually):
    - `python tools/session_preflight.py --mode issue --issue-number {ISSUE_NUMBER} --issue-kind {ISSUE_KIND} --slug {SHORT_SLUG}`
-2. Confirm target branch from prompt: `{TARGET_BRANCH}`.
-3. Run:
+3. Confirm target branch from prompt: `{TARGET_BRANCH}`.
+4. Run:
    - `git branch --show-current`
    - `git status --porcelain`
-4. If preflight blocks due to `main`, create/switch to the recommended issue branch before editing.
-5. If branch differs from target, stop and confirm how to handle local changes before switching.
-6. If worktree is dirty, stop and confirm whether to stash, commit, or continue as-is.
-7. After any branch switch, sync and re-check:
+5. If preflight blocks due to `main`, create/switch to the recommended issue branch before editing.
+6. If branch differs from target, stop and confirm how to handle local changes before switching.
+7. If worktree is dirty, stop and confirm whether to stash, commit, or continue as-is.
+8. After any branch switch, sync and re-check:
    - `git pull --ff-only origin {TARGET_BRANCH}`
    - `git status --short --branch`
 

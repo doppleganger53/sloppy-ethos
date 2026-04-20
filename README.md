@@ -73,12 +73,19 @@ To build a single install ZIP with multiple scripts:
 ## Project Layout
 
 - `scripts/SensorList/main.lua`: widget implementation
+- `scripts/SensorList/AGENTS.md`: SensorList-local agent contract (extends root policy)
 - `scripts/SensorList/README.md`: widget-focused usage notes
 - `scripts/ethos_events/main.lua`: system-tool event tracer entrypoint
+- `scripts/ethos_events/AGENTS.md`: ethos_events-local agent contract (extends root policy)
 - `scripts/ethos_events/README.md`: event tracer usage notes
 - `tools/build.py`: syntax-check + packaging + simulator deploy script
+- `tools/session_start.py`: guided issue-session startup (infers preflight fields from issue metadata)
+- `tools/session_preflight.py`: explicit branch/worktree preflight contract for automation/power users
+- `tools/AGENTS.md`: tooling-local agent contract (extends root policy)
 - `tools/create_todo_issues.py`: GitHub issue bootstrap for TODO backlog tracking
 - `deslopification/prompts/done/SensorList.md`: original implementation prompt
+- `deslopification/prompts/templates/`: active template-first issue/release prompt workflow
+- `deslopification/prompts/issues/archive/`: historical issue prompt snapshots
 - `docs/`: development notes and handoff documents
 - `docs/REPOSITORY_LAYOUT.md`: reference for `tools/`, `tests/`, `deslopification/`, and root artifacts
 - [docs/SensorList/SENSORLIST_ARCHITECTURE.md](docs/SensorList/SENSORLIST_ARCHITECTURE.md): SensorList lifecycle/state flow reference
@@ -141,6 +148,9 @@ luac -p scripts/SensorList/main.lua
 - Start session-memory context with `deslopification/memory/README.md`.
 - Use `deslopification/memory/CATALOG.md` for full historical note lookup.
 - Workflow/process guidance is intentionally mutable; issue-linked workflow updates must keep `AGENTS.md`, `CONTRIBUTING.md`, and `docs/DEVELOPMENT.md` synchronized.
+- Governance is layered:
+  - local issue/startup guardrails are enforced by tooling (`session_start` + `session_preflight`)
+  - GitHub-side `main` protections enforce PR+CI merge discipline
 
 ## Troubleshooting
 

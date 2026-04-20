@@ -12,15 +12,16 @@
 
 ## Workflow
 
-1. Create a short-lived branch from the latest `main` using naming conventions:
+1. For issue-linked work, use the guided startup path in `tools/session_start.py` to infer issue kind/slug from the live issue metadata, then confirm explicit preflight output before editing.
+2. Create a short-lived branch from the latest `main` using naming conventions:
    - `feature/{issue-number}-{short-slug}` for enhancements
    - `fix/{issue-number}-{short-slug}` for bugs
    - `docs/{issue-number}-{short-slug}` for docs/process changes
-   - `chore/{issue-number}-{short-slug}` for maintenance/tooling changes
-2. Keep changes focused and scoped to one concern.
-3. If installable script behavior/assets changed, bump that script `scripts/{ProjectName}/VERSION` in the same PR. Do not bump version files for docs-only or workflow-only changes.
-4. Do not bump root `VERSION` on issue branches; root release versioning is finalized on `release/v{VERSION}`.
-5. Run local checks before opening a PR:
+   - `chore/{issue-number}-{short-slug}` for maintenance/tooling/refactor changes
+3. Keep changes focused and scoped to one concern.
+4. If installable script behavior/assets changed, bump that script `scripts/{ProjectName}/VERSION` in the same PR. Do not bump version files for docs-only or workflow-only changes.
+5. Do not bump root `VERSION` on issue branches; root release versioning is finalized on `release/v{VERSION}`.
+6. Run local checks before opening a PR:
    - `luac -p scripts/SensorList/main.lua`
    - package build:
      `python tools/build.py --project SensorList --dist`
@@ -29,13 +30,13 @@
    - docs validation (required for any documentation changes):
      `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
    - `stylua --config-path tools/config/stylua.toml scripts` (if formatting changed)
-6. Open a PR into `main` using the repository PR template and include linked-closing issue keywords (for example, `Closes #29`).
-7. Use the repository merge strategy policy:
+7. Open a PR into `main` using the repository PR template and include linked-closing issue keywords (for example, `Closes #29`).
+8. Use the repository merge strategy policy:
    - `squash` merge for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`).
    - `merge commit` for release-prep PRs (`release/v{VERSION}`) or lineage-sensitive PRs.
    - avoid `rebase` merge as default.
-8. Do not manually close linked issues before merge; let GitHub close them from the merged PR closing keywords.
-9. Follow release branch/tag flow in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#main-branch-release-and-versioning-policy) and [Release Workflow](docs/DEVELOPMENT.md#release-workflow).
+9. Do not manually close linked issues before merge; let GitHub close them from the merged PR closing keywords.
+10. Follow release branch/tag flow in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#main-branch-release-and-versioning-policy) and [Release Workflow](docs/DEVELOPMENT.md#release-workflow).
 
 ## Documentation Changes
 
@@ -56,6 +57,14 @@
 - Confirm the issue has the `bug` label.
 - Fill the environment section for both Ethos and non-Ethos bug types.
 - For screenshots, prefer GitHub issue-upload links or `raw.githubusercontent.com` links and avoid `blob` image URLs.
+
+## Issue Intake Kinds
+
+- Repository issue intake maps to branch-prefix preflight kinds:
+  - `bug` -> `fix/{issue-number}-{slug}`
+  - `docs`/`documentation` -> `docs/{issue-number}-{slug}`
+  - `enhancement` -> `feature/{issue-number}-{slug}`
+  - maintenance/refactor/workflow/tests -> `chore/{issue-number}-{slug}`
 
 ## Commit Guidance
 

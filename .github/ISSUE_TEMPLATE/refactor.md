@@ -1,12 +1,12 @@
 ---
-name: Refactor
-about: Improve structure/maintainability while preserving behavior unless stated
-title: "[Refactor] "
-labels: refactor
+name: Chore / Refactor
+about: Maintenance or restructuring work with no primary feature addition
+title: "[Chore] "
+labels: chore, refactor
 assignees: ""
 ---
 
-## Current Pain / Complexity
+## Maintenance Goal
 
 What is difficult to maintain, reason about, or evolve?
 

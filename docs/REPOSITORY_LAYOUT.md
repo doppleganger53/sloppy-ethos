@@ -15,6 +15,8 @@ This document explains the purpose of the top-level folders and key root files i
 - Build, packaging, and deployment tooling.
 - Key scripts:
   - `tools/build.py`: canonical cross-platform build/deploy entrypoint.
+  - `tools/session_start.py`: guided issue-session startup (metadata inference + preflight bridge).
+  - `tools/session_preflight.py`: explicit branch/worktree policy gate.
   - `tools/create_todo_issues.py`: utility to create TODO-tracking GitHub issues.
   - `tools/deploy.config.example.json`: template for local simulator-path config.
   - `tools/config/stylua.toml`: Lua formatting configuration for StyLua workflows.
@@ -38,6 +40,7 @@ This document explains the purpose of the top-level folders and key root files i
 
 - Contributor/developer-facing documentation.
 - Primary guide: `docs/DEVELOPMENT.md`.
+- Governance runbook: `docs/GOVERNANCE.md`.
 - SensorList architecture reference: `docs/SensorList/SENSORLIST_ARCHITECTURE.md`.
 - This file (`docs/REPOSITORY_LAYOUT.md`) documents repository structure and root artifacts.
 
@@ -46,13 +49,17 @@ This document explains the purpose of the top-level folders and key root files i
 - Project memory and prompt artifacts that preserve implementation context.
 - Subfolders:
   - `deslopification/memory/`: session notes, handoffs, and project-specific operating context.
-  - `deslopification/prompts/`: source prompts and roadmap prompt variants.
+  - `deslopification/prompts/templates/`: active template-first issue/release prompt contracts.
+  - `deslopification/prompts/issues/archive/`: historical issue prompt snapshots.
+  - `deslopification/prompts/issues/done/`: prompts tied to completed issue work.
 
 ## Root Artifacts
 
 - `README.md`: user-facing entrypoint with quick-start and collaboration links.
 - `CONTRIBUTING.md`: contributor workflow and coding guidance.
 - `AGENTS.md`: coding-agent operating instructions for this repository.
+- `scripts/SensorList/AGENTS.md`, `scripts/ethos_events/AGENTS.md`, `tools/AGENTS.md`:
+  nested subsystem agent instructions; closest `AGENTS.md` takes precedence.
 - `TODO.md`: current backlog and follow-up actions.
 - `VERSION`: repository version source of truth.
 - `LICENSE`: project license (GPLv3).

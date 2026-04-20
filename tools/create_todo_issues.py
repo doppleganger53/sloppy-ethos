@@ -106,8 +106,8 @@ Add pytest docs command parser for README, DEVELOPMENT, SensorList README, and C
         + TODO_REF,
     },
     {
-        "title": "[Refactor] Streamline AGENTS.md and move SensorList-specific notes to memory",
-        "labels": ["refactor", "docs"],
+        "title": "[Chore] Streamline AGENTS.md and move SensorList-specific notes to memory",
+        "labels": ["chore", "docs"],
         "body": """## Current Pain / Complexity
 AGENTS mixes repo-wide and script-specific operational detail, causing repeated context noise.
 
@@ -194,7 +194,7 @@ def main():
     if args.dry_run:
         for issue in CHILD_ISSUES:
             print(issue["title"])
-        print("[Enhancement] Track TODO backlog execution (tests, prompts, docs, AGENTS refactor)")
+        print("[Enhancement] Track TODO backlog execution (tests, prompts, docs, AGENTS chore)")
         return
 
     ensure_gh_available()
@@ -213,7 +213,7 @@ def main():
 - Linked from TODO.md item TODO-03.
 - Child issues correspond to TODO-04 through TODO-09.
 """
-    parent_title = "[Enhancement] Track TODO backlog execution (tests, prompts, docs, AGENTS refactor)"
+    parent_title = "[Enhancement] Track TODO backlog execution (tests, prompts, docs, AGENTS chore)"
     parent_url = new_issue(args.repo, parent_title, ["enhancement"], parent_body)
     print(f"Created parent issue: {parent_url}")
 
