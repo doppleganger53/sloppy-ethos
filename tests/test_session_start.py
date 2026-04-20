@@ -6,6 +6,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 
 def load_session_start_module():
     repo_root = Path(__file__).resolve().parents[1]
@@ -120,3 +122,85 @@ def test_run_issue_json_output(monkeypatch, capsys):
     assert payload["issue"]["issue_kind"] == "enhancement"
     assert payload["preflight"]["status"] == "PASS"
     assert payload["checkout_attempted"] is False
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["issue", "45", "--release-kind", "script"],
+        ["issue", "45", "--release-kind", "script", "--project", "SensorList"],
+        ["issue", "45", "--release-kind", "script", "--script-gate-issue", "32"],
+        ["issue", "45", "--release-kind", "script", "--project", "SensorList", "--script-gate-issue", "bad"],
+        ["issue", "45", "--release-kind", "repo", "--project", "SensorList"],
+    ],
+)
+def test_parse_args_rejects_invalid_release_scope_combinations(argv):
+    with pytest.raises(SystemExit):
+        session_start.parse_args(argv)
+
+
+def test_try_checkout_issue_branch_creates_from_origin_main(monkeypatch):
+    calls = []
+
+    def fake_run_cmd(argv):
+        calls.append(argv)
+        if argv[:5] == ["gh", "issue", "develop", "45", "--name"]:
+            return argparse.Namespace(returncode=1, stdout="", stderr="gh failed")
+        if argv == ["git", "show-ref", "--verify", "--quiet", "refs/heads/feature/45-smartmapper"]:
+            return argparse.Namespace(returncode=1, stdout="", stderr="")
+        if argv == ["git", "show-ref", "--verify", "--quiet", "refs/remotes/origin/main"]:
+            return argparse.Namespace(returncode=0, stdout="", stderr="")
+        if argv == ["git", "switch", "-c", "feature/45-smartmapper", "origin/main"]:
+            return argparse.Namespace(returncode=0, stdout="", stderr="")
+        raise AssertionError(f"Unexpected command: {argv}")
+
+    monkeypatch.setattr(session_start, "run_cmd", fake_run_cmd)
+
+    ok, detail = session_start.try_checkout_issue_branch("45", "feature/45-smartmapper")
+
+    assert ok is True
+    assert "origin/main" in detail
+    assert ["git", "switch", "-c", "feature/45-smartmapper", "origin/main"] in calls
+
+
+def test_try_checkout_issue_branch_falls_back_to_local_main(monkeypatch):
+    def fake_run_cmd(argv):
+        if argv[:5] == ["gh", "issue", "develop", "45", "--name"]:
+            return argparse.Namespace(returncode=1, stdout="", stderr="gh failed")
+        if argv == ["git", "show-ref", "--verify", "--quiet", "refs/heads/feature/45-smartmapper"]:
+            return argparse.Namespace(returncode=1, stdout="", stderr="")
+        if argv == ["git", "show-ref", "--verify", "--quiet", "refs/remotes/origin/main"]:
+            return argparse.Namespace(returncode=1, stdout="", stderr="")
+        if argv == ["git", "show-ref", "--verify", "--quiet", "refs/heads/main"]:
+            return argparse.Namespace(returncode=0, stdout="", stderr="")
+        if argv == ["git", "switch", "-c", "feature/45-smartmapper", "main"]:
+            return argparse.Namespace(returncode=0, stdout="", stderr="")
+        raise AssertionError(f"Unexpected command: {argv}")
+
+    monkeypatch.setattr(session_start, "run_cmd", fake_run_cmd)
+
+    ok, detail = session_start.try_checkout_issue_branch("45", "feature/45-smartmapper")
+
+    assert ok is True
+    assert "main" in detail
+
+
+def test_try_checkout_issue_branch_reports_missing_main_base(monkeypatch):
+    def fake_run_cmd(argv):
+        if argv[:5] == ["gh", "issue", "develop", "45", "--name"]:
+            return argparse.Namespace(returncode=1, stdout="", stderr="gh failed")
+        if argv == ["git", "show-ref", "--verify", "--quiet", "refs/heads/feature/45-smartmapper"]:
+            return argparse.Namespace(returncode=1, stdout="", stderr="")
+        if argv == ["git", "show-ref", "--verify", "--quiet", "refs/remotes/origin/main"]:
+            return argparse.Namespace(returncode=1, stdout="", stderr="")
+        if argv == ["git", "show-ref", "--verify", "--quiet", "refs/heads/main"]:
+            return argparse.Namespace(returncode=1, stdout="", stderr="")
+        raise AssertionError(f"Unexpected command: {argv}")
+
+    monkeypatch.setattr(session_start, "run_cmd", fake_run_cmd)
+
+    ok, detail = session_start.try_checkout_issue_branch("45", "feature/45-smartmapper")
+
+    assert ok is False
+    assert "origin/main" in detail
+    assert "git switch -c feature/45-smartmapper origin/main" in detail

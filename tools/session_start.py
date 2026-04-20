@@ -165,6 +165,21 @@ def local_branch_exists(branch: str) -> bool:
     return result.returncode == 0
 
 
+def ref_exists(ref: str) -> bool:
+    if "/" in ref:
+        result = run_cmd(["git", "show-ref", "--verify", "--quiet", f"refs/remotes/{ref}"])
+        return result.returncode == 0
+    result = run_cmd(["git", "show-ref", "--verify", "--quiet", f"refs/heads/{ref}"])
+    return result.returncode == 0
+
+
+def resolve_issue_branch_base() -> Optional[str]:
+    for ref in ("origin/main", "main"):
+        if ref_exists(ref):
+            return ref
+    return None
+
+
 def try_checkout_issue_branch(issue_number: str, branch_name: str) -> tuple[bool, str]:
     gh_create = run_cmd(["gh", "issue", "develop", issue_number, "--name", branch_name, "--checkout"])
     if gh_create.returncode == 0:
@@ -178,12 +193,22 @@ def try_checkout_issue_branch(issue_number: str, branch_name: str) -> tuple[bool
         if git_checkout.returncode == 0:
             return True, "Switched to existing branch with git checkout."
     else:
-        git_create = run_cmd(["git", "switch", "-c", branch_name])
+        base_ref = resolve_issue_branch_base()
+        if not base_ref:
+            detail = gh_create.stderr.strip() or gh_create.stdout.strip() or "gh issue develop failed"
+            return (
+                False,
+                f"{detail}. Unable to create '{branch_name}' because neither 'origin/main' nor 'main' exists locally. "
+                "Fetch or create main, then retry with: git switch -c "
+                f"{branch_name} origin/main (or git switch -c {branch_name} main).",
+            )
+
+        git_create = run_cmd(["git", "switch", "-c", branch_name, base_ref])
         if git_create.returncode == 0:
-            return True, "Created/switched branch with git switch -c."
-        git_checkout_create = run_cmd(["git", "checkout", "-b", branch_name])
+            return True, f"Created/switched branch with git switch -c from {base_ref}."
+        git_checkout_create = run_cmd(["git", "checkout", "-b", branch_name, base_ref])
         if git_checkout_create.returncode == 0:
-            return True, "Created/switched branch with git checkout -b."
+            return True, f"Created/switched branch with git checkout -b from {base_ref}."
 
     detail = gh_create.stderr.strip() or gh_create.stdout.strip() or "branch checkout failed"
     return False, detail
@@ -227,6 +252,8 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     args = parser.parse_args(argv)
     if args.mode == "issue" and not re.fullmatch(r"[0-9]+", args.issue_number):
         parser.error("issue_number must contain digits only.")
+    if args.mode == "issue":
+        session_preflight.validate_release_scope_args(parser, args)
     return args
 
 

@@ -88,6 +88,46 @@ def get_issue_metadata(issue_number: str) -> tuple[str, str, str]:
     return state, title, url
 
 
+def validate_issue_mode_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    missing = []
+    if not args.issue_number:
+        missing.append("--issue-number")
+    if not args.issue_kind:
+        missing.append("--issue-kind")
+    if not args.slug:
+        missing.append("--slug")
+    if missing:
+        parser.error(f"--mode issue requires {' '.join(missing)}")
+
+    if not re.fullmatch(r"[0-9]+", args.issue_number):
+        parser.error("--issue-number must contain digits only.")
+    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", args.slug):
+        parser.error("--slug must be lowercase kebab-case (a-z, 0-9, hyphen).")
+
+    validate_release_scope_args(parser, args)
+
+
+def validate_release_scope_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    if args.release_kind == "repo":
+        if args.project:
+            parser.error("--release-kind repo does not accept --project.")
+        if args.script_gate_issue:
+            parser.error("--release-kind repo does not accept --script-gate-issue.")
+    elif args.release_kind == "script":
+        if not args.project:
+            parser.error("--release-kind script requires --project.")
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", args.project):
+            parser.error("--project must contain letters, digits, underscore, or hyphen.")
+        if not args.script_gate_issue:
+            parser.error("--release-kind script requires at least one --script-gate-issue.")
+        for issue_number in args.script_gate_issue:
+            if not re.fullmatch(r"[0-9]+", issue_number):
+                parser.error("--script-gate-issue must contain digits only.")
+    else:
+        if args.project or args.script_gate_issue:
+            parser.error("--project and --script-gate-issue require --release-kind.")
+
+
 def find_open_script_gate_issues(gate_issues: list[str]) -> list[tuple[str, str, str]]:
     open_issues: list[tuple[str, str, str]] = []
     for issue_number in gate_issues:
@@ -119,39 +159,7 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     args = parser.parse_args(argv)
 
     if args.mode == "issue":
-        missing = []
-        if not args.issue_number:
-            missing.append("--issue-number")
-        if not args.issue_kind:
-            missing.append("--issue-kind")
-        if not args.slug:
-            missing.append("--slug")
-        if missing:
-            parser.error(f"--mode issue requires {' '.join(missing)}")
-
-        if not re.fullmatch(r"[0-9]+", args.issue_number):
-            parser.error("--issue-number must contain digits only.")
-        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", args.slug):
-            parser.error("--slug must be lowercase kebab-case (a-z, 0-9, hyphen).")
-
-        if args.release_kind == "repo":
-            if args.project:
-                parser.error("--release-kind repo does not accept --project.")
-            if args.script_gate_issue:
-                parser.error("--release-kind repo does not accept --script-gate-issue.")
-        elif args.release_kind == "script":
-            if not args.project:
-                parser.error("--release-kind script requires --project.")
-            if not re.fullmatch(r"[A-Za-z0-9_-]+", args.project):
-                parser.error("--project must contain letters, digits, underscore, or hyphen.")
-            if not args.script_gate_issue:
-                parser.error("--release-kind script requires at least one --script-gate-issue.")
-            for issue_number in args.script_gate_issue:
-                if not re.fullmatch(r"[0-9]+", issue_number):
-                    parser.error("--script-gate-issue must contain digits only.")
-        else:
-            if args.project or args.script_gate_issue:
-                parser.error("--project and --script-gate-issue require --release-kind.")
+        validate_issue_mode_args(parser, args)
     else:
         if args.issue_number or args.issue_kind or args.slug:
             parser.error("--mode non-issue does not accept issue-specific arguments.")

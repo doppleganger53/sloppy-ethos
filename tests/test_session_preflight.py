@@ -182,6 +182,17 @@ def test_parse_args_accepts_valid_script_release_scope():
     assert args.script_gate_issue == ["32"]
 
 
+def test_validate_release_scope_args_rejects_non_numeric_script_gate_issue():
+    parser = preflight.argparse.ArgumentParser()
+    args = Namespace(
+        release_kind="script",
+        project="SensorList",
+        script_gate_issue=["bad"],
+    )
+    with pytest.raises(SystemExit):
+        preflight.validate_release_scope_args(parser, args)
+
+
 def test_parse_args_accepts_valid_non_issue_mode():
     args = preflight.parse_args(["--mode", "non-issue"])
     assert args.mode == "non-issue"
