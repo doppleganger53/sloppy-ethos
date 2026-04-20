@@ -37,6 +37,19 @@ Historical detail remains in individual session notes referenced from
   endings to remain stable across Windows (`CRLF`) and Linux (`LF`) checkouts.
 - Scope distribution lines in `CATALOG.md` are sourced from per-scope `.desc`
   files stored in each `notes/{artifact}/{scope}/` folder.
+- Root and nested `AGENTS.md` contracts are now the canonical agent policy
+  surface (root plus subsystem-local overrides in `scripts/` and `tools/`).
+- Prompt workflow is template-first:
+  - active contracts live under `deslopification/prompts/templates/`
+  - issue snapshots under `deslopification/prompts/issues/archive/` are
+    historical references, not live source-of-truth workflows.
+- Issue session startup is now dual-path:
+  - guided path with `tools/session_start.py issue {N}` (kind/slug inference)
+  - explicit path with `tools/session_preflight.py` for automation/power users
+    and strict overrides.
+- `tools/session_preflight.py` supports:
+  - strict branch enforcement (`--strict-branch-match`)
+  - structured output (`--json`) for scripted consumers.
 - Session notes should use explicit `Artifact`, `Scope`, and `Concern`
   metadata, with path and metadata aligned.
 - Reusable Ethos runtime/API/simulator knowledge belongs under scope
@@ -74,6 +87,9 @@ Historical detail remains in individual session notes referenced from
   - `squash` for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`).
   - `merge commit` for `release/v{VERSION}` and `release/{ProjectName}-v{VERSION}` PRs, plus lineage-sensitive cases.
   - `rebase` is not the default merge method.
+- GitHub-side governance baseline now includes protected `main` with required CI
+  status check (`test`) and PR-based merges, while leaving branch-name
+  restrictions/rulesets optional for contributor approachability.
 - Non-issue sessions may run on `main`, but require user confirmation before
   file mutations.
 - Simulator debugging sessions for Lua behavior now require a deploy step
