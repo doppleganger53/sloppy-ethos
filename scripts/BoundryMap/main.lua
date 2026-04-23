@@ -42,12 +42,15 @@ local CONTROL_BUTTON_WIDTH = 58
 local CONTROL_BUTTON_HEIGHT = 18
 local CONTROL_BUTTON_GAP = 4
 local CONTROL_MARGIN = 6
+local CONTROL_RELEASE_SLOP = 8
+local TOUCH_CONTENT_Y_OFFSET = 18
 
 local gpsLatQuery = { name = "GPS", options = nil }
 local gpsLonQuery = { name = "GPS", options = nil }
 local gpsQueriesReady = false
 local gpsSensorQuery = { name = "" }
 local altSensorQuery = { name = "" }
+local saveBoundaries
 
 local function safeCall(fn, ...)
   if type(fn) ~= "function" then
@@ -368,6 +371,13 @@ local function resolveTouchPhase(category, value)
   return nil
 end
 
+local function normalizeTouchPoint(x, y)
+  if type(y) ~= "number" then
+    return x, y
+  end
+  return x, y - TOUCH_CONTENT_Y_OFFSET
+end
+
 local function controlRects(widget)
   local w = widget.windowW or 480
   local totalHeight = (CONTROL_BUTTON_HEIGHT * 3) + (CONTROL_BUTTON_GAP * 2)
@@ -395,6 +405,69 @@ local function hitRect(x, y, rect)
     return false
   end
   return x >= rect.left and x <= rect.right and y >= rect.top and y <= rect.bottom
+end
+
+local function hitRectSlop(x, y, rect, slop)
+  if type(x) ~= "number" or type(y) ~= "number" or type(rect) ~= "table" then
+    return false
+  end
+  local pad = slop or 0
+  return x >= rect.left - pad and x <= rect.right + pad and y >= rect.top - pad and y <= rect.bottom + pad
+end
+
+local function controlAtPoint(widget, x, y, slop)
+  local rects = controlRects(widget)
+  if hitRect(x, y, rects.draw) then
+    return "draw", rects.draw
+  end
+  if hitRect(x, y, rects.delete) then
+    return "delete", rects.delete
+  end
+  if hitRect(x, y, rects.save) then
+    return "save", rects.save
+  end
+  if hitRectSlop(x, y, rects.draw, slop) then
+    return "draw", rects.draw
+  end
+  if hitRectSlop(x, y, rects.delete, slop) then
+    return "delete", rects.delete
+  end
+  if hitRectSlop(x, y, rects.save, slop) then
+    return "save", rects.save
+  end
+  return nil, nil
+end
+
+local function touchOverControls(widget, x, y)
+  return controlAtPoint(widget, x, y, 0) ~= nil
+end
+
+local function activateControl(widget, control)
+  if control == "draw" then
+    widget.drawMode = not widget.drawMode
+    if widget.drawMode then
+      widget.deleteMode = false
+    end
+    widget.needsInvalidate = true
+    return true
+  end
+  if control == "delete" then
+    widget.deleteMode = not widget.deleteMode
+    if widget.deleteMode then
+      widget.drawMode = false
+    end
+    widget.needsInvalidate = true
+    return true
+  end
+  if control == "save" then
+    local okSave, saveErr = saveBoundaries(widget)
+    if not okSave then
+      logRuntimeError("sidecar-save", saveErr)
+    end
+    widget.needsInvalidate = true
+    return true
+  end
+  return false
 end
 
 local function triggerWarningFeedback(widget)
@@ -498,7 +571,7 @@ local function encodeBoundary(boundary)
   )
 end
 
-local function saveBoundaries(widget)
+saveBoundaries = function(widget)
   local path = sidecarPath(widget.bitmapFile)
   if not path or not io or type(io.open) ~= "function" then
     return false, "sidecar path unavailable"
@@ -1268,24 +1341,29 @@ local function paint(widget)
 end
 
 local function handleControlTouch(widget, phase, x, y)
-  local rects = controlRects(widget)
+  local exactControl = controlAtPoint(widget, x, y, 0)
+  local releaseControl = controlAtPoint(widget, x, y, CONTROL_RELEASE_SLOP)
   if phase == "start" then
-    if hitRect(x, y, rects.draw) then
-      widget.touchArmed = "draw"
-      return true
-    end
-    if hitRect(x, y, rects.delete) then
-      widget.touchArmed = "delete"
-      return true
-    end
-    if hitRect(x, y, rects.save) then
-      widget.touchArmed = "save"
+    if exactControl then
+      widget.touchArmed = exactControl
+      widget.touchActivatedOnStart = false
+      if exactControl == "save" then
+        activateControl(widget, exactControl)
+        widget.touchActivatedOnStart = true
+      end
       return true
     end
     return false
   end
 
   local armed = widget.touchArmed
+  if not armed and exactControl then
+    if phase == "end" then
+      activateControl(widget, exactControl)
+    end
+    return true
+  end
+
   if not armed then
     return false
   end
@@ -1296,28 +1374,12 @@ local function handleControlTouch(widget, phase, x, y)
 
   if phase == "end" then
     widget.touchArmed = nil
-    if armed == "draw" and hitRect(x, y, rects.draw) then
-      widget.drawMode = not widget.drawMode
-      if widget.drawMode then
-        widget.deleteMode = false
-      end
-      widget.needsInvalidate = true
+    if widget.touchActivatedOnStart then
+      widget.touchActivatedOnStart = false
       return true
     end
-    if armed == "delete" and hitRect(x, y, rects.delete) then
-      widget.deleteMode = not widget.deleteMode
-      if widget.deleteMode then
-        widget.drawMode = false
-      end
-      widget.needsInvalidate = true
-      return true
-    end
-    if armed == "save" and hitRect(x, y, rects.save) then
-      local okSave, saveErr = saveBoundaries(widget)
-      if not okSave then
-        logRuntimeError("sidecar-save", saveErr)
-      end
-      widget.needsInvalidate = true
+    if armed == releaseControl then
+      activateControl(widget, armed)
       return true
     end
   end
@@ -1325,6 +1387,9 @@ local function handleControlTouch(widget, phase, x, y)
 end
 
 local function handleMapTouch(widget, phase, x, y)
+  if touchOverControls(widget, x, y) then
+    return true
+  end
   if type(widget.mapRect) ~= "table" or not hitRect(x, y, widget.mapRect) then
     if phase == "end" then
       widget.draftBoundary = nil
@@ -1443,10 +1508,11 @@ local function event(widget, category, value, x, y)
     if not phase then
       return false
     end
-    if handleControlTouch(widget, phase, x, y) then
+    local contentX, contentY = normalizeTouchPoint(x, y)
+    if handleControlTouch(widget, phase, contentX, contentY) then
       return true
     end
-    return handleMapTouch(widget, phase, x, y)
+    return handleMapTouch(widget, phase, contentX, contentY)
   end)
   if not ok then
     setWidgetError(widget, "event", result)
@@ -1546,6 +1612,7 @@ local function testExports()
     write = write,
     event = event,
     controlRects = controlRects,
+    controlAtPoint = controlAtPoint,
     pointSegmentDistance = pointSegmentDistance,
     updateWarnings = updateWarnings,
     markBoundariesDirty = markBoundariesDirty,
