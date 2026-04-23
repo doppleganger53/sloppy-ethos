@@ -38,8 +38,8 @@ local WARNING_MODE_BOTH = 3
 local WARNING_TYPE_MOMENTARY = 0
 local WARNING_TYPE_CONSTANT = 1
 
-local CONTROL_BUTTON_WIDTH = 58
-local CONTROL_BUTTON_HEIGHT = 18
+local CONTROL_BUTTON_WIDTH = 72
+local CONTROL_BUTTON_HEIGHT = 24
 local CONTROL_BUTTON_GAP = 4
 local CONTROL_MARGIN = 6
 
@@ -617,6 +617,38 @@ local function addBoundary(widget, x1, y1, x2, y2)
   widget.boundaries[#widget.boundaries + 1] = boundary
   markBoundariesDirty(widget)
   return true
+end
+
+local function commitDraftBoundary(widget, x, y)
+  if type(widget) ~= "table" or type(widget.draftBoundary) ~= "table" then
+    return false
+  end
+
+  local draft = widget.draftBoundary
+  if type(x) == "number" and type(y) == "number" then
+    local localX, localY = screenToBitmapLocal(widget, x, y)
+    draft.x2 = localX
+    draft.y2 = localY
+  elseif type(widget.pendingDraftPoint) == "table" then
+    if type(widget.pendingDraftPoint.x) == "number" then
+      draft.x2 = widget.pendingDraftPoint.x
+    end
+    if type(widget.pendingDraftPoint.y) == "number" then
+      draft.y2 = widget.pendingDraftPoint.y
+    end
+  end
+
+  widget.draftBoundary = nil
+  widget.pendingDraftPoint = nil
+  return addBoundary(widget, draft.x1, draft.y1, draft.x2, draft.y2)
+end
+
+local function saveCurrentBoundaries(widget)
+  -- Save must persist the in-progress draft without turning the save tap into a new endpoint.
+  if type(widget) == "table" and type(widget.draftBoundary) == "table" then
+    commitDraftBoundary(widget)
+  end
+  return saveBoundaries(widget)
 end
 
 local function removeBoundaryAtPoint(widget, screenX, screenY)
@@ -1286,6 +1318,16 @@ local function handleControlTouch(widget, phase, x, y)
   end
 
   local armed = widget.touchArmed
+  if phase == "end" and hitRect(x, y, rects.save) and (not armed or armed == "save") then
+    local okSave, saveErr = saveCurrentBoundaries(widget)
+    if not okSave then
+      logRuntimeError("sidecar-save", saveErr)
+    end
+    widget.touchArmed = nil
+    widget.needsInvalidate = true
+    return true
+  end
+
   if not armed then
     return false
   end
@@ -1312,8 +1354,8 @@ local function handleControlTouch(widget, phase, x, y)
       widget.needsInvalidate = true
       return true
     end
-    if armed == "save" and hitRect(x, y, rects.save) then
-      local okSave, saveErr = saveBoundaries(widget)
+    if armed == "save" then
+      local okSave, saveErr = saveCurrentBoundaries(widget)
       if not okSave then
         logRuntimeError("sidecar-save", saveErr)
       end
@@ -1350,13 +1392,7 @@ local function handleMapTouch(widget, phase, x, y)
       return true
     end
     if phase == "end" and widget.draftBoundary then
-      local localX, localY = screenToBitmapLocal(widget, x, y)
-      local startX = widget.draftBoundary.x1
-      local startY = widget.draftBoundary.y1
-      widget.draftBoundary = nil
-      widget.pendingDraftPoint = nil
-      addBoundary(widget, startX, startY, localX, localY)
-      return true
+      return commitDraftBoundary(widget, x, y)
     end
   elseif widget.deleteMode then
     if phase == "end" then

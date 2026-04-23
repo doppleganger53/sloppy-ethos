@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 109
-- Total size: 179,234 bytes
-- Total lines: 4,806
+- Files: 110
+- Total size: 180,942 bytes
+- Total lines: 4,849
 - Distribution by artifact:
-  - session notes: 103
+  - session notes: 104
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 63 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 64 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -33,8 +33,8 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 3 -- handoff ( Session continuity and restart handoffs )
 
 - Distribution by concern:
+  - 26 -- implementation
   - 26 -- workflow
-  - 25 -- implementation
   - 15 -- release
   - 13 -- docs
   - 12 -- build
@@ -182,3 +182,4 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-03-28 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_LICENSE_DERIVATION.md](notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_LICENSE_DERIVATION.md) | # Session Notes 2026-03-28 - BoundryMap License Derivation Notice |
 | 2026-03-28 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-03-28_OPTIONAL_RADIO_FILE_BUILD_MANIFEST.md](notes/session/repo/SESSION_NOTES_2026-03-28_OPTIONAL_RADIO_FILE_BUILD_MANIFEST.md) | # Session Notes 2026-03-28 - Optional Radio File Build Manifest |
 | 2026-03-28 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md](notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md) | # Session Notes 2026-03-28 - README Published Script Link Policy |
+| 2026-04-23 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-04-23_BOUNDRYMAP_SAVE_TOUCH_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-23_BOUNDRYMAP_SAVE_TOUCH_FIX.md) | # Session Notes 2026-04-23 - BoundryMap Save Touch Fix |

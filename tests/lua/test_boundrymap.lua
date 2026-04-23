@@ -236,6 +236,8 @@ widget.bmpW = 480
 widget.bmpH = 272
 widget.mapMeta = meta
 local rects = test.controlRects(widget)
+assert_equal(rects.draw.right - rects.draw.left, 72, "draw button width expanded")
+assert_equal(rects.draw.bottom - rects.draw.top, 24, "draw button height expanded")
 local drawX = rects.draw.left + 2
 local drawY = rects.draw.top + 2
 assert_true(test.event(widget, _G.EVT_TOUCH, 16640, drawX, drawY), "draw button start consumed")
@@ -255,6 +257,45 @@ widget.deleteMode = true
 widget.drawMode = false
 assert_true(test.event(widget, _G.EVT_TOUCH, 16641, 22, 22), "delete touch consumed")
 assert_equal(#widget.boundaries, 0, "event delete flow removes boundary")
+
+widget = test.create()
+widget.bitmapFile = "TestMap.bmp"
+widget.windowW = 480
+widget.windowH = 272
+widget.mapRect = { left = 0, top = 0, right = 480, bottom = 272 }
+widget.loadedBitmap = true
+widget.bmpW = 480
+widget.bmpH = 272
+widget.mapMeta = meta
+widget.drawMode = true
+widget.boundaries = {}
+widget.draftBoundary = {
+  x1 = 40,
+  y1 = 30,
+  x2 = 120,
+  y2 = 48,
+  lat1 = 0,
+  lon1 = 0,
+  lat2 = 0,
+  lon2 = 0,
+}
+widget.pendingDraftPoint = { x = 120, y = 48 }
+local saveRects = test.controlRects(widget)
+assert_equal(saveRects.save.right - saveRects.save.left, 72, "save button width expanded")
+assert_equal(saveRects.save.bottom - saveRects.save.top, 24, "save button height expanded")
+local saveX = saveRects.save.left + 4
+local saveY = saveRects.save.top + 4
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, saveX, saveY), "save touch consumed")
+assert_equal(#widget.boundaries, 1, "save commits current draft")
+assert_true(widget.draftBoundary == nil, "save clears draft boundary")
+assert_true(widget.drawMode, "save keeps draw mode enabled")
+local savedAfterTouch = ioWrites["/documents/user/TestMap.boundries.json"]
+local savedAfterTouchParsed = test.parseBoundaryObjects(savedAfterTouch)
+assert_equal(#savedAfterTouchParsed, 1, "save writes one boundary after touch")
+assert_equal(savedAfterTouchParsed[1].x1, 40, "save keeps draft start x")
+assert_equal(savedAfterTouchParsed[1].y1, 30, "save keeps draft start y")
+assert_equal(savedAfterTouchParsed[1].x2, 120, "save keeps draft end x")
+assert_equal(savedAfterTouchParsed[1].y2, 48, "save keeps draft end y")
 
 widget = test.create()
 widget.boundryWarningMode = 1
