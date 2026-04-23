@@ -43,7 +43,8 @@
 - If a change touches `README.md`, `docs/`, or other contributor-facing docs, run:
   `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
 - Docs updates are not complete until docs contract checks pass.
-- Keep `README.md` 'Download Latest Script Releases' links aligned with the latest published script release ZIP assets whenever a script release is published.
+- Keep `README.md` 'Download Latest Script Releases' links aligned only with currently published script release ZIP assets.
+- Do not add unreleased scripts to that README section just because `scripts/{ProjectName}/VERSION` exists on a branch.
 - Include the docs validation command output in the PR `Verification` checklist.
 - If workflow/behavior changed, add a session note under
   `deslopification/memory/notes/{artifact}/{scope}/`, regenerate

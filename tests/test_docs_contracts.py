@@ -38,6 +38,21 @@ def _extract_markdown_links(text: str) -> list[tuple[str, str]]:
     return [(label.strip(), target.strip()) for label, target in re.findall(r"\[([^\]]+)\]\(([^)]+)\)", text)]
 
 
+def _extract_section(text: str, heading: str) -> str:
+    lines = text.splitlines()
+    capture = False
+    collected: list[str] = []
+    for line in lines:
+        if line.strip() == heading:
+            capture = True
+            continue
+        if capture and line.startswith("## "):
+            break
+        if capture:
+            collected.append(line)
+    return "\n".join(collected).strip()
+
+
 def _looks_like_local_file_reference(token: str) -> bool:
     if "://" in token or " " in token:
         return False
@@ -192,9 +207,15 @@ def test_vscode_pytest_enabled_in_repo_settings():
 def test_readme_download_links_match_script_versions():
     readme_text = _read(README_PATH)
     assert "## Download Latest Script Releases" in readme_text
+    section = _extract_section(readme_text, "## Download Latest Script Releases")
+    assert "/releases/download/" in section
 
-    listed_assets = _extract_readme_download_assets(readme_text)
+    links = _extract_markdown_links(section)
+    assert links, "README download section must contain at least one published script release link."
+
+    listed_assets = _extract_readme_download_assets(section)
     assert listed_assets, "README download section should include at least one release asset link."
+    seen_projects: set[str] = set()
     for project_name, listed_version in listed_assets:
         version_file = SCRIPTS_ROOT / project_name / "VERSION"
         assert version_file.exists(), f"README download link references unknown project '{project_name}'."
@@ -202,7 +223,10 @@ def test_readme_download_links_match_script_versions():
         assert listed_version == actual_version, (
             f"README download link for {project_name} should use {actual_version}, got {listed_version}."
         )
-
+        assert project_name not in seen_projects, (
+            f"README download section should not contain duplicate published links for {project_name}."
+        )
+        seen_projects.add(project_name)
 
 def test_required_recommended_links_present_in_readme():
     readme_text = _read(README_PATH)
