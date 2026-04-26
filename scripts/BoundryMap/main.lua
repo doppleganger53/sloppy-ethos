@@ -1318,16 +1318,6 @@ local function handleControlTouch(widget, phase, x, y)
   end
 
   local armed = widget.touchArmed
-  if phase == "end" and hitRect(x, y, rects.save) and (not armed or armed == "save") then
-    local okSave, saveErr = saveCurrentBoundaries(widget)
-    if not okSave then
-      logRuntimeError("sidecar-save", saveErr)
-    end
-    widget.touchArmed = nil
-    widget.needsInvalidate = true
-    return true
-  end
-
   if not armed then
     return false
   end

@@ -285,6 +285,7 @@ assert_equal(saveRects.save.right - saveRects.save.left, 72, "save button width 
 assert_equal(saveRects.save.bottom - saveRects.save.top, 24, "save button height expanded")
 local saveX = saveRects.save.left + 4
 local saveY = saveRects.save.top + 4
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, saveX, saveY), "save touch start consumed")
 assert_true(test.event(widget, _G.EVT_TOUCH, 16641, saveX, saveY), "save touch consumed")
 assert_equal(#widget.boundaries, 1, "save commits current draft")
 assert_true(widget.draftBoundary == nil, "save clears draft boundary")
@@ -296,6 +297,31 @@ assert_equal(savedAfterTouchParsed[1].x1, 40, "save keeps draft start x")
 assert_equal(savedAfterTouchParsed[1].y1, 30, "save keeps draft start y")
 assert_equal(savedAfterTouchParsed[1].x2, 120, "save keeps draft end x")
 assert_equal(savedAfterTouchParsed[1].y2, 48, "save keeps draft end y")
+
+widget = test.create()
+widget.bitmapFile = "TestMap.bmp"
+widget.windowW = 480
+widget.windowH = 272
+widget.mapRect = { left = 0, top = 0, right = 480, bottom = 272 }
+widget.loadedBitmap = true
+widget.bmpW = 480
+widget.bmpH = 272
+widget.mapMeta = meta
+widget.drawMode = true
+widget.boundaries = {}
+ioWrites["/documents/user/TestMap.boundries.json"] = nil
+local overlapRects = test.controlRects(widget)
+local overlapSaveX = overlapRects.save.left + 3
+local overlapSaveY = overlapRects.save.top + 3
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, 40, 30), "map draw over save start consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16642, overlapSaveX - 10, overlapSaveY), "map draw over save move consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, overlapSaveX, overlapSaveY), "map draw over save end consumed")
+assert_equal(#widget.boundaries, 1, "map release over save adds boundary")
+assert_equal(widget.boundaries[1].x1, 40, "map release over save keeps start x")
+assert_equal(widget.boundaries[1].y1, 30, "map release over save keeps start y")
+assert_equal(widget.boundaries[1].x2, overlapSaveX, "map release over save uses release x")
+assert_equal(widget.boundaries[1].y2, overlapSaveY, "map release over save uses release y")
+assert_true(ioWrites["/documents/user/TestMap.boundries.json"] == nil, "map release over save does not save sidecar")
 
 widget = test.create()
 widget.boundryWarningMode = 1
