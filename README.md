@@ -27,6 +27,9 @@ Ethos Lua widget workspace. Current active project: `SensorList`.
 
 ## Download Latest Script Releases
 
+This section tracks currently published single-script GitHub release assets.
+Unreleased scripts may exist under `scripts/` without appearing here yet.
+
 - [Download SensorList (v1.0.1)](https://github.com/doppleganger53/sloppy-ethos/releases/download/SensorList-v1.0.1/SensorList-1.0.1.zip)
 - [Download ethos_events (v0.1.0)](https://github.com/doppleganger53/sloppy-ethos/releases/download/ethos_events-v0.1.0/ethos_events-0.1.0.zip)
 
@@ -42,6 +45,7 @@ or GIF walkthrough will be added in a follow-up docs update.
 
 ```powershell
 python tools/build.py --project SensorList --dist
+python tools/build.py --project BoundryMap --dist
 python tools/build.py --project SensorList --project ethos_events --dist
 python tools/build.py --project SensorList --deploy
 python tools/build.py --project ethos_events --deploy
@@ -56,6 +60,8 @@ python tools/build.py --help
 - During simulator debugging sessions, deploy the touched script before closing out the session so runtime verification uses the current build.
 - Single-script package version is read from `scripts/{ProjectName}/VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
 - Multi-script dist bundles are an explicit naming exception and use the unversioned ZIP name: `dist/sloppy-ethos_scripts.zip`.
+- Projects can optionally declare extra radio-root files in a project-local build manifest; those files are packaged into the ZIP root and are also deployed/cleaned alongside `scripts/{ProjectName}`.
+- Example: [scripts/BoundryMap/build.json](scripts/BoundryMap/build.json) installs `maps/WJRC/WJRC.bmp` to `/bitmaps/GPS/WJRC.bmp` and the matching WJRC metadata JSON to the radio's `/documents/user/` folder.
 - Root `VERSION` remains the repository version source of truth.
 
 ### 30-Second First Run
@@ -74,6 +80,9 @@ To build a single install ZIP with multiple scripts:
 
 - `scripts/SensorList/main.lua`: widget implementation
 - `scripts/SensorList/README.md`: widget-focused usage notes
+- `scripts/BoundryMap/build.json`: optional extra radio-file manifest for assets installed outside `/scripts`
+- `scripts/BoundryMap/main.lua`: BoundryMap widget implementation
+- `scripts/BoundryMap/README.md`: BoundryMap usage notes
 - `scripts/ethos_events/main.lua`: system-tool event tracer entrypoint
 - `scripts/ethos_events/README.md`: event tracer usage notes
 - `tools/build.py`: syntax-check + packaging + simulator deploy script

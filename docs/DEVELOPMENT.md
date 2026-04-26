@@ -21,6 +21,7 @@
   `luac -p scripts/SensorList/main.lua`
 - Package and deploy:
   `python tools/build.py --project SensorList --dist`
+  `python tools/build.py --project BoundryMap --dist`
   `python tools/build.py --project SensorList --project ethos_events --dist`
   `python tools/build.py --project SensorList --deploy`
   `python tools/build.py --project ethos_events --deploy`
@@ -49,12 +50,15 @@
 - reads single-script package version from `scripts/{ProjectName}/VERSION` (or `--version` override).
 - produces single-script ZIPs as `dist/{ProjectName}-{version}.zip`.
 - supports repeatable `--project` for multi-script dist bundles and produces the unversioned bundle ZIP `dist/sloppy-ethos_scripts.zip`.
-- optionally copies `scripts/{ProjectName}` into `${ETHOS_SIM_PATHS[default_or_selected_radio]}/scripts/{ProjectName}` when `--deploy` is specified (no ZIP).
-- supports `--clean` to remove `scripts/{ProjectName}` from simulator deploy path and clear `dist/` (or `--out-dir`) artifacts.
+- supports an optional project-local build manifest with `radioFiles` entries for installable files that belong outside `/scripts`.
+- packages manifest-declared `radioFiles` into the ZIP root at their declared radio-relative destinations.
+- optionally copies `scripts/{ProjectName}` and manifest-declared `radioFiles` into `${ETHOS_SIM_PATHS[default_or_selected_radio]}` when `--deploy` is specified (no ZIP).
+- supports `--clean` to remove `scripts/{ProjectName}`, manifest-declared `radioFiles`, and clear `dist/` (or `--out-dir`) artifacts.
 - supports `--sim-radio` to resolve model-specific simulator paths via `ETHOS_SIM_PATHS`.
 - supports `--help` to print `tools/build_help.txt` command reference.
 - supports custom ZIP destination via `--out-dir`.
 - Write operations fail fast with clear errors when paths are missing or unwritable.
+- Example: [scripts/BoundryMap/build.json](../scripts/BoundryMap/build.json) installs `maps/WJRC/WJRC.bmp` to `bitmaps/GPS/WJRC.bmp` and the matching WJRC metadata JSON to the radio's `documents/user/` folder.
 
 ## Tooling Decision Records
 
@@ -230,3 +234,5 @@ This repository uses `main` as the only long-lived integration branch and aligns
 5. Attach script artifact(s) to the release, for example:
    - `dist/SensorList-{scripts/SensorList/VERSION}.zip`
 6. Publish the script release with `gh release create ... --notes-file {RELEASE_NOTES_FILE}` instead of inline `--notes`.
+7. After the script release is published, update `README.md` `Download Latest Script Releases` so it reflects the newly published asset.
+   - Do not add unreleased script ZIP names to that README section before the GitHub release exists.
