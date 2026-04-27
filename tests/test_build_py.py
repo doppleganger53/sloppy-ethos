@@ -44,26 +44,37 @@ def _set_main_prerequisites(monkeypatch, args: Namespace):
     return calls
 
 
-def _create_boundrymap_project(tmp_path: Path):
+def _create_asset_project(tmp_path: Path):
     repo_root = tmp_path / "repo"
-    project_dir = repo_root / "scripts" / "BoundryMap"
-    map_dir = project_dir / "maps" / "WJRC"
+    project_dir = repo_root / "scripts" / "WidgetX"
+    map_dir = project_dir / "assets" / "WJRC"
+    test_dir = project_dir / "tests" / "lua"
     map_dir.mkdir(parents=True)
+    test_dir.mkdir(parents=True)
     (project_dir / "main.lua").write_text("print('ok')\n", encoding="utf-8")
     (project_dir / "VERSION").write_text("0.1.1\n", encoding="utf-8")
+    (project_dir / "tests" / "test_widget.py").write_text("def test_widget():\n    pass\n", encoding="utf-8")
+    (test_dir / "test_widget.lua").write_text("print('test')\n", encoding="utf-8")
     (map_dir / "WJRC.bmp").write_text("bmp-bytes\n", encoding="utf-8")
     (map_dir / "WJRC.json").write_text('{"map":"WJRC"}\n', encoding="utf-8")
+    (map_dir / "WJRC_Z16_metadata.txt").write_text("generator metadata\n", encoding="utf-8")
     (project_dir / "build.json").write_text(
         json.dumps(
             {
-                "radioFiles": [
+                "assets": [
                     {
-                        "source": "maps/WJRC/WJRC.bmp",
-                        "destination": "bitmaps/GPS/WJRC.bmp",
+                        "source": "assets",
+                        "include": ["**/*.bmp", "**/*.png"],
+                        "destination": "bitmaps/WidgetX",
+                        "flatten": True,
+                        "required": False,
                     },
                     {
-                        "source": "maps/WJRC/WJRC.json",
-                        "destination": "documents/user/WJRC.json",
+                        "source": "assets",
+                        "include": "**/*.json",
+                        "destination": "documents/WidgetX",
+                        "flatten": True,
+                        "required": False,
                     },
                 ]
             }
@@ -101,37 +112,189 @@ def test_resolve_version_missing_file(tmp_path: Path):
     assert "Version file not found" in str(exc.value)
 
 
-def test_resolve_project_install_spec_reads_optional_radio_files(tmp_path: Path):
-    _repo_root, project_dir = _create_boundrymap_project(tmp_path)
+def test_resolve_project_install_spec_reads_optional_assets(tmp_path: Path):
+    _repo_root, project_dir = _create_asset_project(tmp_path)
 
-    install_spec = build.resolve_project_install_spec(project_dir, "BoundryMap")
+    install_spec = build.resolve_project_install_spec(project_dir, "WidgetX")
 
-    assert install_spec.project_name == "BoundryMap"
+    assert install_spec.project_name == "WidgetX"
     assert install_spec.manifest_relative == Path("build.json")
-    assert install_spec.script_destination == Path("scripts") / "BoundryMap"
+    assert install_spec.script_destination == Path("scripts") / "WidgetX"
     assert install_spec.script_exclusions == (
+        Path("tests"),
         Path("build.json"),
-        Path("maps") / "WJRC" / "WJRC.bmp",
-        Path("maps") / "WJRC" / "WJRC.json",
+        Path("assets"),
     )
-    assert [radio_file.destination.as_posix() for radio_file in install_spec.radio_files] == [
-        "bitmaps/GPS/WJRC.bmp",
-        "documents/user/WJRC.json",
+    assert sorted(radio_file.destination.as_posix() for radio_file in install_spec.radio_files) == [
+        "bitmaps/WidgetX/WJRC.bmp",
+        "documents/WidgetX/WJRC.json",
     ]
 
 
-def test_resolve_project_install_spec_rejects_scripts_destination(tmp_path: Path):
-    project_dir = tmp_path / "BoundryMap"
-    map_dir = project_dir / "maps"
-    map_dir.mkdir(parents=True)
-    (map_dir / "demo.bmp").write_text("bmp\n", encoding="utf-8")
+def test_resolve_project_install_spec_discovers_multiple_local_asset_matches(tmp_path: Path):
+    _repo_root, project_dir = _create_asset_project(tmp_path)
+    second_map_dir = project_dir / "assets" / "FieldTwo"
+    second_map_dir.mkdir(parents=True)
+    (second_map_dir / "FieldTwo.png").write_text("png-bytes\n", encoding="utf-8")
+    (second_map_dir / "FieldTwo.json").write_text('{"map":"FieldTwo"}\n', encoding="utf-8")
+
+    install_spec = build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert sorted(radio_file.destination.as_posix() for radio_file in install_spec.radio_files) == [
+        "bitmaps/WidgetX/FieldTwo.png",
+        "bitmaps/WidgetX/WJRC.bmp",
+        "documents/WidgetX/FieldTwo.json",
+        "documents/WidgetX/WJRC.json",
+    ]
+
+
+def test_resolve_project_install_spec_allows_optional_missing_asset_directory(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    project_dir.mkdir()
     (project_dir / "build.json").write_text(
-        json.dumps({"radioFiles": [{"source": "maps/demo.bmp", "destination": "scripts/demo.bmp"}]}),
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.json",
+                        "destination": "documents/WidgetX",
+                        "required": False,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    install_spec = build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert install_spec.radio_files == tuple()
+    assert install_spec.script_exclusions == (Path("tests"), Path("build.json"), Path("assets"))
+
+
+def test_resolve_project_install_spec_preserves_asset_subdirectories_by_default(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    asset_dir = project_dir / "assets" / "icons"
+    asset_dir.mkdir(parents=True)
+    (asset_dir / "home.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.png",
+                        "destination": "bitmaps/WidgetX",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    install_spec = build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert [radio_file.destination.as_posix() for radio_file in install_spec.radio_files] == [
+        "bitmaps/WidgetX/icons/home.png",
+    ]
+
+
+def test_resolve_project_install_spec_preserves_asset_sources_when_requested(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    asset_dir = project_dir / "assets" / "icons"
+    asset_dir.mkdir(parents=True)
+    (asset_dir / "home.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.png",
+                        "destination": "bitmaps/WidgetX",
+                        "excludeSource": False,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    install_spec = build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert install_spec.source_exclusions == tuple()
+    assert install_spec.script_exclusions == (Path("tests"), Path("build.json"))
+    assert [
+        (radio_file.destination.as_posix(), radio_file.exclude_from_script)
+        for radio_file in install_spec.radio_files
+    ] == [
+        ("bitmaps/WidgetX/icons/home.png", False),
+    ]
+
+
+def test_resolve_project_install_spec_rejects_missing_required_asset_directory(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    project_dir.mkdir()
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.png",
+                        "destination": "bitmaps/WidgetX",
+                    }
+                ]
+            }
+        ),
         encoding="utf-8",
     )
 
     with pytest.raises(SystemExit) as exc:
-        build.resolve_project_install_spec(project_dir, "BoundryMap")
+        build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert "source not found" in str(exc.value)
+
+
+def test_resolve_project_install_spec_rejects_scripts_destination(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    map_dir = project_dir / "assets"
+    map_dir.mkdir(parents=True)
+    (map_dir / "demo.bmp").write_text("bmp\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps({"radioFiles": [{"source": "assets/demo.bmp", "destination": "scripts/demo.bmp"}]}),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert "must be outside scripts/" in str(exc.value)
+
+
+def test_resolve_project_install_spec_rejects_asset_scripts_destination(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    asset_dir = project_dir / "assets"
+    asset_dir.mkdir(parents=True)
+    (asset_dir / "icon.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "*.png",
+                        "destination": "scripts/WidgetX/assets",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        build.resolve_project_install_spec(project_dir, "WidgetX")
 
     assert "must be outside scripts/" in str(exc.value)
 
@@ -320,20 +483,58 @@ def test_build_zip_creates_archive_and_cleans_staging(monkeypatch, tmp_path: Pat
 
 
 def test_build_zip_includes_optional_radio_files_and_excludes_build_inputs(tmp_path: Path):
-    repo_root, project_dir = _create_boundrymap_project(tmp_path)
+    repo_root, project_dir = _create_asset_project(tmp_path)
     dist_dir = repo_root / "dist"
 
-    archive = build.build_zip(project_dir, "BoundryMap", "0.1.1", dist_dir, repo_root)
+    archive = build.build_zip(project_dir, "WidgetX", "0.1.1", dist_dir, repo_root)
 
     with zipfile.ZipFile(archive) as payload:
         names = set(payload.namelist())
 
-    assert "scripts/BoundryMap/main.lua" in names
-    assert "bitmaps/GPS/WJRC.bmp" in names
-    assert "documents/user/WJRC.json" in names
-    assert "scripts/BoundryMap/build.json" not in names
-    assert "scripts/BoundryMap/maps/WJRC/WJRC.bmp" not in names
-    assert "scripts/BoundryMap/maps/WJRC/WJRC.json" not in names
+    assert "scripts/WidgetX/main.lua" in names
+    assert "bitmaps/WidgetX/WJRC.bmp" in names
+    assert "documents/WidgetX/WJRC.json" in names
+    assert "scripts/WidgetX/build.json" not in names
+    assert "scripts/WidgetX/tests/test_widget.py" not in names
+    assert "scripts/WidgetX/tests/lua/test_widget.lua" not in names
+    assert "scripts/WidgetX/assets/WJRC/WJRC.bmp" not in names
+    assert "scripts/WidgetX/assets/WJRC/WJRC.json" not in names
+    assert "scripts/WidgetX/assets/WJRC/WJRC_Z16_metadata.txt" not in names
+
+
+def test_build_zip_preserves_asset_sources_when_requested(tmp_path: Path):
+    repo_root = tmp_path / "repo"
+    project_dir = repo_root / "scripts" / "WidgetX"
+    asset_dir = project_dir / "assets" / "icons"
+    dist_dir = repo_root / "dist"
+    asset_dir.mkdir(parents=True)
+    (project_dir / "main.lua").write_text("print('ok')\n", encoding="utf-8")
+    (asset_dir / "home.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.png",
+                        "destination": "bitmaps/WidgetX",
+                        "excludeSource": False,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    archive = build.build_zip(project_dir, "WidgetX", "1.0.0", dist_dir, repo_root)
+
+    with zipfile.ZipFile(archive) as payload:
+        names = set(payload.namelist())
+
+    assert "scripts/WidgetX/main.lua" in names
+    assert "scripts/WidgetX/assets/icons/home.png" in names
+    assert "bitmaps/WidgetX/icons/home.png" in names
+    assert "scripts/WidgetX/build.json" not in names
 
 
 def test_build_zip_handles_preexisting_staging_and_cleans_up(tmp_path: Path):
@@ -468,17 +669,20 @@ def test_deploy_to_simulator_wraps_oserror_with_formatted_message(monkeypatch, t
 
 
 def test_deploy_to_simulator_copies_optional_radio_files(tmp_path: Path):
-    _repo_root, project_dir = _create_boundrymap_project(tmp_path)
+    _repo_root, project_dir = _create_asset_project(tmp_path)
     sim_path = tmp_path / "sim"
     sim_path.mkdir()
 
-    build.deploy_to_simulator(project_dir, "BoundryMap", sim_path)
+    build.deploy_to_simulator(project_dir, "WidgetX", sim_path)
 
-    assert (sim_path / "scripts" / "BoundryMap" / "main.lua").exists()
-    assert not (sim_path / "scripts" / "BoundryMap" / "build.json").exists()
-    assert not (sim_path / "scripts" / "BoundryMap" / "maps" / "WJRC" / "WJRC.bmp").exists()
-    assert (sim_path / "bitmaps" / "GPS" / "WJRC.bmp").read_text(encoding="utf-8") == "bmp-bytes\n"
-    assert (sim_path / "documents" / "user" / "WJRC.json").read_text(encoding="utf-8") == '{"map":"WJRC"}\n'
+    assert (sim_path / "scripts" / "WidgetX" / "main.lua").exists()
+    assert not (sim_path / "scripts" / "WidgetX" / "build.json").exists()
+    assert not (sim_path / "scripts" / "WidgetX" / "tests" / "test_widget.py").exists()
+    assert not (sim_path / "scripts" / "WidgetX" / "tests" / "lua" / "test_widget.lua").exists()
+    assert not (sim_path / "scripts" / "WidgetX" / "assets" / "WJRC" / "WJRC.bmp").exists()
+    assert not (sim_path / "scripts" / "WidgetX" / "assets" / "WJRC" / "WJRC_Z16_metadata.txt").exists()
+    assert (sim_path / "bitmaps" / "WidgetX" / "WJRC.bmp").read_text(encoding="utf-8") == "bmp-bytes\n"
+    assert (sim_path / "documents" / "WidgetX" / "WJRC.json").read_text(encoding="utf-8") == '{"map":"WJRC"}\n'
 
 
 def test_clean_from_simulator_removes_existing_target(tmp_path: Path, capsys):
@@ -527,12 +731,12 @@ def test_clean_from_simulator_exits_when_rmtree_fails(monkeypatch, tmp_path: Pat
 
 
 def test_clean_from_simulator_removes_optional_radio_files_but_keeps_unmanaged_files(tmp_path: Path):
-    _repo_root, project_dir = _create_boundrymap_project(tmp_path)
+    _repo_root, project_dir = _create_asset_project(tmp_path)
     sim_path = tmp_path / "sim"
-    script_target = sim_path / "scripts" / "BoundryMap"
-    bitmap_target = sim_path / "bitmaps" / "GPS" / "WJRC.bmp"
-    metadata_target = sim_path / "documents" / "user" / "WJRC.json"
-    boundary_target = sim_path / "documents" / "user" / "WJRC.boundries.json"
+    script_target = sim_path / "scripts" / "WidgetX"
+    bitmap_target = sim_path / "bitmaps" / "WidgetX" / "WJRC.bmp"
+    metadata_target = sim_path / "documents" / "WidgetX" / "WJRC.json"
+    boundary_target = sim_path / "documents" / "WidgetX" / "WJRC.boundries.json"
 
     script_target.mkdir(parents=True)
     bitmap_target.parent.mkdir(parents=True)
@@ -542,7 +746,7 @@ def test_clean_from_simulator_removes_optional_radio_files_but_keeps_unmanaged_f
     metadata_target.write_text("{}\n", encoding="utf-8")
     boundary_target.write_text('{"boundary":[]}\n', encoding="utf-8")
 
-    build.clean_from_simulator(project_dir, "BoundryMap", sim_path)
+    build.clean_from_simulator(project_dir, "WidgetX", sim_path)
 
     assert not script_target.exists()
     assert not bitmap_target.exists()

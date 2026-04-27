@@ -38,8 +38,8 @@ local WARNING_MODE_BOTH = 3
 local WARNING_TYPE_MOMENTARY = 0
 local WARNING_TYPE_CONSTANT = 1
 
-local CONTROL_BUTTON_WIDTH = 58
-local CONTROL_BUTTON_HEIGHT = 18
+local CONTROL_BUTTON_WIDTH = 72
+local CONTROL_BUTTON_HEIGHT = 24
 local CONTROL_BUTTON_GAP = 4
 local CONTROL_MARGIN = 6
 local CONTROL_RELEASE_SLOP = 8
@@ -438,10 +438,6 @@ local function controlAtPoint(widget, x, y, slop)
   return nil, nil
 end
 
-local function touchOverControls(widget, x, y)
-  return controlAtPoint(widget, x, y, 0) ~= nil
-end
-
 local function activateControl(widget, control)
   if control == "draw" then
     widget.drawMode = not widget.drawMode
@@ -690,6 +686,38 @@ local function addBoundary(widget, x1, y1, x2, y2)
   widget.boundaries[#widget.boundaries + 1] = boundary
   markBoundariesDirty(widget)
   return true
+end
+
+local function commitDraftBoundary(widget, x, y)
+  if type(widget) ~= "table" or type(widget.draftBoundary) ~= "table" then
+    return false
+  end
+
+  local draft = widget.draftBoundary
+  if type(x) == "number" and type(y) == "number" then
+    local localX, localY = screenToBitmapLocal(widget, x, y)
+    draft.x2 = localX
+    draft.y2 = localY
+  elseif type(widget.pendingDraftPoint) == "table" then
+    if type(widget.pendingDraftPoint.x) == "number" then
+      draft.x2 = widget.pendingDraftPoint.x
+    end
+    if type(widget.pendingDraftPoint.y) == "number" then
+      draft.y2 = widget.pendingDraftPoint.y
+    end
+  end
+
+  widget.draftBoundary = nil
+  widget.pendingDraftPoint = nil
+  return addBoundary(widget, draft.x1, draft.y1, draft.x2, draft.y2)
+end
+
+local function saveCurrentBoundaries(widget)
+  -- Save must persist the in-progress draft without turning the save tap into a new endpoint.
+  if type(widget) == "table" and type(widget.draftBoundary) == "table" then
+    commitDraftBoundary(widget)
+  end
+  return saveBoundaries(widget)
 end
 
 local function removeBoundaryAtPoint(widget, screenX, screenY)
@@ -1175,9 +1203,160 @@ local function create()
   }
 end
 
-local function configure(widget)
+local buildMainForm, buildDiagForm
+
+local function addStaticLine(label, text)
+  local line = form.addLine(label)
+  if type(form.addStaticText) == "function" then
+    form.addStaticText(line, nil, tostring(text or ""))
+  end
+  return line
+end
+
+local function callSourceValue(source)
+  return getSourceValue(source)
+end
+
+local function gpsDiagnostics(widget)
+  local sensorName = widget.gpsSensorName or ""
+  if sensorName == "" and widget.gpsSensor then
+    local name = safeCall(widget.gpsSensor.name, widget.gpsSensor)
+    sensorName = (type(name) == "string" and name ~= "---") and name or ""
+  end
+  if sensorName == "" then
+    return "Not configured", "-"
+  end
+  if type(system) ~= "table" or type(system.getSource) ~= "function" then
+    return "Configured, source API unavailable (" .. sensorName .. ")", "-"
+  end
+
+  local latQuery = { name = sensorName }
+  local lonQuery = { name = sensorName }
+  if OPTION_LATITUDE then
+    latQuery.options = OPTION_LATITUDE
+  end
+  if OPTION_LONGITUDE then
+    lonQuery.options = OPTION_LONGITUDE
+  end
+  local srcLat = safeCall(system.getSource, latQuery)
+  local srcLon = safeCall(system.getSource, lonQuery)
+  if not srcLat and not srcLon then
+    return "Not found (" .. sensorName .. ")", "-"
+  end
+
+  local lat = callSourceValue(srcLat)
+  local lon = callSourceValue(srcLon)
+  if lat and lon then
+    return "Found (" .. sensorName .. ")", sformat("%.5f, %.5f", lat, lon)
+  end
+  return "Found, no fix (" .. sensorName .. ")", "-"
+end
+
+local function bitmapDiagnostics(widget)
+  local bmpFile = widget.bitmapFile or ""
+  if bmpFile == "" then
+    return "No map selected"
+  end
+  local path = bitmapsPath .. "/" .. bmpFile
+  if widget.loadedBitmap and widget.loadedFile == bmpFile then
+    return "Loaded (" .. path .. ")"
+  end
+  local bitmap = nil
+  if type(lcd) == "table" and type(lcd.loadBitmap) == "function" then
+    bitmap = safeCall(lcd.loadBitmap, path)
+  end
+  if bitmap then
+    return "Available, not loaded (" .. path .. ")"
+  end
+  return "Missing (" .. path .. ")"
+end
+
+local function metadataDiagnostics(widget)
+  local bmpFile = widget.bitmapFile or ""
+  local stem = mapStem(bmpFile)
+  if not stem then
+    return "No map selected"
+  end
+  local path = metadataDir .. "/" .. stem .. ".json"
+  local meta, metaErr = loadMapMetadata(bmpFile)
+  if meta then
+    return "OK (" .. path .. ")"
+  end
+  if metaErr == "metadata not found" then
+    return "Missing (" .. path .. ")"
+  end
+  return "Malformed (" .. path .. ": " .. tostring(metaErr or "metadata invalid") .. ")"
+end
+
+local function sidecarDiagnostics(widget)
+  local path = sidecarPath(widget.bitmapFile)
+  if not path then
+    return "No map selected"
+  end
+  if not io or type(io.open) ~= "function" then
+    return "Unavailable (" .. path .. ")"
+  end
+  local file = io.open(path, "r")
+  if not file then
+    return "Missing (" .. path .. ")"
+  end
+  local content = file:read(65535)
+  file:close()
+  if type(content) ~= "string" or content == "" then
+    return "Malformed (" .. path .. ": sidecar empty)"
+  end
+  local boundaries, parseErr = parseBoundaryObjects(content)
+  if parseErr and parseErr ~= "" then
+    return "Malformed (" .. path .. ": " .. parseErr .. ")"
+  end
+  return sformat("Loaded %d lines (%s)", #boundaries, path)
+end
+
+local function buildDiagnostics(widget)
+  local gpsStatus, gpsCoords = gpsDiagnostics(widget)
+  return {
+    gpsStatus = gpsStatus,
+    gpsCoords = gpsCoords,
+    bitmapStatus = bitmapDiagnostics(widget),
+    metadataStatus = metadataDiagnostics(widget),
+    sidecarStatus = sidecarDiagnostics(widget),
+    errorStatus = tostring(widget.errorText or widget.lastError or "None"),
+  }
+end
+
+buildDiagForm = function(widget)
   if type(widget) ~= "table" or type(form) ~= "table" or type(form.addLine) ~= "function" then
     return
+  end
+
+  if type(form.clear) == "function" then
+    form.clear()
+  end
+
+  local diagnostics = buildDiagnostics(widget)
+  addStaticLine("GPS Source", diagnostics.gpsStatus)
+  addStaticLine("GPS Lat/Lon", diagnostics.gpsCoords)
+  addStaticLine("Map Bitmap", diagnostics.bitmapStatus)
+  addStaticLine("JSON Metadata", diagnostics.metadataStatus)
+  addStaticLine("Boundary Sidecar", diagnostics.sidecarStatus)
+  addStaticLine("Last Error", diagnostics.errorStatus)
+
+  form.addLine("")
+  local lineBack = form.addLine("")
+  if type(form.addTextButton) == "function" then
+    form.addTextButton(lineBack, nil, "Back", function()
+      buildMainForm(widget)
+    end)
+  end
+end
+
+buildMainForm = function(widget)
+  if type(widget) ~= "table" or type(form) ~= "table" or type(form.addLine) ~= "function" then
+    return
+  end
+
+  if type(form.clear) == "function" then
+    form.clear()
   end
 
   local line1 = form.addLine("Map")
@@ -1282,6 +1461,17 @@ local function configure(widget)
       widget.warningType = tonumber(value) or WARNING_TYPE_MOMENTARY
     end)
   end
+
+  local line7 = form.addLine("Diagnostics")
+  if type(form.addTextButton) == "function" then
+    form.addTextButton(line7, nil, "Run", function()
+      buildDiagForm(widget)
+    end)
+  end
+end
+
+local function configure(widget)
+  buildMainForm(widget)
 end
 
 local function paint(widget)
@@ -1357,13 +1547,6 @@ local function handleControlTouch(widget, phase, x, y)
   end
 
   local armed = widget.touchArmed
-  if not armed and exactControl then
-    if phase == "end" then
-      activateControl(widget, exactControl)
-    end
-    return true
-  end
-
   if not armed then
     return false
   end
@@ -1387,9 +1570,6 @@ local function handleControlTouch(widget, phase, x, y)
 end
 
 local function handleMapTouch(widget, phase, x, y)
-  if touchOverControls(widget, x, y) then
-    return true
-  end
   if type(widget.mapRect) ~= "table" or not hitRect(x, y, widget.mapRect) then
     if phase == "end" then
       widget.draftBoundary = nil

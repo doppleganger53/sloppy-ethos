@@ -172,13 +172,13 @@ def test_parse_args_accepts_valid_script_release_scope():
             "--release-kind",
             "script",
             "--project",
-            "SensorList",
+            "WidgetX",
             "--script-gate-issue",
             "32",
         ]
     )
     assert args.release_kind == "script"
-    assert args.project == "SensorList"
+    assert args.project == "WidgetX"
     assert args.script_gate_issue == ["32"]
 
 
@@ -259,7 +259,7 @@ def test_parse_args_rejects_issue_fields_for_non_issue_mode(argv):
             "--release-kind",
             "script",
             "--project",
-            "SensorList",
+            "WidgetX",
         ],
         [
             "--mode",
@@ -285,7 +285,7 @@ def test_parse_args_rejects_issue_fields_for_non_issue_mode(argv):
             "--slug",
             "repo-release-workflow-failures",
             "--project",
-            "SensorList",
+            "WidgetX",
         ],
     ],
 )
@@ -300,14 +300,14 @@ def test_issue_mode_script_release_blocks_when_gate_issue_open(monkeypatch, caps
     monkeypatch.setattr(
         preflight,
         "get_issue_metadata",
-        lambda _issue_number: ("OPEN", "Manual testing of SensorList-v1.0.0 changes", "https://github.com/example/32"),
+        lambda _issue_number: ("OPEN", "Manual testing of WidgetX-v1.0.0 changes", "https://github.com/example/32"),
     )
     args = make_issue_args(
         issue_number="39",
         issue_kind="bug",
         slug="repo-release-workflow-failures",
         release_kind="script",
-        project="SensorList",
+        project="WidgetX",
         script_gate_issue=["32"],
     )
     result = preflight.run_preflight(args)
@@ -331,7 +331,7 @@ def test_issue_mode_script_release_passes_when_gate_issue_closed(monkeypatch, ca
         issue_kind="bug",
         slug="repo-release-workflow-failures",
         release_kind="script",
-        project="SensorList",
+        project="WidgetX",
         script_gate_issue=["32"],
     )
     result = preflight.run_preflight(args)

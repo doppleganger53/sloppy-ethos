@@ -2,37 +2,41 @@
 
 BoundryMap is an Ethos widget that overlays editable boundary lines on a GPS map.
 
+## Map Assets And Privacy
+
+Maps usually identify a specific flying site, so the `maps/` directory is local-only and ignored by git. Do not commit personal field maps, generated metadata, or boundary sidecars to the public repository.
+
 Install with Ethos Suite:
 
 1. Build a package with `python tools/build.py --project BoundryMap --dist`
 2. Import the generated ZIP through Ethos Suite Lua install/import.
-3. The package now includes the example `maps/WJRC` files declared in [build.json](build.json):
-   - `WJRC.bmp` installs to `/bitmaps/GPS/WJRC.bmp`
-   - the matching WJRC metadata JSON installs to the radio's `/documents/user/` folder
 
-Additional map assets can be packaged and simulator-deployed by adding entries to [build.json](build.json) under `radioFiles`.
+When local maps exist under `scripts/BoundryMap/maps/`, the build scans them using the generic asset rules in [build.json](build.json):
+
+- BMP and PNG files install to `/bitmaps/GPS/`
+- matching JSON map metadata files install to `/documents/user/`
+- generator metadata text files are ignored by the package because BoundryMap reads the JSON metadata
+
+Multiple maps can be packaged together without adding each map filename to [build.json](build.json). Use one folder per map:
+
+```text
+scripts/BoundryMap/maps/
+├── MyField/
+│   ├── MyField.bmp
+│   └── MyField.json
+└── PracticeSite/
+    ├── PracticeSite.png
+    └── PracticeSite.json
+```
+
+Clean checkouts without a local `maps/` directory still build the widget ZIP; they just do not include private map assets.
+
+## Creating Maps
+
+Create map files with the [Ethos GPS Map Generator](https://martinovem.github.io/Ethos-GPS-Map-Generator/), the same tool used by AccuMap. Choose the flying area, export the map, and place the generated bitmap plus JSON metadata in a local folder under `scripts/BoundryMap/maps/`.
+
+The generator may also create a human-readable metadata text file. Keep it locally if useful, but it is not installed by the build.
 
 Boundary edits are stored per map in the radio's `/documents/user/` folder using the `<map-stem>.boundries.json` filename pattern.
-
-## User Guide
-
-Add the BoundryMap widget to a screen, then open widget configuration before flying:
-
-- **Map**: choose the GPS bitmap to display. The widget expects a matching metadata JSON with the same map stem in the radio's user documents folder.
-- **GPS Source**: choose the GPS telemetry source used to place the aircraft on the map and set the home point.
-- **Heading Indicator**: choose Dot for a compact position marker or Arrow for a direction marker when movement gives the widget a usable heading.
-- **Signal Timeout (s)**: set how long GPS telemetry can go stale before the aircraft marker is shown as stale.
-- **Distance**: enable distance text from the home point. Add an altitude source when you want slant distance instead of ground distance.
-- **Reset Home**: clear the current home point so the widget can set a new one after GPS stabilizes.
-- **Boundry Warning**: choose no warning, audio, haptic, or both when the aircraft crosses a saved boundary line from home.
-- **Warning Type**: choose Momentary for a one-time warning when first crossing while moving away, or Constant for repeated warnings while the boundary remains exceeded.
-
-On the widget screen, use the on-screen controls:
-
-- **Draw**: tap Draw, then drag across the map to add a boundary line. Up to six lines can be stored for each map.
-- **Delete**: tap Delete, then tap near an existing line to remove it.
-- **Save**: tap Save after drawing or deleting lines. Unsaved edits are marked with `Unsaved *`; saved maps show the current line count.
-
-The widget draws saved boundary lines in cyan, the active draft line in yellow, home as `H`, and the aircraft marker in orange or red when GPS is stale. When a boundary is exceeded, the overlay shows `Boundary exceeded` and uses the configured warning feedback.
 
 Map functionality derived from: [AccuMap](https://github.com/MartinovEm/Ethos-GPS-AccuMap)

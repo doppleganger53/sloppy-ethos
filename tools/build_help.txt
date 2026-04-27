@@ -30,13 +30,38 @@ PROJECT BUILD MANIFEST
   Projects may include a local build.json file with a radioFiles array:
     {
       "radioFiles": [
-        { "source": "maps/WJRC/WJRC.bmp", "destination": "bitmaps/GPS/WJRC.bmp" },
-        { "source": "maps/WJRC/WJRC.json", "destination": "documents/user/WJRC.json" }
+        { "source": "extras/widget-icon.png", "destination": "bitmaps/widgets/widget-icon.png" }
       ]
     }
   source paths are relative to the project directory under scripts/.
   destination paths are relative to the radio root and must stay outside scripts/.
   Declared radio files are packaged into ZIPs and are deployed/cleaned with the project.
+
+  Projects may also declare generic asset groups for directory/glob inclusion:
+    {
+      "assets": [
+        {
+          "source": "maps",
+          "include": ["**/*.bmp", "**/*.png"],
+          "destination": "bitmaps/GPS",
+          "flatten": true,
+          "required": false
+        },
+        {
+          "source": "maps",
+          "include": "**/*.json",
+          "destination": "documents/user",
+          "flatten": true,
+          "required": false
+        }
+      ]
+    }
+  assets source directories are relative to the project directory.
+  include may be a glob string or array of glob strings, evaluated under source.
+  destination is relative to the radio root and must stay outside scripts/.
+  flatten=true copies matched files directly into destination; the default preserves source-relative subdirectories.
+  required=false allows public checkouts to build when a local-only asset source is absent.
+  excludeSource=false leaves matched source folders inside scripts/{ProjectName}; the default excludes asset sources from the script payload.
 
 SIMULATOR PATH RESOLUTION
   With --sim-radio:
@@ -58,7 +83,7 @@ WORKFLOW EXAMPLES
   Build install ZIP:
     python tools/build.py --project SensorList --dist
 
-  Build BoundryMap ZIP including its example map assets:
+  Build BoundryMap ZIP, including any local maps under scripts/BoundryMap/maps/:
     python tools/build.py --project BoundryMap --dist
 
   Build multi-script install ZIP bundle:

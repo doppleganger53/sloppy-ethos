@@ -100,7 +100,8 @@ Historical detail remains in individual session notes referenced from
 ## Active Tooling Decisions
 
 - Canonical build/deploy workflow remains `tools/build.py`.
-- Projects can optionally declare installable radio-root files in a project-local `build.json` manifest via `radioFiles`; `tools/build.py` packages, deploys, and cleans those files alongside the script payload.
+- Projects can optionally declare installable radio-root files in a project-local `build.json` manifest via explicit `radioFiles` or generic `assets`; `tools/build.py` packages, deploys, and cleans those files alongside the script payload.
+- Generic `assets` entries define project-local source directories, include globs, radio-root destinations, flattening behavior, and whether a missing local source is allowed; build.py does not hardcode script-specific asset types or destinations.
 - `build.py` to `doit` migration decision: retain `build.py` (Issue #22
   evaluation complete).
 - Optional VS Code Lua coverage workflow is now wired through:

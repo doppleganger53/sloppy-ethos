@@ -23,15 +23,15 @@ SAMPLE_CHANGELOG = """# Changelog
 
 All notable changes to this project are documented in this file.
 
-## [SensorList v1.0.0] - 2026-03-02
+## [WidgetX v1.0.0] - 2026-03-02
 
 ### Changed
 
-- Released the SensorList script artifact.
+- Released the WidgetX script artifact.
 
 ### Testing
 
-- `python tools/build.py --project SensorList --dist`
+- `python tools/build.py --project WidgetX --dist`
 
 ## [1.0.1] - 2026-02-27
 
@@ -47,7 +47,7 @@ def test_normalize_version_strips_optional_v_prefix():
 
 
 def test_build_release_label_supports_script_release():
-    assert release_notes.build_release_label("1.0.0", "SensorList") == "SensorList v1.0.0"
+    assert release_notes.build_release_label("1.0.0", "WidgetX") == "WidgetX v1.0.0"
 
 
 def test_extract_release_notes_repo_strips_section_heading():
@@ -58,8 +58,8 @@ def test_extract_release_notes_repo_strips_section_heading():
 
 
 def test_extract_release_notes_script_finds_project_scoped_entry():
-    notes = release_notes.extract_release_notes(SAMPLE_CHANGELOG, version="v1.0.0", project="SensorList")
-    assert notes.startswith("[SensorList v1.0.0] - 2026-03-02\n")
+    notes = release_notes.extract_release_notes(SAMPLE_CHANGELOG, version="v1.0.0", project="WidgetX")
+    assert notes.startswith("[WidgetX v1.0.0] - 2026-03-02\n")
     assert "### Testing" in notes
 
 

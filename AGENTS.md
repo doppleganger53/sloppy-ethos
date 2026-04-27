@@ -141,8 +141,9 @@ If a required validation command times out or hangs:
 
 - Root `VERSION` is the repository version source of truth.
 - Script artifact versions are sourced from `scripts/{ProjectName}/VERSION`.
-- Single-script ZIP naming: `dist/{ProjectName}-{version}.zip`.
-- Multi-script bundle naming exception: `dist/sloppy-ethos_scripts.zip` (unversioned by design).
+- Single-script dist ZIP naming remains `dist/{ProjectName}-{version}.zip`.
+- Multi-script dist bundles are an explicit naming exception and are intentionally unversioned (`dist/sloppy-ethos_scripts.zip`).
+- `README.md` `Download Latest Script Releases` is a published-release surface, not a preview of unreleased script directories.
 - Keep release steps aligned with repository docs and release templates.
 
 ## Definition of done (before commit/push)
