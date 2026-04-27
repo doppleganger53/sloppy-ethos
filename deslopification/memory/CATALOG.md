@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 115
-- Total size: 190,441 bytes
-- Total lines: 5,084
+- Files: 116
+- Total size: 192,189 bytes
+- Total lines: 5,129
 - Distribution by artifact:
-  - session notes: 109
+  - session notes: 110
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 69 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 70 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -35,7 +35,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - Distribution by concern:
   - 28 -- implementation
   - 26 -- workflow
-  - 15 -- build
+  - 16 -- build
   - 15 -- release
   - 13 -- docs
   - 6 -- testing
@@ -48,7 +48,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md) | # Session Notes 2026-04-27 - Generic Build Assets
-- 2026-04-26 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_LOCAL_MAP_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_LOCAL_MAP_ASSETS.md) | # Session Notes 2026-04-26 - BoundryMap Local Map Assets
+- 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_GITIGNORE.md](notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_GITIGNORE.md) | # Session Notes 2026-04-27 - BoundryMap Script Gitignore
 - 2026-03-28 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md](notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md) | # Session Notes 2026-03-28 - README Published Script Link Policy
 - 2026-03-28 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_LICENSE_DERIVATION.md](notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_LICENSE_DERIVATION.md) | # Session Notes 2026-03-28 - BoundryMap License Derivation Notice
 - 2026-03-09 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md) | # Session Notes 2026-03-09 - SensorList-v1.0.1 Release
@@ -186,5 +186,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-04-26 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_DIAGNOSTICS_FORM.md](notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_DIAGNOSTICS_FORM.md) | # Session Notes 2026-04-26 - BoundryMap Diagnostics Form |
 | 2026-04-26 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_LOCAL_MAP_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_LOCAL_MAP_ASSETS.md) | # Session Notes 2026-04-26 - BoundryMap Local Map Assets |
 | 2026-04-26 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_SAVE_ARMING_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_SAVE_ARMING_FIX.md) | # Session Notes 2026-04-26 - BoundryMap Save Arming Fix |
+| 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_GITIGNORE.md](notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_GITIGNORE.md) | # Session Notes 2026-04-27 - BoundryMap Script Gitignore |
 | 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md) | # Session Notes 2026-04-27 - Generic Build Assets |
 | 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix |
