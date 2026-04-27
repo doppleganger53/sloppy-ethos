@@ -18,6 +18,8 @@ local storageValues = {}
 local ioReads = {}
 local ioWrites = {}
 local formRows = {}
+local drawTexts = {}
+local drawnBitmaps = {}
 
 local function resetFormRows()
   formRows = {}
@@ -29,6 +31,11 @@ end
 
 local function rowValue(row)
   return formRows[row] and formRows[row].value or nil
+end
+
+local function resetDrawCalls()
+  drawTexts = {}
+  drawnBitmaps = {}
 end
 
 _G.system = {
@@ -103,14 +110,42 @@ _G.lcd = {
   end,
   color = function(_) end,
   font = function(_) end,
-  drawText = function(_, _, _, _) end,
+  drawText = function(x, y, text, flags)
+    drawTexts[#drawTexts + 1] = { x = x, y = y, text = text, flags = flags }
+  end,
   drawFilledRectangle = function(_, _, _, _) end,
   drawRectangle = function(_, _, _, _) end,
   drawLine = function(_, _, _, _) end,
   drawFilledCircle = function(_, _, _) end,
-  drawBitmap = function(_, _, _) end,
-  loadBitmap = function(_)
+  drawBitmap = function(x, y, bitmap)
+    drawnBitmaps[#drawnBitmaps + 1] = { x = x, y = y, name = bitmap and bitmap.name or "" }
+  end,
+  loadBitmap = function(path)
+    if path and path:find("icons/", 1, true) then
+      local icon = {
+        name = path,
+        width = function()
+          return 16
+        end,
+        height = function()
+          return 20
+        end,
+      }
+      function icon:rotate(heading)
+        return {
+          name = path .. ":rotated:" .. tostring(heading),
+          width = function()
+            return 16
+          end,
+          height = function()
+            return 20
+          end,
+        }
+      end
+      return icon
+    end
     return {
+      name = path,
       width = function()
         return 480
       end,
@@ -187,7 +222,7 @@ assert_equal(test.resolveTouchPhase(_G.EVT_TOUCH, 16640), "start", "raw touch st
 assert_equal(test.resolveTouchPhase(_G.EVT_TOUCH, 16642), "move", "raw touch move maps")
 assert_equal(test.resolveTouchPhase(_G.EVT_TOUCH, 16641), "end", "raw touch end maps")
 
-ioReads["/documents/user/TestMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
+ioReads["/scripts/BoundryMap/assets/maps/TestMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
 local meta = test.loadMapMetadata("TestMap.bmp")
 assert_true(type(meta) == "table", "metadata loads")
 
@@ -251,19 +286,19 @@ widget.boundaries = {
   },
 }
 assert_true(test.saveBoundaries(widget), "save boundaries succeeds")
-local savedPayload = ioWrites["/documents/user/TestMap.boundries.json"]
+local savedPayload = ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"]
 assert_true(type(savedPayload) == "string" and savedPayload:find('"schemaVersion":1', 1, true) ~= nil, "saved payload has schema version")
 
 local parsed = test.parseBoundaryObjects(savedPayload)
 assert_equal(#parsed, 1, "parse saved boundary payload")
 
-ioReads["/documents/user/TestMap.boundries.json"] = savedPayload
+ioReads["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = savedPayload
 widget.boundaries = {}
 widget.savedBoundarySignature = ""
 test.loadBoundaries(widget)
 assert_equal(#widget.boundaries, 1, "load boundaries restores payload")
 
-ioReads["/documents/user/TestMap.boundries.json"] = '{"schemaVersion":1,"mapFile":"TestMap.bmp","boundaries":[{"oops":1}]}'
+ioReads["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = '{"schemaVersion":1,"mapFile":"TestMap.bmp","boundaries":[{"oops":1}]}'
 widget.boundaries = {
   { x1 = 5, y1 = 5, x2 = 6, y2 = 6, lat1 = 0, lon1 = 0, lat2 = 0, lon2 = 0 },
 }
@@ -279,6 +314,7 @@ widget.indicatorType = 1
 widget.signalTimeout = 9
 widget.boundryWarningMode = 3
 widget.warningType = 1
+widget.coordsEnabled = true
 test.write(widget)
 assert_true(type(storageValues.cfg) == "string", "write persists config")
 
@@ -292,6 +328,7 @@ assert_equal(restored.indicatorType, 1, "read restores indicator")
 assert_equal(restored.signalTimeout, 9, "read restores signal timeout")
 assert_equal(restored.boundryWarningMode, 3, "read restores warning mode")
 assert_equal(restored.warningType, 1, "read restores warning type")
+assert_true(restored.coordsEnabled, "read restores coordinate toggle")
 
 storageValues.cfg = "LegacyMap.bmp|GPS|1|Alt"
 local legacy = test.create()
@@ -304,26 +341,27 @@ assert_equal(legacy.indicatorType, 0, "legacy read defaults indicator")
 assert_equal(legacy.signalTimeout, 2, "legacy read defaults signal timeout")
 assert_equal(legacy.boundryWarningMode, 0, "legacy read defaults warning mode")
 assert_equal(legacy.warningType, 0, "legacy read defaults warning type")
+assert_true(not legacy.coordsEnabled, "legacy read defaults coordinates hidden")
 
 widget = test.create()
 widget.bitmapFile = "UnsavedMap.bmp"
 registeredWidget.configure(widget)
 assert_equal(rowLabel(1), "Map", "main form keeps map first")
-assert_equal(rowLabel(10), "Diagnostics", "main form adds diagnostics row")
-assert_equal(formRows[10].text, "Run", "diagnostics button text")
+assert_equal(rowLabel(11), "Diagnostics", "main form adds diagnostics row")
+assert_equal(formRows[11].text, "Run", "diagnostics button text")
 formRows[1].setter("ChangedBeforeDiagnostics.bmp")
-formRows[10].callback()
+formRows[11].callback()
 assert_equal(widget.bitmapFile, "ChangedBeforeDiagnostics.bmp", "diagnostics keeps unsaved map edit")
 assert_equal(rowLabel(1), "GPS Source", "diagnostics form first row")
 assert_equal(rowValue(1), "Not configured", "diagnostics reports unconfigured gps")
 assert_equal(rowLabel(2), "GPS Lat/Lon", "diagnostics includes coords")
 assert_equal(rowValue(2), "-", "diagnostics coords absent without gps")
 assert_equal(rowLabel(3), "Map Bitmap", "diagnostics includes bitmap")
-assert_equal(rowValue(3), "Available, not loaded (/bitmaps/GPS/ChangedBeforeDiagnostics.bmp)", "diagnostics checks bitmap path")
+assert_equal(rowValue(3), "Available, not loaded (/scripts/BoundryMap/assets/maps/ChangedBeforeDiagnostics.bmp)", "diagnostics checks bitmap path")
 assert_equal(rowLabel(4), "JSON Metadata", "diagnostics includes metadata")
-assert_equal(rowValue(4), "Missing (/documents/user/ChangedBeforeDiagnostics.json)", "diagnostics reports missing metadata")
+assert_equal(rowValue(4), "Missing (/scripts/BoundryMap/assets/maps/ChangedBeforeDiagnostics.json)", "diagnostics reports missing metadata")
 assert_equal(rowLabel(5), "Boundary Sidecar", "diagnostics includes sidecar")
-assert_equal(rowValue(5), "Missing (/documents/user/ChangedBeforeDiagnostics.boundries.json)", "diagnostics reports missing sidecar")
+assert_equal(rowValue(5), "Missing (/scripts/BoundryMap/assets/maps/ChangedBeforeDiagnostics.boundries.json)", "diagnostics reports missing sidecar")
 assert_equal(rowLabel(6), "Last Error", "diagnostics includes last error")
 assert_equal(rowValue(6), "None", "diagnostics reports no error")
 assert_equal(formRows[8].text, "Back", "diagnostics adds back button")
@@ -333,7 +371,7 @@ assert_equal(widget.bitmapFile, "ChangedBeforeDiagnostics.bmp", "back keeps unsa
 
 widget = test.create()
 registeredWidget.configure(widget)
-formRows[10].callback()
+formRows[11].callback()
 assert_equal(rowValue(3), "No map selected", "diagnostics reports no selected bitmap")
 assert_equal(rowValue(4), "No map selected", "diagnostics reports no selected metadata")
 assert_equal(rowValue(5), "No map selected", "diagnostics reports no selected sidecar")
@@ -345,8 +383,8 @@ end
 widget = test.create()
 widget.bitmapFile = "MissingMap.bmp"
 registeredWidget.configure(widget)
-formRows[10].callback()
-assert_equal(rowValue(3), "Missing (/bitmaps/GPS/MissingMap.bmp)", "diagnostics reports missing bitmap")
+formRows[11].callback()
+assert_equal(rowValue(3), "Missing (/scripts/BoundryMap/assets/maps/MissingMap.bmp)", "diagnostics reports missing bitmap")
 _G.lcd.loadBitmap = originalLoadBitmap
 
 local originalGetSource = _G.system.getSource
@@ -376,24 +414,24 @@ end
 widget = test.create()
 widget.gpsSensorName = "GPS1"
 registeredWidget.configure(widget)
-formRows[10].callback()
+formRows[11].callback()
 assert_equal(rowValue(1), "Found (GPS1)", "diagnostics reports found gps")
 assert_equal(rowValue(2), "39.12346, -75.65432", "diagnostics reports gps coords")
 widget = test.create()
 widget.gpsSensorName = "GPS2"
 registeredWidget.configure(widget)
-formRows[10].callback()
+formRows[11].callback()
 assert_equal(rowValue(1), "Found, no fix (GPS2)", "diagnostics reports gps without fix")
 assert_equal(rowValue(2), "-", "diagnostics hides coords without fix")
 widget = test.create()
 widget.gpsSensorName = "MissingGPS"
 registeredWidget.configure(widget)
-formRows[10].callback()
+formRows[11].callback()
 assert_equal(rowValue(1), "Not found (MissingGPS)", "diagnostics reports missing gps")
 _G.system.getSource = originalGetSource
 
-ioReads["/documents/user/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
-ioReads["/documents/user/DiagMap.boundries.json"] = savedPayload
+ioReads["/scripts/BoundryMap/assets/maps/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
+ioReads["/scripts/BoundryMap/assets/maps/DiagMap.boundries.json"] = savedPayload
 widget = test.create()
 widget.bitmapFile = "DiagMap.bmp"
 widget.loadedBitmap = true
@@ -403,23 +441,23 @@ widget.boundaries = {
   { x1 = 99, y1 = 99, x2 = 100, y2 = 100, lat1 = 1, lon1 = 1, lat2 = 2, lon2 = 2 },
 }
 registeredWidget.configure(widget)
-formRows[10].callback()
-assert_equal(rowValue(3), "Loaded (/bitmaps/GPS/DiagMap.bmp)", "diagnostics reports loaded bitmap")
-assert_equal(rowValue(4), "OK (/documents/user/DiagMap.json)", "diagnostics reports valid metadata")
-assert_equal(rowValue(5), "Loaded 1 lines (/documents/user/DiagMap.boundries.json)", "diagnostics reports loaded sidecar count")
+formRows[11].callback()
+assert_equal(rowValue(3), "Loaded (/scripts/BoundryMap/assets/maps/DiagMap.bmp)", "diagnostics reports loaded bitmap")
+assert_equal(rowValue(4), "OK (/scripts/BoundryMap/assets/maps/DiagMap.json)", "diagnostics reports valid metadata")
+assert_equal(rowValue(5), "Loaded 1 lines (/scripts/BoundryMap/assets/maps/DiagMap.boundries.json)", "diagnostics reports loaded sidecar count")
 assert_equal(rowValue(6), "paint: bad draw", "diagnostics reports last error")
 assert_equal(#widget.boundaries, 1, "diagnostics does not reload boundaries")
 assert_equal(widget.boundaries[1].x1, 99, "diagnostics leaves current boundaries untouched")
 
-ioReads["/documents/user/DiagMap.boundries.json"] = '{"schemaVersion":1,"mapFile":"DiagMap.bmp","boundaries":[{"oops":1}]}'
+ioReads["/scripts/BoundryMap/assets/maps/DiagMap.boundries.json"] = '{"schemaVersion":1,"mapFile":"DiagMap.bmp","boundaries":[{"oops":1}]}'
 registeredWidget.configure(widget)
-formRows[10].callback()
-assert_equal(rowValue(5), "Malformed (/documents/user/DiagMap.boundries.json: sidecar malformed)", "diagnostics reports malformed sidecar")
+formRows[11].callback()
+assert_equal(rowValue(5), "Malformed (/scripts/BoundryMap/assets/maps/DiagMap.boundries.json: sidecar malformed)", "diagnostics reports malformed sidecar")
 
-ioReads["/documents/user/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129}'
+ioReads["/scripts/BoundryMap/assets/maps/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129}'
 registeredWidget.configure(widget)
-formRows[10].callback()
-assert_equal(rowValue(4), "Malformed (/documents/user/DiagMap.json: metadata invalid)", "diagnostics reports malformed metadata")
+formRows[11].callback()
+assert_equal(rowValue(4), "Malformed (/scripts/BoundryMap/assets/maps/DiagMap.json: metadata invalid)", "diagnostics reports malformed metadata")
 
 widget = test.create()
 widget.windowW = 480
@@ -484,7 +522,7 @@ assert_true(test.event(widget, _G.EVT_TOUCH, 16641, saveX, saveY), "save touch c
 assert_equal(#widget.boundaries, 1, "save commits current draft")
 assert_true(widget.draftBoundary == nil, "save clears draft boundary")
 assert_true(widget.drawMode, "save keeps draw mode enabled")
-local savedAfterTouch = ioWrites["/documents/user/TestMap.boundries.json"]
+local savedAfterTouch = ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"]
 local savedAfterTouchParsed = test.parseBoundaryObjects(savedAfterTouch)
 assert_equal(#savedAfterTouchParsed, 1, "save writes one boundary after touch")
 assert_equal(savedAfterTouchParsed[1].x1, 40, "save keeps draft start x")
@@ -503,7 +541,7 @@ widget.bmpH = 272
 widget.mapMeta = meta
 widget.drawMode = true
 widget.boundaries = {}
-ioWrites["/documents/user/TestMap.boundries.json"] = nil
+ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = nil
 local overlapRects = test.controlRects(widget)
 local overlapSaveX = overlapRects.save.left + 3
 local overlapSaveY = overlapRects.save.top + 3
@@ -515,7 +553,7 @@ assert_equal(widget.boundaries[1].x1, 40, "map release over save keeps start x")
 assert_equal(widget.boundaries[1].y1, 30, "map release over save keeps start y")
 assert_equal(widget.boundaries[1].x2, overlapSaveX, "map release over save uses release x")
 assert_equal(widget.boundaries[1].y2, overlapSaveY, "map release over save uses release y")
-assert_true(ioWrites["/documents/user/TestMap.boundries.json"] == nil, "map release over save does not save sidecar")
+assert_true(ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] == nil, "map release over save does not save sidecar")
 
 widget = test.create()
 widget.boundryWarningMode = 1
@@ -563,5 +601,48 @@ test.updateWarnings(widget, 2.0, 39.001, -74.999)
 assert_equal(haptics, 1, "constant warning waits for repeat interval")
 test.updateWarnings(widget, 3.1, 39.001, -74.999)
 assert_equal(haptics, 2, "constant warning repeats after interval")
+
+widget = test.create()
+widget.bitmapFile = "TestMap.bmp"
+widget.coordsEnabled = true
+widget.distEnabled = true
+widget.distText = "123 m"
+widget.lastCoordsText = "39.12345, -75.54321"
+widget.homeX = 50
+widget.homeY = 60
+widget.aircraftScreenX = 200
+widget.aircraftScreenY = 100
+widget.indicatorType = 1
+widget.lastHeading = 45
+resetDrawCalls()
+registeredWidget.paint(widget)
+local drewHomeIcon = false
+local drewArrowIcon = false
+for _, call in ipairs(drawnBitmaps) do
+  if call.name == "assets/icons/home.png" then
+    drewHomeIcon = true
+  end
+  if call.name == "assets/icons/arrow.png:rotated:45" then
+    drewArrowIcon = true
+  end
+end
+assert_true(drewHomeIcon, "paint draws home icon asset")
+assert_true(drewArrowIcon, "paint draws rotated aircraft icon asset")
+local coordText = nil
+for _, call in ipairs(drawTexts) do
+  if call.text == "39.12345, -75.54321" then
+    coordText = call
+  end
+end
+assert_true(coordText ~= nil, "coordinate toggle draws coordinates")
+assert_equal(coordText.x, 4, "coordinates render away from lower-right controls")
+assert_equal(coordText.y, 232, "coordinates render above distance text")
+
+widget.coordsEnabled = false
+resetDrawCalls()
+registeredWidget.paint(widget)
+for _, call in ipairs(drawTexts) do
+  assert_true(call.text ~= "39.12345, -75.54321", "coordinate toggle hides coordinates")
+end
 
 print("boundrymap lua tests passed")
