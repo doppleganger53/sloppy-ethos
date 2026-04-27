@@ -1,19 +1,19 @@
 {
   "assets": [
     {
-      "source": "maps",
+      "source": "assets/maps",
       "include": [
         "**/*.bmp",
         "**/*.png"
       ],
-      "destination": "bitmaps/GPS",
+      "destination": "scripts/BoundryMap/assets/maps",
       "flatten": true,
       "required": false
     },
     {
-      "source": "maps",
+      "source": "assets/maps",
       "include": "**/*.json",
-      "destination": "documents/user",
+      "destination": "scripts/BoundryMap/assets/maps",
       "flatten": true,
       "required": false
     }

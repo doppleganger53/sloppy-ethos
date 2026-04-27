@@ -222,7 +222,7 @@ assert_equal(test.resolveTouchPhase(_G.EVT_TOUCH, 16640), "start", "raw touch st
 assert_equal(test.resolveTouchPhase(_G.EVT_TOUCH, 16642), "move", "raw touch move maps")
 assert_equal(test.resolveTouchPhase(_G.EVT_TOUCH, 16641), "end", "raw touch end maps")
 
-ioReads["/documents/user/TestMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
+ioReads["/scripts/BoundryMap/assets/maps/TestMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
 local meta = test.loadMapMetadata("TestMap.bmp")
 assert_true(type(meta) == "table", "metadata loads")
 
@@ -286,19 +286,19 @@ widget.boundaries = {
   },
 }
 assert_true(test.saveBoundaries(widget), "save boundaries succeeds")
-local savedPayload = ioWrites["/documents/user/TestMap.boundries.json"]
+local savedPayload = ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"]
 assert_true(type(savedPayload) == "string" and savedPayload:find('"schemaVersion":1', 1, true) ~= nil, "saved payload has schema version")
 
 local parsed = test.parseBoundaryObjects(savedPayload)
 assert_equal(#parsed, 1, "parse saved boundary payload")
 
-ioReads["/documents/user/TestMap.boundries.json"] = savedPayload
+ioReads["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = savedPayload
 widget.boundaries = {}
 widget.savedBoundarySignature = ""
 test.loadBoundaries(widget)
 assert_equal(#widget.boundaries, 1, "load boundaries restores payload")
 
-ioReads["/documents/user/TestMap.boundries.json"] = '{"schemaVersion":1,"mapFile":"TestMap.bmp","boundaries":[{"oops":1}]}'
+ioReads["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = '{"schemaVersion":1,"mapFile":"TestMap.bmp","boundaries":[{"oops":1}]}'
 widget.boundaries = {
   { x1 = 5, y1 = 5, x2 = 6, y2 = 6, lat1 = 0, lon1 = 0, lat2 = 0, lon2 = 0 },
 }
@@ -357,11 +357,11 @@ assert_equal(rowValue(1), "Not configured", "diagnostics reports unconfigured gp
 assert_equal(rowLabel(2), "GPS Lat/Lon", "diagnostics includes coords")
 assert_equal(rowValue(2), "-", "diagnostics coords absent without gps")
 assert_equal(rowLabel(3), "Map Bitmap", "diagnostics includes bitmap")
-assert_equal(rowValue(3), "Available, not loaded (/bitmaps/GPS/ChangedBeforeDiagnostics.bmp)", "diagnostics checks bitmap path")
+assert_equal(rowValue(3), "Available, not loaded (/scripts/BoundryMap/assets/maps/ChangedBeforeDiagnostics.bmp)", "diagnostics checks bitmap path")
 assert_equal(rowLabel(4), "JSON Metadata", "diagnostics includes metadata")
-assert_equal(rowValue(4), "Missing (/documents/user/ChangedBeforeDiagnostics.json)", "diagnostics reports missing metadata")
+assert_equal(rowValue(4), "Missing (/scripts/BoundryMap/assets/maps/ChangedBeforeDiagnostics.json)", "diagnostics reports missing metadata")
 assert_equal(rowLabel(5), "Boundary Sidecar", "diagnostics includes sidecar")
-assert_equal(rowValue(5), "Missing (/documents/user/ChangedBeforeDiagnostics.boundries.json)", "diagnostics reports missing sidecar")
+assert_equal(rowValue(5), "Missing (/scripts/BoundryMap/assets/maps/ChangedBeforeDiagnostics.boundries.json)", "diagnostics reports missing sidecar")
 assert_equal(rowLabel(6), "Last Error", "diagnostics includes last error")
 assert_equal(rowValue(6), "None", "diagnostics reports no error")
 assert_equal(formRows[8].text, "Back", "diagnostics adds back button")
@@ -384,7 +384,7 @@ widget = test.create()
 widget.bitmapFile = "MissingMap.bmp"
 registeredWidget.configure(widget)
 formRows[11].callback()
-assert_equal(rowValue(3), "Missing (/bitmaps/GPS/MissingMap.bmp)", "diagnostics reports missing bitmap")
+assert_equal(rowValue(3), "Missing (/scripts/BoundryMap/assets/maps/MissingMap.bmp)", "diagnostics reports missing bitmap")
 _G.lcd.loadBitmap = originalLoadBitmap
 
 local originalGetSource = _G.system.getSource
@@ -430,8 +430,8 @@ formRows[11].callback()
 assert_equal(rowValue(1), "Not found (MissingGPS)", "diagnostics reports missing gps")
 _G.system.getSource = originalGetSource
 
-ioReads["/documents/user/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
-ioReads["/documents/user/DiagMap.boundries.json"] = savedPayload
+ioReads["/scripts/BoundryMap/assets/maps/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
+ioReads["/scripts/BoundryMap/assets/maps/DiagMap.boundries.json"] = savedPayload
 widget = test.create()
 widget.bitmapFile = "DiagMap.bmp"
 widget.loadedBitmap = true
@@ -442,22 +442,22 @@ widget.boundaries = {
 }
 registeredWidget.configure(widget)
 formRows[11].callback()
-assert_equal(rowValue(3), "Loaded (/bitmaps/GPS/DiagMap.bmp)", "diagnostics reports loaded bitmap")
-assert_equal(rowValue(4), "OK (/documents/user/DiagMap.json)", "diagnostics reports valid metadata")
-assert_equal(rowValue(5), "Loaded 1 lines (/documents/user/DiagMap.boundries.json)", "diagnostics reports loaded sidecar count")
+assert_equal(rowValue(3), "Loaded (/scripts/BoundryMap/assets/maps/DiagMap.bmp)", "diagnostics reports loaded bitmap")
+assert_equal(rowValue(4), "OK (/scripts/BoundryMap/assets/maps/DiagMap.json)", "diagnostics reports valid metadata")
+assert_equal(rowValue(5), "Loaded 1 lines (/scripts/BoundryMap/assets/maps/DiagMap.boundries.json)", "diagnostics reports loaded sidecar count")
 assert_equal(rowValue(6), "paint: bad draw", "diagnostics reports last error")
 assert_equal(#widget.boundaries, 1, "diagnostics does not reload boundaries")
 assert_equal(widget.boundaries[1].x1, 99, "diagnostics leaves current boundaries untouched")
 
-ioReads["/documents/user/DiagMap.boundries.json"] = '{"schemaVersion":1,"mapFile":"DiagMap.bmp","boundaries":[{"oops":1}]}'
+ioReads["/scripts/BoundryMap/assets/maps/DiagMap.boundries.json"] = '{"schemaVersion":1,"mapFile":"DiagMap.bmp","boundaries":[{"oops":1}]}'
 registeredWidget.configure(widget)
 formRows[11].callback()
-assert_equal(rowValue(5), "Malformed (/documents/user/DiagMap.boundries.json: sidecar malformed)", "diagnostics reports malformed sidecar")
+assert_equal(rowValue(5), "Malformed (/scripts/BoundryMap/assets/maps/DiagMap.boundries.json: sidecar malformed)", "diagnostics reports malformed sidecar")
 
-ioReads["/documents/user/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129}'
+ioReads["/scripts/BoundryMap/assets/maps/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129}'
 registeredWidget.configure(widget)
 formRows[11].callback()
-assert_equal(rowValue(4), "Malformed (/documents/user/DiagMap.json: metadata invalid)", "diagnostics reports malformed metadata")
+assert_equal(rowValue(4), "Malformed (/scripts/BoundryMap/assets/maps/DiagMap.json: metadata invalid)", "diagnostics reports malformed metadata")
 
 widget = test.create()
 widget.windowW = 480
@@ -522,7 +522,7 @@ assert_true(test.event(widget, _G.EVT_TOUCH, 16641, saveX, saveY), "save touch c
 assert_equal(#widget.boundaries, 1, "save commits current draft")
 assert_true(widget.draftBoundary == nil, "save clears draft boundary")
 assert_true(widget.drawMode, "save keeps draw mode enabled")
-local savedAfterTouch = ioWrites["/documents/user/TestMap.boundries.json"]
+local savedAfterTouch = ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"]
 local savedAfterTouchParsed = test.parseBoundaryObjects(savedAfterTouch)
 assert_equal(#savedAfterTouchParsed, 1, "save writes one boundary after touch")
 assert_equal(savedAfterTouchParsed[1].x1, 40, "save keeps draft start x")
@@ -541,7 +541,7 @@ widget.bmpH = 272
 widget.mapMeta = meta
 widget.drawMode = true
 widget.boundaries = {}
-ioWrites["/documents/user/TestMap.boundries.json"] = nil
+ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = nil
 local overlapRects = test.controlRects(widget)
 local overlapSaveX = overlapRects.save.left + 3
 local overlapSaveY = overlapRects.save.top + 3
@@ -553,7 +553,7 @@ assert_equal(widget.boundaries[1].x1, 40, "map release over save keeps start x")
 assert_equal(widget.boundaries[1].y1, 30, "map release over save keeps start y")
 assert_equal(widget.boundaries[1].x2, overlapSaveX, "map release over save uses release x")
 assert_equal(widget.boundaries[1].y2, overlapSaveY, "map release over save uses release y")
-assert_true(ioWrites["/documents/user/TestMap.boundries.json"] == nil, "map release over save does not save sidecar")
+assert_true(ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] == nil, "map release over save does not save sidecar")
 
 widget = test.create()
 widget.boundryWarningMode = 1
@@ -619,10 +619,10 @@ registeredWidget.paint(widget)
 local drewHomeIcon = false
 local drewArrowIcon = false
 for _, call in ipairs(drawnBitmaps) do
-  if call.name == "icons/home.png" then
+  if call.name == "assets/icons/home.png" then
     drewHomeIcon = true
   end
-  if call.name == "icons/arrow.png:rotated:45" then
+  if call.name == "assets/icons/arrow.png:rotated:45" then
     drewArrowIcon = true
   end
 end

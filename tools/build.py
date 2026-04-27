@@ -259,12 +259,16 @@ def _normalize_manifest_bool(
     return raw_value
 
 
-def _normalize_radio_destination(raw_value: object, field_name: str, manifest_path: Path, index: int, entry_name: str):
+def _normalize_install_destination(
+    raw_value: object, field_name: str, manifest_path: Path, index: int, entry_name: str, project_name: str
+):
     destination = _normalize_relative_manifest_path(raw_value, field_name, manifest_path, index, entry_name)
-    if destination.parts[0].lower() == "scripts":
+    if destination.parts[0].lower() == "scripts" and (
+        len(destination.parts) < 3 or destination.parts[1].lower() != project_name.lower()
+    ):
         sys.exit(
             f"{manifest_path} {entry_name}[{index}] '{field_name}' destination "
-            f"'{destination.as_posix()}' must be outside scripts/."
+            f"'{destination.as_posix()}' must stay outside scripts/ or under scripts/{project_name}/."
         )
     return destination
 
@@ -296,6 +300,7 @@ def _add_radio_file(
 def _resolve_manifest_radio_files(
     manifest_path: Path,
     project_dir: Path,
+    project_name: str,
     raw_radio_files: object,
     radio_files: list[RadioFile],
     seen_destinations: set[str],
@@ -308,7 +313,9 @@ def _resolve_manifest_radio_files(
             sys.exit(f"{manifest_path} radioFiles[{index}] must be an object with 'source' and 'destination'.")
 
         source_relative = _normalize_relative_manifest_path(entry.get("source"), "source", manifest_path, index)
-        destination = _normalize_radio_destination(entry.get("destination"), "destination", manifest_path, index, "radioFiles")
+        destination = _normalize_install_destination(
+            entry.get("destination"), "destination", manifest_path, index, "radioFiles", project_name
+        )
 
         source = project_dir / source_relative
         if not source.exists():
@@ -330,6 +337,7 @@ def _resolve_manifest_radio_files(
 def _resolve_manifest_assets(
     manifest_path: Path,
     project_dir: Path,
+    project_name: str,
     raw_assets: object,
     radio_files: list[RadioFile],
     seen_destinations: set[str],
@@ -346,8 +354,8 @@ def _resolve_manifest_assets(
         source_root_relative = _normalize_relative_manifest_path(
             entry.get("source"), "source", manifest_path, index, "assets"
         )
-        destination_root = _normalize_radio_destination(
-            entry.get("destination"), "destination", manifest_path, index, "assets"
+        destination_root = _normalize_install_destination(
+            entry.get("destination"), "destination", manifest_path, index, "assets", project_name
         )
         include_patterns = _normalize_asset_include(entry.get("include"), manifest_path, index)
         required = _normalize_manifest_bool(entry.get("required"), True, "required", manifest_path, index)
@@ -413,8 +421,10 @@ def resolve_project_install_spec(project_dir: Path, project_name: str):
 
     radio_files: list[RadioFile] = []
     seen_destinations: set[str] = set()
-    _resolve_manifest_radio_files(manifest_path, project_dir, raw_radio_files, radio_files, seen_destinations)
-    source_exclusions = _resolve_manifest_assets(manifest_path, project_dir, raw_assets, radio_files, seen_destinations)
+    _resolve_manifest_radio_files(manifest_path, project_dir, project_name, raw_radio_files, radio_files, seen_destinations)
+    source_exclusions = _resolve_manifest_assets(
+        manifest_path, project_dir, project_name, raw_assets, radio_files, seen_destinations
+    )
 
     return ProjectInstallSpec(
         project_dir=project_dir,

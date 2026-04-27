@@ -1,6 +1,8 @@
 local WIDGET_NAME = "BoundryMap"
-local bitmapsPath = "/bitmaps/GPS"
-local metadataDir = "/documents/user"
+local mapAssetsPath = "/scripts/BoundryMap/assets/maps"
+local bitmapsPath = mapAssetsPath
+local metadataDir = mapAssetsPath
+local sidecarDir = mapAssetsPath
 
 local floor = math.floor
 local min = math.min
@@ -42,7 +44,7 @@ local CONTROL_BUTTON_WIDTH = 72
 local CONTROL_BUTTON_HEIGHT = 24
 local CONTROL_BUTTON_GAP = 4
 local CONTROL_MARGIN = 6
-local ICON_PATH = "icons"
+local ICON_PATH = "assets/icons"
 local COORDS_TEXT_X = 4
 local COORDS_TEXT_BOTTOM = 40
 local DIST_TEXT_BOTTOM = 24
@@ -485,7 +487,7 @@ local function sidecarPath(bitmapFile)
   if not stem then
     return nil
   end
-  return metadataDir .. "/" .. stem .. ".boundries.json"
+  return sidecarDir .. "/" .. stem .. ".boundries.json"
 end
 
 local function encodeBoundary(boundary)
