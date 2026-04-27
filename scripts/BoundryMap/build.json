@@ -1,9 +1,21 @@
 {
-  "mapAssets": [
+  "assets": [
     {
       "source": "maps",
-      "bitmapDestination": "bitmaps/GPS",
-      "metadataDestination": "documents/user"
+      "include": [
+        "**/*.bmp",
+        "**/*.png"
+      ],
+      "destination": "bitmaps/GPS",
+      "flatten": true,
+      "required": false
+    },
+    {
+      "source": "maps",
+      "include": "**/*.json",
+      "destination": "documents/user",
+      "flatten": true,
+      "required": false
     }
   ]
 }

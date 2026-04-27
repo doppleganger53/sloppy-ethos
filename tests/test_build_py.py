@@ -57,12 +57,21 @@ def _create_boundrymap_project(tmp_path: Path):
     (project_dir / "build.json").write_text(
         json.dumps(
             {
-                "mapAssets": [
+                "assets": [
                     {
                         "source": "maps",
-                        "bitmapDestination": "bitmaps/GPS",
-                        "metadataDestination": "documents/user",
-                    }
+                        "include": ["**/*.bmp", "**/*.png"],
+                        "destination": "bitmaps/GPS",
+                        "flatten": True,
+                        "required": False,
+                    },
+                    {
+                        "source": "maps",
+                        "include": "**/*.json",
+                        "destination": "documents/user",
+                        "flatten": True,
+                        "required": False,
+                    },
                 ]
             }
         ),
@@ -99,7 +108,7 @@ def test_resolve_version_missing_file(tmp_path: Path):
     assert "Version file not found" in str(exc.value)
 
 
-def test_resolve_project_install_spec_reads_optional_radio_files(tmp_path: Path):
+def test_resolve_project_install_spec_reads_optional_assets(tmp_path: Path):
     _repo_root, project_dir = _create_boundrymap_project(tmp_path)
 
     install_spec = build.resolve_project_install_spec(project_dir, "BoundryMap")
@@ -117,7 +126,7 @@ def test_resolve_project_install_spec_reads_optional_radio_files(tmp_path: Path)
     ]
 
 
-def test_resolve_project_install_spec_discovers_multiple_local_maps(tmp_path: Path):
+def test_resolve_project_install_spec_discovers_multiple_local_asset_matches(tmp_path: Path):
     _repo_root, project_dir = _create_boundrymap_project(tmp_path)
     second_map_dir = project_dir / "maps" / "FieldTwo"
     second_map_dir.mkdir(parents=True)
@@ -134,11 +143,22 @@ def test_resolve_project_install_spec_discovers_multiple_local_maps(tmp_path: Pa
     ]
 
 
-def test_resolve_project_install_spec_allows_missing_local_map_directory(tmp_path: Path):
+def test_resolve_project_install_spec_allows_optional_missing_asset_directory(tmp_path: Path):
     project_dir = tmp_path / "BoundryMap"
     project_dir.mkdir()
     (project_dir / "build.json").write_text(
-        json.dumps({"mapAssets": [{"source": "maps"}]}),
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "maps",
+                        "include": "**/*.json",
+                        "destination": "documents/user",
+                        "required": False,
+                    }
+                ]
+            }
+        ),
         encoding="utf-8",
     )
 
@@ -146,6 +166,57 @@ def test_resolve_project_install_spec_allows_missing_local_map_directory(tmp_pat
 
     assert install_spec.radio_files == tuple()
     assert install_spec.script_exclusions == (Path("build.json"), Path("maps"))
+
+
+def test_resolve_project_install_spec_preserves_asset_subdirectories_by_default(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    asset_dir = project_dir / "assets" / "icons"
+    asset_dir.mkdir(parents=True)
+    (asset_dir / "home.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.png",
+                        "destination": "bitmaps/WidgetX",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    install_spec = build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert [radio_file.destination.as_posix() for radio_file in install_spec.radio_files] == [
+        "bitmaps/WidgetX/icons/home.png",
+    ]
+
+
+def test_resolve_project_install_spec_rejects_missing_required_asset_directory(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    project_dir.mkdir()
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.png",
+                        "destination": "bitmaps/WidgetX",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert "source not found" in str(exc.value)
 
 
 def test_resolve_project_install_spec_rejects_scripts_destination(tmp_path: Path):
@@ -160,6 +231,32 @@ def test_resolve_project_install_spec_rejects_scripts_destination(tmp_path: Path
 
     with pytest.raises(SystemExit) as exc:
         build.resolve_project_install_spec(project_dir, "BoundryMap")
+
+    assert "must be outside scripts/" in str(exc.value)
+
+
+def test_resolve_project_install_spec_rejects_asset_scripts_destination(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    asset_dir = project_dir / "assets"
+    asset_dir.mkdir(parents=True)
+    (asset_dir / "icon.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "*.png",
+                        "destination": "scripts/WidgetX/assets",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        build.resolve_project_install_spec(project_dir, "WidgetX")
 
     assert "must be outside scripts/" in str(exc.value)
 
