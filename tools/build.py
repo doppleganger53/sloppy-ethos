@@ -12,6 +12,7 @@ from typing import Optional
 HELP_FILE = Path(__file__).resolve().parent / "build_help.txt"
 BUNDLE_ZIP_BASENAME = "sloppy-ethos_scripts"
 PROJECT_BUILD_FILE = "build.json"
+SCRIPT_LOCAL_TEST_DIR = "tests"
 
 
 @dataclass(frozen=True)
@@ -36,7 +37,7 @@ class ProjectInstallSpec:
 
     @property
     def script_exclusions(self) -> tuple[Path, ...]:
-        exclusions: list[Path] = []
+        exclusions: list[Path] = [Path(SCRIPT_LOCAL_TEST_DIR)]
         if self.manifest_relative is not None:
             exclusions.append(self.manifest_relative)
         exclusions.extend(self.source_exclusions)

@@ -80,6 +80,7 @@ To build a single install ZIP with multiple scripts:
 
 - `scripts/SensorList/main.lua`: widget implementation
 - `scripts/SensorList/README.md`: widget-focused usage notes
+- `scripts/{ProjectName}/tests/`: script-owned pytest wrappers and Lua harnesses
 - `scripts/BoundryMap/build.json`: project build manifest for assets installed outside `/scripts`
 - `scripts/BoundryMap/main.lua`: BoundryMap widget implementation
 - `scripts/BoundryMap/README.md`: BoundryMap usage notes
@@ -90,7 +91,7 @@ To build a single install ZIP with multiple scripts:
 - `tools/create_todo_issues.py`: GitHub issue bootstrap for TODO backlog tracking
 - `deslopification/prompts/done/SensorList.md`: original implementation prompt
 - `docs/`: development notes and handoff documents
-- `docs/REPOSITORY_LAYOUT.md`: reference for `tools/`, `tests/`, `deslopification/`, and root artifacts
+- `docs/REPOSITORY_LAYOUT.md`: reference for `tools/`, repo-level `tests/`, script-local tests, `deslopification/`, and root artifacts
 - [docs/SensorList/SENSORLIST_ARCHITECTURE.md](docs/SensorList/SENSORLIST_ARCHITECTURE.md): SensorList lifecycle/state flow reference
 
 ## Development
@@ -109,7 +110,9 @@ luac -p scripts/SensorList/main.lua
 
 - Select a Python 3.9+ interpreter in VS Code via `Python: Select Interpreter` (or ensure `python` resolves to your preferred interpreter in terminal).
 - Install test dependencies once per interpreter: `python -m pip install -r requirements/dev.txt`.
-- Execute the sensor-list test file: `python -m pytest tests/test_sensorlist_widget.py`.
+- Run all repo-level and script-local tests: `python -m pytest -q`.
+- Run one script's tests directly, for example: `python -m pytest scripts/SensorList/tests -q`.
+- Add script-owned Python wrappers and Lua harnesses under `scripts/{ProjectName}/tests/`; keep generic tooling contracts under the root `tests/` folder.
 - VS Code Test Explorer coverage runs require `pytest-cov`, which is included in `requirements/dev.txt`.
 
 ### Lua Coverage In VS Code
@@ -118,8 +121,8 @@ luac -p scripts/SensorList/main.lua
 - Install Lua coverage tools with LuaRocks:
   - `luarocks install luacov`
   - `luarocks install luacov-reporter-lcov`
-- Run the VS Code task `Lua Coverage Refresh (SensorList)`.
-- Coverage output is written to `coverage/lua/luacov.report.out` and the workspace is configured to let Coverage Gutters display it.
+- Coverage output can be generated with `lua -lluacov scripts/SensorList/tests/lua/test_sensorlist.lua` followed by `luacov -r lcov`.
+- The workspace is configured to let Coverage Gutters display `coverage/lua/luacov.report.out` when that report exists.
 
 ## Releases
 

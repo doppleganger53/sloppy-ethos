@@ -30,6 +30,10 @@
      `python tools/build.py --project SensorList --project ethos_events --dist`
    - docs validation (required for any documentation changes):
      `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
+   - full repo and script-local tests when touching test layout, shared tooling, or cross-script behavior:
+     `python -m pytest -q`
+   - one script's local tests when touching that script's behavior:
+     `python -m pytest scripts/{ProjectName}/tests -q`
    - `stylua --config-path tools/config/stylua.toml scripts` (if formatting changed)
 6. Open a PR into `main` using the repository PR template and include linked-closing issue keywords (for example, `Closes #29`).
 7. Use the repository merge strategy policy:
@@ -47,6 +51,7 @@
 - Keep `README.md` 'Download Latest Script Releases' links aligned only with currently published script release ZIP assets.
 - Do not add unreleased scripts to that README section just because `scripts/{ProjectName}/VERSION` exists on a branch.
 - Include the docs validation command output in the PR `Verification` checklist.
+- Put script-owned tests under `scripts/{ProjectName}/tests/`; keep generic repository tooling and documentation contracts under root `tests/`.
 - If workflow/behavior changed, add a session note under
   `deslopification/memory/notes/{artifact}/{scope}/`, regenerate
   `deslopification/memory/CATALOG.md`, use explicit `Artifact`, `Scope`, and

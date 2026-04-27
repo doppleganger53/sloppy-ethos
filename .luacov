@@ -7,5 +7,6 @@ return {
   },
   exclude = {
     "tests/",
+    "scripts/SensorList/tests/",
   },
 }

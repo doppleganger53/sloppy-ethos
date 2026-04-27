@@ -53,4 +53,4 @@ Artifact version source: `scripts/SensorList/VERSION`.
 - Install Lua coverage tooling with LuaRocks:
   - `luarocks install luacov`
   - `luarocks install luacov-reporter-lcov`
-- Run the VS Code task `Lua Coverage Refresh (SensorList)` to generate `coverage/lua/luacov.report.out` for editor gutter coverage.
+- Generate coverage with `lua -lluacov scripts/SensorList/tests/lua/test_sensorlist.lua` followed by `luacov -r lcov`; Coverage Gutters can then display `coverage/lua/luacov.report.out`.

@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 116
-- Total size: 192,189 bytes
-- Total lines: 5,129
+- Files: 117
+- Total size: 194,842 bytes
+- Total lines: 5,195
 - Distribution by artifact:
-  - session notes: 110
+  - session notes: 111
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 70 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 71 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -38,7 +38,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 16 -- build
   - 15 -- release
   - 13 -- docs
-  - 6 -- testing
+  - 7 -- testing
   - 5 -- issue-admin
   - 5 -- prompts
   - 2 -- metadata
@@ -47,6 +47,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix
+- 2026-04-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_ISSUE_72_SCRIPT_LOCAL_TESTS.md](notes/session/repo/SESSION_NOTES_2026-04-27_ISSUE_72_SCRIPT_LOCAL_TESTS.md) | # Session Notes 2026-04-27 - Issue 72 Script Local Tests
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md) | # Session Notes 2026-04-27 - Generic Build Assets
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_GITIGNORE.md](notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_GITIGNORE.md) | # Session Notes 2026-04-27 - BoundryMap Script Gitignore
 - 2026-03-28 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md](notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md) | # Session Notes 2026-03-28 - README Published Script Link Policy
@@ -57,7 +58,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - 2026-03-08 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md](notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md) | # Session Notes 2026-03-08 - Debug Sessions Require Deploy
 - 2026-03-05 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_MUTABLE_WORKFLOW_AGENT_METADATA.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_MUTABLE_WORKFLOW_AGENT_METADATA.md) | # Session Notes 2026-03-05 - Issue #56 Mutable Workflow Agent Metadata
 - 2026-03-05 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md) | # Session Notes 2026-03-05 - Issue #54 Low-Signal Test Pruning
-- 2026-03-02 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md) | # Session Notes 2026-03-02 - SensorList-v1.0.0 Release
 
 ## Recent Ethos Platform Notes
 
@@ -188,4 +188,5 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-04-26 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_SAVE_ARMING_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_SAVE_ARMING_FIX.md) | # Session Notes 2026-04-26 - BoundryMap Save Arming Fix |
 | 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_GITIGNORE.md](notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_GITIGNORE.md) | # Session Notes 2026-04-27 - BoundryMap Script Gitignore |
 | 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md) | # Session Notes 2026-04-27 - Generic Build Assets |
+| 2026-04-27 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-04-27_ISSUE_72_SCRIPT_LOCAL_TESTS.md](notes/session/repo/SESSION_NOTES_2026-04-27_ISSUE_72_SCRIPT_LOCAL_TESTS.md) | # Session Notes 2026-04-27 - Issue 72 Script Local Tests |
 | 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix |

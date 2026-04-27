@@ -61,7 +61,9 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
   - `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
 - Lua widget behavior changes (`scripts/**/*.lua`):
   - `luac -p scripts/SensorList/main.lua`
-  - `python -m pytest tests/test_sensorlist_widget.py -q`
+  - `python -m pytest scripts/SensorList/tests -q`
+  - For another script, run that script's local test folder, for example
+    `python -m pytest scripts/BoundryMap/tests -q`
 - Build/tooling changes (`tools/`, Python build/test harness):
   - `python -m pytest tests/test_build_py.py -q`
 - Broad or cross-cutting changes:

@@ -80,6 +80,9 @@ Historical detail remains in individual session notes referenced from
 - Simulator debugging sessions for Lua behavior now require a deploy step
   before session closeout, with the touched script deployed via
   `tools/build.py --project {ProjectName} --deploy`.
+- Script-owned tests live under `scripts/{ProjectName}/tests/` and are
+  included in repo-root pytest discovery through `pytest.ini`; install staging
+  excludes script-local `tests/` folders from ZIP and simulator payloads.
 
 ## Active Tooling Decisions
 
@@ -91,7 +94,8 @@ Historical detail remains in individual session notes referenced from
 - Optional VS Code Lua coverage workflow is now wired through:
   - `Coverage Gutters` workspace recommendation in `.vscode/extensions.json`
   - `.luacov` output under `coverage/lua/`
-  - `Lua Coverage Refresh (SensorList)` task sequence in `.vscode/tasks.json`
+  - manual `lua -lluacov ...` and `luacov -r lcov` commands; no Lua coverage
+    task sequence is kept in `.vscode/tasks.json`
 - Prompt templates live in `deslopification/prompts/templates/`.
 
 ## How To Use With CATALOG

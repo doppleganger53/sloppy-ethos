@@ -175,6 +175,17 @@ def test_mutable_workflow_policy_is_documented_across_agent_and_contributor_docs
 def test_vscode_pytest_enabled_in_repo_settings():
     settings = json.loads((REPO_ROOT / ".vscode" / "settings.json").read_text(encoding="utf-8"))
     assert settings.get("python.testing.pytestEnabled") is True
+    assert settings.get("python.testing.pytestArgs") == ["tests", "scripts"]
+
+
+def test_script_local_tests_are_discovered_from_repo_root():
+    pytest_config = (REPO_ROOT / "pytest.ini").read_text(encoding="utf-8")
+    assert "testpaths =" in pytest_config
+    assert "tests" in pytest_config
+    assert "scripts" in pytest_config
+    assert (REPO_ROOT / "scripts" / "SensorList" / "tests" / "test_sensorlist_widget.py").exists()
+    assert (REPO_ROOT / "scripts" / "BoundryMap" / "tests" / "test_boundrymap_widget.py").exists()
+    assert not (REPO_ROOT / "tests" / "lua").exists()
 
 
 
