@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 117
-- Total size: 194,842 bytes
-- Total lines: 5,195
+- Files: 118
+- Total size: 196,875 bytes
+- Total lines: 5,245
 - Distribution by artifact:
-  - session notes: 111
+  - session notes: 112
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 71 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 72 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -33,7 +33,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 3 -- handoff ( Session continuity and restart handoffs )
 
 - Distribution by concern:
-  - 28 -- implementation
+  - 29 -- implementation
   - 26 -- workflow
   - 16 -- build
   - 15 -- release
@@ -186,6 +186,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-04-26 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_DIAGNOSTICS_FORM.md](notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_DIAGNOSTICS_FORM.md) | # Session Notes 2026-04-26 - BoundryMap Diagnostics Form |
 | 2026-04-26 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_LOCAL_MAP_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_LOCAL_MAP_ASSETS.md) | # Session Notes 2026-04-26 - BoundryMap Local Map Assets |
 | 2026-04-26 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_SAVE_ARMING_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_SAVE_ARMING_FIX.md) | # Session Notes 2026-04-26 - BoundryMap Save Arming Fix |
+| 2026-04-27 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_POSITION_ICONS.md](notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_POSITION_ICONS.md) | # Session Notes 2026-04-27 - BoundryMap Position Icons |
 | 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_GITIGNORE.md](notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_GITIGNORE.md) | # Session Notes 2026-04-27 - BoundryMap Script Gitignore |
 | 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md) | # Session Notes 2026-04-27 - Generic Build Assets |
 | 2026-04-27 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-04-27_ISSUE_72_SCRIPT_LOCAL_TESTS.md](notes/session/repo/SESSION_NOTES_2026-04-27_ISSUE_72_SCRIPT_LOCAL_TESTS.md) | # Session Notes 2026-04-27 - Issue 72 Script Local Tests |

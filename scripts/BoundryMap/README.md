@@ -2,6 +2,12 @@
 
 BoundryMap is an Ethos widget that overlays editable boundary lines on a GPS map.
 
+## Display Features
+
+- Home and aircraft position use the same icon assets as GPS AccuMap when available, with drawn fallbacks if an icon cannot be loaded.
+- The aircraft indicator can be configured as a dot or a heading arrow.
+- GPS coordinate text is optional. When enabled, coordinates render in the lower-left area above distance text instead of the lower-right touch controls.
+
 ## Map Assets And Privacy
 
 Maps usually identify a specific flying site, so the `maps/` directory is local-only and ignored by git. Do not commit personal field maps, generated metadata, or boundary sidecars to the public repository.
@@ -16,6 +22,7 @@ When local maps exist under `scripts/BoundryMap/maps/`, the build scans them usi
 - BMP and PNG files install to `/bitmaps/GPS/`
 - matching JSON map metadata files install to `/documents/user/`
 - generator metadata text files are ignored by the package because BoundryMap reads the JSON metadata
+- built-in widget icons install under `/scripts/BoundryMap/icons/`
 
 Multiple maps can be packaged together without adding each map filename to [build.json](build.json). Use one folder per map:
 
