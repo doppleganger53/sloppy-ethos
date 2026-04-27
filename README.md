@@ -168,7 +168,6 @@ luac -p scripts/SensorList/main.lua
 
 - Script idea: smart switch map that pre-populates mapped switches and identifies unused switches
 - optimize agentic and human workflows in the repo
-- Completed [#42](https://github.com/doppleganger53/sloppy-ethos/issues/42): repo releases include the multi-script bundle deliverable `dist/sloppy-ethos_scripts.zip`.
 
 ### SensorList
 
