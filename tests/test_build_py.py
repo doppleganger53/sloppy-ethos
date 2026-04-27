@@ -300,6 +300,33 @@ def test_resolve_project_install_spec_allows_own_script_asset_destination(tmp_pa
     ]
 
 
+def test_resolve_project_install_spec_allows_own_script_root_asset_destination(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    asset_dir = project_dir / "assets"
+    asset_dir.mkdir(parents=True)
+    (asset_dir / "icon.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "*.png",
+                        "destination": "scripts/WidgetX",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    install_spec = build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert [radio_file.destination.as_posix() for radio_file in install_spec.radio_files] == [
+        "scripts/WidgetX/icon.png",
+    ]
+
+
 def test_resolve_project_install_spec_rejects_other_script_asset_destination(tmp_path: Path):
     project_dir = tmp_path / "WidgetX"
     asset_dir = project_dir / "assets"

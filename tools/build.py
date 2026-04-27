@@ -264,7 +264,7 @@ def _normalize_install_destination(
 ):
     destination = _normalize_relative_manifest_path(raw_value, field_name, manifest_path, index, entry_name)
     if destination.parts[0].lower() == "scripts" and (
-        len(destination.parts) < 3 or destination.parts[1].lower() != project_name.lower()
+        len(destination.parts) < 2 or destination.parts[1].lower() != project_name.lower()
     ):
         sys.exit(
             f"{manifest_path} {entry_name}[{index}] '{field_name}' destination "
