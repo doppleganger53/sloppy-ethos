@@ -94,7 +94,9 @@
 
 - Select a Python 3.9+ interpreter in VS Code via `Python: Select Interpreter`, or use a shell where `python` resolves to your desired interpreter.
 - Install the pytest harness listed in `requirements/dev.txt`: `python -m pip install -r requirements/dev.txt` (includes `pytest-cov` for coverage in the VS Code Test Explorer).
-- Run the Lua-driven sensor list test file through pytest: `python -m pytest tests/test_sensorlist_widget.py`.
+- Run all repo-level and script-local tests: `python -m pytest -q`.
+- Run one script's tests directly, for example: `python -m pytest scripts/SensorList/tests -q`.
+- Place script-owned pytest wrappers and Lua harnesses under `scripts/{ProjectName}/tests/`; keep generic tooling and documentation contracts under the root `tests/` folder.
 - For any documentation updates, run docs contract checks: `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`.
 - Use the VS Code Testing view to run/discover tests and trigger coverage once dependencies are installed for the selected interpreter.
 
@@ -105,12 +107,7 @@
   - `luarocks install luacov`
   - `luarocks install luacov-reporter-lcov`
 - The workspace includes `.luacov` config that targets `scripts/SensorList/main.lua` and writes reports under `coverage/lua/`.
-- Run the VS Code task:
-  - `Lua Coverage Refresh (SensorList)`
-- That task sequence:
-  - clears the prior Lua coverage outputs
-  - runs `tests/lua/test_sensorlist.lua` through `lua -lluacov`
-  - generates an LCOV-style report via `luacov -r lcov`
+- Generate a Lua coverage report manually with `lua -lluacov scripts/SensorList/tests/lua/test_sensorlist.lua` followed by `luacov -r lcov`.
 - Coverage Gutters is configured in `.vscode/settings.json` to pick up `luacov.report.out` from the workspace coverage output folder.
 
 ## Main Branch Release And Versioning Policy
