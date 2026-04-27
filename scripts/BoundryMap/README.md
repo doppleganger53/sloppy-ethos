@@ -11,13 +11,13 @@ Install with Ethos Suite:
 1. Build a package with `python tools/build.py --project BoundryMap --dist`
 2. Import the generated ZIP through Ethos Suite Lua install/import.
 
-When local maps exist under `scripts/BoundryMap/maps/`, the build scans them automatically using [build.json](build.json):
+When local maps exist under `scripts/BoundryMap/maps/`, the build scans them using the generic asset rules in [build.json](build.json):
 
 - BMP and PNG files install to `/bitmaps/GPS/`
 - matching JSON map metadata files install to `/documents/user/`
 - generator metadata text files are ignored by the package because BoundryMap reads the JSON metadata
 
-Multiple maps can be packaged together without editing [build.json](build.json). Use one folder per map:
+Multiple maps can be packaged together without adding each map filename to [build.json](build.json). Use one folder per map:
 
 ```text
 scripts/BoundryMap/maps/
