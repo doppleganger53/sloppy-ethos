@@ -1,12 +1,21 @@
 {
-  "radioFiles": [
+  "assets": [
     {
-      "source": "maps/WJRC/WJRC.bmp",
-      "destination": "bitmaps/GPS/WJRC.bmp"
+      "source": "maps",
+      "include": [
+        "**/*.bmp",
+        "**/*.png"
+      ],
+      "destination": "bitmaps/GPS",
+      "flatten": true,
+      "required": false
     },
     {
-      "source": "maps/WJRC/WJRC.json",
-      "destination": "documents/user/WJRC.json"
+      "source": "maps",
+      "include": "**/*.json",
+      "destination": "documents/user",
+      "flatten": true,
+      "required": false
     }
   ]
 }

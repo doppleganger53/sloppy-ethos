@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 111
-- Total size: 182,424 bytes
-- Total lines: 4,891
+- Files: 115
+- Total size: 190,441 bytes
+- Total lines: 5,084
 - Distribution by artifact:
-  - session notes: 105
+  - session notes: 109
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 65 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 69 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -33,11 +33,11 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 3 -- handoff ( Session continuity and restart handoffs )
 
 - Distribution by concern:
-  - 27 -- implementation
+  - 28 -- implementation
   - 26 -- workflow
+  - 15 -- build
   - 15 -- release
   - 13 -- docs
-  - 12 -- build
   - 6 -- testing
   - 5 -- issue-admin
   - 5 -- prompts
@@ -46,18 +46,18 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent High-Signal Notes (Auto-generated)
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
+- 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix
+- 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md) | # Session Notes 2026-04-27 - Generic Build Assets
+- 2026-04-26 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_LOCAL_MAP_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_LOCAL_MAP_ASSETS.md) | # Session Notes 2026-04-26 - BoundryMap Local Map Assets
 - 2026-03-28 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md](notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md) | # Session Notes 2026-03-28 - README Published Script Link Policy
-- 2026-03-28 | build | repo | [notes/session/repo/SESSION_NOTES_2026-03-28_OPTIONAL_RADIO_FILE_BUILD_MANIFEST.md](notes/session/repo/SESSION_NOTES_2026-03-28_OPTIONAL_RADIO_FILE_BUILD_MANIFEST.md) | # Session Notes 2026-03-28 - Optional Radio File Build Manifest
 - 2026-03-28 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_LICENSE_DERIVATION.md](notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_LICENSE_DERIVATION.md) | # Session Notes 2026-03-28 - BoundryMap License Derivation Notice
 - 2026-03-09 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md) | # Session Notes 2026-03-09 - SensorList-v1.0.1 Release
 - 2026-03-09 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-09_ISSUE_62_README_GUIDANCE_RELOCATION.md](notes/session/repo/SESSION_NOTES_2026-03-09_ISSUE_62_README_GUIDANCE_RELOCATION.md) | # Session Notes 2026-03-09 - Issue #62 README Guidance Relocation
 - 2026-03-08 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md](notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md) | # Session Notes 2026-03-08 - VS Code Lua Coverage Workflow
 - 2026-03-08 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md](notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md) | # Session Notes 2026-03-08 - Debug Sessions Require Deploy
-- 2026-03-08 | build | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_BUILD_CLEAN_ORDER_FIX.md](notes/session/repo/SESSION_NOTES_2026-03-08_BUILD_CLEAN_ORDER_FIX.md) | # Session Notes 2026-03-08 - Build Clean Order Fix
 - 2026-03-05 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_MUTABLE_WORKFLOW_AGENT_METADATA.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_MUTABLE_WORKFLOW_AGENT_METADATA.md) | # Session Notes 2026-03-05 - Issue #56 Mutable Workflow Agent Metadata
 - 2026-03-05 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md) | # Session Notes 2026-03-05 - Issue #54 Low-Signal Test Pruning
 - 2026-03-02 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-02_SENSORLIST_V100_RELEASE.md) | # Session Notes 2026-03-02 - SensorList-v1.0.0 Release
-- 2026-03-02 | release | repo | [notes/session/repo/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md](notes/session/repo/SESSION_NOTES_2026-03-02_REPO_RELEASE_CONSOLIDATED_BUNDLE_ONLY.md) | # Session Notes 2026-03-02 - Repo Releases Consolidated Bundle Only
 
 ## Recent Ethos Platform Notes
 
@@ -183,4 +183,8 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-03-28 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-03-28_OPTIONAL_RADIO_FILE_BUILD_MANIFEST.md](notes/session/repo/SESSION_NOTES_2026-03-28_OPTIONAL_RADIO_FILE_BUILD_MANIFEST.md) | # Session Notes 2026-03-28 - Optional Radio File Build Manifest |
 | 2026-03-28 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md](notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md) | # Session Notes 2026-03-28 - README Published Script Link Policy |
 | 2026-04-23 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-04-23_BOUNDRYMAP_SAVE_TOUCH_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-23_BOUNDRYMAP_SAVE_TOUCH_FIX.md) | # Session Notes 2026-04-23 - BoundryMap Save Touch Fix |
+| 2026-04-26 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_DIAGNOSTICS_FORM.md](notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_DIAGNOSTICS_FORM.md) | # Session Notes 2026-04-26 - BoundryMap Diagnostics Form |
+| 2026-04-26 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_LOCAL_MAP_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_LOCAL_MAP_ASSETS.md) | # Session Notes 2026-04-26 - BoundryMap Local Map Assets |
 | 2026-04-26 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_SAVE_ARMING_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-26_BOUNDRYMAP_SAVE_ARMING_FIX.md) | # Session Notes 2026-04-26 - BoundryMap Save Arming Fix |
+| 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md) | # Session Notes 2026-04-27 - Generic Build Assets |
+| 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix |

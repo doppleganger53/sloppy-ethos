@@ -53,17 +53,24 @@ def _create_boundrymap_project(tmp_path: Path):
     (project_dir / "VERSION").write_text("0.1.1\n", encoding="utf-8")
     (map_dir / "WJRC.bmp").write_text("bmp-bytes\n", encoding="utf-8")
     (map_dir / "WJRC.json").write_text('{"map":"WJRC"}\n', encoding="utf-8")
+    (map_dir / "WJRC_Z16_metadata.txt").write_text("generator metadata\n", encoding="utf-8")
     (project_dir / "build.json").write_text(
         json.dumps(
             {
-                "radioFiles": [
+                "assets": [
                     {
-                        "source": "maps/WJRC/WJRC.bmp",
-                        "destination": "bitmaps/GPS/WJRC.bmp",
+                        "source": "maps",
+                        "include": ["**/*.bmp", "**/*.png"],
+                        "destination": "bitmaps/GPS",
+                        "flatten": True,
+                        "required": False,
                     },
                     {
-                        "source": "maps/WJRC/WJRC.json",
-                        "destination": "documents/user/WJRC.json",
+                        "source": "maps",
+                        "include": "**/*.json",
+                        "destination": "documents/user",
+                        "flatten": True,
+                        "required": False,
                     },
                 ]
             }
@@ -101,7 +108,7 @@ def test_resolve_version_missing_file(tmp_path: Path):
     assert "Version file not found" in str(exc.value)
 
 
-def test_resolve_project_install_spec_reads_optional_radio_files(tmp_path: Path):
+def test_resolve_project_install_spec_reads_optional_assets(tmp_path: Path):
     _repo_root, project_dir = _create_boundrymap_project(tmp_path)
 
     install_spec = build.resolve_project_install_spec(project_dir, "BoundryMap")
@@ -111,13 +118,138 @@ def test_resolve_project_install_spec_reads_optional_radio_files(tmp_path: Path)
     assert install_spec.script_destination == Path("scripts") / "BoundryMap"
     assert install_spec.script_exclusions == (
         Path("build.json"),
-        Path("maps") / "WJRC" / "WJRC.bmp",
-        Path("maps") / "WJRC" / "WJRC.json",
+        Path("maps"),
     )
-    assert [radio_file.destination.as_posix() for radio_file in install_spec.radio_files] == [
+    assert sorted(radio_file.destination.as_posix() for radio_file in install_spec.radio_files) == [
         "bitmaps/GPS/WJRC.bmp",
         "documents/user/WJRC.json",
     ]
+
+
+def test_resolve_project_install_spec_discovers_multiple_local_asset_matches(tmp_path: Path):
+    _repo_root, project_dir = _create_boundrymap_project(tmp_path)
+    second_map_dir = project_dir / "maps" / "FieldTwo"
+    second_map_dir.mkdir(parents=True)
+    (second_map_dir / "FieldTwo.png").write_text("png-bytes\n", encoding="utf-8")
+    (second_map_dir / "FieldTwo.json").write_text('{"map":"FieldTwo"}\n', encoding="utf-8")
+
+    install_spec = build.resolve_project_install_spec(project_dir, "BoundryMap")
+
+    assert sorted(radio_file.destination.as_posix() for radio_file in install_spec.radio_files) == [
+        "bitmaps/GPS/FieldTwo.png",
+        "bitmaps/GPS/WJRC.bmp",
+        "documents/user/FieldTwo.json",
+        "documents/user/WJRC.json",
+    ]
+
+
+def test_resolve_project_install_spec_allows_optional_missing_asset_directory(tmp_path: Path):
+    project_dir = tmp_path / "BoundryMap"
+    project_dir.mkdir()
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "maps",
+                        "include": "**/*.json",
+                        "destination": "documents/user",
+                        "required": False,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    install_spec = build.resolve_project_install_spec(project_dir, "BoundryMap")
+
+    assert install_spec.radio_files == tuple()
+    assert install_spec.script_exclusions == (Path("build.json"), Path("maps"))
+
+
+def test_resolve_project_install_spec_preserves_asset_subdirectories_by_default(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    asset_dir = project_dir / "assets" / "icons"
+    asset_dir.mkdir(parents=True)
+    (asset_dir / "home.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.png",
+                        "destination": "bitmaps/WidgetX",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    install_spec = build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert [radio_file.destination.as_posix() for radio_file in install_spec.radio_files] == [
+        "bitmaps/WidgetX/icons/home.png",
+    ]
+
+
+def test_resolve_project_install_spec_preserves_asset_sources_when_requested(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    asset_dir = project_dir / "assets" / "icons"
+    asset_dir.mkdir(parents=True)
+    (asset_dir / "home.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.png",
+                        "destination": "bitmaps/WidgetX",
+                        "excludeSource": False,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    install_spec = build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert install_spec.source_exclusions == tuple()
+    assert install_spec.script_exclusions == (Path("build.json"),)
+    assert [
+        (radio_file.destination.as_posix(), radio_file.exclude_from_script)
+        for radio_file in install_spec.radio_files
+    ] == [
+        ("bitmaps/WidgetX/icons/home.png", False),
+    ]
+
+
+def test_resolve_project_install_spec_rejects_missing_required_asset_directory(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    project_dir.mkdir()
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.png",
+                        "destination": "bitmaps/WidgetX",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert "source not found" in str(exc.value)
 
 
 def test_resolve_project_install_spec_rejects_scripts_destination(tmp_path: Path):
@@ -132,6 +264,32 @@ def test_resolve_project_install_spec_rejects_scripts_destination(tmp_path: Path
 
     with pytest.raises(SystemExit) as exc:
         build.resolve_project_install_spec(project_dir, "BoundryMap")
+
+    assert "must be outside scripts/" in str(exc.value)
+
+
+def test_resolve_project_install_spec_rejects_asset_scripts_destination(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    asset_dir = project_dir / "assets"
+    asset_dir.mkdir(parents=True)
+    (asset_dir / "icon.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "*.png",
+                        "destination": "scripts/WidgetX/assets",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        build.resolve_project_install_spec(project_dir, "WidgetX")
 
     assert "must be outside scripts/" in str(exc.value)
 
@@ -334,6 +492,42 @@ def test_build_zip_includes_optional_radio_files_and_excludes_build_inputs(tmp_p
     assert "scripts/BoundryMap/build.json" not in names
     assert "scripts/BoundryMap/maps/WJRC/WJRC.bmp" not in names
     assert "scripts/BoundryMap/maps/WJRC/WJRC.json" not in names
+    assert "scripts/BoundryMap/maps/WJRC/WJRC_Z16_metadata.txt" not in names
+
+
+def test_build_zip_preserves_asset_sources_when_requested(tmp_path: Path):
+    repo_root = tmp_path / "repo"
+    project_dir = repo_root / "scripts" / "WidgetX"
+    asset_dir = project_dir / "assets" / "icons"
+    dist_dir = repo_root / "dist"
+    asset_dir.mkdir(parents=True)
+    (project_dir / "main.lua").write_text("print('ok')\n", encoding="utf-8")
+    (asset_dir / "home.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.png",
+                        "destination": "bitmaps/WidgetX",
+                        "excludeSource": False,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    archive = build.build_zip(project_dir, "WidgetX", "1.0.0", dist_dir, repo_root)
+
+    with zipfile.ZipFile(archive) as payload:
+        names = set(payload.namelist())
+
+    assert "scripts/WidgetX/main.lua" in names
+    assert "scripts/WidgetX/assets/icons/home.png" in names
+    assert "bitmaps/WidgetX/icons/home.png" in names
+    assert "scripts/WidgetX/build.json" not in names
 
 
 def test_build_zip_handles_preexisting_staging_and_cleans_up(tmp_path: Path):
@@ -477,6 +671,7 @@ def test_deploy_to_simulator_copies_optional_radio_files(tmp_path: Path):
     assert (sim_path / "scripts" / "BoundryMap" / "main.lua").exists()
     assert not (sim_path / "scripts" / "BoundryMap" / "build.json").exists()
     assert not (sim_path / "scripts" / "BoundryMap" / "maps" / "WJRC" / "WJRC.bmp").exists()
+    assert not (sim_path / "scripts" / "BoundryMap" / "maps" / "WJRC" / "WJRC_Z16_metadata.txt").exists()
     assert (sim_path / "bitmaps" / "GPS" / "WJRC.bmp").read_text(encoding="utf-8") == "bmp-bytes\n"
     assert (sim_path / "documents" / "user" / "WJRC.json").read_text(encoding="utf-8") == '{"map":"WJRC"}\n'
 

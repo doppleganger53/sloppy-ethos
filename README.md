@@ -60,8 +60,8 @@ python tools/build.py --help
 - During simulator debugging sessions, deploy the touched script before closing out the session so runtime verification uses the current build.
 - Single-script package version is read from `scripts/{ProjectName}/VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
 - Multi-script dist bundles are an explicit naming exception and use the unversioned ZIP name: `dist/sloppy-ethos_scripts.zip`.
-- Projects can optionally declare extra radio-root files in a project-local build manifest; those files are packaged into the ZIP root and are also deployed/cleaned alongside `scripts/{ProjectName}`.
-- Example: [scripts/BoundryMap/build.json](scripts/BoundryMap/build.json) installs `maps/WJRC/WJRC.bmp` to `/bitmaps/GPS/WJRC.bmp` and the matching WJRC metadata JSON to the radio's `/documents/user/` folder.
+- Projects can optionally declare extra radio-root files or generic asset groups in a project-local build manifest; those files are packaged into the ZIP root and are also deployed/cleaned alongside `scripts/{ProjectName}`.
+- BoundryMap map assets are local-only because flying-site maps can reveal private locations. Put private maps under `scripts/BoundryMap/maps/`; [scripts/BoundryMap/build.json](scripts/BoundryMap/build.json) defines the asset globs and radio destinations for local map images and metadata.
 - Root `VERSION` remains the repository version source of truth.
 
 ### 30-Second First Run
@@ -80,9 +80,10 @@ To build a single install ZIP with multiple scripts:
 
 - `scripts/SensorList/main.lua`: widget implementation
 - `scripts/SensorList/README.md`: widget-focused usage notes
-- `scripts/BoundryMap/build.json`: optional extra radio-file manifest for assets installed outside `/scripts`
+- `scripts/BoundryMap/build.json`: project build manifest for assets installed outside `/scripts`
 - `scripts/BoundryMap/main.lua`: BoundryMap widget implementation
 - `scripts/BoundryMap/README.md`: BoundryMap usage notes
+- `scripts/BoundryMap/maps/`: ignored local-only map asset folder, created by contributors when packaging private maps
 - `scripts/ethos_events/main.lua`: system-tool event tracer entrypoint
 - `scripts/ethos_events/README.md`: event tracer usage notes
 - `tools/build.py`: syntax-check + packaging + simulator deploy script

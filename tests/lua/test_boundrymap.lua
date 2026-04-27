@@ -17,6 +17,19 @@ _G.TOUCH_END = 16641
 local storageValues = {}
 local ioReads = {}
 local ioWrites = {}
+local formRows = {}
+
+local function resetFormRows()
+  formRows = {}
+end
+
+local function rowLabel(row)
+  return formRows[row] and formRows[row].label or nil
+end
+
+local function rowValue(row)
+  return formRows[row] and formRows[row].value or nil
+end
 
 _G.system = {
   registerWidget = function(_) end,
@@ -31,6 +44,53 @@ _G.storage = {
   end,
   write = function(key, value)
     storageValues[key] = value
+  end,
+}
+
+_G.form = {
+  clear = function()
+    resetFormRows()
+  end,
+  addLine = function(label)
+    formRows[#formRows + 1] = { label = label }
+    return #formRows
+  end,
+  addBitmapField = function(row, _, _, getter, setter)
+    formRows[row].type = "bitmap"
+    formRows[row].getter = getter
+    formRows[row].setter = setter
+  end,
+  addSensorField = function(row, _, getter, setter)
+    formRows[row].type = "sensor"
+    formRows[row].getter = getter
+    formRows[row].setter = setter
+  end,
+  addChoiceField = function(row, _, choices, getter, setter)
+    formRows[row].type = "choice"
+    formRows[row].choices = choices
+    formRows[row].getter = getter
+    formRows[row].setter = setter
+  end,
+  addNumberField = function(row, _, low, high, getter, setter)
+    formRows[row].type = "number"
+    formRows[row].low = low
+    formRows[row].high = high
+    formRows[row].getter = getter
+    formRows[row].setter = setter
+  end,
+  addBooleanField = function(row, _, getter, setter)
+    formRows[row].type = "boolean"
+    formRows[row].getter = getter
+    formRows[row].setter = setter
+  end,
+  addTextButton = function(row, _, text, callback)
+    formRows[row].type = "button"
+    formRows[row].text = text
+    formRows[row].callback = callback
+  end,
+  addStaticText = function(row, _, text)
+    formRows[row].type = "static"
+    formRows[row].value = text
   end,
 }
 
@@ -116,6 +176,12 @@ end
 local module = dofile("scripts/BoundryMap/main.lua")
 local test = module._test
 assert_true(type(test) == "table", "expected _test export table")
+local registeredWidget = nil
+_G.system.registerWidget = function(spec)
+  registeredWidget = spec
+end
+module.init()
+assert_true(type(registeredWidget) == "table", "registered widget spec")
 
 assert_equal(test.resolveTouchPhase(_G.EVT_TOUCH, 16640), "start", "raw touch start maps")
 assert_equal(test.resolveTouchPhase(_G.EVT_TOUCH, 16642), "move", "raw touch move maps")
@@ -226,6 +292,134 @@ assert_equal(restored.indicatorType, 1, "read restores indicator")
 assert_equal(restored.signalTimeout, 9, "read restores signal timeout")
 assert_equal(restored.boundryWarningMode, 3, "read restores warning mode")
 assert_equal(restored.warningType, 1, "read restores warning type")
+
+storageValues.cfg = "LegacyMap.bmp|GPS|1|Alt"
+local legacy = test.create()
+test.read(legacy)
+assert_equal(legacy.bitmapFile, "LegacyMap.bmp", "legacy read restores bitmap")
+assert_equal(legacy.gpsSensorName, "GPS", "legacy read restores gps")
+assert_true(legacy.distEnabled, "legacy read restores distance toggle")
+assert_equal(legacy.altSensorName, "Alt", "legacy read restores altitude")
+assert_equal(legacy.indicatorType, 0, "legacy read defaults indicator")
+assert_equal(legacy.signalTimeout, 2, "legacy read defaults signal timeout")
+assert_equal(legacy.boundryWarningMode, 0, "legacy read defaults warning mode")
+assert_equal(legacy.warningType, 0, "legacy read defaults warning type")
+
+widget = test.create()
+widget.bitmapFile = "UnsavedMap.bmp"
+registeredWidget.configure(widget)
+assert_equal(rowLabel(1), "Map", "main form keeps map first")
+assert_equal(rowLabel(10), "Diagnostics", "main form adds diagnostics row")
+assert_equal(formRows[10].text, "Run", "diagnostics button text")
+formRows[1].setter("ChangedBeforeDiagnostics.bmp")
+formRows[10].callback()
+assert_equal(widget.bitmapFile, "ChangedBeforeDiagnostics.bmp", "diagnostics keeps unsaved map edit")
+assert_equal(rowLabel(1), "GPS Source", "diagnostics form first row")
+assert_equal(rowValue(1), "Not configured", "diagnostics reports unconfigured gps")
+assert_equal(rowLabel(2), "GPS Lat/Lon", "diagnostics includes coords")
+assert_equal(rowValue(2), "-", "diagnostics coords absent without gps")
+assert_equal(rowLabel(3), "Map Bitmap", "diagnostics includes bitmap")
+assert_equal(rowValue(3), "Available, not loaded (/bitmaps/GPS/ChangedBeforeDiagnostics.bmp)", "diagnostics checks bitmap path")
+assert_equal(rowLabel(4), "JSON Metadata", "diagnostics includes metadata")
+assert_equal(rowValue(4), "Missing (/documents/user/ChangedBeforeDiagnostics.json)", "diagnostics reports missing metadata")
+assert_equal(rowLabel(5), "Boundary Sidecar", "diagnostics includes sidecar")
+assert_equal(rowValue(5), "Missing (/documents/user/ChangedBeforeDiagnostics.boundries.json)", "diagnostics reports missing sidecar")
+assert_equal(rowLabel(6), "Last Error", "diagnostics includes last error")
+assert_equal(rowValue(6), "None", "diagnostics reports no error")
+assert_equal(formRows[8].text, "Back", "diagnostics adds back button")
+formRows[8].callback()
+assert_equal(rowLabel(1), "Map", "back returns to main form")
+assert_equal(widget.bitmapFile, "ChangedBeforeDiagnostics.bmp", "back keeps unsaved map edit")
+
+widget = test.create()
+registeredWidget.configure(widget)
+formRows[10].callback()
+assert_equal(rowValue(3), "No map selected", "diagnostics reports no selected bitmap")
+assert_equal(rowValue(4), "No map selected", "diagnostics reports no selected metadata")
+assert_equal(rowValue(5), "No map selected", "diagnostics reports no selected sidecar")
+
+local originalLoadBitmap = _G.lcd.loadBitmap
+_G.lcd.loadBitmap = function(_)
+  return nil
+end
+widget = test.create()
+widget.bitmapFile = "MissingMap.bmp"
+registeredWidget.configure(widget)
+formRows[10].callback()
+assert_equal(rowValue(3), "Missing (/bitmaps/GPS/MissingMap.bmp)", "diagnostics reports missing bitmap")
+_G.lcd.loadBitmap = originalLoadBitmap
+
+local originalGetSource = _G.system.getSource
+_G.system.getSource = function(query)
+  if query.name == "GPS1" then
+    return {
+      value = function()
+        if query.options == _G.OPTION_LATITUDE then
+          return 39.123456
+        end
+        if query.options == _G.OPTION_LONGITUDE then
+          return -75.654321
+        end
+        return nil
+      end,
+    }
+  end
+  if query.name == "GPS2" then
+    return {
+      value = function()
+        return nil
+      end,
+    }
+  end
+  return nil
+end
+widget = test.create()
+widget.gpsSensorName = "GPS1"
+registeredWidget.configure(widget)
+formRows[10].callback()
+assert_equal(rowValue(1), "Found (GPS1)", "diagnostics reports found gps")
+assert_equal(rowValue(2), "39.12346, -75.65432", "diagnostics reports gps coords")
+widget = test.create()
+widget.gpsSensorName = "GPS2"
+registeredWidget.configure(widget)
+formRows[10].callback()
+assert_equal(rowValue(1), "Found, no fix (GPS2)", "diagnostics reports gps without fix")
+assert_equal(rowValue(2), "-", "diagnostics hides coords without fix")
+widget = test.create()
+widget.gpsSensorName = "MissingGPS"
+registeredWidget.configure(widget)
+formRows[10].callback()
+assert_equal(rowValue(1), "Not found (MissingGPS)", "diagnostics reports missing gps")
+_G.system.getSource = originalGetSource
+
+ioReads["/documents/user/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
+ioReads["/documents/user/DiagMap.boundries.json"] = savedPayload
+widget = test.create()
+widget.bitmapFile = "DiagMap.bmp"
+widget.loadedBitmap = true
+widget.loadedFile = "DiagMap.bmp"
+widget.lastError = "paint: bad draw"
+widget.boundaries = {
+  { x1 = 99, y1 = 99, x2 = 100, y2 = 100, lat1 = 1, lon1 = 1, lat2 = 2, lon2 = 2 },
+}
+registeredWidget.configure(widget)
+formRows[10].callback()
+assert_equal(rowValue(3), "Loaded (/bitmaps/GPS/DiagMap.bmp)", "diagnostics reports loaded bitmap")
+assert_equal(rowValue(4), "OK (/documents/user/DiagMap.json)", "diagnostics reports valid metadata")
+assert_equal(rowValue(5), "Loaded 1 lines (/documents/user/DiagMap.boundries.json)", "diagnostics reports loaded sidecar count")
+assert_equal(rowValue(6), "paint: bad draw", "diagnostics reports last error")
+assert_equal(#widget.boundaries, 1, "diagnostics does not reload boundaries")
+assert_equal(widget.boundaries[1].x1, 99, "diagnostics leaves current boundaries untouched")
+
+ioReads["/documents/user/DiagMap.boundries.json"] = '{"schemaVersion":1,"mapFile":"DiagMap.bmp","boundaries":[{"oops":1}]}'
+registeredWidget.configure(widget)
+formRows[10].callback()
+assert_equal(rowValue(5), "Malformed (/documents/user/DiagMap.boundries.json: sidecar malformed)", "diagnostics reports malformed sidecar")
+
+ioReads["/documents/user/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129}'
+registeredWidget.configure(widget)
+formRows[10].callback()
+assert_equal(rowValue(4), "Malformed (/documents/user/DiagMap.json: metadata invalid)", "diagnostics reports malformed metadata")
 
 widget = test.create()
 widget.windowW = 480
