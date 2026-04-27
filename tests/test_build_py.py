@@ -195,6 +195,39 @@ def test_resolve_project_install_spec_preserves_asset_subdirectories_by_default(
     ]
 
 
+def test_resolve_project_install_spec_preserves_asset_sources_when_requested(tmp_path: Path):
+    project_dir = tmp_path / "WidgetX"
+    asset_dir = project_dir / "assets" / "icons"
+    asset_dir.mkdir(parents=True)
+    (asset_dir / "home.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.png",
+                        "destination": "bitmaps/WidgetX",
+                        "excludeSource": False,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    install_spec = build.resolve_project_install_spec(project_dir, "WidgetX")
+
+    assert install_spec.source_exclusions == tuple()
+    assert install_spec.script_exclusions == (Path("build.json"),)
+    assert [
+        (radio_file.destination.as_posix(), radio_file.exclude_from_script)
+        for radio_file in install_spec.radio_files
+    ] == [
+        ("bitmaps/WidgetX/icons/home.png", False),
+    ]
+
+
 def test_resolve_project_install_spec_rejects_missing_required_asset_directory(tmp_path: Path):
     project_dir = tmp_path / "WidgetX"
     project_dir.mkdir()
@@ -460,6 +493,41 @@ def test_build_zip_includes_optional_radio_files_and_excludes_build_inputs(tmp_p
     assert "scripts/BoundryMap/maps/WJRC/WJRC.bmp" not in names
     assert "scripts/BoundryMap/maps/WJRC/WJRC.json" not in names
     assert "scripts/BoundryMap/maps/WJRC/WJRC_Z16_metadata.txt" not in names
+
+
+def test_build_zip_preserves_asset_sources_when_requested(tmp_path: Path):
+    repo_root = tmp_path / "repo"
+    project_dir = repo_root / "scripts" / "WidgetX"
+    asset_dir = project_dir / "assets" / "icons"
+    dist_dir = repo_root / "dist"
+    asset_dir.mkdir(parents=True)
+    (project_dir / "main.lua").write_text("print('ok')\n", encoding="utf-8")
+    (asset_dir / "home.png").write_text("png\n", encoding="utf-8")
+    (project_dir / "build.json").write_text(
+        json.dumps(
+            {
+                "assets": [
+                    {
+                        "source": "assets",
+                        "include": "**/*.png",
+                        "destination": "bitmaps/WidgetX",
+                        "excludeSource": False,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    archive = build.build_zip(project_dir, "WidgetX", "1.0.0", dist_dir, repo_root)
+
+    with zipfile.ZipFile(archive) as payload:
+        names = set(payload.namelist())
+
+    assert "scripts/WidgetX/main.lua" in names
+    assert "scripts/WidgetX/assets/icons/home.png" in names
+    assert "bitmaps/WidgetX/icons/home.png" in names
+    assert "scripts/WidgetX/build.json" not in names
 
 
 def test_build_zip_handles_preexisting_staging_and_cleans_up(tmp_path: Path):

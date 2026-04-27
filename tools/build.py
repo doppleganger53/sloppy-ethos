@@ -19,6 +19,7 @@ class RadioFile:
     source: Path
     source_relative: Path
     destination: Path
+    exclude_from_script: bool = True
 
 
 @dataclass(frozen=True)
@@ -40,7 +41,9 @@ class ProjectInstallSpec:
             exclusions.append(self.manifest_relative)
         exclusions.extend(self.source_exclusions)
         for radio_file in self.radio_files:
-            if not any(_is_relative_to(radio_file.source_relative, excluded) for excluded in self.source_exclusions):
+            if radio_file.exclude_from_script and not any(
+                _is_relative_to(radio_file.source_relative, excluded) for excluded in self.source_exclusions
+            ):
                 exclusions.append(radio_file.source_relative)
         return tuple(exclusions)
 
@@ -273,12 +276,20 @@ def _add_radio_file(
     destination: Path,
     manifest_path: Path,
     context: str,
+    exclude_from_script: bool = True,
 ):
     destination_key = destination.as_posix().lower()
     if destination_key in seen_destinations:
         sys.exit(f"{manifest_path} contains duplicate radio destination '{destination.as_posix()}' from {context}.")
     seen_destinations.add(destination_key)
-    radio_files.append(RadioFile(source=source, source_relative=source_relative, destination=destination))
+    radio_files.append(
+        RadioFile(
+            source=source,
+            source_relative=source_relative,
+            destination=destination,
+            exclude_from_script=exclude_from_script,
+        )
+    )
 
 
 def _resolve_manifest_radio_files(
@@ -384,6 +395,7 @@ def _resolve_manifest_assets(
                 destination,
                 manifest_path,
                 f"assets[{index}]",
+                exclude_from_script=exclude_source,
             )
 
     return tuple(source_exclusions)
