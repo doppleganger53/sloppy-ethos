@@ -30,13 +30,27 @@ PROJECT BUILD MANIFEST
   Projects may include a local build.json file with a radioFiles array:
     {
       "radioFiles": [
-        { "source": "maps/WJRC/WJRC.bmp", "destination": "bitmaps/GPS/WJRC.bmp" },
-        { "source": "maps/WJRC/WJRC.json", "destination": "documents/user/WJRC.json" }
+        { "source": "extras/widget-icon.png", "destination": "bitmaps/widgets/widget-icon.png" }
       ]
     }
   source paths are relative to the project directory under scripts/.
   destination paths are relative to the radio root and must stay outside scripts/.
   Declared radio files are packaged into ZIPs and are deployed/cleaned with the project.
+
+  Projects with local map folders may instead declare generic mapAssets:
+    {
+      "mapAssets": [
+        {
+          "source": "maps",
+          "bitmapDestination": "bitmaps/GPS",
+          "metadataDestination": "documents/user"
+        }
+      ]
+    }
+  mapAssets source directories are relative to the project directory.
+  Missing mapAssets source directories are allowed so public checkouts can build without private maps.
+  Discovered BMP/PNG files install to bitmapDestination; discovered JSON files install to metadataDestination.
+  Other generator outputs, including metadata text files, are ignored by mapAssets.
 
 SIMULATOR PATH RESOLUTION
   With --sim-radio:
@@ -58,7 +72,7 @@ WORKFLOW EXAMPLES
   Build install ZIP:
     python tools/build.py --project SensorList --dist
 
-  Build BoundryMap ZIP including its example map assets:
+  Build BoundryMap ZIP, including any local maps under scripts/BoundryMap/maps/:
     python tools/build.py --project BoundryMap --dist
 
   Build multi-script install ZIP bundle:

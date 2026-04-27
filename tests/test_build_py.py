@@ -53,18 +53,16 @@ def _create_boundrymap_project(tmp_path: Path):
     (project_dir / "VERSION").write_text("0.1.1\n", encoding="utf-8")
     (map_dir / "WJRC.bmp").write_text("bmp-bytes\n", encoding="utf-8")
     (map_dir / "WJRC.json").write_text('{"map":"WJRC"}\n', encoding="utf-8")
+    (map_dir / "WJRC_Z16_metadata.txt").write_text("generator metadata\n", encoding="utf-8")
     (project_dir / "build.json").write_text(
         json.dumps(
             {
-                "radioFiles": [
+                "mapAssets": [
                     {
-                        "source": "maps/WJRC/WJRC.bmp",
-                        "destination": "bitmaps/GPS/WJRC.bmp",
-                    },
-                    {
-                        "source": "maps/WJRC/WJRC.json",
-                        "destination": "documents/user/WJRC.json",
-                    },
+                        "source": "maps",
+                        "bitmapDestination": "bitmaps/GPS",
+                        "metadataDestination": "documents/user",
+                    }
                 ]
             }
         ),
@@ -111,13 +109,43 @@ def test_resolve_project_install_spec_reads_optional_radio_files(tmp_path: Path)
     assert install_spec.script_destination == Path("scripts") / "BoundryMap"
     assert install_spec.script_exclusions == (
         Path("build.json"),
-        Path("maps") / "WJRC" / "WJRC.bmp",
-        Path("maps") / "WJRC" / "WJRC.json",
+        Path("maps"),
     )
-    assert [radio_file.destination.as_posix() for radio_file in install_spec.radio_files] == [
+    assert sorted(radio_file.destination.as_posix() for radio_file in install_spec.radio_files) == [
         "bitmaps/GPS/WJRC.bmp",
         "documents/user/WJRC.json",
     ]
+
+
+def test_resolve_project_install_spec_discovers_multiple_local_maps(tmp_path: Path):
+    _repo_root, project_dir = _create_boundrymap_project(tmp_path)
+    second_map_dir = project_dir / "maps" / "FieldTwo"
+    second_map_dir.mkdir(parents=True)
+    (second_map_dir / "FieldTwo.png").write_text("png-bytes\n", encoding="utf-8")
+    (second_map_dir / "FieldTwo.json").write_text('{"map":"FieldTwo"}\n', encoding="utf-8")
+
+    install_spec = build.resolve_project_install_spec(project_dir, "BoundryMap")
+
+    assert sorted(radio_file.destination.as_posix() for radio_file in install_spec.radio_files) == [
+        "bitmaps/GPS/FieldTwo.png",
+        "bitmaps/GPS/WJRC.bmp",
+        "documents/user/FieldTwo.json",
+        "documents/user/WJRC.json",
+    ]
+
+
+def test_resolve_project_install_spec_allows_missing_local_map_directory(tmp_path: Path):
+    project_dir = tmp_path / "BoundryMap"
+    project_dir.mkdir()
+    (project_dir / "build.json").write_text(
+        json.dumps({"mapAssets": [{"source": "maps"}]}),
+        encoding="utf-8",
+    )
+
+    install_spec = build.resolve_project_install_spec(project_dir, "BoundryMap")
+
+    assert install_spec.radio_files == tuple()
+    assert install_spec.script_exclusions == (Path("build.json"), Path("maps"))
 
 
 def test_resolve_project_install_spec_rejects_scripts_destination(tmp_path: Path):
@@ -334,6 +362,7 @@ def test_build_zip_includes_optional_radio_files_and_excludes_build_inputs(tmp_p
     assert "scripts/BoundryMap/build.json" not in names
     assert "scripts/BoundryMap/maps/WJRC/WJRC.bmp" not in names
     assert "scripts/BoundryMap/maps/WJRC/WJRC.json" not in names
+    assert "scripts/BoundryMap/maps/WJRC/WJRC_Z16_metadata.txt" not in names
 
 
 def test_build_zip_handles_preexisting_staging_and_cleans_up(tmp_path: Path):
@@ -477,6 +506,7 @@ def test_deploy_to_simulator_copies_optional_radio_files(tmp_path: Path):
     assert (sim_path / "scripts" / "BoundryMap" / "main.lua").exists()
     assert not (sim_path / "scripts" / "BoundryMap" / "build.json").exists()
     assert not (sim_path / "scripts" / "BoundryMap" / "maps" / "WJRC" / "WJRC.bmp").exists()
+    assert not (sim_path / "scripts" / "BoundryMap" / "maps" / "WJRC" / "WJRC_Z16_metadata.txt").exists()
     assert (sim_path / "bitmaps" / "GPS" / "WJRC.bmp").read_text(encoding="utf-8") == "bmp-bytes\n"
     assert (sim_path / "documents" / "user" / "WJRC.json").read_text(encoding="utf-8") == '{"map":"WJRC"}\n'
 

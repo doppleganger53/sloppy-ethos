@@ -12,6 +12,10 @@ from typing import Optional
 HELP_FILE = Path(__file__).resolve().parent / "build_help.txt"
 BUNDLE_ZIP_BASENAME = "sloppy-ethos_scripts"
 PROJECT_BUILD_FILE = "build.json"
+MAP_BITMAP_EXTENSIONS = {".bmp", ".png"}
+MAP_METADATA_EXTENSIONS = {".json"}
+DEFAULT_MAP_BITMAP_DESTINATION = Path("bitmaps") / "GPS"
+DEFAULT_MAP_METADATA_DESTINATION = Path("documents") / "user"
 
 
 @dataclass(frozen=True)
@@ -26,6 +30,7 @@ class ProjectInstallSpec:
     project_dir: Path
     project_name: str
     radio_files: tuple[RadioFile, ...]
+    source_exclusions: tuple[Path, ...] = tuple()
     manifest_relative: Optional[Path] = None
 
     @property
@@ -37,7 +42,10 @@ class ProjectInstallSpec:
         exclusions: list[Path] = []
         if self.manifest_relative is not None:
             exclusions.append(self.manifest_relative)
-        exclusions.extend(radio_file.source_relative for radio_file in self.radio_files)
+        exclusions.extend(self.source_exclusions)
+        for radio_file in self.radio_files:
+            if not any(_is_relative_to(radio_file.source_relative, excluded) for excluded in self.source_exclusions):
+                exclusions.append(radio_file.source_relative)
         return tuple(exclusions)
 
 
@@ -191,34 +199,71 @@ def normalize_project_names(raw_projects: Optional[list[str]]):
     return normalized
 
 
-def _normalize_relative_manifest_path(raw_value: object, field_name: str, manifest_path: Path, index: int):
+def _is_relative_to(path: Path, candidate_parent: Path):
+    try:
+        path.relative_to(candidate_parent)
+    except ValueError:
+        return False
+    return True
+
+
+def _normalize_relative_manifest_path(
+    raw_value: object, field_name: str, manifest_path: Path, index: int, entry_name: str = "radioFiles"
+):
     if not isinstance(raw_value, str) or not raw_value.strip():
-        sys.exit(f"{manifest_path} radioFiles[{index}] must include a non-empty '{field_name}' string.")
+        sys.exit(f"{manifest_path} {entry_name}[{index}] must include a non-empty '{field_name}' string.")
 
     normalized = raw_value.strip().replace("\\", "/")
     if re.match(r"^[A-Za-z]:", normalized) or normalized.startswith("/"):
-        sys.exit(f"{manifest_path} radioFiles[{index}] '{field_name}' must be a relative path.")
+        sys.exit(f"{manifest_path} {entry_name}[{index}] '{field_name}' must be a relative path.")
 
     parts = [part for part in normalized.split("/") if part and part != "."]
     if not parts or any(part == ".." for part in parts):
         sys.exit(
-            f"{manifest_path} radioFiles[{index}] '{field_name}' must stay within the project directory."
+            f"{manifest_path} {entry_name}[{index}] '{field_name}' must stay within the project directory."
         )
     return Path(*parts)
 
 
-def resolve_project_install_spec(project_dir: Path, project_name: str):
-    manifest_path = project_dir / PROJECT_BUILD_FILE
-    manifest = load_json_object(manifest_path, "project build manifest")
-    if manifest is None:
-        return ProjectInstallSpec(project_dir=project_dir, project_name=project_name, radio_files=tuple())
+def _normalize_destination_dir(raw_value: object, default: Path, field_name: str, manifest_path: Path, index: int):
+    if raw_value is None:
+        return default
 
-    raw_radio_files = manifest.get("radioFiles", [])
+    destination = _normalize_relative_manifest_path(raw_value, field_name, manifest_path, index, "mapAssets")
+    if destination.parts[0].lower() == "scripts":
+        sys.exit(
+            f"{manifest_path} mapAssets[{index}] '{field_name}' destination "
+            f"'{destination.as_posix()}' must be outside scripts/."
+        )
+    return destination
+
+
+def _add_radio_file(
+    radio_files: list[RadioFile],
+    seen_destinations: set[str],
+    source: Path,
+    source_relative: Path,
+    destination: Path,
+    manifest_path: Path,
+    context: str,
+):
+    destination_key = destination.as_posix().lower()
+    if destination_key in seen_destinations:
+        sys.exit(f"{manifest_path} contains duplicate radio destination '{destination.as_posix()}' from {context}.")
+    seen_destinations.add(destination_key)
+    radio_files.append(RadioFile(source=source, source_relative=source_relative, destination=destination))
+
+
+def _resolve_manifest_radio_files(
+    manifest_path: Path,
+    project_dir: Path,
+    raw_radio_files: object,
+    radio_files: list[RadioFile],
+    seen_destinations: set[str],
+):
     if not isinstance(raw_radio_files, list):
         sys.exit(f"'{manifest_path}' key 'radioFiles' must be a JSON array when present.")
 
-    radio_files: list[RadioFile] = []
-    seen_destinations: set[str] = set()
     for index, entry in enumerate(raw_radio_files, start=1):
         if not isinstance(entry, dict):
             sys.exit(f"{manifest_path} radioFiles[{index}] must be an object with 'source' and 'destination'.")
@@ -238,20 +283,104 @@ def resolve_project_install_spec(project_dir: Path, project_name: str):
         if not source.is_file():
             sys.exit(f"{manifest_path} radioFiles[{index}] source must be a file: {source}")
 
-        destination_key = destination.as_posix().lower()
-        if destination_key in seen_destinations:
-            sys.exit(
-                f"{manifest_path} radioFiles contains duplicate destination '{destination.as_posix()}'."
-            )
-        seen_destinations.add(destination_key)
-        radio_files.append(
-            RadioFile(source=source, source_relative=source_relative, destination=destination)
+        _add_radio_file(
+            radio_files,
+            seen_destinations,
+            source,
+            source_relative,
+            destination,
+            manifest_path,
+            f"radioFiles[{index}]",
         )
+
+
+def _resolve_manifest_map_assets(
+    manifest_path: Path,
+    project_dir: Path,
+    raw_map_assets: object,
+    radio_files: list[RadioFile],
+    seen_destinations: set[str],
+):
+    if not isinstance(raw_map_assets, list):
+        sys.exit(f"'{manifest_path}' key 'mapAssets' must be a JSON array when present.")
+
+    source_exclusions: list[Path] = []
+    for index, entry in enumerate(raw_map_assets, start=1):
+        if not isinstance(entry, dict):
+            sys.exit(f"{manifest_path} mapAssets[{index}] must be an object.")
+
+        source_root_relative = _normalize_relative_manifest_path(
+            entry.get("source", "maps"), "source", manifest_path, index, "mapAssets"
+        )
+        bitmap_destination = _normalize_destination_dir(
+            entry.get("bitmapDestination"),
+            DEFAULT_MAP_BITMAP_DESTINATION,
+            "bitmapDestination",
+            manifest_path,
+            index,
+        )
+        metadata_destination = _normalize_destination_dir(
+            entry.get("metadataDestination"),
+            DEFAULT_MAP_METADATA_DESTINATION,
+            "metadataDestination",
+            manifest_path,
+            index,
+        )
+
+        source_root = project_dir / source_root_relative
+        source_exclusions.append(source_root_relative)
+        if not source_root.exists():
+            continue
+        if not source_root.is_dir():
+            sys.exit(f"{manifest_path} mapAssets[{index}] source must be a directory: {source_root}")
+
+        for source in sorted(source_root.rglob("*")):
+            if not source.is_file():
+                continue
+
+            suffix = source.suffix.lower()
+            if suffix in MAP_BITMAP_EXTENSIONS:
+                destination = bitmap_destination / source.name
+            elif suffix in MAP_METADATA_EXTENSIONS:
+                destination = metadata_destination / source.name
+            else:
+                continue
+
+            source_relative = source.relative_to(project_dir)
+            _add_radio_file(
+                radio_files,
+                seen_destinations,
+                source,
+                source_relative,
+                destination,
+                manifest_path,
+                f"mapAssets[{index}]",
+            )
+
+    return tuple(source_exclusions)
+
+
+def resolve_project_install_spec(project_dir: Path, project_name: str):
+    manifest_path = project_dir / PROJECT_BUILD_FILE
+    manifest = load_json_object(manifest_path, "project build manifest")
+    if manifest is None:
+        return ProjectInstallSpec(project_dir=project_dir, project_name=project_name, radio_files=tuple())
+
+    raw_radio_files = manifest.get("radioFiles", [])
+    raw_map_assets = manifest.get("mapAssets", [])
+
+    radio_files: list[RadioFile] = []
+    seen_destinations: set[str] = set()
+    _resolve_manifest_radio_files(manifest_path, project_dir, raw_radio_files, radio_files, seen_destinations)
+    source_exclusions = _resolve_manifest_map_assets(
+        manifest_path, project_dir, raw_map_assets, radio_files, seen_destinations
+    )
 
     return ProjectInstallSpec(
         project_dir=project_dir,
         project_name=project_name,
         radio_files=tuple(radio_files),
+        source_exclusions=source_exclusions,
         manifest_relative=Path(PROJECT_BUILD_FILE),
     )
 

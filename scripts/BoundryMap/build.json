@@ -1,12 +1,9 @@
 {
-  "radioFiles": [
+  "mapAssets": [
     {
-      "source": "maps/WJRC/WJRC.bmp",
-      "destination": "bitmaps/GPS/WJRC.bmp"
-    },
-    {
-      "source": "maps/WJRC/WJRC.json",
-      "destination": "documents/user/WJRC.json"
+      "source": "maps",
+      "bitmapDestination": "bitmaps/GPS",
+      "metadataDestination": "documents/user"
     }
   ]
 }

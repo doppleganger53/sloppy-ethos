@@ -85,6 +85,7 @@ Historical detail remains in individual session notes referenced from
 
 - Canonical build/deploy workflow remains `tools/build.py`.
 - Projects can optionally declare installable radio-root files in a project-local `build.json` manifest via `radioFiles`; `tools/build.py` packages, deploys, and cleans those files alongside the script payload.
+- Projects can declare local-only map sources via `mapAssets`; `tools/build.py` scans discovered `.bmp`/`.png` images into `bitmaps/GPS`, discovered `.json` metadata into `documents/user`, and allows missing source directories so public checkouts can build without private maps.
 - `build.py` to `doit` migration decision: retain `build.py` (Issue #22
   evaluation complete).
 - Optional VS Code Lua coverage workflow is now wired through:
