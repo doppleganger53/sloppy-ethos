@@ -77,8 +77,8 @@
 - reads single-script package version from `scripts/{ProjectName}/VERSION` (or `--version` override).
 - produces single-script ZIPs as `dist/{ProjectName}-{version}.zip`.
 - supports repeatable `--project` for multi-script dist bundles and produces the unversioned bundle ZIP `dist/sloppy-ethos_scripts.zip`.
-- supports an optional project-local build manifest with `radioFiles` entries for explicit installable files that belong outside `/scripts`.
-- supports generic `assets` entries that scan a project-local source directory with manifest-declared glob patterns and install matches under manifest-declared radio destinations.
+- supports an optional project-local build manifest with `radioFiles` entries for explicit installable files that belong outside `/scripts` or under the owning `scripts/{ProjectName}` folder.
+- supports generic `assets` entries that scan a project-local source directory with manifest-declared glob patterns and install matches under manifest-declared radio or script-local destinations.
 - packages manifest-declared `radioFiles` and discovered `assets` into the ZIP root at their radio-relative destinations.
 - optionally copies `scripts/{ProjectName}` plus manifest-declared/discovered radio files into `${ETHOS_SIM_PATHS[default_or_selected_radio]}` when `--deploy` is specified (no ZIP).
 - supports `--clean` to remove `scripts/{ProjectName}`, manifest-declared/discovered radio files, and clear `dist/` (or `--out-dir`) artifacts.
@@ -86,7 +86,7 @@
 - supports `--help` to print `tools/build_help.txt` command reference.
 - supports custom ZIP destination via `--out-dir`.
 - Write operations fail fast with clear errors when paths are missing or unwritable.
-- BoundryMap map assets are local-only and ignored because flying-site maps can reveal private locations. [scripts/BoundryMap/build.json](../scripts/BoundryMap/build.json) defines the source folder, include globs, radio destinations, flattening behavior, and optional-source behavior for private maps.
+- BoundryMap map assets are local-only and ignored because flying-site maps can reveal private locations. [scripts/BoundryMap/build.json](../scripts/BoundryMap/build.json) defines the source folder, include globs, script-local destinations, flattening behavior, and optional-source behavior for private maps.
 
 ## Tooling Decision Records
 

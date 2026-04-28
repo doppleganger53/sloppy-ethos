@@ -20,8 +20,8 @@
    - `chore/{issue-number}-{short-slug}` for maintenance/tooling/refactor changes
 3. Keep changes focused and scoped to one concern.
 4. If installable script behavior/assets changed, bump that script `scripts/{ProjectName}/VERSION` in the same PR. Do not bump version files for docs-only or workflow-only changes.
-   If the script needs installable files outside `/scripts`, declare them in a project-local build manifest so `tools/build.py` can package, deploy, and clean them consistently.
-   Keep user-specific location assets local. For BoundryMap, place private flying-site maps under the ignored `scripts/BoundryMap/maps/` folder and let the generic `assets` manifest entries package them.
+   If the script needs installable files outside `/scripts` or optional local assets under its own script folder, declare them in a project-local build manifest so `tools/build.py` can package, deploy, and clean them consistently.
+   Keep user-specific location assets local. For BoundryMap, place private flying-site maps under the ignored `scripts/BoundryMap/assets/maps/` folder and let the generic `assets` manifest entries package them.
 5. Do not bump root `VERSION` on issue branches; root release versioning is finalized on `release/v{VERSION}`.
 6. Run local checks before opening a PR:
    - `luac -p scripts/SensorList/main.lua`
