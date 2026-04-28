@@ -1,6 +1,8 @@
 local WIDGET_NAME = "BoundryMap"
-local bitmapsPath = "/bitmaps/GPS"
-local metadataDir = "/documents/user"
+local mapAssetsPath = "/scripts/BoundryMap/assets/maps"
+local bitmapsPath = mapAssetsPath
+local metadataDir = mapAssetsPath
+local sidecarDir = mapAssetsPath
 
 local floor = math.floor
 local min = math.min
@@ -42,6 +44,10 @@ local CONTROL_BUTTON_WIDTH = 72
 local CONTROL_BUTTON_HEIGHT = 24
 local CONTROL_BUTTON_GAP = 4
 local CONTROL_MARGIN = 6
+local ICON_PATH = "assets/icons"
+local COORDS_TEXT_X = 4
+local COORDS_TEXT_BOTTOM = 40
+local DIST_TEXT_BOTTOM = 24
 
 local gpsLatQuery = { name = "GPS", options = nil }
 local gpsLonQuery = { name = "GPS", options = nil }
@@ -481,7 +487,7 @@ local function sidecarPath(bitmapFile)
   if not stem then
     return nil
   end
-  return metadataDir .. "/" .. stem .. ".boundries.json"
+  return sidecarDir .. "/" .. stem .. ".boundries.json"
 end
 
 local function encodeBoundary(boundary)
@@ -695,6 +701,35 @@ local function drawLineSafe(x1, y1, x2, y2)
   if type(lcd) == "table" and type(lcd.drawLine) == "function" then
     lcd.drawLine(x1, y1, x2, y2)
   end
+end
+
+local function drawBitmapSafe(x, y, bitmap)
+  if bitmap and type(lcd) == "table" and type(lcd.drawBitmap) == "function" then
+    return safeInvoke(lcd.drawBitmap, x, y, bitmap)
+  end
+  return false
+end
+
+local function bitmapDimension(bitmap, methodName, fallback)
+  if type(bitmap) ~= "table" then
+    return fallback
+  end
+  local method = bitmap[methodName]
+  local value = safeCall(method, bitmap)
+  if type(value) == "number" then
+    return value
+  end
+  return fallback
+end
+
+local function loadWidgetIcons(widget)
+  if widget.iconsLoaded or type(lcd) ~= "table" or type(lcd.loadBitmap) ~= "function" then
+    return
+  end
+  widget.homeIcon = safeCall(lcd.loadBitmap, ICON_PATH .. "/home.png")
+  widget.arrowIcon = safeCall(lcd.loadBitmap, ICON_PATH .. "/arrow.png")
+  widget.arrowRedIcon = safeCall(lcd.loadBitmap, ICON_PATH .. "/arrow_red.png")
+  widget.iconsLoaded = true
 end
 
 local function setColor(widget, key)
@@ -985,6 +1020,19 @@ local function drawIndicator(widget, isStale)
   end
   local x = clamp(widget.aircraftScreenX, 6, (widget.windowW or 480) - 6)
   local y = clamp(widget.aircraftScreenY, 6, (widget.windowH or 272) - 6)
+  if widget.indicatorType == 1 then
+    local icon = isStale and widget.arrowRedIcon or widget.arrowIcon
+    if type(icon) == "table" and type(icon.rotate) == "function" then
+      local rotated = safeCall(icon.rotate, icon, widget.lastHeading or 0)
+      if rotated then
+        local rw = bitmapDimension(rotated, "width", 16)
+        local rh = bitmapDimension(rotated, "height", 16)
+        if drawBitmapSafe(x - floor(rw * 0.5), y - floor(rh * 0.5), rotated) then
+          return
+        end
+      end
+    end
+  end
   if widget.indicatorType == 1 and type(lcd) == "table" and type(lcd.drawLine) == "function" then
     local length = 10
     local angle = (widget.lastHeading or 0) * DEG_TO_RAD
@@ -1008,6 +1056,13 @@ local function drawHome(widget)
   local sx, sy = bitmapLocalToScreen(widget, widget.homeX, widget.homeY)
   if not sx or not sy then
     return
+  end
+  if widget.homeIcon then
+    local iw = bitmapDimension(widget.homeIcon, "width", 16)
+    local ih = bitmapDimension(widget.homeIcon, "height", 20)
+    if drawBitmapSafe(sx - floor(iw * 0.5), sy - floor(ih * 0.5), widget.homeIcon) then
+      return
+    end
   end
   setColor(widget, "white")
   if type(lcd) == "table" and type(lcd.font) == "function" then
@@ -1076,10 +1131,15 @@ local function create()
     altSrc = nil,
     indicatorType = 0,
     signalTimeout = 2,
+    coordsEnabled = false,
     boundryWarningMode = WARNING_MODE_NONE,
     warningType = WARNING_TYPE_MOMENTARY,
     loadedBitmap = nil,
     loadedFile = "",
+    iconsLoaded = false,
+    homeIcon = nil,
+    arrowIcon = nil,
+    arrowRedIcon = nil,
     bmpW = 0,
     bmpH = 0,
     offX = 0,
@@ -1335,6 +1395,15 @@ buildMainForm = function(widget)
     end)
   end
 
+  local line2c = form.addLine("Coordinates")
+  if type(form.addBooleanField) == "function" then
+    form.addBooleanField(line2c, nil, function()
+      return widget.coordsEnabled
+    end, function(value)
+      widget.coordsEnabled = normalizeBoolean(value, false)
+    end)
+  end
+
   local line3 = form.addLine("Distance")
   if type(form.addBooleanField) == "function" then
     form.addBooleanField(line3, nil, function()
@@ -1412,6 +1481,7 @@ local function paint(widget)
   local ok, err = pcall(function()
     refreshMapState(widget)
     initializeColors(widget)
+    loadWidgetIcons(widget)
 
     if widget.lastError then
       drawErrorState(widget)
@@ -1444,15 +1514,16 @@ local function paint(widget)
       lcd.font(FONT_XS or FONT_STD)
     end
     setColor(widget, "white")
+    local bottomTextY = (widget.windowH or 272) - DIST_TEXT_BOTTOM
+    if widget.coordsEnabled and widget.lastCoordsText then
+      drawTextSafe(COORDS_TEXT_X, (widget.windowH or 272) - COORDS_TEXT_BOTTOM, widget.lastCoordsText)
+    end
     if widget.gpsStale then
-      if widget.lastCoordsText then
-        drawTextSafe((widget.windowW or 480) - 140, (widget.windowH or 272) - 24, widget.lastCoordsText)
-      end
       if widget.lastGroundDistText then
-        drawTextSafe(4, (widget.windowH or 272) - 24, widget.lastGroundDistText)
+        drawTextSafe(4, bottomTextY, widget.lastGroundDistText)
       end
     elseif widget.distEnabled and widget.distText then
-      drawTextSafe(4, (widget.windowH or 272) - 24, widget.distText)
+      drawTextSafe(4, bottomTextY, widget.distText)
     end
   end)
   if not ok then
@@ -1664,6 +1735,7 @@ local function read(widget)
   widget.signalTimeout = clamp(signalTimeout, 2, 30)
   widget.boundryWarningMode = tonumber(parts[7]) or WARNING_MODE_NONE
   widget.warningType = tonumber(parts[8]) or WARNING_TYPE_MOMENTARY
+  widget.coordsEnabled = parts[9] == "1"
 
   if widget.gpsSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
     widget.gpsSensor = safeCall(system.getSource, { name = widget.gpsSensorName })
@@ -1695,6 +1767,8 @@ local function write(widget)
     .. tostring(widget.boundryWarningMode or WARNING_MODE_NONE)
     .. CFG_SEP
     .. tostring(widget.warningType or WARNING_TYPE_MOMENTARY)
+    .. CFG_SEP
+    .. (widget.coordsEnabled and "1" or "0")
   safeInvoke(storage.write, "cfg", payload)
 end
 
