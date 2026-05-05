@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 119
-- Total size: 199,965 bytes
-- Total lines: 5,301
+- Files: 120
+- Total size: 202,183 bytes
+- Total lines: 5,351
 - Distribution by artifact:
-  - session notes: 113
+  - session notes: 114
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 73 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 74 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -33,7 +33,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 3 -- handoff ( Session continuity and restart handoffs )
 
 - Distribution by concern:
-  - 29 -- implementation
+  - 30 -- implementation
   - 26 -- workflow
   - 17 -- build
   - 15 -- release
@@ -192,3 +192,4 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md) | # Session Notes 2026-04-27 - Generic Build Assets |
 | 2026-04-27 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-04-27_ISSUE_72_SCRIPT_LOCAL_TESTS.md](notes/session/repo/SESSION_NOTES_2026-04-27_ISSUE_72_SCRIPT_LOCAL_TESTS.md) | # Session Notes 2026-04-27 - Issue 72 Script Local Tests |
 | 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix |
+| 2026-05-05 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_86_AGENTIC_REORG_RETIREMENT.md](notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_86_AGENTIC_REORG_RETIREMENT.md) | # Session Notes 2026-05-05 - Issue 86 Agentic Reorg Retirement |
