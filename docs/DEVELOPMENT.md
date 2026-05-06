@@ -65,6 +65,8 @@
 
 - Issue #22 build tooling evaluation: [Issue #22 build.py to doit migration decision](decisions/ISSUE-022-doit-migration-evaluation.md).
 - Current decision state (2026-02-26): retain `tools/build.py` as the canonical build/deploy workflow.
+- Ethos `26.1` reference baseline and compatibility backlog:
+  [ETHOS_26_1_COMPATIBILITY.md](ETHOS_26_1_COMPATIBILITY.md).
 
 ## Session Memory Navigation
 

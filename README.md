@@ -92,6 +92,8 @@ To build a single install ZIP with multiple scripts:
 - `tools/create_todo_issues.py`: GitHub issue bootstrap for TODO backlog tracking
 - `deslopification/prompts/done/SensorList.md`: original implementation prompt
 - `docs/`: development notes and handoff documents
+- [docs/ETHOS_26_1_COMPATIBILITY.md](docs/ETHOS_26_1_COMPATIBILITY.md): Ethos
+  `26.1` reference checkout, validation targets, and compatibility matrix
 - `docs/REPOSITORY_LAYOUT.md`: reference for `tools/`, repo-level `tests/`, script-local tests, `deslopification/`, and root artifacts
 - [docs/SensorList/SENSORLIST_ARCHITECTURE.md](docs/SensorList/SENSORLIST_ARCHITECTURE.md): SensorList lifecycle/state flow reference
 
