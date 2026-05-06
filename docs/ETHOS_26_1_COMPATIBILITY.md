@@ -50,25 +50,44 @@ confirm that it is still pinned to the tracked `26.1` branch.
 
 - Widget registration: `system.registerWidget(...)`
 - System tools and background tasks:
-  `system.registerSystemTool(...)`, `system.registerTask(...)`
+  `system.registerSystemTool(...)`, `system.registerTask(...)`,
+  `system.getMemoryUsage(...)`
 - Form fields seen in reference examples:
-  `form.addSensorField(...)`, `form.addChoiceField(...)`,
-  `form.addNumberField(...)`, `form.addTextButton(...)`,
+  `form.addSensorField(...)`, `form.addSourceField(...)`,
+  `form.addChoiceField(...)`, `form.addNumberField(...)`,
+  `form.addTextButton(...)`, `form.addBitmapField(...)`,
   `form.addStaticText(...)`
+  - `form.addBooleanField(...)` was not surfaced in the checked `26.1`
+    examples, so keep it optional in local code and stubs.
 - Bitmap loading patterns: `lcd.loadMask(...)`, `lcd.loadBitmap(...)`
 - Sensor/source access patterns:
   `system.getSource(...)`, then `source:value(...)` or
   `source:stringValue(...)`
+- Touch constants and categories:
+  `EVT_TOUCH*`, raw values `16640`, `16641`, `16642`
 - Model surfaces confirmed during triage:
   `model.createMix(...)`, `model.name()`
 
 ## Compatibility Matrix
 
+### API Surface Matrix
+
+| Surface | Used by | 26.1 evidence | Smoke target | Notes |
+| --- | --- | --- | --- | --- |
+| `system.registerWidget` / widget callbacks | SensorList: yes; BoundryMap: yes; ethos_events: no; SmartMapper: no; FBus: no | `lua/templates/widget/main.lua`, `lua/examples/widget-rssi/main.lua`, `lua/examples/widget-sinus/main.lua` | `python -m pytest scripts/SensorList/tests -q`, `python -m pytest scripts/BoundryMap/tests -q` | callback set includes `create`, `configure`, `paint`, `wakeup`, `event`, `read`, `write`, `menu`, `persistent` |
+| `system.registerSystemTool` / `lcd.loadMask` / `lcd.loadBitmap` | SensorList: no; BoundryMap: no; ethos_events: yes; SmartMapper: no; FBus: no | `lua/tests/emergency-test/main.lua`, `lua/tests/latency-test/main.lua`, `lua/examples/bluetooth/main.lua`, `lua/examples/widget-lcddemo/main.lua` | `python tools/build.py --project ethos_events --deploy` | `ethos_events` is the current local probe for system tool registration and touch-event logging |
+| `system.registerTask` / `system.getMemoryUsage` | SensorList: no; BoundryMap: no; ethos_events: no; SmartMapper: no; FBus: no | `lua/examples/task/main.lua`, `lua/examples/memstatus/main.lua` | reference-only until a task-based script lands | budget-sensitive helper APIs, no current local consumer |
+| `system.getSource` / `system.getSensors` / `model.getSensors` | SensorList: yes; BoundryMap: yes; ethos_events: no; SmartMapper: no; FBus: no | `lua/examples/widget-rssi/main.lua`, `lua/examples/widget-jet/main.lua`, `lua/examples/wizard/main.lua` | `python -m pytest scripts/SensorList/tests -q`, `python -m pytest scripts/BoundryMap/tests -q` | `SensorList` also exercises method-vs-field drift; `BoundryMap` uses source-handle reads for GPS and altitude |
+| `form.addSensorField` / `form.addSourceField` / `form.addChoiceField` / `form.addNumberField` / `form.addTextButton` / `form.addBitmapField` / `form.addStaticText` / `form.addBooleanField` | SensorList: yes; BoundryMap: yes; ethos_events: no; SmartMapper: no; FBus: no | `lua/examples/tool-form/main.lua`, `lua/examples/widget-jet/main.lua`, `lua/modules/crossfire/main.lua`, `lua/modules/elrs/main.lua` | `python -m pytest scripts/SensorList/tests -q`, `python -m pytest scripts/BoundryMap/tests -q` | `form.addBooleanField` was not surfaced in the checked `26.1` examples, so BoundryMap keeps that row optional and the local test harness omits the stub |
+| `EVT_TOUCH*` and raw touch values `16640`, `16641`, `16642` | SensorList: yes; BoundryMap: yes; ethos_events: yes; SmartMapper: no; FBus: no | `scripts/SensorList/main.lua`, `scripts/BoundryMap/main.lua`, `scripts/ethos_events/main.lua` | `python -m pytest scripts/SensorList/tests -q`, `python -m pytest scripts/BoundryMap/tests -q`, `python tools/build.py --project ethos_events --deploy` | local tests lock the raw-value mapping, while `ethos_events` remains the manual simulator probe |
+
+### Workstream Matrix
+
 | Area | Status | Current 26.1 risk | Validation target | Follow-up |
 | --- | --- | --- | --- | --- |
-| Shared Lua API stubs | Baseline defined, coverage missing | Local Lua and Python test doubles can drift from `26.1` registration, form, and source-handle behavior. | Extend repo tests and script-local harnesses before relying on the stubs for more compatibility work. | [#77](https://github.com/doppleganger53/sloppy-ethos/issues/77) |
+| Shared Lua API stubs | Compatibility matrix established; the local stubs now track the 26.1 source-field surface and keep boolean fields optional. | Local Lua and Python test doubles can still drift on unexercised task and memory-budget APIs. | Extend repo tests and script-local harnesses before relying on the stubs for more compatibility work. | [#78](https://github.com/doppleganger53/sloppy-ethos/issues/78), [#79](https://github.com/doppleganger53/sloppy-ethos/issues/79), [#80](https://github.com/doppleganger53/sloppy-ethos/issues/80) |
 | `SensorList` | Partially aligned, runtime coverage incomplete | Existing defensive source discovery may still miss method-vs-field or table-vs-userdata drift on `26.1`, especially in simulator startup paths. | Validate on `X20RS`; recheck `X20S` whenever the reproduction overlaps the existing simulator bug surface. | [#82](https://github.com/doppleganger53/sloppy-ethos/issues/82), [#30](https://github.com/doppleganger53/sloppy-ethos/issues/30) |
-| `BoundryMap` | Highest active compatibility risk | GPS sub-value reads currently rely on `system.getSource({ ..., options = ... })`, boolean config fields assume `form.addBooleanField(...)`, and asset loading needs a `26.1` install/deploy check. | Validate packaged and deployed assets on `X20RS`, then confirm GPS/config behavior on hardware if simulator results are ambiguous. | [#78](https://github.com/doppleganger53/sloppy-ethos/issues/78), [#79](https://github.com/doppleganger53/sloppy-ethos/issues/79), [#80](https://github.com/doppleganger53/sloppy-ethos/issues/80) |
+| `BoundryMap` | Highest active compatibility risk | GPS sub-value reads currently rely on `system.getSource({ ..., options = ... })`, and the `26.1` surface keeps boolean config fields optional rather than guaranteed. | Validate packaged and deployed assets on `X20RS`, then confirm GPS/config behavior on hardware if simulator results are ambiguous. | [#78](https://github.com/doppleganger53/sloppy-ethos/issues/78), [#79](https://github.com/doppleganger53/sloppy-ethos/issues/79), [#80](https://github.com/doppleganger53/sloppy-ethos/issues/80) |
 | `ethos_events` | Best local runtime probe, `26.1` capture pending | The repo can already log raw events, but the current docs still point at an older upstream path and the `26.1` event map has not been recorded yet. | Deploy to both simulator targets and capture current raw touch/key constants before treating local event assumptions as settled. | [#81](https://github.com/doppleganger53/sloppy-ethos/issues/81) |
 | `SmartMapper` | Blocked on API proof | Reference examples confirm `model.createMix(...)` and `model.name()`, but do not yet prove the read/enumeration APIs needed to inspect existing mixes, switches, trims, or special functions. | Probe the reference checkout and runtime APIs before reviving implementation on the stale feature branch. | [#83](https://github.com/doppleganger53/sloppy-ethos/issues/83), [#45](https://github.com/doppleganger53/sloppy-ethos/issues/45) |
 | `Arduino FBus` | Feasibility unresolved | The surviving remote branch appears prompt-only, and the `26.1` reference scan did not expose a proven widget pattern for this work. | Decide whether to revive or retire the branch after reviewing the telemetry use case against current Ethos surfaces. | [#84](https://github.com/doppleganger53/sloppy-ethos/issues/84) |

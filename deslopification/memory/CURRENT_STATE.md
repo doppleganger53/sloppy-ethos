@@ -86,6 +86,10 @@ Historical detail remains in individual session notes referenced from
 - Ethos `26.1` compatibility baseline, reference checkout path, simulator
   targets, and follow-up issue map now live in
   `docs/ETHOS_26_1_COMPATIBILITY.md`.
+- The baseline doc now carries an API surface matrix for widget, tool, task,
+  form, source, and touch APIs, with BoundryMap's local harness aligned to the
+  checked `26.1` form surface by keeping `addBooleanField` optional and
+  modeling `addSourceField`.
 
 ## Active Tooling Decisions
 

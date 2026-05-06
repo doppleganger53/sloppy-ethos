@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 121
-- Total size: 204,255 bytes
-- Total lines: 5,410
+- Files: 122
+- Total size: 205,815 bytes
+- Total lines: 5,459
 - Distribution by artifact:
-  - session notes: 115
+  - session notes: 116
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 75 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 76 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -38,7 +38,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 17 -- build
   - 15 -- release
   - 14 -- docs
-  - 7 -- testing
+  - 8 -- testing
   - 5 -- issue-admin
   - 5 -- prompts
   - 2 -- metadata
@@ -46,6 +46,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent High-Signal Notes (Auto-generated)
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
+- 2026-05-06 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-05-06_ISSUE_77_ETHOS_26_1_API_SURFACE_MATRIX.md](notes/session/repo/SESSION_NOTES_2026-05-06_ISSUE_77_ETHOS_26_1_API_SURFACE_MATRIX.md) | # Session Notes 2026-05-06 - Issue #77 Ethos 26.1 API Surface Matrix
 - 2026-05-05 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md](notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md) | # Session Notes 2026-05-05 - Issue #76 Ethos 26.1 Baseline
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix
 - 2026-04-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_ISSUE_72_SCRIPT_LOCAL_TESTS.md](notes/session/repo/SESSION_NOTES_2026-04-27_ISSUE_72_SCRIPT_LOCAL_TESTS.md) | # Session Notes 2026-04-27 - Issue 72 Script Local Tests
@@ -57,7 +58,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - 2026-03-08 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md](notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md) | # Session Notes 2026-03-08 - VS Code Lua Coverage Workflow
 - 2026-03-08 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md](notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md) | # Session Notes 2026-03-08 - Debug Sessions Require Deploy
 - 2026-03-05 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_MUTABLE_WORKFLOW_AGENT_METADATA.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_MUTABLE_WORKFLOW_AGENT_METADATA.md) | # Session Notes 2026-03-05 - Issue #56 Mutable Workflow Agent Metadata
-- 2026-03-05 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_54_LOW_SIGNAL_TEST_PRUNING.md) | # Session Notes 2026-03-05 - Issue #54 Low-Signal Test Pruning
 
 ## Recent Ethos Platform Notes
 
@@ -194,3 +194,4 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-04-27 | session | repo | build | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix |
 | 2026-05-05 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md](notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md) | # Session Notes 2026-05-05 - Issue #76 Ethos 26.1 Baseline |
 | 2026-05-05 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_86_AGENTIC_REORG_RETIREMENT.md](notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_86_AGENTIC_REORG_RETIREMENT.md) | # Session Notes 2026-05-05 - Issue 86 Agentic Reorg Retirement |
+| 2026-05-06 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-05-06_ISSUE_77_ETHOS_26_1_API_SURFACE_MATRIX.md](notes/session/repo/SESSION_NOTES_2026-05-06_ISSUE_77_ETHOS_26_1_API_SURFACE_MATRIX.md) | # Session Notes 2026-05-06 - Issue #77 Ethos 26.1 API Surface Matrix |

@@ -104,6 +104,10 @@ def test_documented_local_file_references_exist(ref: str):
     if path.exists():
         return
 
+    # Ethos compatibility docs cite upstream reference-checkout examples under lua/.
+    if ref.startswith("lua/") or ref.startswith("lua\\"):
+        return
+
     # Allow local-only config files when docs also point to a committed template.
     if ref.endswith(".json") and _has_companion_example(ref):
         return
@@ -172,7 +176,7 @@ def test_core_docs_link_ethos_26_1_compatibility_baseline():
 
 def test_ethos_26_1_compatibility_baseline_captures_reference_targets_and_follow_ups():
     text = _read(COMPATIBILITY_BASELINE_PATH)
-    for heading in ("## Reference Checkout", "## Validation Targets", "## Compatibility Matrix"):
+    for heading in ("## Reference Checkout", "## Validation Targets", "## Compatibility Matrix", "### API Surface Matrix"):
         assert heading in text
     assert "ETHOS-Feedback-Community" in text
     assert "`26.1`" in text
@@ -183,6 +187,43 @@ def test_ethos_26_1_compatibility_baseline_captures_reference_targets_and_follow
     assert "X20S" in text
     for area in ("SensorList", "BoundryMap", "ethos_events", "SmartMapper", "Arduino FBus"):
         assert area in text
+
+
+def test_ethos_26_1_api_surface_matrix_lists_shared_surfaces_and_smoke_targets():
+    text = _read(COMPATIBILITY_BASELINE_PATH)
+    for token in (
+        "system.registerWidget",
+        "system.registerSystemTool",
+        "system.registerTask",
+        "system.getMemoryUsage",
+        "system.getSource",
+        "system.getSensors",
+        "model.getSensors",
+        "form.addSensorField",
+        "form.addSourceField",
+        "form.addChoiceField",
+        "form.addNumberField",
+        "form.addTextButton",
+        "form.addBitmapField",
+        "form.addStaticText",
+        "form.addBooleanField",
+        "EVT_TOUCH",
+        "16640",
+        "16641",
+        "16642",
+    ):
+        assert token in text
+    for token in (
+        "SensorList: yes",
+        "BoundryMap: yes",
+        "ethos_events: yes",
+        "SmartMapper: no",
+        "FBus: no",
+        "python -m pytest scripts/SensorList/tests -q",
+        "python -m pytest scripts/BoundryMap/tests -q",
+        "python tools/build.py --project ethos_events --deploy",
+    ):
+        assert token in text
 
 
 def test_ethos_26_1_compatibility_baseline_links_follow_up_issues():
