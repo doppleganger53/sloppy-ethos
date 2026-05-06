@@ -10,8 +10,6 @@ across the repo.
 - Repository:
   `https://github.com/FrSkyRC/ETHOS-Feedback-Community.git`
 - Local path: `..\ETHOS-Feedback-Community`
-- Resolved Windows path:
-  `C:\Users\kurtk\Documents\Workspaces\EthosLua\ETHOS-Feedback-Community`
 - Branch: `26.1`
 - Commit: `e9d7afb7`
 - Baseline rule:
