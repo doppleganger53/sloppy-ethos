@@ -13,6 +13,8 @@ from tests.test_docs_commands import DOC_FILES, discover_commands, is_manual_com
 
 README_PATH = REPO_ROOT / "README.md"
 DEVELOPMENT_PATH = REPO_ROOT / "docs" / "DEVELOPMENT.md"
+REPOSITORY_LAYOUT_PATH = REPO_ROOT / "docs" / "REPOSITORY_LAYOUT.md"
+COMPATIBILITY_BASELINE_PATH = REPO_ROOT / "docs" / "ETHOS_26_1_COMPATIBILITY.md"
 CONTRIBUTING_PATH = REPO_ROOT / "CONTRIBUTING.md"
 CODEOWNERS_PATH = REPO_ROOT / ".github" / "CODEOWNERS"
 ARCHITECTURE_PATH = REPO_ROOT / "docs" / "SensorList" / "SENSORLIST_ARCHITECTURE.md"
@@ -159,6 +161,34 @@ def test_readme_has_visual_overview_section():
 def test_readme_links_sensorlist_architecture_doc():
     assert "(docs/SensorList/SENSORLIST_ARCHITECTURE.md)" in _read(README_PATH)
     assert ARCHITECTURE_PATH.exists()
+
+
+def test_core_docs_link_ethos_26_1_compatibility_baseline():
+    assert "(docs/ETHOS_26_1_COMPATIBILITY.md)" in _read(README_PATH)
+    assert "(ETHOS_26_1_COMPATIBILITY.md)" in _read(DEVELOPMENT_PATH)
+    assert "(ETHOS_26_1_COMPATIBILITY.md)" in _read(REPOSITORY_LAYOUT_PATH)
+    assert COMPATIBILITY_BASELINE_PATH.exists()
+
+
+def test_ethos_26_1_compatibility_baseline_captures_reference_targets_and_follow_ups():
+    text = _read(COMPATIBILITY_BASELINE_PATH)
+    for heading in ("## Reference Checkout", "## Validation Targets", "## Compatibility Matrix"):
+        assert heading in text
+    assert "ETHOS-Feedback-Community" in text
+    assert "`26.1`" in text
+    assert re.search(r"Commit:\s*`?[0-9a-f]{8}`?", text)
+    assert "git clone" in text
+    assert re.search(r"git\s+(-C\s+\S+\s+)?fetch\b", text)
+    assert "X20RS" in text
+    assert "X20S" in text
+    for area in ("SensorList", "BoundryMap", "ethos_events", "SmartMapper", "Arduino FBus"):
+        assert area in text
+
+
+def test_ethos_26_1_compatibility_baseline_links_follow_up_issues():
+    text = _read(COMPATIBILITY_BASELINE_PATH)
+    links = set(re.findall(r"https://github\.com/doppleganger53/sloppy-ethos/issues/(\d+)", text))
+    assert len(links) >= 5
 
 
 def test_contributing_has_workflow_section():

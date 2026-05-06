@@ -12,6 +12,8 @@ from tests.helpers import REPO_ROOT, command_exists, run_command
 DOC_FILES = [
     REPO_ROOT / "README.md",
     REPO_ROOT / "docs" / "DEVELOPMENT.md",
+    REPO_ROOT / "docs" / "ETHOS_26_1_COMPATIBILITY.md",
+    REPO_ROOT / "docs" / "REPOSITORY_LAYOUT.md",
     *sorted((REPO_ROOT / "scripts").glob("*/README.md")),
     REPO_ROOT / "CONTRIBUTING.md",
     REPO_ROOT / ".github" / "PULL_REQUEST_TEMPLATE.md",

@@ -1,4 +1,4 @@
-# Current State (2026-03-02)
+# Current State (2026-05-05)
 
 This file is the high-signal memory entrypoint for cold-start sessions.
 Historical detail remains in individual session notes referenced from
@@ -83,6 +83,9 @@ Historical detail remains in individual session notes referenced from
 - Script-owned tests live under `scripts/{ProjectName}/tests/` and are
   included in repo-root pytest discovery through `pytest.ini`; install staging
   excludes script-local `tests/` folders from ZIP and simulator payloads.
+- Ethos `26.1` compatibility baseline, reference checkout path, simulator
+  targets, and follow-up issue map now live in
+  `docs/ETHOS_26_1_COMPATIBILITY.md`.
 
 ## Active Tooling Decisions
 
