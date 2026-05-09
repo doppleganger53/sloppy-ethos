@@ -15,25 +15,25 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 122
-- Total size: 205,815 bytes
-- Total lines: 5,459
+- Files: 124
+- Total size: 210,571 bytes
+- Total lines: 5,583
 - Distribution by artifact:
-  - session notes: 116
+  - session notes: 118
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 76 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 77 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
-  - 7 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
+  - 8 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
   - 4 -- ethos-events ( ethos_events-specific behavior, release history, and operating notes )
   - 3 -- handoff ( Session continuity and restart handoffs )
 
 - Distribution by concern:
-  - 30 -- implementation
+  - 32 -- implementation
   - 26 -- workflow
   - 17 -- build
   - 15 -- release
@@ -62,12 +62,12 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent Ethos Platform Notes
 
 - Selection: newest `session` and `reference` notes where `Scope` is `ethos-platform`; keep newest 6 overall.
+- 2026-05-09 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md) | # Session Notes 2026-05-09 - Ethos 26.1 Release Docs And getSources
 - 2026-03-02 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_STAGED_SCAN_BUDGET_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_STAGED_SCAN_BUDGET_FIX.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Staged Scan Budget Fix
 - 2026-03-02 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_RADIO_ACCESSOR_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_RADIO_ACCESSOR_FIX.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Radio Accessor Fix
 - 2026-03-02 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_FAILSOFT_ERROR_LOGGING.md](notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_FAILSOFT_ERROR_LOGGING.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Fail-Soft Error Logging
 - 2026-02-23 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-02-23_SENSORLIST_AND_EVENTS_CONSOLIDATED.md](notes/session/ethos-platform/SESSION_NOTES_2026-02-23_SENSORLIST_AND_EVENTS_CONSOLIDATED.md) | # Session Notes 2026-02-23 - SensorList and Ethos Events (Consolidated)
 - 2026-02-23 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-02-23_ETHOS_EVENTS_RADIO_ICON_PATH_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-02-23_ETHOS_EVENTS_RADIO_ICON_PATH_FIX.md) | # Session Notes 2026-02-23 - ethos_events Radio Icon Path Fix
-- 2026-02-23 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-02-23_ETHOS_EVENTS_ICON_DPI24_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-02-23_ETHOS_EVENTS_ICON_DPI24_FIX.md) | # Session Notes 2026-02-23 - ethos_events Icon DPI/Color Fix
 
 ## Entries
 
@@ -195,3 +195,5 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-05-05 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md](notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md) | # Session Notes 2026-05-05 - Issue #76 Ethos 26.1 Baseline |
 | 2026-05-05 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_86_AGENTIC_REORG_RETIREMENT.md](notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_86_AGENTIC_REORG_RETIREMENT.md) | # Session Notes 2026-05-05 - Issue 86 Agentic Reorg Retirement |
 | 2026-05-06 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-05-06_ISSUE_77_ETHOS_26_1_API_SURFACE_MATRIX.md](notes/session/repo/SESSION_NOTES_2026-05-06_ISSUE_77_ETHOS_26_1_API_SURFACE_MATRIX.md) | # Session Notes 2026-05-06 - Issue #77 Ethos 26.1 API Surface Matrix |
+| 2026-05-09 | session | ethos-platform | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md) | # Session Notes 2026-05-09 - Ethos 26.1 Release Docs And getSources |
+| 2026-05-09 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-05-09_SMARTMAPPER_API_PROBE.md](notes/session/repo/SESSION_NOTES_2026-05-09_SMARTMAPPER_API_PROBE.md) | # Session Notes 2026-05-09 - SmartMapper API Probe |
