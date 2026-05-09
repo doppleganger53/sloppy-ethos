@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 124
-- Total size: 210,571 bytes
-- Total lines: 5,583
+- Files: 125
+- Total size: 212,467 bytes
+- Total lines: 5,630
 - Distribution by artifact:
-  - session notes: 118
+  - session notes: 119
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 77 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 78 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 8 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -39,7 +39,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 15 -- release
   - 14 -- docs
   - 8 -- testing
-  - 5 -- issue-admin
+  - 6 -- issue-admin
   - 5 -- prompts
   - 2 -- metadata
 
@@ -196,4 +196,5 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-05-05 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_86_AGENTIC_REORG_RETIREMENT.md](notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_86_AGENTIC_REORG_RETIREMENT.md) | # Session Notes 2026-05-05 - Issue 86 Agentic Reorg Retirement |
 | 2026-05-06 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-05-06_ISSUE_77_ETHOS_26_1_API_SURFACE_MATRIX.md](notes/session/repo/SESSION_NOTES_2026-05-06_ISSUE_77_ETHOS_26_1_API_SURFACE_MATRIX.md) | # Session Notes 2026-05-06 - Issue #77 Ethos 26.1 API Surface Matrix |
 | 2026-05-09 | session | ethos-platform | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md) | # Session Notes 2026-05-09 - Ethos 26.1 Release Docs And getSources |
+| 2026-05-09 | session | repo | issue-admin | [notes/session/repo/SESSION_NOTES_2026-05-09_ISSUE_85_BRANCH_RECONCILIATION.md](notes/session/repo/SESSION_NOTES_2026-05-09_ISSUE_85_BRANCH_RECONCILIATION.md) | # Session Notes 2026-05-09 - Issue 85 branch reconciliation |
 | 2026-05-09 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-05-09_SMARTMAPPER_API_PROBE.md](notes/session/repo/SESSION_NOTES_2026-05-09_SMARTMAPPER_API_PROBE.md) | # Session Notes 2026-05-09 - SmartMapper API Probe |
