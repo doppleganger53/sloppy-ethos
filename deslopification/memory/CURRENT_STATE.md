@@ -90,6 +90,14 @@ Historical detail remains in individual session notes referenced from
   form, source, and touch APIs, with BoundryMap's local harness aligned to the
   checked `26.1` form surface by keeping `addBooleanField` optional and
   modeling `addSourceField`.
+- SmartMapper now has a `SmartMapper Probe` system tool for issue `#83`; it
+  records candidate `model.*`, `system.getSources(...)`, and required
+  read/enumeration surfaces before issue `#45` implementation resumes. Runtime
+  capture in the `26.1` simulator or target radio is still the next gate.
+- Ethos release assets can contain API evidence not present in the public repo
+  checkout. For `26.1.0-RC1`, the release `lua-doc.zip` documents
+  `system.getSources(categoryNumber)` and the source `CATEGORY_*` list; check
+  release assets when branch examples are incomplete.
 
 ## Active Tooling Decisions
 
