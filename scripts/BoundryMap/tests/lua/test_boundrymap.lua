@@ -42,7 +42,12 @@ end
 
 _G.system = {
   registerWidget = function(_) end,
+  registerSystemTool = function(_) end,
+  registerTask = function(_) end,
   getSource = function(_) return nil end,
+  getMemoryUsage = function()
+    return 0
+  end,
   playHaptic = function(_) return true end,
   playTone = function(...) return true end,
 }
@@ -74,6 +79,12 @@ _G.form = {
     formRows[row].getter = getter
     formRows[row].setter = setter
   end,
+  -- Ethos 26.1 examples surface source fields, but not boolean fields.
+  addSourceField = function(row, _, getter, setter)
+    formRows[row].type = "source"
+    formRows[row].getter = getter
+    formRows[row].setter = setter
+  end,
   addChoiceField = function(row, _, choices, getter, setter)
     formRows[row].type = "choice"
     formRows[row].choices = choices
@@ -84,11 +95,6 @@ _G.form = {
     formRows[row].type = "number"
     formRows[row].low = low
     formRows[row].high = high
-    formRows[row].getter = getter
-    formRows[row].setter = setter
-  end,
-  addBooleanField = function(row, _, getter, setter)
-    formRows[row].type = "boolean"
     formRows[row].getter = getter
     formRows[row].setter = setter
   end,
@@ -121,6 +127,17 @@ _G.lcd = {
   drawFilledCircle = function(_, _, _) end,
   drawBitmap = function(x, y, bitmap)
     drawnBitmaps[#drawnBitmaps + 1] = { x = x, y = y, name = bitmap and bitmap.name or "" }
+  end,
+  loadMask = function(path)
+    return {
+      name = path,
+      width = function()
+        return 16
+      end,
+      height = function()
+        return 20
+      end,
+    }
   end,
   loadBitmap = function(path)
     if path and path:find("icons/", 1, true) then
