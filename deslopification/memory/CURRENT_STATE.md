@@ -83,6 +83,17 @@ Historical detail remains in individual session notes referenced from
 - Script-owned tests live under `scripts/{ProjectName}/tests/` and are
   included in repo-root pytest discovery through `pytest.ini`; install staging
   excludes script-local `tests/` folders from ZIP and simulator payloads.
+- Automated Ethos WebSimulator smoke testing now lives under
+  `tools/sim/harness/`; downloaded runtimes are cached under
+  `tools/sim/radios/`, run artifacts under `tools/sim/runs/`, and both payload
+  roots are ignored except for `.gitkeep` placeholders.
+- For SensorList on the current Ethos `26.1` line, the repeatable runtime smoke
+  command is
+  `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`.
+- On 2026-05-16, `latest-26.1` resolved to `26.1.0-RC2`; the X20RS-FCC
+  WebSimulator starts and `reloadScripts` completes under Node, but
+  `_writeDefaultSettingsAndModel()` blocks in that runtime, so the harness keeps
+  that call behind optional `--write-default-model`.
 - Ethos `26.1` compatibility baseline, reference checkout path, simulator
   targets, and follow-up issue map now live in
   `docs/ETHOS_26_1_COMPATIBILITY.md`.
