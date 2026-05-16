@@ -27,13 +27,20 @@
   `python tools/build.py --project ethos_events --deploy`
   `python tools/build.py --project SensorList --clean --sim-radio X20RS`
   `python tools/build.py --help`
+- Automated WebSimulator harness:
+  `python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1`
+  `python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1`
+  `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`
+  `python tools/sim/harness/run.py gui --project SensorList --radio X20RS-FCC --ethos-version latest-26.1`
 
 ## Debugging Session Rule
 
-- When a session is actively debugging simulator-visible Lua behavior, deploy the touched script before closing out the session.
+- When a session is actively debugging simulator-visible Lua behavior, run the automated WebSimulator harness when it supports the target, then deploy the touched script before closing out the session when live Ethos Suite state also needs to be updated.
 - For SensorList debugging, the minimum closeout command is:
   `python tools/build.py --project SensorList --deploy`
 - Add `--dist` only when you also need a fresh install ZIP; deploy is the required debugging-session step.
+- For repeatable SensorList simulator smoke coverage, run:
+  `python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1`
 
 ## Configuring Simulator Path
 
@@ -60,6 +67,20 @@
 - supports custom ZIP destination via `--out-dir`.
 - Write operations fail fast with clear errors when paths are missing or unwritable.
 - BoundryMap map assets are local-only and ignored because flying-site maps can reveal private locations. [scripts/BoundryMap/build.json](../scripts/BoundryMap/build.json) defines the source folder, include globs, script-local destinations, flattening behavior, and optional-source behavior for private maps.
+
+## Automated WebSimulator Harness
+
+`tools/sim/harness/run.py`:
+
+- resolves `latest-26.1` to the newest Ethos `26.1` release from `FrSkyRC/ETHOS-Feedback-Community`.
+- downloads the requested radio WebSimulator package, such as `X20RS-FCC-WebSimulator.zip`, into `tools/sim/radios/{Radio}-{Region}/{EthosVersion}/{PackageName}/`.
+- validates the GitHub asset SHA-256 digest when release metadata provides one.
+- stages scripts into isolated run persist trees under `tools/sim/runs/` by calling the existing `tools/build.py` install-spec helpers.
+- supports JSON smoke suites, starting with `tools/sim/harness/suites/SensorList-X20RS-FCC.json`.
+- runs headless smoke checks through Node.js and reports structured statuses for success, missing runtime, download failure, startup failure, script failure, and timeout.
+- can prepare and serve a browser-based GUI view for manual confirmation without hand-copying scripts.
+- keeps downloaded runtimes, extracted JavaScript/WASM, logs, generated GUI files, and persist trees out of git.
+- does not call `_writeDefaultSettingsAndModel()` by default because the X20RS-FCC `26.1.0-RC2` runtime blocks in that export under Node; use `--write-default-model` only when validating a runtime known not to block there.
 
 ## Tooling Decision Records
 

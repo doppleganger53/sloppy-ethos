@@ -14,6 +14,7 @@ DOC_FILES = [
     REPO_ROOT / "docs" / "DEVELOPMENT.md",
     REPO_ROOT / "docs" / "ETHOS_26_1_COMPATIBILITY.md",
     REPO_ROOT / "docs" / "REPOSITORY_LAYOUT.md",
+    REPO_ROOT / "tools" / "sim" / "harness" / "README.md",
     *sorted((REPO_ROOT / "scripts").glob("*/README.md")),
     REPO_ROOT / "CONTRIBUTING.md",
     REPO_ROOT / ".github" / "PULL_REQUEST_TEMPLATE.md",
@@ -55,6 +56,8 @@ def discover_commands() -> list[str]:
 def is_manual_command(command: str) -> bool:
     if command in MANUAL_COMMANDS:
         return True
+    if command.startswith("python tools/sim/harness/run.py"):
+        return True
     if "--dist" in command or "--deploy" in command or "--clean" in command:
         return True
     if command.startswith("python -m pytest"):
@@ -81,7 +84,7 @@ def test_extract_fenced_commands_parses_supported_lines():
 
 @pytest.mark.parametrize("command", discover_commands())
 def test_command_references_existing_scripts(command: str):
-    for script in ("tools/build.py",):
+    for script in ("tools/build.py", "tools/sim/harness/run.py"):
         if script in command:
             assert (REPO_ROOT / script).exists(), f"Missing referenced script: {script}"
 
@@ -123,6 +126,7 @@ def test_documented_command_luac_skips_when_missing(monkeypatch):
     "command",
     [
         "python tools/build.py --project WidgetX --dist",
+        "python tools/sim/harness/run.py headless --project SensorList",
         "python -m pytest tests/test_any.py",
         "python -m pip install -r requirements/dev.txt",
         "powershell -File script.ps1",
@@ -150,6 +154,7 @@ def test_documented_command_stylua_runs_with_check(monkeypatch):
     [
         "luac -p",
         "python tools/build.py --project WidgetX --dist",
+        "python tools/sim/harness/run.py headless --project SensorList",
         "python -m pytest tests/test_any.py",
         "python -m pip install -r requirements/dev.txt",
         "powershell -File script.ps1",

@@ -34,6 +34,8 @@
      `python -m pytest -q`
    - one script's local tests when touching that script's behavior:
      `python -m pytest scripts/{ProjectName}/tests -q`
+   - automated simulator smoke when touching simulator-visible behavior and the target is supported:
+     `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`
    - `stylua --config-path tools/config/stylua.toml scripts` (if formatting changed)
 6. Open a PR into `main` using the repository PR template and include linked-closing issue keywords (for example, `Closes #29`).
 7. Use the repository merge strategy policy:
