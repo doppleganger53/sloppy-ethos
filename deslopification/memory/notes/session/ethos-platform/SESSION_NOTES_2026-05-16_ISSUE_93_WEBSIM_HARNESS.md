@@ -19,6 +19,16 @@
 - Follow-up in the same issue branch made `headless` and `gui` accept repeated
   `--project` values so one WebSimulator session can stage any project or a
   project set, such as `SensorList` plus `BoundryMap`.
+- Follow-up GUI debugging fixed browser startup for X20RS-FCC Ethos `1.6.6`:
+  - GUI startup now keeps `_writeDefaultSettingsAndModel()` opt-in, matching the
+    headless default.
+  - Manifest staging now runs during Emscripten `preRun`, allowing generated
+    `main` to initialize the display path before `_start()`.
+  - The canvas callback handles the runtime's `(width, height, pointer)` order
+    and reads pixels through exported `HEAP8.buffer` instead of unexported
+    `HEAPU8`.
+  - The generated page uses an inline empty favicon to avoid browser-console
+    404 noise during automated GUI checks.
 - Added ignored cache/run roots:
   - `tools/sim/radios/`
   - `tools/sim/runs/`
@@ -62,6 +72,10 @@
     `_writeDefaultSettingsAndModel()`, so the harness does not call it by
     default. The optional `--write-default-model` flag exists for runtimes known
     not to block in that export.
+- Important GUI runtime note:
+  - X20RS-FCC Ethos `1.6.6` does not expose `_reloadScripts()`, so GUI startup
+    treats that export as optional after `_start()` and logs startup completion
+    when the export is unavailable.
 
 ## Validation run(s)
 
@@ -81,6 +95,16 @@
   - result: pass (`status=gui_ready`)
 - `python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version 1.6.6 --dry-run --run-dir tools/sim/runs/multiproject-dry-run`
   - result: pass (`status=gui_ready`, `projects=[SensorList, BoundryMap]`)
+- `python -m pytest tests/test_sim_harness.py tests/test_docs_commands.py tests/test_docs_contracts.py -q`
+  - result: pass (`193 passed, 25 skipped`)
+- `python -m pytest -q`
+  - result: pass (`341 passed, 25 skipped`)
+- GUI launch command:
+  - `python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version 1.6.6 --port 8765 --run-dir tools/sim/runs/gui-SensorList-BoundryMap-X20RS-FCC-1.6.6-fixed3`
+  - result: live server on `http://127.0.0.1:8765/index.html`
+- Edge Playwright check against the live GUI:
+  - result: no browser console messages, no pthread abort, canvas `800x480`
+    with non-black pixels (`81552`), screenshot captured under the run folder.
 
 ## Follow-up items
 

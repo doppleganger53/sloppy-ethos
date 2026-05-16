@@ -96,7 +96,11 @@ Historical detail remains in individual session notes referenced from
 - On 2026-05-16, `latest-26.1` resolved to `26.1.0-RC2`; the X20RS-FCC
   WebSimulator starts and `reloadScripts` completes under Node, but
   `_writeDefaultSettingsAndModel()` blocks in that runtime, so the harness keeps
-  that call behind optional `--write-default-model`.
+  that call behind optional `--write-default-model` in headless and GUI modes.
+- For WebSimulator GUI mode, stage manifest writes run through Emscripten
+  `preRun`, then the harness lets generated `main` initialize before calling
+  `_start()`. Browser canvas updates arrive as `(width, height, pointer)` and
+  must read through exported `HEAP8.buffer`, not unexported `HEAPU8`.
 - Ethos `26.1` compatibility baseline, reference checkout path, simulator
   targets, and follow-up issue map now live in
   `docs/ETHOS_26_1_COMPATIBILITY.md`.
