@@ -30,7 +30,7 @@ The headless command exits with structured status:
 - `script_failure`: the simulator surfaced Lua/script/runtime error output.
 - `timeout`: the headless run did not finish within the requested timeout.
 
-By default, the Node headless path does not call the WebSimulator export
-`_writeDefaultSettingsAndModel()` because the X20RS-FCC `26.1.0-RC2` runtime
-blocks in that call under Node. Use `--write-default-model` only when validating
-that behavior against a runtime known not to block.
+By default, the headless and GUI paths do not call the WebSimulator export
+`_writeDefaultSettingsAndModel()` because some X20RS-FCC runtimes can block or
+abort in that call during automated startup. Use `--write-default-model` only
+when validating that behavior against a runtime known not to block.

@@ -351,6 +351,8 @@ def apply_suite_args(args: argparse.Namespace) -> None:
 
     for suite_key, arg_name in mapping.items():
         if suite_key in payload:
+            if arg_name == "write_default_model" and getattr(args, arg_name, False):
+                continue
             setattr(args, arg_name, payload[suite_key])
 
 
@@ -461,7 +463,13 @@ def _persist_manifest(root: Path) -> dict[str, str]:
     return manifest
 
 
-def write_gui_files(package: RuntimePackage, persist_root: Path, run_root: Path, project: str) -> Path:
+def write_gui_files(
+    package: RuntimePackage,
+    persist_root: Path,
+    run_root: Path,
+    project: str,
+    write_default_model: bool = False,
+) -> Path:
     gui_root = run_root / "gui"
     runtime_root = gui_root / "runtime"
     if gui_root.exists():
@@ -478,7 +486,8 @@ def write_gui_files(package: RuntimePackage, persist_root: Path, run_root: Path,
     (gui_root / "index.html").write_text(
         GUI_HTML.replace("__RUNTIME_JS__", f"runtime/{package.runtime_js.name}")
         .replace("__RUNTIME_FACTORY__", package.target.runtime_stem)
-        .replace("__PROJECT__", project),
+        .replace("__PROJECT__", project)
+        .replace("__WRITE_DEFAULT_MODEL__", json.dumps(write_default_model)),
         encoding="utf-8",
     )
     return gui_root
@@ -499,7 +508,13 @@ def run_gui(args: argparse.Namespace) -> dict[str, Any]:
     package = ensure_runtime(args.radio, args.region, args.ethos_version, args.no_download)
     run_root = new_run_root(label, package, args.run_dir)
     persist_root = stage_projects(projects, run_root)
-    gui_root = write_gui_files(package, persist_root, run_root, label)
+    gui_root = write_gui_files(
+        package,
+        persist_root,
+        run_root,
+        label,
+        bool(getattr(args, "write_default_model", False)),
+    )
     url = f"http://127.0.0.1:{args.port}/index.html"
     result = {
         "status": "gui_ready",
@@ -578,6 +593,11 @@ def parse_args() -> argparse.Namespace:
     gui.add_argument("--port", type=int, default=8765, help="Local HTTP port for the GUI view.")
     gui.add_argument("--no-open", action="store_true", help="Serve without opening the default browser.")
     gui.add_argument("--dry-run", action="store_true", help="Prepare GUI files and print the URL without serving.")
+    gui.add_argument(
+        "--write-default-model",
+        action="store_true",
+        help="Call the runtime default model writer before start.",
+    )
     gui.add_argument("--run-dir", help="Explicit run artifact directory.")
     return parser.parse_args()
 
@@ -618,6 +638,7 @@ GUI_HTML = """<!doctype html>
 <head>
   <meta charset="utf-8">
   <title>Ethos WebSimulator - __PROJECT__</title>
+  <link rel="icon" href="data:,">
   <style>
     body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #eee; }
     main { display: grid; grid-template-columns: minmax(480px, 1fr) 420px; min-height: 100vh; }
@@ -637,6 +658,10 @@ const log = (message) => {
   node.textContent += String(message) + "\\n";
   node.scrollTop = node.scrollHeight;
 };
+const canvas = document.getElementById("screen");
+const context = canvas.getContext("2d");
+const writeDefaultModel = __WRITE_DEFAULT_MODEL__;
+let runtimeModule = null;
 const ensureDir = (FS, path) => {
   const parts = path.split("/").filter(Boolean);
   let current = "";
@@ -653,24 +678,51 @@ const writeFile = (FS, relative, encoded) => {
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   FS.writeFile(path, bytes);
 };
+const drawRuntimeCanvas = (width, height, pointer) => {
+  if (!runtimeModule || !runtimeModule.HEAP8 || !pointer || !width || !height) return;
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+  const pixelCount = width * height;
+  const rgbaLength = pixelCount * 4;
+  const heap = new Uint8Array(runtimeModule.HEAP8.buffer);
+  if (pointer + rgbaLength > heap.length) return;
+  const pixels = new Uint8ClampedArray(heap.subarray(pointer, pointer + rgbaLength));
+  context.putImageData(new ImageData(pixels, width, height), 0, 0);
+};
 fetch("persist_manifest.json")
   .then((response) => response.json())
-  .then((manifest) => __RUNTIME_FACTORY__({
-    noInitialRun: true,
-    locateFile: (path) => "runtime/" + path,
-    print: log,
-    printErr: (line) => log("ERR " + line),
-    updateCanvas: () => {},
-    setModelJson: () => log("model json callback")
-  }).then((module) => {
-    for (const [relative, encoded] of Object.entries(manifest)) writeFile(module.FS, relative, encoded);
-    module._writeDefaultSettingsAndModel();
+  .then((manifest) => {
+    const runtimeConfig = {
+      locateFile: (path) => "runtime/" + path,
+      print: log,
+      printErr: (line) => log("ERR " + line),
+      updateCanvas: drawRuntimeCanvas,
+      setModelJson: () => log("model json callback"),
+      preRun: [() => {
+        for (const [relative, encoded] of Object.entries(manifest)) {
+          writeFile(runtimeConfig.FS, relative, encoded);
+        }
+      }]
+    };
+    return __RUNTIME_FACTORY__(runtimeConfig);
+  })
+  .then((module) => {
+    runtimeModule = module;
+    if (writeDefaultModel && typeof module._writeDefaultSettingsAndModel === "function") {
+      module._writeDefaultSettingsAndModel();
+    }
     module._start();
     setTimeout(() => {
-      module._reloadScripts();
-      log("reloadScripts complete for __PROJECT__");
+      if (typeof module._reloadScripts === "function") {
+        module._reloadScripts();
+        log("reloadScripts complete for __PROJECT__");
+      } else {
+        log("reloadScripts unavailable in this runtime; startup complete for __PROJECT__");
+      }
     }, 1000);
-  }))
+  })
   .catch((error) => log(error.stack || error));
 </script>
 </body>

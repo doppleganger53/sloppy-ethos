@@ -81,7 +81,7 @@
 - runs headless smoke checks through Node.js and reports structured statuses for success, missing runtime, download failure, startup failure, script failure, and timeout.
 - can prepare and serve a browser-based GUI view for manual confirmation without hand-copying scripts.
 - keeps downloaded runtimes, extracted JavaScript/WASM, logs, generated GUI files, and persist trees out of git.
-- does not call `_writeDefaultSettingsAndModel()` by default because the X20RS-FCC `26.1.0-RC2` runtime blocks in that export under Node; use `--write-default-model` only when validating a runtime known not to block there.
+- does not call `_writeDefaultSettingsAndModel()` by default in headless or GUI startup because some X20RS-FCC runtimes can block or abort in that export; use `--write-default-model` only when validating a runtime known not to block there.
 
 ## Tooling Decision Records
 

@@ -26,6 +26,23 @@ def load_harness_module():
 harness = load_harness_module()
 
 
+def _make_runtime_package(tmp_path: Path) -> harness.RuntimePackage:
+    runtime_dir = tmp_path / "runtime"
+    runtime_dir.mkdir()
+    runtime_js = runtime_dir / "X20RS_FCC.js"
+    runtime_js.write_text("module.exports = async () => ({});\n", encoding="utf-8")
+    (runtime_dir / "X20RS_FCC.wasm").write_bytes(b"wasm")
+    return harness.RuntimePackage(
+        target=harness.normalize_radio_target("X20RS-FCC", None),
+        version="26.1.0-RC2",
+        asset_name="X20RS-FCC-WebSimulator.zip",
+        package_dir=tmp_path / "pkg",
+        archive_path=tmp_path / "pkg" / "X20RS-FCC-WebSimulator.zip",
+        runtime_dir=runtime_dir,
+        runtime_js=runtime_js,
+    )
+
+
 def test_normalize_radio_target_defaults_to_fcc_region():
     target = harness.normalize_radio_target("X20RS", None)
     assert target.key == "X20RS-FCC"
@@ -113,7 +130,7 @@ def test_apply_suite_args_loads_sensorlist_smoke_suite():
         startup_ms=1,
         settle_ms=1,
         timeout_ms=1,
-        write_default_model=True,
+        write_default_model=False,
     )
     harness.apply_suite_args(args)
     assert args.project == ["SensorList"]
@@ -121,6 +138,29 @@ def test_apply_suite_args_loads_sensorlist_smoke_suite():
     assert args.ethos_version == "latest-26.1"
     assert args.timeout_ms == 12000
     assert args.write_default_model is False
+
+
+def test_apply_suite_args_preserves_explicit_default_model_opt_in():
+    args = Namespace(
+        suite="tools/sim/harness/suites/SensorList-X20RS-FCC.json",
+        project=["Other"],
+        radio="X20S",
+        region="FCC",
+        ethos_version="old",
+        startup_ms=1,
+        settle_ms=1,
+        timeout_ms=1,
+        write_default_model=True,
+    )
+    harness.apply_suite_args(args)
+    assert args.write_default_model is True
+
+
+def test_parse_args_gui_accepts_write_default_model_flag(monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["run.py", "gui", "--write-default-model"])
+    args = harness.parse_args()
+    assert args.command == "gui"
+    assert args.write_default_model is True
 
 
 def test_parse_runner_result_reads_last_json_line():
@@ -132,19 +172,7 @@ def test_parse_runner_result_reads_last_json_line():
 
 
 def test_run_headless_invokes_node_runner_and_logs_output(monkeypatch, tmp_path: Path):
-    runtime_dir = tmp_path / "runtime"
-    runtime_dir.mkdir()
-    runtime_js = runtime_dir / "X20RS_FCC.js"
-    runtime_js.write_text("module.exports = async () => ({});\n", encoding="utf-8")
-    package = harness.RuntimePackage(
-        target=harness.normalize_radio_target("X20RS-FCC", None),
-        version="26.1.0-RC2",
-        asset_name="X20RS-FCC-WebSimulator.zip",
-        package_dir=tmp_path / "pkg",
-        archive_path=tmp_path / "pkg" / "X20RS-FCC-WebSimulator.zip",
-        runtime_dir=runtime_dir,
-        runtime_js=runtime_js,
-    )
+    package = _make_runtime_package(tmp_path)
     monkeypatch.setattr(harness, "ensure_runtime", lambda *_args, **_kwargs: package)
     monkeypatch.setattr(harness, "stage_projects", lambda _projects, run_root: (run_root / "persist"))
 
@@ -176,6 +204,55 @@ def test_run_headless_invokes_node_runner_and_logs_output(monkeypatch, tmp_path:
     assert "SensorList+BoundryMap" in calls["command"]
     assert str(harness.RUNNER_JS) in calls["command"]
     assert (tmp_path / "run" / "logs" / "websim.stdout.txt").exists()
+
+
+@pytest.mark.parametrize(
+    ("write_default_model", "expected_value"),
+    [
+        (False, "const writeDefaultModel = false;"),
+        (True, "const writeDefaultModel = true;"),
+    ],
+)
+def test_run_gui_controls_default_model_writer(monkeypatch, tmp_path: Path, write_default_model: bool, expected_value: str):
+    package = _make_runtime_package(tmp_path)
+    monkeypatch.setattr(harness, "ensure_runtime", lambda *_args, **_kwargs: package)
+
+    def fake_stage_projects(projects, run_root):
+        persist_root = run_root / "persist"
+        script_root = persist_root / "scripts" / projects[0]
+        script_root.mkdir(parents=True, exist_ok=True)
+        (script_root / "main.lua").write_text("-- staged\n", encoding="utf-8")
+        return persist_root
+
+    monkeypatch.setattr(harness, "stage_projects", fake_stage_projects)
+    args = Namespace(
+        radio="X20RS-FCC",
+        region="FCC",
+        ethos_version="26.1.0-RC2",
+        no_download=False,
+        project=["SensorList"],
+        port=8765,
+        no_open=True,
+        dry_run=True,
+        run_dir=str(tmp_path / "run"),
+        suite=None,
+        write_default_model=write_default_model,
+    )
+
+    result = harness.run_gui(args)
+    index_html = Path(result["runDir"]) / "gui" / "index.html"
+    html = index_html.read_text(encoding="utf-8")
+
+    assert result["status"] == "gui_ready"
+    assert expected_value in html
+    assert '<link rel="icon" href="data:,">' in html
+    assert 'if (writeDefaultModel && typeof module._writeDefaultSettingsAndModel === "function")' in html
+    assert 'typeof module._reloadScripts === "function"' in html
+    assert "const drawRuntimeCanvas = (width, height, pointer) => {" in html
+    assert "new Uint8Array(runtimeModule.HEAP8.buffer)" in html
+    assert "updateCanvas: drawRuntimeCanvas" in html
+    assert "preRun: [() => {" in html
+    assert "runtimeModule = module;" in html
 
 
 def test_download_no_download_reports_missing_runtime(monkeypatch, tmp_path: Path):
