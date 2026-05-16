@@ -1,0 +1,180 @@
+from __future__ import annotations
+
+import hashlib
+import importlib.util
+import json
+import subprocess
+import sys
+import zipfile
+from argparse import Namespace
+from pathlib import Path
+
+import pytest
+
+
+def load_harness_module():
+    repo_root = Path(__file__).resolve().parents[1]
+    harness_path = repo_root / "tools" / "sim" / "harness" / "run.py"
+    spec = importlib.util.spec_from_file_location("sim_harness", harness_path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+harness = load_harness_module()
+
+
+def test_normalize_radio_target_defaults_to_fcc_region():
+    target = harness.normalize_radio_target("X20RS", None)
+    assert target.key == "X20RS-FCC"
+    assert target.runtime_stem == "X20RS_FCC"
+    assert target.websim_asset_name == "X20RS-FCC-WebSimulator.zip"
+
+
+def test_normalize_radio_target_accepts_explicit_region():
+    target = harness.normalize_radio_target("x20rs-flex", "FCC")
+    assert target.key == "X20RS-FLEX"
+
+
+def test_select_websim_asset_matches_exact_radio_package():
+    release = {
+        "tag_name": "26.1.0-RC2",
+        "assets": [
+            {"name": "X20RS-EU-WebSimulator.zip"},
+            {"name": "X20RS-FCC-WebSimulator.zip", "browser_download_url": "https://example.invalid/x.zip"},
+        ],
+    }
+    asset = harness.select_websim_asset(release, harness.normalize_radio_target("X20RS-FCC", None))
+    assert asset["name"] == "X20RS-FCC-WebSimulator.zip"
+
+
+def test_runtime_package_uses_radio_version_and_package_identity(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(harness, "RADIOS_ROOT", tmp_path / "radios")
+    target = harness.normalize_radio_target("X20RS-FCC", None)
+    package = harness.runtime_package_from_asset(target, "26.1.0-RC2", {"name": target.websim_asset_name})
+    assert package.package_dir == tmp_path / "radios" / "X20RS-FCC" / "26.1.0-RC2" / "X20RS-FCC-WebSimulator"
+    assert package.runtime_js == package.runtime_dir / "X20RS_FCC.js"
+
+
+def test_ensure_runtime_extracts_downloaded_package_and_validates_digest(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(harness, "RADIOS_ROOT", tmp_path / "radios")
+    target = harness.normalize_radio_target("X20RS-FCC", None)
+    zip_source = tmp_path / "source.zip"
+    with zipfile.ZipFile(zip_source, "w") as payload:
+        payload.writestr("X20RS_FCC.js", "module.exports = async () => ({});\n")
+        payload.writestr("X20RS_FCC.wasm", b"wasm")
+    digest = hashlib.sha256(zip_source.read_bytes()).hexdigest()
+    asset = {
+        "name": target.websim_asset_name,
+        "browser_download_url": "https://example.invalid/X20RS-FCC-WebSimulator.zip",
+        "digest": f"sha256:{digest}",
+    }
+
+    monkeypatch.setattr(harness, "resolve_ethos_version", lambda _version: "26.1.0-RC2")
+    monkeypatch.setattr(harness, "fetch_release", lambda _version: {"tag_name": "26.1.0-RC2", "assets": [asset]})
+    def fake_download(_asset, destination: Path):
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(zip_source.read_bytes())
+
+    monkeypatch.setattr(harness, "download_asset", fake_download)
+
+    package = harness.ensure_runtime("X20RS-FCC", None, "26.1.0-RC2")
+
+    assert package.runtime_js.exists()
+    metadata = json.loads((package.package_dir / "metadata.json").read_text(encoding="utf-8"))
+    assert metadata["radio"] == "X20RS-FCC"
+    assert metadata["version"] == "26.1.0-RC2"
+
+
+def test_stage_project_reuses_build_install_spec_and_excludes_tests(tmp_path: Path):
+    run_root = tmp_path / "run"
+    persist = harness.stage_project("SensorList", run_root)
+    assert (persist / "scripts" / "SensorList" / "main.lua").exists()
+    assert not (persist / "scripts" / "SensorList" / "tests").exists()
+
+
+def test_apply_suite_args_loads_sensorlist_smoke_suite():
+    args = Namespace(
+        suite="tools/sim/harness/suites/SensorList-X20RS-FCC.json",
+        project="Other",
+        radio="X20S",
+        region="FCC",
+        ethos_version="old",
+        startup_ms=1,
+        settle_ms=1,
+        timeout_ms=1,
+        write_default_model=True,
+    )
+    harness.apply_suite_args(args)
+    assert args.project == "SensorList"
+    assert args.radio == "X20RS-FCC"
+    assert args.ethos_version == "latest-26.1"
+    assert args.timeout_ms == 12000
+    assert args.write_default_model is False
+
+
+def test_parse_runner_result_reads_last_json_line():
+    result = harness.parse_runner_result(
+        "noise\n{\"status\":\"success\",\"project\":\"SensorList\"}\n",
+        {"status": "startup_failure"},
+    )
+    assert result == {"status": "success", "project": "SensorList"}
+
+
+def test_run_headless_invokes_node_runner_and_logs_output(monkeypatch, tmp_path: Path):
+    runtime_dir = tmp_path / "runtime"
+    runtime_dir.mkdir()
+    runtime_js = runtime_dir / "X20RS_FCC.js"
+    runtime_js.write_text("module.exports = async () => ({});\n", encoding="utf-8")
+    package = harness.RuntimePackage(
+        target=harness.normalize_radio_target("X20RS-FCC", None),
+        version="26.1.0-RC2",
+        asset_name="X20RS-FCC-WebSimulator.zip",
+        package_dir=tmp_path / "pkg",
+        archive_path=tmp_path / "pkg" / "X20RS-FCC-WebSimulator.zip",
+        runtime_dir=runtime_dir,
+        runtime_js=runtime_js,
+    )
+    monkeypatch.setattr(harness, "ensure_runtime", lambda *_args, **_kwargs: package)
+    monkeypatch.setattr(harness, "stage_project", lambda _project, run_root: (run_root / "persist"))
+
+    calls: dict[str, object] = {}
+
+    def fake_run(command, **kwargs):
+        calls["command"] = command
+        calls["kwargs"] = kwargs
+        return subprocess.CompletedProcess(command, 0, '{"status":"success"}\n', "")
+
+    monkeypatch.setattr(harness.subprocess, "run", fake_run)
+    args = Namespace(
+        radio="X20RS-FCC",
+        region="FCC",
+        ethos_version="26.1.0-RC2",
+        no_download=False,
+        project="SensorList",
+        node="node",
+        startup_ms=1,
+        settle_ms=1,
+        timeout_ms=1000,
+        run_dir=str(tmp_path / "run"),
+    )
+    result = harness.run_headless(args)
+
+    assert result["status"] == "success"
+    assert str(harness.RUNNER_JS) in calls["command"]
+    assert (tmp_path / "run" / "logs" / "websim.stdout.txt").exists()
+
+
+def test_download_no_download_reports_missing_runtime(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(harness, "RADIOS_ROOT", tmp_path / "radios")
+    target = harness.normalize_radio_target("X20RS-FCC", None)
+    asset = {"name": target.websim_asset_name, "browser_download_url": "https://example.invalid/x.zip"}
+    monkeypatch.setattr(harness, "resolve_ethos_version", lambda _version: "26.1.0-RC2")
+    monkeypatch.setattr(harness, "fetch_release", lambda _version: {"tag_name": "26.1.0-RC2", "assets": [asset]})
+
+    with pytest.raises(harness.HarnessError) as exc:
+        harness.ensure_runtime("X20RS-FCC", None, "26.1.0-RC2", no_download=True)
+
+    assert exc.value.status == "missing_runtime"
