@@ -87,6 +87,9 @@ Historical detail remains in individual session notes referenced from
   `tools/sim/harness/`; downloaded runtimes are cached under
   `tools/sim/radios/`, run artifacts under `tools/sim/runs/`, and both payload
   roots are ignored except for `.gitkeep` placeholders.
+- Harness `headless` and `gui` modes accept repeated `--project` values so one
+  simulator session can stage any single project or a project set through the
+  same `tools/build.py` install contract.
 - For SensorList on the current Ethos `26.1` line, the repeatable runtime smoke
   command is
   `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`.

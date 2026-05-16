@@ -268,18 +268,52 @@ def ensure_runtime(radio: str, region: str | None, ethos_version: str, no_downlo
     return package
 
 
-def stage_project(project: str, run_root: Path) -> Path:
+def normalize_projects(raw_projects: str | list[str] | tuple[str, ...] | None) -> list[str]:
+    if raw_projects is None:
+        candidates = ["SensorList"]
+    elif isinstance(raw_projects, str):
+        candidates = [raw_projects]
+    else:
+        candidates = [str(project) for project in raw_projects]
+
+    projects: list[str] = []
+    seen: set[str] = set()
+    for raw_project in candidates:
+        project = raw_project.strip()
+        if not project:
+            raise HarnessError("script_failure", "Project name cannot be empty.", 20)
+        key = project.lower()
+        if key in seen:
+            raise HarnessError("script_failure", f"Duplicate project requested: {project}", 20)
+        seen.add(key)
+        projects.append(project)
+    return projects
+
+
+def project_label(projects: list[str]) -> str:
+    return "+".join(projects)
+
+
+def stage_projects(projects: list[str], run_root: Path) -> Path:
     build = _load_build_module()
-    project_dir = REPO_ROOT / "scripts" / project
-    if not project_dir.exists():
-        raise HarnessError("script_failure", f"Project directory not found: {project_dir}", 20)
     persist_root = run_root / "persist"
     if persist_root.exists():
         shutil.rmtree(persist_root)
     persist_root.mkdir(parents=True)
-    install_spec = build.resolve_project_install_spec(project_dir, project)
-    build.stage_project_files(install_spec, persist_root)
+
+    seen_radio_destinations: dict[str, str] = {}
+    for project in projects:
+        project_dir = REPO_ROOT / "scripts" / project
+        if not project_dir.exists():
+            raise HarnessError("script_failure", f"Project directory not found: {project_dir}", 20)
+        install_spec = build.resolve_project_install_spec(project_dir, project)
+        build.ensure_unique_radio_destinations(project, install_spec.radio_files, seen_radio_destinations)
+        build.stage_project_files(install_spec, persist_root, dirs_exist_ok=True)
     return persist_root
+
+
+def stage_project(project: str, run_root: Path) -> Path:
+    return stage_projects([project], run_root)
 
 
 def apply_suite_args(args: argparse.Namespace) -> None:
@@ -299,7 +333,6 @@ def apply_suite_args(args: argparse.Namespace) -> None:
         raise HarnessError("startup_failure", f"Suite file must contain a JSON object: {path}", 10)
 
     mapping = {
-        "project": "project",
         "radio": "radio",
         "region": "region",
         "ethosVersion": "ethos_version",
@@ -308,6 +341,14 @@ def apply_suite_args(args: argparse.Namespace) -> None:
         "timeoutMs": "timeout_ms",
         "writeDefaultModel": "write_default_model",
     }
+    if "projects" in payload:
+        raw_projects = payload["projects"]
+        if not isinstance(raw_projects, list):
+            raise HarnessError("startup_failure", f"Suite file 'projects' must be an array: {path}", 10)
+        setattr(args, "project", [str(project) for project in raw_projects])
+    elif "project" in payload:
+        setattr(args, "project", str(payload["project"]))
+
     for suite_key, arg_name in mapping.items():
         if suite_key in payload:
             setattr(args, arg_name, payload[suite_key])
@@ -336,9 +377,11 @@ def parse_runner_result(stdout: str, fallback: dict[str, Any]) -> dict[str, Any]
 
 def run_headless(args: argparse.Namespace) -> dict[str, Any]:
     apply_suite_args(args)
+    projects = normalize_projects(args.project)
+    label = project_label(projects)
     package = ensure_runtime(args.radio, args.region, args.ethos_version, args.no_download)
-    run_root = new_run_root(args.project, package, args.run_dir)
-    persist_root = stage_project(args.project, run_root)
+    run_root = new_run_root(label, package, args.run_dir)
+    persist_root = stage_projects(projects, run_root)
     logs_dir = run_root / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
 
@@ -352,7 +395,7 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
         "--persist",
         str(persist_root),
         "--project",
-        args.project,
+        label,
         "--startup-ms",
         str(args.startup_ms),
         "--settle-ms",
@@ -378,7 +421,8 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
         (logs_dir / "websim.stderr.txt").write_text(stderr, encoding="utf-8")
         return {
             "status": "timeout",
-            "project": args.project,
+            "project": label,
+            "projects": projects,
             "radio": package.target.key,
             "ethosVersion": package.version,
             "runDir": str(run_root),
@@ -389,7 +433,8 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
     (logs_dir / "websim.stderr.txt").write_text(completed.stderr, encoding="utf-8")
     fallback = {
         "status": "startup_failure" if completed.returncode else "success",
-        "project": args.project,
+        "project": label,
+        "projects": projects,
         "radio": package.target.key,
         "ethosVersion": package.version,
         "runDir": str(run_root),
@@ -397,7 +442,8 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
         "message": "Simulator runner did not emit structured JSON.",
     }
     result = parse_runner_result(completed.stdout, fallback)
-    result.setdefault("project", args.project)
+    result.setdefault("project", label)
+    result.setdefault("projects", projects)
     result.setdefault("radio", package.target.key)
     result.setdefault("ethosVersion", package.version)
     result.setdefault("runDir", str(run_root))
@@ -447,14 +493,18 @@ class CrossOriginHandler(SimpleHTTPRequestHandler):
 
 
 def run_gui(args: argparse.Namespace) -> dict[str, Any]:
+    apply_suite_args(args)
+    projects = normalize_projects(args.project)
+    label = project_label(projects)
     package = ensure_runtime(args.radio, args.region, args.ethos_version, args.no_download)
-    run_root = new_run_root(args.project, package, args.run_dir)
-    persist_root = stage_project(args.project, run_root)
-    gui_root = write_gui_files(package, persist_root, run_root, args.project)
+    run_root = new_run_root(label, package, args.run_dir)
+    persist_root = stage_projects(projects, run_root)
+    gui_root = write_gui_files(package, persist_root, run_root, label)
     url = f"http://127.0.0.1:{args.port}/index.html"
     result = {
         "status": "gui_ready",
-        "project": args.project,
+        "project": label,
+        "projects": projects,
         "radio": package.target.key,
         "ethosVersion": package.version,
         "runDir": str(run_root),
@@ -499,7 +549,12 @@ def parse_args() -> argparse.Namespace:
     headless = subparsers.add_parser("headless", help="Run a headless WebSimulator smoke test.")
     add_runtime_args(headless)
     headless.add_argument("--suite", help="JSON smoke-suite definition. Suite values populate project/radio/version/timing.")
-    headless.add_argument("--project", default="SensorList", help="Project under scripts/ to stage and reload.")
+    headless.add_argument(
+        "--project",
+        action="append",
+        default=None,
+        help="Project under scripts/ to stage and reload. Repeat to stage multiple projects into one simulator persist tree.",
+    )
     headless.add_argument("--node", default="node", help="Node.js executable.")
     headless.add_argument("--startup-ms", type=int, default=1000, help="Delay after simulator start.")
     headless.add_argument("--settle-ms", type=int, default=1500, help="Delay after script reload.")
@@ -513,7 +568,13 @@ def parse_args() -> argparse.Namespace:
 
     gui = subparsers.add_parser("gui", help="Stage a project and launch a browser-based manual simulator view.")
     add_runtime_args(gui)
-    gui.add_argument("--project", default="SensorList", help="Project under scripts/ to stage and reload.")
+    gui.add_argument("--suite", help="JSON GUI-suite definition. Suite values populate project/radio/version/timing.")
+    gui.add_argument(
+        "--project",
+        action="append",
+        default=None,
+        help="Project under scripts/ to stage and reload. Repeat to stage multiple projects into one simulator persist tree.",
+    )
     gui.add_argument("--port", type=int, default=8765, help="Local HTTP port for the GUI view.")
     gui.add_argument("--no-open", action="store_true", help="Serve without opening the default browser.")
     gui.add_argument("--dry-run", action="store_true", help="Prepare GUI files and print the URL without serving.")

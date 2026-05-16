@@ -16,6 +16,9 @@
   and cache guidance.
 - Added a simple SensorList smoke-suite definition:
   - `tools/sim/harness/suites/SensorList-X20RS-FCC.json`
+- Follow-up in the same issue branch made `headless` and `gui` accept repeated
+  `--project` values so one WebSimulator session can stage any project or a
+  project set, such as `SensorList` plus `BoundryMap`.
 - Added ignored cache/run roots:
   - `tools/sim/radios/`
   - `tools/sim/runs/`
@@ -76,6 +79,8 @@
   - result: pass (`status=success`, `ethosVersion=26.1.0-RC2`)
 - `python tools/sim/harness/run.py gui --project SensorList --radio X20RS-FCC --ethos-version latest-26.1 --dry-run --run-dir tools/sim/runs/gui-dry-run`
   - result: pass (`status=gui_ready`)
+- `python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version 1.6.6 --dry-run --run-dir tools/sim/runs/multiproject-dry-run`
+  - result: pass (`status=gui_ready`, `projects=[SensorList, BoundryMap]`)
 
 ## Follow-up items
 

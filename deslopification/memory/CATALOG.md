@@ -16,8 +16,8 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
 - Files: 125
-- Total size: 213,918 bytes
-- Total lines: 5,672
+- Total size: 214,381 bytes
+- Total lines: 5,677
 - Distribution by artifact:
   - session notes: 119
   - handoff/restart notes: 3

@@ -1,6 +1,6 @@
 {
   "name": "sensorlist-x20rs-fcc-smoke",
-  "project": "SensorList",
+  "projects": ["SensorList"],
   "radio": "X20RS-FCC",
   "ethosVersion": "latest-26.1",
   "startupMs": 1000,

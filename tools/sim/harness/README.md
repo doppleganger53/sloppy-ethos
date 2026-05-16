@@ -2,7 +2,7 @@
 
 This harness downloads cached Ethos WebSimulator runtimes, stages repository
 scripts with the same install contract as `tools/build.py`, and runs repeatable
-smoke checks against the staged project.
+smoke checks against the staged project or project set.
 
 Common commands:
 
@@ -10,7 +10,7 @@ Common commands:
 python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1
 python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1
 python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json
-python tools/sim/harness/run.py gui --project SensorList --radio X20RS-FCC --ethos-version latest-26.1
+python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1
 ```
 
 Runtime ZIPs, extracted JavaScript/WASM files, run persist trees, GUI files,

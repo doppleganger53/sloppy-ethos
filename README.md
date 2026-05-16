@@ -70,7 +70,7 @@ python tools/build.py --help
 python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1
 python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1
 python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json
-python tools/sim/harness/run.py gui --project SensorList --radio X20RS-FCC --ethos-version latest-26.1
+python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1
 ```
 
 - The harness stages projects with the same install contract as `tools/build.py`, caches downloaded runtimes under `tools/sim/radios/`, and stores per-run logs under `tools/sim/runs/`.

@@ -31,7 +31,7 @@
   `python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1`
   `python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1`
   `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`
-  `python tools/sim/harness/run.py gui --project SensorList --radio X20RS-FCC --ethos-version latest-26.1`
+  `python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1`
 
 ## Debugging Session Rule
 
@@ -76,6 +76,7 @@
 - downloads the requested radio WebSimulator package, such as `X20RS-FCC-WebSimulator.zip`, into `tools/sim/radios/{Radio}-{Region}/{EthosVersion}/{PackageName}/`.
 - validates the GitHub asset SHA-256 digest when release metadata provides one.
 - stages scripts into isolated run persist trees under `tools/sim/runs/` by calling the existing `tools/build.py` install-spec helpers.
+- accepts repeated `--project` values so GUI and headless sessions can stage one project or a project set into the same simulator persist tree.
 - supports JSON smoke suites, starting with `tools/sim/harness/suites/SensorList-X20RS-FCC.json`.
 - runs headless smoke checks through Node.js and reports structured statuses for success, missing runtime, download failure, startup failure, script failure, and timeout.
 - can prepare and serve a browser-based GUI view for manual confirmation without hand-copying scripts.

@@ -95,10 +95,18 @@ def test_stage_project_reuses_build_install_spec_and_excludes_tests(tmp_path: Pa
     assert not (persist / "scripts" / "SensorList" / "tests").exists()
 
 
+def test_stage_projects_stages_multiple_projects_into_same_persist_tree(tmp_path: Path):
+    persist = harness.stage_projects(["SensorList", "BoundryMap"], tmp_path / "run")
+    assert (persist / "scripts" / "SensorList" / "main.lua").exists()
+    assert (persist / "scripts" / "BoundryMap" / "main.lua").exists()
+    assert not (persist / "scripts" / "SensorList" / "tests").exists()
+    assert not (persist / "scripts" / "BoundryMap" / "tests").exists()
+
+
 def test_apply_suite_args_loads_sensorlist_smoke_suite():
     args = Namespace(
         suite="tools/sim/harness/suites/SensorList-X20RS-FCC.json",
-        project="Other",
+        project=["Other"],
         radio="X20S",
         region="FCC",
         ethos_version="old",
@@ -108,7 +116,7 @@ def test_apply_suite_args_loads_sensorlist_smoke_suite():
         write_default_model=True,
     )
     harness.apply_suite_args(args)
-    assert args.project == "SensorList"
+    assert args.project == ["SensorList"]
     assert args.radio == "X20RS-FCC"
     assert args.ethos_version == "latest-26.1"
     assert args.timeout_ms == 12000
@@ -138,7 +146,7 @@ def test_run_headless_invokes_node_runner_and_logs_output(monkeypatch, tmp_path:
         runtime_js=runtime_js,
     )
     monkeypatch.setattr(harness, "ensure_runtime", lambda *_args, **_kwargs: package)
-    monkeypatch.setattr(harness, "stage_project", lambda _project, run_root: (run_root / "persist"))
+    monkeypatch.setattr(harness, "stage_projects", lambda _projects, run_root: (run_root / "persist"))
 
     calls: dict[str, object] = {}
 
@@ -153,7 +161,7 @@ def test_run_headless_invokes_node_runner_and_logs_output(monkeypatch, tmp_path:
         region="FCC",
         ethos_version="26.1.0-RC2",
         no_download=False,
-        project="SensorList",
+        project=["SensorList", "BoundryMap"],
         node="node",
         startup_ms=1,
         settle_ms=1,
@@ -163,6 +171,9 @@ def test_run_headless_invokes_node_runner_and_logs_output(monkeypatch, tmp_path:
     result = harness.run_headless(args)
 
     assert result["status"] == "success"
+    assert result["projects"] == ["SensorList", "BoundryMap"]
+    assert "--project" in calls["command"]
+    assert "SensorList+BoundryMap" in calls["command"]
     assert str(harness.RUNNER_JS) in calls["command"]
     assert (tmp_path / "run" / "logs" / "websim.stdout.txt").exists()
 
