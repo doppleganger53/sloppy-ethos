@@ -205,19 +205,40 @@ def safe_extract_zip(archive_path: Path, destination: Path) -> None:
     if destination.exists():
         shutil.rmtree(destination)
     destination.mkdir(parents=True)
-    with zipfile.ZipFile(archive_path) as payload:
-        for member in payload.infolist():
-            member_path = destination / member.filename
-            try:
-                member_path.resolve().relative_to(destination.resolve())
-            except ValueError as exc:
-                raise HarnessError("missing_runtime", f"Unsafe path in simulator package: {member.filename}", 12) from exc
-        payload.extractall(destination)
+    try:
+        with zipfile.ZipFile(archive_path) as payload:
+            for member in payload.infolist():
+                member_path = destination / member.filename
+                try:
+                    member_path.resolve().relative_to(destination.resolve())
+                except ValueError as exc:
+                    raise HarnessError("missing_runtime", f"Unsafe path in simulator package: {member.filename}", 12) from exc
+            payload.extractall(destination)
+    except zipfile.BadZipFile as exc:
+        shutil.rmtree(destination, ignore_errors=True)
+        archive_path.unlink(missing_ok=True)
+        raise HarnessError(
+            "download_failure",
+            f"Simulator archive {archive_path.name} is invalid or truncated.",
+            11,
+        ) from exc
 
 
 def ensure_runtime(radio: str, region: str | None, ethos_version: str, no_download: bool = False) -> RuntimePackage:
     target = normalize_radio_target(radio, region)
     version = resolve_ethos_version(ethos_version)
+    cached_package = runtime_package_from_asset(target, version, {"name": target.websim_asset_name})
+
+    if cached_package.runtime_js.exists():
+        return cached_package
+
+    if no_download:
+        raise HarnessError(
+            "missing_runtime",
+            f"Runtime is not cached at {cached_package.package_dir}. Run the download command first.",
+            12,
+        )
+
     release = fetch_release(version)
     asset = select_websim_asset(release, target)
     package = runtime_package_from_asset(target, version, asset)
@@ -225,13 +246,6 @@ def ensure_runtime(radio: str, region: str | None, ethos_version: str, no_downlo
 
     if package.runtime_js.exists():
         return package
-
-    if no_download:
-        raise HarnessError(
-            "missing_runtime",
-            f"Runtime is not cached at {package.package_dir}. Run the download command first.",
-            12,
-        )
 
     if not package.archive_path.exists():
         download_asset(asset, package.archive_path)

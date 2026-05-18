@@ -105,6 +105,48 @@ def test_ensure_runtime_extracts_downloaded_package_and_validates_digest(monkeyp
     assert metadata["version"] == "26.1.0-RC2"
 
 
+def test_ensure_runtime_returns_cached_runtime_without_fetching_release(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(harness, "RADIOS_ROOT", tmp_path / "radios")
+    target = harness.normalize_radio_target("X20RS-FCC", None)
+    package = harness.runtime_package_from_asset(target, "26.1.0-RC2", {"name": target.websim_asset_name})
+    package.runtime_dir.mkdir(parents=True)
+    package.runtime_js.write_text("module.exports = async () => ({});\n", encoding="utf-8")
+    (package.runtime_dir / f"{target.runtime_stem}.wasm").write_bytes(b"wasm")
+
+    def fail_fetch_release(_version):
+        raise AssertionError("fetch_release should not be called for cached runtimes")
+
+    monkeypatch.setattr(harness, "resolve_ethos_version", lambda _version: "26.1.0-RC2")
+    monkeypatch.setattr(harness, "fetch_release", fail_fetch_release)
+
+    result = harness.ensure_runtime("X20RS-FCC", None, "26.1.0-RC2", no_download=True)
+
+    assert result.runtime_js == package.runtime_js
+
+
+def test_ensure_runtime_wraps_bad_zipfile_and_cleans_invalid_archive(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(harness, "RADIOS_ROOT", tmp_path / "radios")
+    target = harness.normalize_radio_target("X20RS-FCC", None)
+    asset = {
+        "name": target.websim_asset_name,
+        "browser_download_url": "https://example.invalid/X20RS-FCC-WebSimulator.zip",
+    }
+    package = harness.runtime_package_from_asset(target, "26.1.0-RC2", asset)
+    package.archive_path.parent.mkdir(parents=True, exist_ok=True)
+    package.archive_path.write_bytes(b"not-a-zip")
+
+    monkeypatch.setattr(harness, "resolve_ethos_version", lambda _version: "26.1.0-RC2")
+    monkeypatch.setattr(harness, "fetch_release", lambda _version: {"tag_name": "26.1.0-RC2", "assets": [asset]})
+
+    with pytest.raises(harness.HarnessError) as exc:
+        harness.ensure_runtime("X20RS-FCC", None, "26.1.0-RC2")
+
+    assert exc.value.status == "download_failure"
+    assert "invalid or truncated" in exc.value.message
+    assert not package.archive_path.exists()
+    assert not package.runtime_dir.exists()
+
+
 def test_stage_project_reuses_build_install_spec_and_excludes_tests(tmp_path: Path):
     persist = harness.stage_project("SensorList", tmp_path / "persist")
     assert (persist / "scripts" / "SensorList" / "main.lua").exists()
