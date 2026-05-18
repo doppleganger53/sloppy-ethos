@@ -106,18 +106,63 @@ def test_ensure_runtime_extracts_downloaded_package_and_validates_digest(monkeyp
 
 
 def test_stage_project_reuses_build_install_spec_and_excludes_tests(tmp_path: Path):
-    run_root = tmp_path / "run"
-    persist = harness.stage_project("SensorList", run_root)
+    persist = harness.stage_project("SensorList", tmp_path / "persist")
     assert (persist / "scripts" / "SensorList" / "main.lua").exists()
     assert not (persist / "scripts" / "SensorList" / "tests").exists()
 
 
 def test_stage_projects_stages_multiple_projects_into_same_persist_tree(tmp_path: Path):
-    persist = harness.stage_projects(["SensorList", "BoundryMap"], tmp_path / "run")
+    persist = harness.stage_projects(["SensorList", "BoundryMap"], tmp_path / "persist")
     assert (persist / "scripts" / "SensorList" / "main.lua").exists()
     assert (persist / "scripts" / "BoundryMap" / "main.lua").exists()
     assert not (persist / "scripts" / "SensorList" / "tests").exists()
     assert not (persist / "scripts" / "BoundryMap" / "tests").exists()
+
+
+def test_stage_projects_does_not_delete_existing_persist_files(tmp_path: Path):
+    persist = tmp_path / "persist"
+    existing = persist / "models" / "keep.bin"
+    existing.parent.mkdir(parents=True)
+    existing.write_bytes(b"model")
+
+    harness.stage_projects(["SensorList"], persist)
+
+    assert existing.exists()
+    assert (persist / "scripts" / "SensorList" / "main.lua").exists()
+
+
+def test_resolve_persist_root_defaults_to_ethos_suite_version_and_radio(monkeypatch, tmp_path: Path):
+    package = _make_runtime_package(tmp_path)
+    monkeypatch.setattr(harness, "ethos_suite_data_root", lambda: tmp_path / "Ethos Suite")
+
+    persist = harness.resolve_persist_root(package)
+
+    assert persist == tmp_path / "Ethos Suite" / ".simulator" / "26.1.0-RC2" / "persist" / "X20RS"
+
+
+def test_resolve_persist_root_accepts_explicit_override(tmp_path: Path):
+    package = _make_runtime_package(tmp_path)
+    explicit = tmp_path / "custom-persist"
+
+    assert harness.resolve_persist_root(package, str(explicit)) == explicit.resolve()
+
+
+def test_gui_handler_serves_runtime_files_from_cached_package(tmp_path: Path):
+    package = _make_runtime_package(tmp_path)
+    gui_root = tmp_path / "gui"
+    gui_root.mkdir()
+    handler_class = harness.make_gui_handler(
+        gui_root,
+        package.runtime_dir,
+        {package.runtime_js.name, f"{package.target.runtime_stem}.wasm"},
+    )
+    handler = handler_class.__new__(handler_class)
+
+    runtime_path = type(handler).translate_path(handler, f"/runtime/{package.runtime_js.name}")
+    missing_path = type(handler).translate_path(handler, "/runtime/not-cached.js")
+
+    assert runtime_path == str(package.runtime_js)
+    assert missing_path == str(gui_root / "__missing_runtime_file__")
 
 
 def test_apply_suite_args_loads_sensorlist_smoke_suite():
@@ -174,7 +219,8 @@ def test_parse_runner_result_reads_last_json_line():
 def test_run_headless_invokes_node_runner_and_logs_output(monkeypatch, tmp_path: Path):
     package = _make_runtime_package(tmp_path)
     monkeypatch.setattr(harness, "ensure_runtime", lambda *_args, **_kwargs: package)
-    monkeypatch.setattr(harness, "stage_projects", lambda _projects, run_root: (run_root / "persist"))
+    monkeypatch.setattr(harness, "resolve_persist_root", lambda _package, _explicit=None: tmp_path / "persist")
+    monkeypatch.setattr(harness, "stage_projects", lambda _projects, persist_root: persist_root)
 
     calls: dict[str, object] = {}
 
@@ -195,11 +241,13 @@ def test_run_headless_invokes_node_runner_and_logs_output(monkeypatch, tmp_path:
         settle_ms=1,
         timeout_ms=1000,
         run_dir=str(tmp_path / "run"),
+        persist_dir=None,
     )
     result = harness.run_headless(args)
 
     assert result["status"] == "success"
     assert result["projects"] == ["SensorList", "BoundryMap"]
+    assert result["persistDir"] == str(tmp_path / "persist")
     assert "--project" in calls["command"]
     assert "SensorList+BoundryMap" in calls["command"]
     assert str(harness.RUNNER_JS) in calls["command"]
@@ -216,9 +264,9 @@ def test_run_headless_invokes_node_runner_and_logs_output(monkeypatch, tmp_path:
 def test_run_gui_controls_default_model_writer(monkeypatch, tmp_path: Path, write_default_model: bool, expected_value: str):
     package = _make_runtime_package(tmp_path)
     monkeypatch.setattr(harness, "ensure_runtime", lambda *_args, **_kwargs: package)
+    monkeypatch.setattr(harness, "resolve_persist_root", lambda _package, _explicit=None: tmp_path / "persist")
 
-    def fake_stage_projects(projects, run_root):
-        persist_root = run_root / "persist"
+    def fake_stage_projects(projects, persist_root):
         script_root = persist_root / "scripts" / projects[0]
         script_root.mkdir(parents=True, exist_ok=True)
         (script_root / "main.lua").write_text("-- staged\n", encoding="utf-8")
@@ -235,21 +283,38 @@ def test_run_gui_controls_default_model_writer(monkeypatch, tmp_path: Path, writ
         no_open=True,
         dry_run=True,
         run_dir=str(tmp_path / "run"),
+        persist_dir=None,
         suite=None,
         write_default_model=write_default_model,
     )
 
     result = harness.run_gui(args)
     index_html = Path(result["runDir"]) / "gui" / "index.html"
+    gui_runtime_dir = Path(result["runDir"]) / "gui" / "runtime"
     html = index_html.read_text(encoding="utf-8")
 
     assert result["status"] == "gui_ready"
+    assert not gui_runtime_dir.exists()
     assert expected_value in html
     assert '<link rel="icon" href="data:,">' in html
+    runtime_token = f"{package.version}-{harness._sha256(package.runtime_js)[:12]}"
+    runtime_token = f"{runtime_token}-{harness._sha256(package.runtime_dir / f'{package.target.runtime_stem}.wasm')[:12]}"
+    assert f'<script src="runtime/{package.runtime_js.name}?v={runtime_token}"></script>' in html
+    assert f'locateFile: (path) => "runtime/" + path + "?v={runtime_token}"' in html
     assert 'if (writeDefaultModel && typeof module._writeDefaultSettingsAndModel === "function")' in html
     assert 'typeof module._reloadScripts === "function"' in html
+    assert "const expandRgb565 = (source, width, height) => {" in html
     assert "const drawRuntimeCanvas = (width, height, pointer) => {" in html
-    assert "new Uint8Array(runtimeModule.HEAP8.buffer)" in html
+    assert "runtimeModule.HEAPU16.buffer" in html
+    assert "new Uint16Array(runtimeModule.HEAPU16.buffer, pointer, pixelCount)" in html
+    assert "const targetRow = (height - y - 1) * width;" in html
+    assert "new ImageData(pixels, width, height)" in html
+    assert 'runtimeModule.ccall(name, "void", args.map(() => "number"), args);' in html
+    assert 'callRuntime("onMouseDown", [position.x, position.y]);' in html
+    assert 'callRuntime("onMouseUp", [position.x, position.y]);' in html
+    assert 'callRuntime("onMouseMove", [position.x, position.y]);' in html
+    assert 'callRuntime("onMouseLongPress");' in html
+    assert 'canvas.addEventListener("touchstart"' in html
     assert "updateCanvas: drawRuntimeCanvas" in html
     assert "preRun: [() => {" in html
     assert "runtimeModule = module;" in html

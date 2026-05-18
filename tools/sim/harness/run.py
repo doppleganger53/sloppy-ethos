@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.error
+import urllib.parse
 import urllib.request
 import webbrowser
 import zipfile
@@ -294,12 +295,9 @@ def project_label(projects: list[str]) -> str:
     return "+".join(projects)
 
 
-def stage_projects(projects: list[str], run_root: Path) -> Path:
+def stage_projects(projects: list[str], persist_root: Path) -> Path:
     build = _load_build_module()
-    persist_root = run_root / "persist"
-    if persist_root.exists():
-        shutil.rmtree(persist_root)
-    persist_root.mkdir(parents=True)
+    persist_root.mkdir(parents=True, exist_ok=True)
 
     seen_radio_destinations: dict[str, str] = {}
     for project in projects:
@@ -312,8 +310,25 @@ def stage_projects(projects: list[str], run_root: Path) -> Path:
     return persist_root
 
 
-def stage_project(project: str, run_root: Path) -> Path:
-    return stage_projects([project], run_root)
+def stage_project(project: str, persist_root: Path) -> Path:
+    return stage_projects([project], persist_root)
+
+
+def ethos_suite_data_root() -> Path:
+    if os.name == "nt":
+        appdata = os.environ.get("APPDATA")
+        if appdata:
+            return Path(appdata) / "Ethos Suite"
+        return Path.home() / "AppData" / "Roaming" / "Ethos Suite"
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "Ethos Suite"
+    return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "Ethos Suite"
+
+
+def resolve_persist_root(package: RuntimePackage, explicit: str | None = None) -> Path:
+    if explicit:
+        return Path(explicit).expanduser().resolve()
+    return ethos_suite_data_root() / ".simulator" / package.version / "persist" / package.target.radio
 
 
 def apply_suite_args(args: argparse.Namespace) -> None:
@@ -383,7 +398,8 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
     label = project_label(projects)
     package = ensure_runtime(args.radio, args.region, args.ethos_version, args.no_download)
     run_root = new_run_root(label, package, args.run_dir)
-    persist_root = stage_projects(projects, run_root)
+    persist_root = resolve_persist_root(package, args.persist_dir)
+    persist_root = stage_projects(projects, persist_root)
     logs_dir = run_root / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
 
@@ -428,6 +444,7 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
             "radio": package.target.key,
             "ethosVersion": package.version,
             "runDir": str(run_root),
+            "persistDir": str(persist_root),
             "message": f"Headless simulator timed out after {args.timeout_ms} ms.",
         }
 
@@ -440,6 +457,7 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
         "radio": package.target.key,
         "ethosVersion": package.version,
         "runDir": str(run_root),
+        "persistDir": str(persist_root),
         "exitCode": completed.returncode,
         "message": "Simulator runner did not emit structured JSON.",
     }
@@ -449,6 +467,7 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
     result.setdefault("radio", package.target.key)
     result.setdefault("ethosVersion", package.version)
     result.setdefault("runDir", str(run_root))
+    result.setdefault("persistDir", str(persist_root))
     result["stdoutLog"] = str(logs_dir / "websim.stdout.txt")
     result["stderrLog"] = str(logs_dir / "websim.stderr.txt")
     return result
@@ -471,20 +490,20 @@ def write_gui_files(
     write_default_model: bool = False,
 ) -> Path:
     gui_root = run_root / "gui"
-    runtime_root = gui_root / "runtime"
     if gui_root.exists():
         shutil.rmtree(gui_root)
-    runtime_root.mkdir(parents=True)
-    shutil.copy2(package.runtime_js, runtime_root / package.runtime_js.name)
-    wasm = package.runtime_dir / f"{package.target.runtime_stem}.wasm"
-    if wasm.exists():
-        shutil.copy2(wasm, runtime_root / wasm.name)
+    gui_root.mkdir(parents=True)
     (gui_root / "persist_manifest.json").write_text(
         json.dumps(_persist_manifest(persist_root), indent=2) + "\n",
         encoding="utf-8",
     )
+    runtime_token = f"{package.version}-{_sha256(package.runtime_js)[:12]}"
+    runtime_wasm = package.runtime_dir / f"{package.target.runtime_stem}.wasm"
+    if runtime_wasm.exists():
+        runtime_token = f"{runtime_token}-{_sha256(runtime_wasm)[:12]}"
     (gui_root / "index.html").write_text(
         GUI_HTML.replace("__RUNTIME_JS__", f"runtime/{package.runtime_js.name}")
+        .replace("__RUNTIME_CACHE_TOKEN__", urllib.parse.quote(runtime_token, safe=""))
         .replace("__RUNTIME_FACTORY__", package.target.runtime_stem)
         .replace("__PROJECT__", project)
         .replace("__WRITE_DEFAULT_MODEL__", json.dumps(write_default_model)),
@@ -498,7 +517,27 @@ class CrossOriginHandler(SimpleHTTPRequestHandler):
         self.send_header("Cross-Origin-Opener-Policy", "same-origin")
         self.send_header("Cross-Origin-Embedder-Policy", "require-corp")
         self.send_header("Cross-Origin-Resource-Policy", "same-origin")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
         super().end_headers()
+
+
+def make_gui_handler(gui_root: Path, runtime_dir: Path, runtime_files: set[str]):
+    class GuiHandler(CrossOriginHandler):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, directory=str(gui_root), **kwargs)
+
+        def translate_path(self, path: str) -> str:
+            request_path = urllib.parse.urlsplit(path).path
+            if request_path.startswith("/runtime/"):
+                name = Path(urllib.parse.unquote(request_path[len("/runtime/") :])).name
+                if name in runtime_files:
+                    return str(runtime_dir / name)
+                return str(gui_root / "__missing_runtime_file__")
+            return super().translate_path(path)
+
+    return GuiHandler
 
 
 def run_gui(args: argparse.Namespace) -> dict[str, Any]:
@@ -507,7 +546,8 @@ def run_gui(args: argparse.Namespace) -> dict[str, Any]:
     label = project_label(projects)
     package = ensure_runtime(args.radio, args.region, args.ethos_version, args.no_download)
     run_root = new_run_root(label, package, args.run_dir)
-    persist_root = stage_projects(projects, run_root)
+    persist_root = resolve_persist_root(package, args.persist_dir)
+    persist_root = stage_projects(projects, persist_root)
     gui_root = write_gui_files(
         package,
         persist_root,
@@ -523,13 +563,20 @@ def run_gui(args: argparse.Namespace) -> dict[str, Any]:
         "radio": package.target.key,
         "ethosVersion": package.version,
         "runDir": str(run_root),
+        "persistDir": str(persist_root),
         "url": url,
     }
     if args.dry_run:
         return result
 
-    os.chdir(gui_root)
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), CrossOriginHandler)
+    runtime_files = {package.runtime_js.name}
+    wasm = package.runtime_dir / f"{package.target.runtime_stem}.wasm"
+    if wasm.exists():
+        runtime_files.add(wasm.name)
+    server = ThreadingHTTPServer(
+        ("127.0.0.1", args.port),
+        make_gui_handler(gui_root, package.runtime_dir, runtime_files),
+    )
     if not args.no_open:
         webbrowser.open(url)
     print(json.dumps(result, sort_keys=True), flush=True)
@@ -580,6 +627,10 @@ def parse_args() -> argparse.Namespace:
         help="Call the runtime default model writer before start. Disabled by default because some WebSimulator builds block in this call under Node.",
     )
     headless.add_argument("--run-dir", help="Explicit run artifact directory.")
+    headless.add_argument(
+        "--persist-dir",
+        help="Explicit simulator persist directory. Defaults to the Ethos Suite persist path for the selected radio and version.",
+    )
 
     gui = subparsers.add_parser("gui", help="Stage a project and launch a browser-based manual simulator view.")
     add_runtime_args(gui)
@@ -599,6 +650,10 @@ def parse_args() -> argparse.Namespace:
         help="Call the runtime default model writer before start.",
     )
     gui.add_argument("--run-dir", help="Explicit run artifact directory.")
+    gui.add_argument(
+        "--persist-dir",
+        help="Explicit simulator persist directory. Defaults to the Ethos Suite persist path for the selected radio and version.",
+    )
     return parser.parse_args()
 
 
@@ -642,7 +697,7 @@ GUI_HTML = """<!doctype html>
   <style>
     body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #eee; }
     main { display: grid; grid-template-columns: minmax(480px, 1fr) 420px; min-height: 100vh; }
-    canvas { width: 100%; image-rendering: pixelated; background: #000; align-self: start; }
+    canvas { width: 100%; image-rendering: pixelated; background: #000; align-self: start; touch-action: none; user-select: none; }
     pre { margin: 0; padding: 12px; overflow: auto; background: #1f1f1f; font-size: 12px; }
   </style>
 </head>
@@ -651,7 +706,7 @@ GUI_HTML = """<!doctype html>
   <canvas id="screen" width="800" height="480"></canvas>
   <pre id="log"></pre>
 </main>
-<script src="__RUNTIME_JS__"></script>
+<script src="__RUNTIME_JS__?v=__RUNTIME_CACHE_TOKEN__"></script>
 <script>
 const log = (message) => {
   const node = document.getElementById("log");
@@ -662,6 +717,8 @@ const canvas = document.getElementById("screen");
 const context = canvas.getContext("2d");
 const writeDefaultModel = __WRITE_DEFAULT_MODEL__;
 let runtimeModule = null;
+let mouseDown = false;
+let longPressTimer = null;
 const ensureDir = (FS, path) => {
   const parts = path.split("/").filter(Boolean);
   let current = "";
@@ -678,24 +735,102 @@ const writeFile = (FS, relative, encoded) => {
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   FS.writeFile(path, bytes);
 };
+const expandRgb565 = (source, width, height) => {
+  const pixelCount = width * height;
+  const pixels = new Uint8ClampedArray(pixelCount * 4);
+  for (let y = 0; y < height; y++) {
+    const sourceRow = y * width;
+    const targetRow = (height - y - 1) * width;
+    for (let x = 0; x < width; x++) {
+      const value = source[sourceRow + x];
+      const offset = (targetRow + x) * 4;
+      pixels[offset] = ((value >> 11) & 0x1f) * 255 / 31;
+      pixels[offset + 1] = ((value >> 5) & 0x3f) * 255 / 63;
+      pixels[offset + 2] = (value & 0x1f) * 255 / 31;
+      pixels[offset + 3] = 255;
+    }
+  }
+  return pixels;
+};
 const drawRuntimeCanvas = (width, height, pointer) => {
-  if (!runtimeModule || !runtimeModule.HEAP8 || !pointer || !width || !height) return;
+  if (!runtimeModule || !runtimeModule.HEAPU16 || !pointer || !width || !height) return;
   if (canvas.width !== width || canvas.height !== height) {
     canvas.width = width;
     canvas.height = height;
   }
   const pixelCount = width * height;
-  const rgbaLength = pixelCount * 4;
-  const heap = new Uint8Array(runtimeModule.HEAP8.buffer);
-  if (pointer + rgbaLength > heap.length) return;
-  const pixels = new Uint8ClampedArray(heap.subarray(pointer, pointer + rgbaLength));
+  const rgb565Length = pixelCount * 2;
+  if (pointer + rgb565Length > runtimeModule.HEAPU16.buffer.byteLength) return;
+  const source = new Uint16Array(runtimeModule.HEAPU16.buffer, pointer, pixelCount);
+  const pixels = expandRgb565(source, width, height);
   context.putImageData(new ImageData(pixels, width, height), 0, 0);
 };
+const canvasPosition = (clientX, clientY) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.min(canvas.width - 1, Math.max(0, (clientX - rect.left) * canvas.width / rect.width));
+  const y = Math.min(canvas.height - 1, Math.max(0, (clientY - rect.top) * canvas.height / rect.height));
+  return { x: Math.round(x), y: Math.round(y) };
+};
+const touchPosition = (event) => {
+  const touch = event.touches[0] || event.changedTouches[0];
+  return canvasPosition(touch.clientX, touch.clientY);
+};
+const callRuntime = (name, args = []) => {
+  if (!runtimeModule || typeof runtimeModule.ccall !== "function") return;
+  runtimeModule.ccall(name, "void", args.map(() => "number"), args);
+};
+const clearLongPressTimer = () => {
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+};
+const startLongPressTimer = () => {
+  clearLongPressTimer();
+  longPressTimer = setTimeout(() => {
+    if (mouseDown) {
+      mouseDown = false;
+      callRuntime("onMouseLongPress");
+    }
+  }, 1000);
+};
+const handlePointerDown = (position) => {
+  mouseDown = true;
+  callRuntime("onMouseDown", [position.x, position.y]);
+  startLongPressTimer();
+};
+const handlePointerUp = (position) => {
+  if (!mouseDown) return;
+  mouseDown = false;
+  clearLongPressTimer();
+  callRuntime("onMouseUp", [position.x, position.y]);
+};
+const handlePointerMove = (position, pressed) => {
+  if (!mouseDown || !pressed) return;
+  clearLongPressTimer();
+  callRuntime("onMouseMove", [position.x, position.y]);
+};
+canvas.addEventListener("mousedown", (event) => handlePointerDown(canvasPosition(event.clientX, event.clientY)));
+canvas.addEventListener("mouseup", (event) => handlePointerUp(canvasPosition(event.clientX, event.clientY)));
+canvas.addEventListener("mousemove", (event) => handlePointerMove(canvasPosition(event.clientX, event.clientY), event.buttons === 1));
+canvas.addEventListener("mouseleave", (event) => handlePointerUp(canvasPosition(event.clientX, event.clientY)));
+canvas.addEventListener("touchstart", (event) => {
+  event.preventDefault();
+  handlePointerDown(touchPosition(event));
+});
+canvas.addEventListener("touchend", (event) => {
+  event.preventDefault();
+  handlePointerUp(touchPosition(event));
+});
+canvas.addEventListener("touchmove", (event) => {
+  event.preventDefault();
+  handlePointerMove(touchPosition(event), true);
+});
 fetch("persist_manifest.json")
   .then((response) => response.json())
   .then((manifest) => {
     const runtimeConfig = {
-      locateFile: (path) => "runtime/" + path,
+      locateFile: (path) => "runtime/" + path + "?v=__RUNTIME_CACHE_TOKEN__",
       print: log,
       printErr: (line) => log("ERR " + line),
       updateCanvas: drawRuntimeCanvas,

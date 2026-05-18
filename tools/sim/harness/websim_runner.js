@@ -129,13 +129,6 @@ async function main() {
     result.reloaded = true;
     progress("waiting after reload");
     await sleep(settleMs);
-    try {
-      progress("stopping simulator");
-      module._stop();
-    } catch (_error) {
-      // Stop is best effort; script load failures are captured from logs.
-    }
-
     const errors = findScriptErrors([...stdout, ...stderr]);
     result.status = errors.length ? "script_failure" : "success";
     result.errors = errors;
