@@ -73,7 +73,7 @@ python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/Sensor
 python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1
 ```
 
-- The harness stages projects with the same install contract as `tools/build.py`, caches downloaded runtimes under `tools/sim/radios/`, and stores per-run logs under `tools/sim/runs/`.
+- The harness stages projects with the same install contract as `tools/build.py`, writes them into the Ethos Suite persist directory for the selected radio/runtime, caches downloaded runtimes under `tools/sim/radios/`, serves GUI runtimes from that cache, and stores per-run logs under `tools/sim/runs/`.
 - Use headless harness runs as the repeatable simulator layer between script-local Lua/pytest tests and manual Ethos Suite or physical-radio checks.
 
 ### 30-Second First Run

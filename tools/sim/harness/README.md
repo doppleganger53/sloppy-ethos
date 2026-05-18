@@ -13,10 +13,17 @@ python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/Sensor
 python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1
 ```
 
-Runtime ZIPs, extracted JavaScript/WASM files, run persist trees, GUI files,
-and logs are stored under `tools/sim/radios/` and `tools/sim/runs/`. Those
-directories are ignored by git because simulator payloads are downloaded release
-artifacts, not source files.
+By default, headless and GUI runs stage projects into the same Ethos Suite
+persist directory for the selected radio and runtime version:
+`{Ethos Suite data}/.simulator/{EthosVersion}/persist/{Radio}`. Use
+`--persist-dir` only when you need to point the WebSimulator at a nonstandard
+persist tree.
+
+Runtime ZIPs and extracted JavaScript/WASM files are stored under
+`tools/sim/radios/`. GUI mode serves those cached runtime files directly
+instead of copying JS/WASM into each run directory. Run logs and generated GUI
+wrapper files are stored under `tools/sim/runs/`. Those directories are ignored
+by git because simulator payloads and run artifacts are not source files.
 
 The headless command exits with structured status:
 

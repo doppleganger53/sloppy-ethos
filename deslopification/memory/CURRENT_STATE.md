@@ -87,6 +87,12 @@ Historical detail remains in individual session notes referenced from
   `tools/sim/harness/`; downloaded runtimes are cached under
   `tools/sim/radios/`, run artifacts under `tools/sim/runs/`, and both payload
   roots are ignored except for `.gitkeep` placeholders.
+- Harness `headless` and `gui` modes stage projects into the Ethos Suite
+  persist directory for the selected runtime version and radio by default,
+  with `--persist-dir` available only for nonstandard persist roots.
+- GUI mode serves runtime JS/WASM from the cached package under
+  `tools/sim/radios/` rather than copying runtime files into each run
+  directory.
 - Harness `headless` and `gui` modes accept repeated `--project` values so one
   simulator session can stage any single project or a project set through the
   same `tools/build.py` install contract.
@@ -100,7 +106,10 @@ Historical detail remains in individual session notes referenced from
 - For WebSimulator GUI mode, stage manifest writes run through Emscripten
   `preRun`, then the harness lets generated `main` initialize before calling
   `_start()`. Browser canvas updates arrive as `(width, height, pointer)` and
-  must read through exported `HEAP8.buffer`, not unexported `HEAPU8`.
+  point at a bottom-origin RGB565 framebuffer that the harness must decode from
+  exported `HEAPU16.buffer` and vertically flip before writing to a 2D canvas.
+  Display mouse/touch events must be mapped from browser canvas coordinates to
+  LCD coordinates and sent through the runtime `onMouse*` exports.
 - Ethos `26.1` compatibility baseline, reference checkout path, simulator
   targets, and follow-up issue map now live in
   `docs/ETHOS_26_1_COMPATIBILITY.md`.

@@ -75,12 +75,13 @@
 - resolves `latest-26.1` to the newest Ethos `26.1` release from `FrSkyRC/ETHOS-Feedback-Community`.
 - downloads the requested radio WebSimulator package, such as `X20RS-FCC-WebSimulator.zip`, into `tools/sim/radios/{Radio}-{Region}/{EthosVersion}/{PackageName}/`.
 - validates the GitHub asset SHA-256 digest when release metadata provides one.
-- stages scripts into isolated run persist trees under `tools/sim/runs/` by calling the existing `tools/build.py` install-spec helpers.
+- stages scripts into the Ethos Suite persist directory for the selected radio/runtime by calling the existing `tools/build.py` install-spec helpers.
 - accepts repeated `--project` values so GUI and headless sessions can stage one project or a project set into the same simulator persist tree.
 - supports JSON smoke suites, starting with `tools/sim/harness/suites/SensorList-X20RS-FCC.json`.
 - runs headless smoke checks through Node.js and reports structured statuses for success, missing runtime, download failure, startup failure, script failure, and timeout.
 - can prepare and serve a browser-based GUI view for manual confirmation without hand-copying scripts.
-- keeps downloaded runtimes, extracted JavaScript/WASM, logs, generated GUI files, and persist trees out of git.
+- serves GUI runtime JS/WASM from the cached package under `tools/sim/radios/` instead of copying runtime files into each run directory.
+- keeps downloaded runtimes, extracted JavaScript/WASM, logs, and generated GUI files out of git.
 - does not call `_writeDefaultSettingsAndModel()` by default in headless or GUI startup because some X20RS-FCC runtimes can block or abort in that export; use `--write-default-model` only when validating a runtime known not to block there.
 
 ## Tooling Decision Records
