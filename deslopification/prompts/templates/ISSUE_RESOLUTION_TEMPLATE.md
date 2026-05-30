@@ -23,6 +23,8 @@ the stated acceptance criteria and repository policies.
 
 You are Codex working directly in this repository.
 
+- If launched from the parent `EthosLua` workspace, first read the parent
+  `AGENTS.MD`, then enter `sloppy-ethos/` before applying this template.
 - Keep changes focused on this issue only.
 - Preserve existing behavior unless this issue explicitly changes behavior.
 - Prefer minimal, high-signal diffs over broad refactors.
@@ -30,16 +32,18 @@ You are Codex working directly in this repository.
 
 ## Mandatory Startup Workflow
 
-1. Read memory entrypoint files:
+1. Confirm the working directory is the `sloppy-ethos` repository, not the
+   parent `EthosLua` workspace or a sibling reference checkout.
+2. Read memory entrypoint files:
    - `deslopification/memory/README.md`
    - `deslopification/memory/CURRENT_STATE.md`
-2. Use `deslopification/memory/CATALOG.md` to load only task-relevant note(s).
-3. Run `git status --short --branch`.
-4. Confirm root version from `VERSION`.
-5. Cross-check workflow commands in:
+3. Use `deslopification/memory/CATALOG.md` to load only task-relevant note(s).
+4. Run `git status --short --branch`.
+5. Confirm root version from `VERSION`.
+6. Cross-check workflow commands in:
    - `README.md`
    - `docs/DEVELOPMENT.md`
-6. Review issue body/comments and linked artifacts.
+7. Review issue body/comments and linked artifacts.
 
 ## Branch And Worktree Gate (Required Before Editing)
 
@@ -111,6 +115,9 @@ Document the runtime interaction contract before editing:
 - No destructive git commands.
 - No unrelated cleanup.
 - Keep temporary analysis artifacts in `deslopification/memory/temp/`.
+- Treat sibling reference checkouts as read-only evidence unless the issue or
+  user request explicitly asks to update them. Before copying reference code,
+  docs, or assets, verify license and attribution requirements.
 
 ## Validation Matrix (Required)
 

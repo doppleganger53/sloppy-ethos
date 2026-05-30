@@ -16,9 +16,28 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
 ## Priority And Scope
 
-- These rules are repository-wide and apply to every task in this workspace.
+- These rules are repository-wide and apply to every task in this checkout.
+- If a session starts from the parent `EthosLua` workspace, first read the
+  workspace `AGENTS.MD`, then enter `sloppy-ethos/` before applying this
+  repository policy.
 - Keep changes scoped to the user request. Do not perform unrelated cleanup or broad refactors.
 - Preserve existing behavior unless the task explicitly requests behavior changes.
+
+## Parent Workspace And Reference Checkouts
+
+- The parent `EthosLua` workspace is an orchestration shell; this repository is
+  the primary implementation repo.
+- Sibling directories such as `ETHOS-Feedback-Community/`,
+  `ETHOS-Feedback-Community-prerelease/`, and `Ethos-GPS-AccuMapv1/` are
+  reference checkouts, not part of this repo's working tree.
+- Treat sibling reference projects as read-only evidence unless the user
+  explicitly asks to update or modify them.
+- Pull reference updates only with commands scoped to that checkout, for
+  example `git -C ../ETHOS-Feedback-Community pull --ff-only`.
+- Do not stage parent-workspace or sibling-reference files into `sloppy-ethos`.
+- Before copying code, docs, or assets from a reference project, verify the
+  source license and record attribution in the relevant repo docs or session
+  notes.
 
 ## Root-Cause Strategy
 
@@ -29,20 +48,22 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
 ## Required Startup Workflow
 
-1. Read memory entrypoint files:
+1. If launched from the parent `EthosLua` workspace, `cd sloppy-ethos` before
+   running repository commands.
+2. Read memory entrypoint files:
    - `deslopification/memory/README.md`
    - `deslopification/memory/CURRENT_STATE.md`
-2. Use `deslopification/memory/CATALOG.md` to open only the latest relevant
+3. Use `deslopification/memory/CATALOG.md` to open only the latest relevant
    note(s) for the current task.
-3. Determine session type:
+4. Determine session type:
    - issue-linked work (GitHub issue URL/number present, or session driven by
      `deslopification/prompts/issues/*.md`)
    - non-issue work
-4. For issue-linked work, run preflight before editing:
+5. For issue-linked work, run preflight before editing:
    - `python tools/session_preflight.py --mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {short-slug}`
-5. Check branch/worktree state: `git status --short --branch`.
-6. Confirm active package version from `VERSION`.
-7. Before introducing or changing workflow commands, cross-check command docs in:
+6. Check branch/worktree state: `git status --short --branch`.
+7. Confirm active package version from `VERSION`.
+8. Before introducing or changing workflow commands, cross-check command docs in:
    - `README.md`
    - `docs/DEVELOPMENT.md`
 
@@ -162,5 +183,7 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
 - Required validation commands for touched files completed in this session.
 - If the session was a simulator debugging session for a Lua script, the updated script was deployed to the simulator in this session.
-- Workspace and `.gitignore` reviewed for environment-specific files and sensitive data risks.
+- Parent workspace, repository status, and `.gitignore` reviewed for
+  environment-specific files, sibling-reference changes, and sensitive data
+  risks.
 - Any potential security concern (PII, PHI, secrets, unsafe config, API keys, auth tokens) explicitly called out to the user.

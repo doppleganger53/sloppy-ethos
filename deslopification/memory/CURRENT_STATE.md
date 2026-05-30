@@ -1,4 +1,4 @@
-# Current State (2026-05-05)
+# Current State (2026-05-30)
 
 This file is the high-signal memory entrypoint for cold-start sessions.
 Historical detail remains in individual session notes referenced from
@@ -20,6 +20,16 @@ Historical detail remains in individual session notes referenced from
 - Workflow/process guidance is intentionally mutable; issue-linked policy
   changes must keep `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, and
   `docs/DEVELOPMENT.md` synchronized in the same session.
+- `sloppy-ethos` can be operated from the parent `EthosLua` workspace, but
+  repository work must enter the `sloppy-ethos/` checkout before applying repo
+  policy, running preflight, editing files, validating, or updating memory.
+- The parent workspace `AGENTS.MD` defines workspace boundaries; this repo's
+  `AGENTS.md` remains authoritative for repo behavior after entering the
+  checkout.
+- Sibling Ethos checkouts in the parent workspace are reference evidence unless
+  explicitly requested otherwise. Pull them only with checkout-scoped commands
+  such as `git -C ../ETHOS-Feedback-Community pull --ff-only`, and verify
+  license/attribution before copying reference material into this repo.
 - Validation is mandatory for all changes per `AGENTS.md` matrix.
 - Documentation/process changes require docs contract validation.
 - Session memory updates are required for meaningful workflow/behavior changes.
