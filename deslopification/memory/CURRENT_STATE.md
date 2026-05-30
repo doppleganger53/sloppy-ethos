@@ -93,6 +93,38 @@ Historical detail remains in individual session notes referenced from
 - Script-owned tests live under `scripts/{ProjectName}/tests/` and are
   included in repo-root pytest discovery through `pytest.ini`; install staging
   excludes script-local `tests/` folders from ZIP and simulator payloads.
+- Automated Ethos WebSimulator smoke testing now lives under
+  `tools/sim/harness/`; downloaded runtimes are cached under
+  `tools/sim/radios/`, run artifacts under `tools/sim/runs/`, and both payload
+  roots are ignored except for `.gitkeep` placeholders.
+- Harness `headless` and `gui` modes stage projects into the Ethos Suite
+  persist directory for the selected runtime version and radio by default,
+  with `--persist-dir` available only for nonstandard persist roots.
+- The WebSimulator runtime loader now returns a cached runtime, including
+  cached `latest-26.1` alias matches, before any GitHub release lookup and
+  converts invalid cached ZIPs into structured `download_failure` errors, which
+  keeps cached offline runs from depending on the network once the runtime is
+  already present.
+- GUI mode serves runtime JS/WASM from the cached package under
+  `tools/sim/radios/` rather than copying runtime files into each run
+  directory.
+- Harness `headless` and `gui` modes accept repeated `--project` values so one
+  simulator session can stage any single project or a project set through the
+  same `tools/build.py` install contract.
+- For SensorList on the current Ethos `26.1` line, the repeatable runtime smoke
+  command is
+  `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`.
+- On 2026-05-16, `latest-26.1` resolved to `26.1.0-RC2`; the X20RS-FCC
+  WebSimulator starts and `reloadScripts` completes under Node, but
+  `_writeDefaultSettingsAndModel()` blocks in that runtime, so the harness keeps
+  that call behind optional `--write-default-model` in headless and GUI modes.
+- For WebSimulator GUI mode, stage manifest writes run through Emscripten
+  `preRun`, then the harness lets generated `main` initialize before calling
+  `_start()`. Browser canvas updates arrive as `(width, height, pointer)` and
+  point at a bottom-origin RGB565 framebuffer that the harness must decode from
+  exported `HEAPU16.buffer` and vertically flip before writing to a 2D canvas.
+  Display mouse/touch events must be mapped from browser canvas coordinates to
+  LCD coordinates and sent through the runtime `onMouse*` exports.
 - Ethos `26.1` compatibility baseline, reference checkout path, simulator
   targets, and follow-up issue map now live in
   `docs/ETHOS_26_1_COMPATIBILITY.md`.

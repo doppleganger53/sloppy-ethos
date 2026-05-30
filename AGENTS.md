@@ -70,8 +70,10 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 ## Validation Policy
 
 - Validation is mandatory for any change.
-- Debugging-session work on simulator-visible Lua behavior must deploy the touched script to the configured Ethos simulator before session closeout.
+- Debugging-session work on simulator-visible Lua behavior should use the automated WebSimulator harness when it supports the target, then deploy the touched script to the configured Ethos simulator before session closeout when live Ethos Suite state also needs to be updated.
 - Treat a session as a debugging session when the goal is to reproduce, inspect, or verify runtime behavior in the simulator rather than only editing docs or static tooling.
+- Minimum automated SensorList WebSimulator smoke command:
+  - `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`
 - Minimum debug deploy command for SensorList:
   - `python tools/build.py --project SensorList --deploy`
 - Run the minimum test/check commands based on the files touched:
@@ -87,6 +89,7 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
     `python -m pytest scripts/BoundryMap/tests -q`
 - Build/tooling changes (`tools/`, Python build/test harness):
   - `python -m pytest tests/test_build_py.py -q`
+  - For simulator harness changes, also run `python -m pytest tests/test_sim_harness.py -q`
 - Broad or cross-cutting changes:
   - `python -m pytest -q`
 

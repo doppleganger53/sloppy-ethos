@@ -15,30 +15,30 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 126
-- Total size: 214,246 bytes
-- Total lines: 5,683
+- Files: 134
+- Total size: 232,086 bytes
+- Total lines: 6,141
 - Distribution by artifact:
-  - session notes: 120
+  - session notes: 128
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 79 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 80 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
+  - 15 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
   - 15 -- memory ( Memory system structure and retrieval policy )
-  - 8 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
   - 4 -- ethos-events ( ethos_events-specific behavior, release history, and operating notes )
   - 3 -- handoff ( Session continuity and restart handoffs )
 
 - Distribution by concern:
   - 32 -- implementation
-  - 27 -- workflow
+  - 28 -- workflow
   - 17 -- build
   - 15 -- release
+  - 15 -- testing
   - 14 -- docs
-  - 8 -- testing
   - 6 -- issue-admin
   - 5 -- prompts
   - 2 -- metadata
@@ -46,28 +46,28 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent High-Signal Notes (Auto-generated)
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
+- 2026-05-30 | testing | ethos-platform | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md) | # Session Notes 2026-05-30 - WebSimulator Timeout Logs
+- 2026-05-30 | testing | ethos-platform | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_LATEST_ALIAS_CACHE.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_LATEST_ALIAS_CACHE.md) | # Session Notes 2026-05-30 - WebSimulator Latest Alias Cache
+- 2026-05-30 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md](notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md) | # Session Notes 2026-05-30 - PR #94 conflict resolution
 - 2026-05-30 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md](notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md) | # Session Notes 2026-05-30 - Issue #95 workspace AGENTS transition
-- 2026-05-06 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-05-06_ISSUE_77_ETHOS_26_1_API_SURFACE_MATRIX.md](notes/session/repo/SESSION_NOTES_2026-05-06_ISSUE_77_ETHOS_26_1_API_SURFACE_MATRIX.md) | # Session Notes 2026-05-06 - Issue #77 Ethos 26.1 API Surface Matrix
+- 2026-05-18 | testing | ethos-platform | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md) | # Session Notes 2026-05-18 - WebSimulator Shared Persist
 - 2026-05-05 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md](notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md) | # Session Notes 2026-05-05 - Issue #76 Ethos 26.1 Baseline
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix
-- 2026-04-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_ISSUE_72_SCRIPT_LOCAL_TESTS.md](notes/session/repo/SESSION_NOTES_2026-04-27_ISSUE_72_SCRIPT_LOCAL_TESTS.md) | # Session Notes 2026-04-27 - Issue 72 Script Local Tests
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md) | # Session Notes 2026-04-27 - Generic Build Assets
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_LOCAL_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_LOCAL_ASSETS.md) | # Session Notes 2026-04-27 - BoundryMap Script-Local Assets
 - 2026-03-28 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md](notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md) | # Session Notes 2026-03-28 - README Published Script Link Policy
 - 2026-03-28 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_LICENSE_DERIVATION.md](notes/session/repo/SESSION_NOTES_2026-03-28_BOUNDRYMAP_LICENSE_DERIVATION.md) | # Session Notes 2026-03-28 - BoundryMap License Derivation Notice
 - 2026-03-09 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md) | # Session Notes 2026-03-09 - SensorList-v1.0.1 Release
-- 2026-03-08 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md](notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md) | # Session Notes 2026-03-08 - VS Code Lua Coverage Workflow
-- 2026-03-08 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md](notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md) | # Session Notes 2026-03-08 - Debug Sessions Require Deploy
 
 ## Recent Ethos Platform Notes
 
 - Selection: newest `session` and `reference` notes where `Scope` is `ethos-platform`; keep newest 6 overall.
-- 2026-05-09 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md) | # Session Notes 2026-05-09 - Ethos 26.1 Release Docs And getSources
-- 2026-03-02 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_STAGED_SCAN_BUDGET_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_STAGED_SCAN_BUDGET_FIX.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Staged Scan Budget Fix
-- 2026-03-02 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_RADIO_ACCESSOR_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_RADIO_ACCESSOR_FIX.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Radio Accessor Fix
-- 2026-03-02 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_FAILSOFT_ERROR_LOGGING.md](notes/session/ethos-platform/SESSION_NOTES_2026-03-02_ISSUE_48_SENSORLIST_FAILSOFT_ERROR_LOGGING.md) | # Session Notes 2026-03-02 - Issue #48 SensorList Fail-Soft Error Logging
-- 2026-02-23 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-02-23_SENSORLIST_AND_EVENTS_CONSOLIDATED.md](notes/session/ethos-platform/SESSION_NOTES_2026-02-23_SENSORLIST_AND_EVENTS_CONSOLIDATED.md) | # Session Notes 2026-02-23 - SensorList and Ethos Events (Consolidated)
-- 2026-02-23 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-02-23_ETHOS_EVENTS_RADIO_ICON_PATH_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-02-23_ETHOS_EVENTS_RADIO_ICON_PATH_FIX.md) | # Session Notes 2026-02-23 - ethos_events Radio Icon Path Fix
+- 2026-05-30 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md) | # Session Notes 2026-05-30 - WebSimulator Timeout Logs
+- 2026-05-30 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_LATEST_ALIAS_CACHE.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_LATEST_ALIAS_CACHE.md) | # Session Notes 2026-05-30 - WebSimulator Latest Alias Cache
+- 2026-05-18 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md) | # Session Notes 2026-05-18 - WebSimulator Shared Persist
+- 2026-05-18 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_RUNTIME_CACHE_REUSE.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_RUNTIME_CACHE_REUSE.md) | # Session Notes 2026-05-18 - WebSimulator Runtime Cache Reuse
+- 2026-05-18 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_GUI_RGB565_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_GUI_RGB565_FIX.md) | # Session Notes 2026-05-18 - WebSimulator GUI RGB565 Fix
+- 2026-05-18 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_CACHE_RESILIENCE.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_CACHE_RESILIENCE.md) | # Session Notes 2026-05-18 - WebSimulator Cache Resilience
 
 ## Entries
 
@@ -198,4 +198,12 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-05-09 | session | ethos-platform | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md) | # Session Notes 2026-05-09 - Ethos 26.1 Release Docs And getSources |
 | 2026-05-09 | session | repo | issue-admin | [notes/session/repo/SESSION_NOTES_2026-05-09_ISSUE_85_BRANCH_RECONCILIATION.md](notes/session/repo/SESSION_NOTES_2026-05-09_ISSUE_85_BRANCH_RECONCILIATION.md) | # Session Notes 2026-05-09 - Issue 85 branch reconciliation |
 | 2026-05-09 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-05-09_SMARTMAPPER_API_PROBE.md](notes/session/repo/SESSION_NOTES_2026-05-09_SMARTMAPPER_API_PROBE.md) | # Session Notes 2026-05-09 - SmartMapper API Probe |
+| 2026-05-16 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-16_ISSUE_93_WEBSIM_HARNESS.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-16_ISSUE_93_WEBSIM_HARNESS.md) | # Session Notes 2026-05-16 - Issue #93 WebSimulator Harness |
+| 2026-05-18 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_CACHE_RESILIENCE.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_CACHE_RESILIENCE.md) | # Session Notes 2026-05-18 - WebSimulator Cache Resilience |
+| 2026-05-18 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_GUI_RGB565_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_GUI_RGB565_FIX.md) | # Session Notes 2026-05-18 - WebSimulator GUI RGB565 Fix |
+| 2026-05-18 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_RUNTIME_CACHE_REUSE.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_RUNTIME_CACHE_REUSE.md) | # Session Notes 2026-05-18 - WebSimulator Runtime Cache Reuse |
+| 2026-05-18 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md) | # Session Notes 2026-05-18 - WebSimulator Shared Persist |
+| 2026-05-30 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_LATEST_ALIAS_CACHE.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_LATEST_ALIAS_CACHE.md) | # Session Notes 2026-05-30 - WebSimulator Latest Alias Cache |
+| 2026-05-30 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md) | # Session Notes 2026-05-30 - WebSimulator Timeout Logs |
 | 2026-05-30 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md](notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md) | # Session Notes 2026-05-30 - Issue #95 workspace AGENTS transition |
+| 2026-05-30 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md](notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md) | # Session Notes 2026-05-30 - PR #94 conflict resolution |

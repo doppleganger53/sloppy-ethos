@@ -1,6 +1,10 @@
 dist/*
 tools/deploy.config.json
 tools/__pycache__
+tools/sim/radios/**
+tools/sim/runs/**
+!tools/sim/radios/.gitkeep
+!tools/sim/runs/.gitkeep
 .build-staging/
 .coverage
 .editorconfig

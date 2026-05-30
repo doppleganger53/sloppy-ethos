@@ -185,6 +185,7 @@ def test_ethos_26_1_compatibility_baseline_captures_reference_targets_and_follow
     assert re.search(r"git\s+(-C\s+\S+\s+)?fetch\b", text)
     assert "X20RS" in text
     assert "X20S" in text
+    assert "tools/sim/harness/run.py" in text
     for area in ("SensorList", "BoundryMap", "ethos_events", "SmartMapper", "Arduino FBus"):
         assert area in text
 
@@ -220,6 +221,7 @@ def test_ethos_26_1_api_surface_matrix_lists_shared_surfaces_and_smoke_targets()
         "SmartMapper: no",
         "FBus: no",
         "python -m pytest scripts/SensorList/tests -q",
+        "tools/sim/harness/suites/SensorList-X20RS-FCC.json",
         "python -m pytest scripts/BoundryMap/tests -q",
         "python tools/build.py --project ethos_events --deploy",
     ):
@@ -326,6 +328,7 @@ def test_environment_dependent_doc_commands_are_manual():
             "--dist" in command
             or "--deploy" in command
             or "--clean" in command
+            or command.startswith("python tools/sim/harness/run.py")
             or command.startswith("python -m pytest")
             or command.startswith("powershell ")
             or command == "python -m pip install -r requirements/dev.txt"

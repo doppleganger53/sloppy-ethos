@@ -64,6 +64,18 @@ python tools/build.py --help
 - BoundryMap map assets are local-only because flying-site maps can reveal private locations. Put private maps under `scripts/BoundryMap/assets/maps/`; [scripts/BoundryMap/build.json](scripts/BoundryMap/build.json) defines the asset globs and script-local destinations for map images and metadata.
 - Root `VERSION` remains the repository version source of truth.
 
+- Download and run the automated Ethos WebSimulator harness:
+
+```powershell
+python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1
+python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1
+python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json
+python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1
+```
+
+- The harness stages projects with the same install contract as `tools/build.py`, writes them into the Ethos Suite persist directory for the selected radio/runtime, caches downloaded runtimes under `tools/sim/radios/`, serves GUI runtimes from that cache, and stores per-run logs under `tools/sim/runs/`.
+- Use headless harness runs as the repeatable simulator layer between script-local Lua/pytest tests and manual Ethos Suite or physical-radio checks.
+
 ### 30-Second First Run
 
 1. Run:
@@ -89,6 +101,7 @@ To build a single install ZIP with multiple scripts:
 - `scripts/ethos_events/main.lua`: system-tool event tracer entrypoint
 - `scripts/ethos_events/README.md`: event tracer usage notes
 - `tools/build.py`: syntax-check + packaging + simulator deploy script
+- `tools/sim/harness/run.py`: automated Ethos WebSimulator download, headless smoke, and GUI launch harness
 - `tools/create_todo_issues.py`: GitHub issue bootstrap for TODO backlog tracking
 - `deslopification/prompts/done/SensorList.md`: original implementation prompt
 - `docs/`: development notes and handoff documents
@@ -180,6 +193,8 @@ luac -p scripts/SensorList/main.lua
   close Ethos Suite, then retry deployment from a shell with write access.
 - Stale simulator behavior after script changes:
   remove cached `main.luac`, reinstall widget, then reset Ethos Info errors.
+- WebSimulator harness reports `missing_runtime`:
+  run `python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1`, then retry the headless command.
 
 ## Roadmap
 
