@@ -32,6 +32,7 @@ DEFAULT_ETHOS_VERSION = "latest-26.1"
 DEFAULT_REGION = "FCC"
 RUNNER_JS = HARNESS_ROOT / "websim_runner.js"
 GITHUB_API = "https://api.github.com"
+LATEST_26_1_ALIASES = {"latest-26.1", "latest26.1", "latest"}
 
 
 class HarnessError(Exception):
@@ -113,7 +114,7 @@ def resolve_ethos_version(raw_version: str) -> str:
     version = raw_version.strip()
     if not version:
         raise HarnessError("missing_runtime", "Ethos version cannot be empty.", 2)
-    if version.lower() not in {"latest-26.1", "latest26.1", "latest"}:
+    if version.lower() not in LATEST_26_1_ALIASES:
         return version
 
     releases = _http_json(f"{GITHUB_API}/repos/{GITHUB_REPO}/releases?per_page=50")
@@ -166,6 +167,56 @@ def runtime_package_from_asset(target: RadioTarget, version: str, asset: dict[st
     runtime_dir = package_dir / "runtime"
     runtime_js = runtime_dir / f"{target.runtime_stem}.js"
     return RuntimePackage(target, version, asset_name, package_dir, archive_path, runtime_dir, runtime_js)
+
+
+def is_latest_26_1_alias(raw_version: str) -> bool:
+    return raw_version.strip().lower() in LATEST_26_1_ALIASES
+
+
+def _matches_26_1_cache(version: str) -> bool:
+    normalized = version.strip().lower()
+    return normalized.startswith("26.1.") or normalized == "nightly26"
+
+
+def _cached_package_sort_key(package: RuntimePackage) -> tuple[str, float, str]:
+    metadata_path = package.package_dir / "metadata.json"
+    downloaded_at = ""
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        if isinstance(metadata, dict):
+            downloaded_at = str(metadata.get("downloadedAt") or "")
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        pass
+    try:
+        modified_at = package.runtime_js.stat().st_mtime
+    except OSError:
+        modified_at = 0.0
+    return (downloaded_at, modified_at, package.version)
+
+
+def find_cached_runtime(target: RadioTarget, raw_version: str) -> RuntimePackage | None:
+    version = raw_version.strip()
+    if not version:
+        return None
+
+    if not is_latest_26_1_alias(version):
+        package = runtime_package_from_asset(target, version, {"name": target.websim_asset_name})
+        return package if package.runtime_js.exists() else None
+
+    radio_cache = RADIOS_ROOT / target.key
+    if not radio_cache.exists():
+        return None
+
+    matches: list[RuntimePackage] = []
+    for version_dir in radio_cache.iterdir():
+        if not version_dir.is_dir() or not _matches_26_1_cache(version_dir.name):
+            continue
+        package = runtime_package_from_asset(target, version_dir.name, {"name": target.websim_asset_name})
+        if package.runtime_js.exists():
+            matches.append(package)
+    if not matches:
+        return None
+    return max(matches, key=_cached_package_sort_key)
 
 
 def _sha256(path: Path) -> str:
@@ -224,21 +275,33 @@ def safe_extract_zip(archive_path: Path, destination: Path) -> None:
         ) from exc
 
 
-def ensure_runtime(radio: str, region: str | None, ethos_version: str, no_download: bool = False) -> RuntimePackage:
+def ensure_runtime(
+    radio: str,
+    region: str | None,
+    ethos_version: str,
+    no_download: bool = False,
+    prefer_cached_alias: bool = True,
+) -> RuntimePackage:
     target = normalize_radio_target(radio, region)
-    version = resolve_ethos_version(ethos_version)
-    cached_package = runtime_package_from_asset(target, version, {"name": target.websim_asset_name})
+    if not ethos_version.strip():
+        raise HarnessError("missing_runtime", "Ethos version cannot be empty.", 2)
 
-    if cached_package.runtime_js.exists():
-        return cached_package
+    if not is_latest_26_1_alias(ethos_version) or prefer_cached_alias or no_download:
+        cached_package = find_cached_runtime(target, ethos_version)
+        if cached_package is not None:
+            return cached_package
 
     if no_download:
+        cache_hint = RADIOS_ROOT / target.key
+        if not is_latest_26_1_alias(ethos_version):
+            cache_hint = runtime_package_from_asset(target, ethos_version.strip(), {"name": target.websim_asset_name}).package_dir
         raise HarnessError(
             "missing_runtime",
-            f"Runtime is not cached at {cached_package.package_dir}. Run the download command first.",
+            f"Runtime is not cached at {cache_hint}. Run the download command first.",
             12,
         )
 
+    version = resolve_ethos_version(ethos_version)
     release = fetch_release(version)
     asset = select_websim_asset(release, target)
     package = runtime_package_from_asset(target, version, asset)
@@ -685,7 +748,13 @@ def main() -> int:
     args = parse_args()
     try:
         if args.command == "download":
-            package = ensure_runtime(args.radio, args.region, args.ethos_version, args.no_download)
+            package = ensure_runtime(
+                args.radio,
+                args.region,
+                args.ethos_version,
+                args.no_download,
+                prefer_cached_alias=False,
+            )
             emit(
                 {
                     "status": "success",

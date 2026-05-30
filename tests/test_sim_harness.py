@@ -124,6 +124,78 @@ def test_ensure_runtime_returns_cached_runtime_without_fetching_release(monkeypa
     assert result.runtime_js == package.runtime_js
 
 
+def test_ensure_runtime_uses_cached_latest_alias_without_fetching_release(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(harness, "RADIOS_ROOT", tmp_path / "radios")
+    target = harness.normalize_radio_target("X20RS-FCC", None)
+    package = harness.runtime_package_from_asset(target, "26.1.0-RC2", {"name": target.websim_asset_name})
+    package.runtime_dir.mkdir(parents=True)
+    package.runtime_js.write_text("module.exports = async () => ({});\n", encoding="utf-8")
+    (package.package_dir / "metadata.json").write_text(
+        json.dumps({"downloadedAt": "2026-05-16T00:00:00+00:00"}) + "\n",
+        encoding="utf-8",
+    )
+
+    def fail_fetch_release(_version):
+        raise AssertionError("fetch_release should not be called for cached latest aliases")
+
+    def fail_resolve_ethos_version(_version):
+        raise AssertionError("resolve_ethos_version should not call GitHub for cached latest aliases")
+
+    monkeypatch.setattr(harness, "fetch_release", fail_fetch_release)
+    monkeypatch.setattr(harness, "resolve_ethos_version", fail_resolve_ethos_version)
+
+    result = harness.ensure_runtime("X20RS-FCC", None, "latest-26.1")
+
+    assert result.runtime_js == package.runtime_js
+    assert result.version == "26.1.0-RC2"
+
+
+def test_ensure_runtime_no_download_latest_alias_reports_missing_without_fetch(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(harness, "RADIOS_ROOT", tmp_path / "radios")
+
+    def fail_resolve_ethos_version(_version):
+        raise AssertionError("resolve_ethos_version should not call GitHub when --no-download has no cache")
+
+    monkeypatch.setattr(harness, "resolve_ethos_version", fail_resolve_ethos_version)
+
+    with pytest.raises(harness.HarnessError) as exc:
+        harness.ensure_runtime("X20RS-FCC", None, "latest-26.1", no_download=True)
+
+    assert exc.value.status == "missing_runtime"
+    assert str(tmp_path / "radios" / "X20RS-FCC") in exc.value.message
+
+
+def test_ensure_runtime_can_refresh_latest_alias_for_download(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(harness, "RADIOS_ROOT", tmp_path / "radios")
+    target = harness.normalize_radio_target("X20RS-FCC", None)
+    cached = harness.runtime_package_from_asset(target, "26.1.0-RC1", {"name": target.websim_asset_name})
+    cached.runtime_dir.mkdir(parents=True)
+    cached.runtime_js.write_text("module.exports = async () => ({});\n", encoding="utf-8")
+
+    zip_source = tmp_path / "source.zip"
+    with zipfile.ZipFile(zip_source, "w") as payload:
+        payload.writestr("X20RS_FCC.js", "module.exports = async () => ({});\n")
+        payload.writestr("X20RS_FCC.wasm", b"wasm")
+    asset = {
+        "name": target.websim_asset_name,
+        "browser_download_url": "https://example.invalid/X20RS-FCC-WebSimulator.zip",
+    }
+
+    monkeypatch.setattr(harness, "resolve_ethos_version", lambda _version: "26.1.0-RC2")
+    monkeypatch.setattr(harness, "fetch_release", lambda _version: {"tag_name": "26.1.0-RC2", "assets": [asset]})
+
+    def fake_download(_asset, destination: Path):
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(zip_source.read_bytes())
+
+    monkeypatch.setattr(harness, "download_asset", fake_download)
+
+    result = harness.ensure_runtime("X20RS-FCC", None, "latest-26.1", prefer_cached_alias=False)
+
+    assert result.version == "26.1.0-RC2"
+    assert result.runtime_js.exists()
+
+
 def test_ensure_runtime_wraps_bad_zipfile_and_cleans_invalid_archive(monkeypatch, tmp_path: Path):
     monkeypatch.setattr(harness, "RADIOS_ROOT", tmp_path / "radios")
     target = harness.normalize_radio_target("X20RS-FCC", None)

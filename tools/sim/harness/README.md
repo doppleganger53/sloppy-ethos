@@ -24,6 +24,10 @@ Runtime ZIPs and extracted JavaScript/WASM files are stored under
 instead of copying JS/WASM into each run directory. Run logs and generated GUI
 wrapper files are stored under `tools/sim/runs/`. Those directories are ignored
 by git because simulator payloads and run artifacts are not source files.
+When `latest-26.1` already has a matching cached `26.1` runtime, the harness
+uses the cached package before calling GitHub so repeated smoke runs can work
+offline. The `download` command still checks GitHub for latest aliases so you
+can refresh the latest-release lookup explicitly.
 
 The headless command exits with structured status:
 

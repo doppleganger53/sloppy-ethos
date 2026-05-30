@@ -85,7 +85,8 @@
 
 `tools/sim/harness/run.py`:
 
-- resolves `latest-26.1` to the newest Ethos `26.1` release from `FrSkyRC/ETHOS-Feedback-Community`.
+- resolves `latest-26.1` to the newest Ethos `26.1` release from `FrSkyRC/ETHOS-Feedback-Community` when no matching cached `26.1` runtime is already present.
+- keeps the `download` command as the explicit path for refreshing a latest-alias release lookup.
 - downloads the requested radio WebSimulator package, such as `X20RS-FCC-WebSimulator.zip`, into `tools/sim/radios/{Radio}-{Region}/{EthosVersion}/{PackageName}/`.
 - validates the GitHub asset SHA-256 digest when release metadata provides one.
 - stages scripts into the Ethos Suite persist directory for the selected radio/runtime by calling the existing `tools/build.py` install-spec helpers.

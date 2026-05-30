@@ -100,10 +100,11 @@ Historical detail remains in individual session notes referenced from
 - Harness `headless` and `gui` modes stage projects into the Ethos Suite
   persist directory for the selected runtime version and radio by default,
   with `--persist-dir` available only for nonstandard persist roots.
-- The WebSimulator runtime loader now returns a cached runtime before any
-  GitHub release lookup and converts invalid cached ZIPs into structured
-  `download_failure` errors, which keeps cached offline runs from depending on
-  the network once the runtime is already present.
+- The WebSimulator runtime loader now returns a cached runtime, including
+  cached `latest-26.1` alias matches, before any GitHub release lookup and
+  converts invalid cached ZIPs into structured `download_failure` errors, which
+  keeps cached offline runs from depending on the network once the runtime is
+  already present.
 - GUI mode serves runtime JS/WASM from the cached package under
   `tools/sim/radios/` rather than copying runtime files into each run
   directory.
