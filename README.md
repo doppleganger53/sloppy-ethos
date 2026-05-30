@@ -101,6 +101,16 @@ To build a single install ZIP with multiple scripts:
 
 - Recommended development environment: [Visual Studio Code](https://code.visualstudio.com/).
 - Recommended coding agent: [OpenAI Codex](https://openai.com/codex/).
+- If your Codex session starts in the parent `EthosLua` workspace, treat
+  `sloppy-ethos/` as the implementation repo and enter it before running repo
+  commands. The parent `AGENTS.MD` only defines workspace boundaries; this
+  repository's `AGENTS.md` remains the source of truth once inside the repo.
+- Keep sibling reference checkouts such as `ETHOS-Feedback-Community/` and
+  `Ethos-GPS-AccuMapv1/` separate from this repo. Pull them with scoped
+  commands such as `git -C ../ETHOS-Feedback-Community pull --ff-only`, and
+  treat them as read-only evidence unless you are explicitly updating them.
+- Before copying reference code, docs, or assets into this repo, verify the
+  upstream license and record attribution.
 - Format Lua: VS Code task `Format Lua (stylua)` or run `stylua --config-path tools/config/stylua.toml scripts`
 - Build package: VS Code task `Build Ethos Install ZIP`
 - Lua parse check:
@@ -157,6 +167,8 @@ luac -p scripts/SensorList/main.lua
 - Start session-memory context with `deslopification/memory/README.md`.
 - Use `deslopification/memory/CATALOG.md` for full historical note lookup.
 - Workflow/process guidance is intentionally mutable; issue-linked workflow updates must keep `AGENTS.md`, `CONTRIBUTING.md`, and `docs/DEVELOPMENT.md` synchronized.
+- Parent-workspace policy changes live outside this repo; repo behavior,
+  validation, release, and memory work still happens inside `sloppy-ethos/`.
 
 ## Troubleshooting
 
