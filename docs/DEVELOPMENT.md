@@ -15,6 +15,19 @@
 - Lua tooling on PATH (`lua`, `luac`)
 - Optional: `stylua` for formatting
 
+## Parent Workspace Boundary
+
+- `sloppy-ethos/` is the primary implementation repository inside the parent
+  `EthosLua` workspace.
+- If a session starts from the parent workspace, read the parent `AGENTS.MD`,
+  then enter `sloppy-ethos/` before running repository commands or applying
+  this repo's policy.
+- Keep sibling reference checkouts outside this repo's Git scope. Use scoped
+  update commands such as `git -C ../ETHOS-Feedback-Community pull --ff-only`.
+- Treat references as read-only evidence unless a user request explicitly asks
+  to update them, and verify license/attribution before copying anything into
+  this repository.
+
 ## Core Commands
 
 - Syntax check:

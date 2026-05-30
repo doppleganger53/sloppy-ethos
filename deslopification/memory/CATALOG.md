@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 125
-- Total size: 212,467 bytes
-- Total lines: 5,630
+- Files: 126
+- Total size: 214,246 bytes
+- Total lines: 5,683
 - Distribution by artifact:
-  - session notes: 119
+  - session notes: 120
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 78 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 79 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
   - 8 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
@@ -34,7 +34,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 
 - Distribution by concern:
   - 32 -- implementation
-  - 26 -- workflow
+  - 27 -- workflow
   - 17 -- build
   - 15 -- release
   - 14 -- docs
@@ -46,6 +46,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent High-Signal Notes (Auto-generated)
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
+- 2026-05-30 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md](notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md) | # Session Notes 2026-05-30 - Issue #95 workspace AGENTS transition
 - 2026-05-06 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-05-06_ISSUE_77_ETHOS_26_1_API_SURFACE_MATRIX.md](notes/session/repo/SESSION_NOTES_2026-05-06_ISSUE_77_ETHOS_26_1_API_SURFACE_MATRIX.md) | # Session Notes 2026-05-06 - Issue #77 Ethos 26.1 API Surface Matrix
 - 2026-05-05 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md](notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md) | # Session Notes 2026-05-05 - Issue #76 Ethos 26.1 Baseline
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix
@@ -57,7 +58,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - 2026-03-09 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md) | # Session Notes 2026-03-09 - SensorList-v1.0.1 Release
 - 2026-03-08 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md](notes/session/repo/SESSION_NOTES_2026-03-08_VSCODE_LUA_COVERAGE_WORKFLOW.md) | # Session Notes 2026-03-08 - VS Code Lua Coverage Workflow
 - 2026-03-08 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md](notes/session/repo/SESSION_NOTES_2026-03-08_DEBUG_SESSIONS_REQUIRE_DEPLOY.md) | # Session Notes 2026-03-08 - Debug Sessions Require Deploy
-- 2026-03-05 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_MUTABLE_WORKFLOW_AGENT_METADATA.md](notes/session/repo/SESSION_NOTES_2026-03-05_ISSUE_56_MUTABLE_WORKFLOW_AGENT_METADATA.md) | # Session Notes 2026-03-05 - Issue #56 Mutable Workflow Agent Metadata
 
 ## Recent Ethos Platform Notes
 
@@ -198,3 +198,4 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-05-09 | session | ethos-platform | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md) | # Session Notes 2026-05-09 - Ethos 26.1 Release Docs And getSources |
 | 2026-05-09 | session | repo | issue-admin | [notes/session/repo/SESSION_NOTES_2026-05-09_ISSUE_85_BRANCH_RECONCILIATION.md](notes/session/repo/SESSION_NOTES_2026-05-09_ISSUE_85_BRANCH_RECONCILIATION.md) | # Session Notes 2026-05-09 - Issue 85 branch reconciliation |
 | 2026-05-09 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-05-09_SMARTMAPPER_API_PROBE.md](notes/session/repo/SESSION_NOTES_2026-05-09_SMARTMAPPER_API_PROBE.md) | # Session Notes 2026-05-09 - SmartMapper API Probe |
+| 2026-05-30 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md](notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md) | # Session Notes 2026-05-30 - Issue #95 workspace AGENTS transition |
