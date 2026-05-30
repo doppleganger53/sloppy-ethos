@@ -406,6 +406,14 @@ def parse_runner_result(stdout: str, fallback: dict[str, Any]) -> dict[str, Any]
     return fallback
 
 
+def captured_output_text(value: str | bytes | None) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
+
+
 def run_headless(args: argparse.Namespace) -> dict[str, Any]:
     apply_suite_args(args)
     projects = normalize_projects(args.project)
@@ -447,8 +455,8 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
     except FileNotFoundError as exc:
         raise HarnessError("startup_failure", f"Node executable not found: {args.node}", 10) from exc
     except subprocess.TimeoutExpired as exc:
-        stdout = exc.stdout or ""
-        stderr = exc.stderr or ""
+        stdout = captured_output_text(exc.stdout)
+        stderr = captured_output_text(exc.stderr)
         (logs_dir / "websim.stdout.txt").write_text(stdout, encoding="utf-8")
         (logs_dir / "websim.stderr.txt").write_text(stderr, encoding="utf-8")
         return {
@@ -462,8 +470,10 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
             "message": f"Headless simulator timed out after {args.timeout_ms} ms.",
         }
 
-    (logs_dir / "websim.stdout.txt").write_text(completed.stdout, encoding="utf-8")
-    (logs_dir / "websim.stderr.txt").write_text(completed.stderr, encoding="utf-8")
+    stdout = captured_output_text(completed.stdout)
+    stderr = captured_output_text(completed.stderr)
+    (logs_dir / "websim.stdout.txt").write_text(stdout, encoding="utf-8")
+    (logs_dir / "websim.stderr.txt").write_text(stderr, encoding="utf-8")
     fallback = {
         "status": "startup_failure" if completed.returncode else "success",
         "project": label,
@@ -475,7 +485,7 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
         "exitCode": completed.returncode,
         "message": "Simulator runner did not emit structured JSON.",
     }
-    result = parse_runner_result(completed.stdout, fallback)
+    result = parse_runner_result(stdout, fallback)
     result.setdefault("project", label)
     result.setdefault("projects", projects)
     result.setdefault("radio", package.target.key)

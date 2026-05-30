@@ -296,6 +296,37 @@ def test_run_headless_invokes_node_runner_and_logs_output(monkeypatch, tmp_path:
     assert (tmp_path / "run" / "logs" / "websim.stdout.txt").exists()
 
 
+def test_run_headless_timeout_decodes_captured_bytes(monkeypatch, tmp_path: Path):
+    package = _make_runtime_package(tmp_path)
+    monkeypatch.setattr(harness, "ensure_runtime", lambda *_args, **_kwargs: package)
+    monkeypatch.setattr(harness, "resolve_persist_root", lambda _package, _explicit=None: tmp_path / "persist")
+    monkeypatch.setattr(harness, "stage_projects", lambda _projects, persist_root: persist_root)
+
+    def fake_run(command, **_kwargs):
+        raise subprocess.TimeoutExpired(command, timeout=1, output=b"booting\n", stderr=b"still running\n")
+
+    monkeypatch.setattr(harness.subprocess, "run", fake_run)
+    args = Namespace(
+        radio="X20RS-FCC",
+        region="FCC",
+        ethos_version="26.1.0-RC2",
+        no_download=False,
+        project=["SensorList"],
+        node="node",
+        startup_ms=1,
+        settle_ms=1,
+        timeout_ms=1000,
+        run_dir=str(tmp_path / "run"),
+        persist_dir=None,
+    )
+
+    result = harness.run_headless(args)
+
+    assert result["status"] == "timeout"
+    assert (tmp_path / "run" / "logs" / "websim.stdout.txt").read_text(encoding="utf-8") == "booting\n"
+    assert (tmp_path / "run" / "logs" / "websim.stderr.txt").read_text(encoding="utf-8") == "still running\n"
+
+
 @pytest.mark.parametrize(
     ("write_default_model", "expected_value"),
     [

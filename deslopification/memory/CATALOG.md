@@ -15,11 +15,11 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 132
-- Total size: 228,949 bytes
-- Total lines: 6,048
+- Files: 133
+- Total size: 230,124 bytes
+- Total lines: 6,088
 - Distribution by artifact:
-  - session notes: 126
+  - session notes: 127
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
@@ -28,7 +28,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 80 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
-  - 13 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
+  - 14 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
   - 4 -- ethos-events ( ethos_events-specific behavior, release history, and operating notes )
   - 3 -- handoff ( Session continuity and restart handoffs )
 
@@ -38,7 +38,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 17 -- build
   - 15 -- release
   - 14 -- docs
-  - 13 -- testing
+  - 14 -- testing
   - 6 -- issue-admin
   - 5 -- prompts
   - 2 -- metadata
@@ -46,11 +46,11 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent High-Signal Notes (Auto-generated)
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
+- 2026-05-30 | testing | ethos-platform | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md) | # Session Notes 2026-05-30 - WebSimulator Timeout Logs
 - 2026-05-30 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md](notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md) | # Session Notes 2026-05-30 - PR #94 conflict resolution
 - 2026-05-30 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md](notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md) | # Session Notes 2026-05-30 - Issue #95 workspace AGENTS transition
 - 2026-05-18 | testing | ethos-platform | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md) | # Session Notes 2026-05-18 - WebSimulator Shared Persist
 - 2026-05-18 | testing | ethos-platform | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_RUNTIME_CACHE_REUSE.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_RUNTIME_CACHE_REUSE.md) | # Session Notes 2026-05-18 - WebSimulator Runtime Cache Reuse
-- 2026-05-18 | testing | ethos-platform | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_GUI_RGB565_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_GUI_RGB565_FIX.md) | # Session Notes 2026-05-18 - WebSimulator GUI RGB565 Fix
 - 2026-05-05 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md](notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md) | # Session Notes 2026-05-05 - Issue #76 Ethos 26.1 Baseline
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md) | # Session Notes 2026-04-27 - Generic Build Assets
@@ -62,12 +62,12 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent Ethos Platform Notes
 
 - Selection: newest `session` and `reference` notes where `Scope` is `ethos-platform`; keep newest 6 overall.
+- 2026-05-30 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md) | # Session Notes 2026-05-30 - WebSimulator Timeout Logs
 - 2026-05-18 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md) | # Session Notes 2026-05-18 - WebSimulator Shared Persist
 - 2026-05-18 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_RUNTIME_CACHE_REUSE.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_RUNTIME_CACHE_REUSE.md) | # Session Notes 2026-05-18 - WebSimulator Runtime Cache Reuse
 - 2026-05-18 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_GUI_RGB565_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_GUI_RGB565_FIX.md) | # Session Notes 2026-05-18 - WebSimulator GUI RGB565 Fix
 - 2026-05-18 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_CACHE_RESILIENCE.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_CACHE_RESILIENCE.md) | # Session Notes 2026-05-18 - WebSimulator Cache Resilience
 - 2026-05-16 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-16_ISSUE_93_WEBSIM_HARNESS.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-16_ISSUE_93_WEBSIM_HARNESS.md) | # Session Notes 2026-05-16 - Issue #93 WebSimulator Harness
-- 2026-05-09 | session | implementation | [notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-09_ETHOS_26_1_RELEASE_DOCS_GETSOURCES.md) | # Session Notes 2026-05-09 - Ethos 26.1 Release Docs And getSources
 
 ## Entries
 
@@ -203,5 +203,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-05-18 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_GUI_RGB565_FIX.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_GUI_RGB565_FIX.md) | # Session Notes 2026-05-18 - WebSimulator GUI RGB565 Fix |
 | 2026-05-18 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_RUNTIME_CACHE_REUSE.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_RUNTIME_CACHE_REUSE.md) | # Session Notes 2026-05-18 - WebSimulator Runtime Cache Reuse |
 | 2026-05-18 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md) | # Session Notes 2026-05-18 - WebSimulator Shared Persist |
+| 2026-05-30 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md) | # Session Notes 2026-05-30 - WebSimulator Timeout Logs |
 | 2026-05-30 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md](notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md) | # Session Notes 2026-05-30 - Issue #95 workspace AGENTS transition |
 | 2026-05-30 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md](notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md) | # Session Notes 2026-05-30 - PR #94 conflict resolution |
