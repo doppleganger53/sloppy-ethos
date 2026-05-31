@@ -219,6 +219,23 @@ def test_ensure_runtime_wraps_bad_zipfile_and_cleans_invalid_archive(monkeypatch
     assert not package.runtime_dir.exists()
 
 
+@pytest.mark.parametrize("member_name", ["../escape.txt", "/absolute-escape.txt"])
+def test_safe_extract_zip_rejects_unsafe_member_paths(member_name: str, tmp_path: Path):
+    archive_path = tmp_path / "unsafe.zip"
+    destination = tmp_path / "runtime"
+    escaped = tmp_path / "escape.txt"
+    with zipfile.ZipFile(archive_path, "w") as payload:
+        payload.writestr(member_name, "outside")
+
+    with pytest.raises(harness.HarnessError) as exc:
+        harness.safe_extract_zip(archive_path, destination)
+
+    assert exc.value.status == "missing_runtime"
+    assert "Unsafe path" in exc.value.message
+    assert not escaped.exists()
+    assert not any(destination.rglob("*"))
+
+
 def test_stage_project_reuses_build_install_spec_and_excludes_tests(tmp_path: Path):
     persist = harness.stage_project("SensorList", tmp_path / "persist")
     assert (persist / "scripts" / "SensorList" / "main.lua").exists()
