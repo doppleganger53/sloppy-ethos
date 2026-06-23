@@ -98,6 +98,14 @@
 - keeps downloaded runtimes, extracted JavaScript/WASM, logs, and generated GUI files out of git.
 - does not call `_writeDefaultSettingsAndModel()` by default in headless or GUI startup because some X20RS-FCC runtimes can block or abort in that export; use `--write-default-model` only when validating a runtime known not to block there.
 
+
+## Codex Review Fallback
+
+- Native GitHub `@codex review` comments depend on Codex Cloud repository settings and the Codex GitHub connector.
+- This repository also provides `.github/workflows/codex-review.yml` as a fallback path for exact pull request comments containing only `@codex review`, plus manual `workflow_dispatch` with a PR number.
+- The fallback workflow uses `openai/codex-action@v1`, reads `.github/codex/prompts/review.md`, runs with a read-only Codex sandbox, and posts the final Markdown result back to the pull request.
+- The repository must define an `OPENAI_API_KEY` Actions secret before the fallback can run successfully.
+
 ## Tooling Decision Records
 
 - Issue #22 build tooling evaluation: [Issue #22 build.py to doit migration decision](decisions/ISSUE-022-doit-migration-evaluation.md).

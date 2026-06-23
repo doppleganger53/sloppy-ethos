@@ -133,6 +133,7 @@ To build a single install ZIP with multiple scripts:
 
 - Recommended development environment: [Visual Studio Code](https://code.visualstudio.com/).
 - Recommended coding agent: [OpenAI Codex](https://openai.com/codex/).
+- Codex GitHub review fallback: comment exactly `@codex review` on a pull request, or run the `Codex review fallback` workflow manually with a PR number. The fallback requires the repository secret `OPENAI_API_KEY`; native Codex reviews still require Codex Cloud code review to be enabled for the repository.
 - If your Codex session starts in the parent `EthosLua` workspace, treat
   `sloppy-ethos/` as the implementation repo and enter it before running repo
   commands. The parent `AGENTS.MD` only defines workspace boundaries; this
