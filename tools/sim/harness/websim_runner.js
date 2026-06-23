@@ -67,6 +67,35 @@ function findScriptErrors(lines) {
   return unique(lines.filter((line) => patterns.some((pattern) => pattern.test(line))));
 }
 
+function parseProbeReports(lines) {
+  const reports = {};
+  const prefix = "[SimProbe:";
+  for (const rawLine of lines) {
+    const line = String(rawLine).trim();
+    if (!line.startsWith(prefix)) continue;
+    const markerEnd = line.indexOf("]");
+    if (markerEnd <= prefix.length) continue;
+    const name = line.slice(prefix.length, markerEnd);
+    const payloadText = line.slice(markerEnd + 1).trim();
+    if (!payloadText.startsWith("{")) {
+      reports[name] = { raw: payloadText };
+      continue;
+    }
+    try {
+      reports[name] = JSON.parse(payloadText);
+    } catch (_error) {
+      reports[name] = { raw: payloadText };
+    }
+  }
+  return reports;
+}
+
+function attachCapturedStreams(result, stdout, stderr) {
+  result.probeReports = parseProbeReports(stdout);
+  result.stdout = stdout.slice(-100);
+  result.stderr = stderr.slice(-100);
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   const runtimeJs = path.resolve(args["runtime-js"]);
@@ -134,15 +163,13 @@ async function main() {
     const errors = findScriptErrors([...stdout, ...stderr]);
     result.status = errors.length ? "script_failure" : "success";
     result.errors = errors;
-    result.stdout = stdout.slice(-100);
-    result.stderr = stderr.slice(-100);
+    attachCapturedStreams(result, stdout, stderr);
     result.canvasUpdates = canvasUpdates;
     result.modelJsonCallbacks = modelJsonCallbacks;
   } catch (error) {
     result.status = result.started ? "script_failure" : "startup_failure";
     result.errors = [error && error.stack ? error.stack : String(error)];
-    result.stdout = stdout.slice(-100);
-    result.stderr = stderr.slice(-100);
+    attachCapturedStreams(result, stdout, stderr);
     result.canvasUpdates = canvasUpdates;
     result.modelJsonCallbacks = modelJsonCallbacks;
   }

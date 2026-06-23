@@ -449,6 +449,84 @@ def test_run_headless_invokes_node_runner_and_logs_output(monkeypatch, tmp_path:
     assert (tmp_path / "run" / "logs" / "websim.stdout.txt").exists()
 
 
+def test_run_headless_keeps_runner_probe_reports_when_stdout_is_truncated(monkeypatch, tmp_path: Path):
+    package = _make_runtime_package(tmp_path)
+    monkeypatch.setattr(harness, "ensure_runtime", lambda *_args, **_kwargs: package)
+    monkeypatch.setattr(harness, "resolve_persist_root", lambda _package, _explicit=None: tmp_path / "persist")
+    monkeypatch.setattr(harness, "stage_projects", lambda _projects, persist_root: persist_root)
+    monkeypatch.setattr(harness, "stage_probes", lambda _probes, persist_root, _projects=None: persist_root)
+
+    def fake_run(command, **_kwargs):
+        payload = {
+            "status": "success",
+            "stdout": ["tail output after probe"],
+            "probeReports": {"SmartMapperApiProbe": {"ok": True}},
+        }
+        return subprocess.CompletedProcess(command, 0, json.dumps(payload) + "\n", "")
+
+    monkeypatch.setattr(harness.subprocess, "run", fake_run)
+    args = Namespace(
+        radio="X20RS-FCC",
+        region="FCC",
+        ethos_version="26.1.0-RC2",
+        no_download=False,
+        project=["SmartMapper"],
+        probe=["SmartMapperApiProbe"],
+        expect_probe_report=["SmartMapperApiProbe"],
+        node="node",
+        startup_ms=1,
+        settle_ms=1,
+        timeout_ms=1000,
+        run_dir=str(tmp_path / "run"),
+        persist_dir=None,
+    )
+
+    result = harness.run_headless(args)
+
+    assert result["status"] == "success"
+    assert result["probeReports"] == {"SmartMapperApiProbe": {"ok": True}}
+
+
+def test_run_headless_parses_expected_probe_report_from_captured_stdout(monkeypatch, tmp_path: Path):
+    package = _make_runtime_package(tmp_path)
+    monkeypatch.setattr(harness, "ensure_runtime", lambda *_args, **_kwargs: package)
+    monkeypatch.setattr(harness, "resolve_persist_root", lambda _package, _explicit=None: tmp_path / "persist")
+    monkeypatch.setattr(harness, "stage_projects", lambda _projects, persist_root: persist_root)
+    monkeypatch.setattr(harness, "stage_probes", lambda _probes, persist_root, _projects=None: persist_root)
+
+    def fake_run(command, **_kwargs):
+        stdout = "\n".join(
+            [
+                '[SimProbe:SmartMapperApiProbe] {"ok":true}',
+                '{"status":"success","stdout":["tail output after probe"]}',
+                "",
+            ]
+        )
+        return subprocess.CompletedProcess(command, 0, stdout, "")
+
+    monkeypatch.setattr(harness.subprocess, "run", fake_run)
+    args = Namespace(
+        radio="X20RS-FCC",
+        region="FCC",
+        ethos_version="26.1.0-RC2",
+        no_download=False,
+        project=["SmartMapper"],
+        probe=["SmartMapperApiProbe"],
+        expect_probe_report=["SmartMapperApiProbe"],
+        node="node",
+        startup_ms=1,
+        settle_ms=1,
+        timeout_ms=1000,
+        run_dir=str(tmp_path / "run"),
+        persist_dir=None,
+    )
+
+    result = harness.run_headless(args)
+
+    assert result["status"] == "success"
+    assert result["probeReports"] == {"SmartMapperApiProbe": {"ok": True}}
+
+
 def test_run_headless_fails_when_expected_probe_report_is_missing(monkeypatch, tmp_path: Path):
     package = _make_runtime_package(tmp_path)
     monkeypatch.setattr(harness, "ensure_runtime", lambda *_args, **_kwargs: package)

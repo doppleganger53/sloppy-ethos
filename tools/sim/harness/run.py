@@ -550,8 +550,17 @@ def parse_probe_reports(lines: Any) -> dict[str, Any]:
     return reports
 
 
-def attach_probe_reports(result: dict[str, Any], expected_reports: list[str]) -> dict[str, Any]:
+def attach_probe_reports(
+    result: dict[str, Any],
+    expected_reports: list[str],
+    captured_stdout_lines: Any | None = None,
+) -> dict[str, Any]:
     reports = parse_probe_reports(result.get("stdout"))
+    if captured_stdout_lines is not None:
+        reports.update(parse_probe_reports(captured_stdout_lines))
+    runner_reports = result.get("probeReports")
+    if isinstance(runner_reports, dict):
+        reports.update(runner_reports)
     result["probeReports"] = reports
     missing = [name for name in expected_reports if name not in reports]
     if missing:
@@ -651,7 +660,7 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
     result.setdefault("persistDir", str(persist_root))
     result["stdoutLog"] = str(logs_dir / "websim.stdout.txt")
     result["stderrLog"] = str(logs_dir / "websim.stderr.txt")
-    attach_probe_reports(result, expected_reports)
+    attach_probe_reports(result, expected_reports, stdout.splitlines())
     return result
 
 
