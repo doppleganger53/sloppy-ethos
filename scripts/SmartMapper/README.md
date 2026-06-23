@@ -1,47 +1,52 @@
 # SmartMapper
 
-SmartMapper is currently an Ethos `26.1` API validation probe for issue
-[#83](https://github.com/doppleganger53/sloppy-ethos/issues/83), before the
-full function-mapping feature in issue
-[#45](https://github.com/doppleganger53/sloppy-ethos/issues/45) resumes.
+SmartMapper is an Ethos `26.1+` widget for reviewing available control
+sources and the model assignments that Lua can read safely.
 
 ## Current Behavior
 
-- Registers an Ethos system tool named `SmartMapper Probe`.
-- Prints available `model.*` APIs, documented source category constant values,
-  and `system.getSources(categoryNumber)` probe results with the
-  `[SmartMapperProbe]` log prefix.
-- Attempts to write the same report to the first writable path:
-  /documents/SmartMapper-api-probe.txt,
-  /scripts/SmartMapper/smartmapper-api-probe.txt, or
-  smartmapper-api-probe.txt.
-- Explicitly marks whether candidate read/enumeration support appears present
-  for mixes, logical switches, trims, special functions, and switch/input
-  assignments.
+- Registers a fullscreen Ethos widget named `SmartMapper`.
+- Inventories controls through `system.getSources(categoryNumber)`.
+- Reads accessible mixes, logical switches, trims, special functions, inputs,
+  and channels through defensive model API enumeration.
+- Normalizes discovered assignments into a compact list of assigned controls
+  followed by unused switch-like controls.
+- Labels special-function assignments with play-audio filenames first, then
+  play-text text, then the normal model object name fallback.
+- Reports unavailable or empty API surfaces in a trailing `Status` section
+  instead of fabricating mappings.
 
-The probe does not create or mutate model configuration. It intentionally
-reports `model.createMix` as availability evidence only.
+SmartMapper does not create, edit, or delete model configuration.
 
-## Simulator Or Radio Run
+## User Guide
 
-1. Deploy the probe:
+See [SmartMapper User Guide](../../docs/SmartMapper/SMARTMAPPER_USER_GUIDE.md)
+for installation, widget setup, screenshots, and display interpretation notes.
 
-   ```powershell
-   python tools/build.py --project SmartMapper --deploy
-   ```
+## Simulator Validation
 
-2. Open the Ethos `SmartMapper Probe` system tool on the `26.1` simulator or
-   target radio.
-3. Capture the printed `[SmartMapperProbe]` lines or copy the generated report
-   file when the runtime exposes a writable path.
-4. Add the observed results to issue
-   [#45](https://github.com/doppleganger53/sloppy-ethos/issues/45) before
-   reviving implementation work from any stale branch.
+Run the automated WebSimulator smoke suite from the repo root:
 
-## Validation
+```powershell
+python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SmartMapper-X20RS-FCC.json
+```
+
+The suite stages SmartMapper and verifies that the Ethos `26.1` WebSimulator
+starts and reloads scripts without detected runtime errors. The harness also
+includes a `SmartMapperApiProbe` that can emit a structured
+`[SimProbe:SmartMapperApiProbe]` report when a simulator model or manual GUI
+workflow activates the probe script; plain headless `reloadScripts` does not
+open standalone tools, widgets, or tasks by itself.
+
+## Build And Deploy
 
 ```powershell
 luac -p scripts/SmartMapper/main.lua
 python -m pytest scripts/SmartMapper/tests -q
 python tools/build.py --project SmartMapper --dist
+python tools/build.py --project SmartMapper --deploy
 ```
+
+Use manual simulator or radio confirmation after deploy when evaluating real
+model assignments, because simulator model data can differ from a physical
+radio or a configured aircraft model.

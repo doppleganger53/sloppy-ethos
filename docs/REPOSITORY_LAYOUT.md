@@ -10,7 +10,7 @@ This document explains the purpose of the top-level folders and key root files i
 - Current active script directories are:
   - `scripts/SensorList/` (released)
   - `scripts/BoundryMap/` (open/in progress, unreleased)
-  - `scripts/SmartMapper/` (open/in progress, unreleased)
+  - `scripts/SmartMapper/` (implemented for issue `#45`, unreleased)
   - `scripts/ethos_events/` (released)
 - `Arduino FBus` is deferred work (issue [#84](https://github.com/doppleganger53/sloppy-ethos/issues/84))
   and does not currently have a checked-in script directory.
@@ -48,6 +48,8 @@ This document explains the purpose of the top-level folders and key root files i
   - `scripts/SensorList/tests/lua/test_sensorlist.lua`
   - `scripts/BoundryMap/tests/test_boundrymap_widget.py`
   - `scripts/BoundryMap/tests/lua/test_boundrymap.lua`
+  - `scripts/SmartMapper/tests/test_smartmapper_widget.py`
+  - `scripts/SmartMapper/tests/lua/test_smartmapper.lua`
 
 ### `docs/`
 

@@ -27,6 +27,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 HARNESS_ROOT = Path(__file__).resolve().parent
 RADIOS_ROOT = REPO_ROOT / "tools" / "sim" / "radios"
 RUNS_ROOT = REPO_ROOT / "tools" / "sim" / "runs"
+PROBES_ROOT = HARNESS_ROOT / "probes"
 GITHUB_REPO = "FrSkyRC/ETHOS-Feedback-Community"
 DEFAULT_ETHOS_VERSION = "latest-26.1"
 DEFAULT_REGION = "FCC"
@@ -368,8 +369,34 @@ def normalize_projects(raw_projects: str | list[str] | tuple[str, ...] | None) -
     return projects
 
 
+def normalize_names(raw_names: str | list[str] | tuple[str, ...] | None) -> list[str]:
+    if raw_names is None:
+        candidates: list[str] = []
+    elif isinstance(raw_names, str):
+        candidates = [raw_names]
+    else:
+        candidates = [str(name) for name in raw_names]
+
+    names: list[str] = []
+    seen: set[str] = set()
+    for raw_name in candidates:
+        name = raw_name.strip()
+        if not name:
+            raise HarnessError("script_failure", "Harness probe name cannot be empty.", 20)
+        key = name.lower()
+        if key in seen:
+            raise HarnessError("script_failure", f"Duplicate harness probe requested: {name}", 20)
+        seen.add(key)
+        names.append(name)
+    return names
+
+
 def project_label(projects: list[str]) -> str:
     return "+".join(projects)
+
+
+def simulator_persist_prefix(radio: str) -> str:
+    return "/persist/" + radio.strip("/\\")
 
 
 def stage_projects(projects: list[str], persist_root: Path) -> Path:
@@ -384,6 +411,20 @@ def stage_projects(projects: list[str], persist_root: Path) -> Path:
         install_spec = build.resolve_project_install_spec(project_dir, project)
         build.ensure_unique_radio_destinations(project, install_spec.radio_files, seen_radio_destinations)
         build.stage_project_files(install_spec, persist_root, dirs_exist_ok=True)
+    return persist_root
+
+
+def stage_probes(probes: list[str], persist_root: Path, projects: list[str] | None = None) -> Path:
+    project_keys = {project.lower() for project in projects or []}
+    for probe in probes:
+        if probe.lower() in project_keys:
+            raise HarnessError("script_failure", f"Harness probe conflicts with project name: {probe}", 20)
+        source = PROBES_ROOT / probe
+        if not source.exists():
+            raise HarnessError("script_failure", f"Harness probe not found: {source}", 20)
+        destination = persist_root / "scripts" / probe
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(source, destination, dirs_exist_ok=True)
     return persist_root
 
 
@@ -441,6 +482,13 @@ def apply_suite_args(args: argparse.Namespace) -> None:
     elif "project" in payload:
         setattr(args, "project", str(payload["project"]))
 
+    for suite_key, arg_name in (("probes", "probe"), ("expectProbeReports", "expect_probe_report")):
+        if suite_key in payload:
+            raw_items = payload[suite_key]
+            if not isinstance(raw_items, list):
+                raise HarnessError("startup_failure", f"Suite file '{suite_key}' must be an array: {path}", 10)
+            setattr(args, arg_name, [str(item) for item in raw_items])
+
     for suite_key, arg_name in mapping.items():
         if suite_key in payload:
             if arg_name == "write_default_model" and getattr(args, arg_name, False):
@@ -477,14 +525,67 @@ def captured_output_text(value: str | bytes | None) -> str:
     return value
 
 
+def parse_probe_reports(lines: Any) -> dict[str, Any]:
+    if not isinstance(lines, list):
+        return {}
+
+    reports: dict[str, Any] = {}
+    prefix = "[SimProbe:"
+    for raw_line in lines:
+        line = str(raw_line).strip()
+        if not line.startswith(prefix):
+            continue
+        marker_end = line.find("]")
+        if marker_end <= len(prefix):
+            continue
+        name = line[len(prefix) : marker_end]
+        payload_text = line[marker_end + 1 :].strip()
+        if not payload_text.startswith("{"):
+            reports[name] = {"raw": payload_text}
+            continue
+        try:
+            reports[name] = json.loads(payload_text)
+        except json.JSONDecodeError:
+            reports[name] = {"raw": payload_text}
+    return reports
+
+
+def attach_probe_reports(
+    result: dict[str, Any],
+    expected_reports: list[str],
+    captured_stdout_lines: Any | None = None,
+) -> dict[str, Any]:
+    reports = parse_probe_reports(result.get("stdout"))
+    if captured_stdout_lines is not None:
+        reports.update(parse_probe_reports(captured_stdout_lines))
+    runner_reports = result.get("probeReports")
+    if isinstance(runner_reports, dict):
+        reports.update(runner_reports)
+    result["probeReports"] = reports
+    missing = [name for name in expected_reports if name not in reports]
+    if missing:
+        result["status"] = "script_failure"
+        result["message"] = "Missing expected simulator probe report."
+        result["missingProbeReports"] = missing
+        errors = result.get("errors")
+        if not isinstance(errors, list):
+            errors = []
+        errors.extend(f"missing probe report: {name}" for name in missing)
+        result["errors"] = errors
+    return result
+
+
 def run_headless(args: argparse.Namespace) -> dict[str, Any]:
     apply_suite_args(args)
     projects = normalize_projects(args.project)
+    probes = normalize_names(getattr(args, "probe", None))
+    expected_reports = normalize_names(getattr(args, "expect_probe_report", None))
     label = project_label(projects)
     package = ensure_runtime(args.radio, args.region, args.ethos_version, args.no_download)
     run_root = new_run_root(label, package, args.run_dir)
     persist_root = resolve_persist_root(package, args.persist_dir)
     persist_root = stage_projects(projects, persist_root)
+    persist_root = stage_probes(probes, persist_root, projects)
     logs_dir = run_root / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
 
@@ -497,6 +598,8 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
         str(package.runtime_dir),
         "--persist",
         str(persist_root),
+        "--persist-prefix",
+        simulator_persist_prefix(package.target.radio),
         "--project",
         label,
         "--startup-ms",
@@ -557,6 +660,7 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
     result.setdefault("persistDir", str(persist_root))
     result["stdoutLog"] = str(logs_dir / "websim.stdout.txt")
     result["stderrLog"] = str(logs_dir / "websim.stderr.txt")
+    attach_probe_reports(result, expected_reports, stdout.splitlines())
     return result
 
 
@@ -593,6 +697,7 @@ def write_gui_files(
         .replace("__RUNTIME_CACHE_TOKEN__", urllib.parse.quote(runtime_token, safe=""))
         .replace("__RUNTIME_FACTORY__", package.target.runtime_stem)
         .replace("__PROJECT__", project)
+        .replace("__PERSIST_PREFIX__", json.dumps(simulator_persist_prefix(package.target.radio)))
         .replace("__WRITE_DEFAULT_MODEL__", json.dumps(write_default_model)),
         encoding="utf-8",
     )
@@ -630,11 +735,13 @@ def make_gui_handler(gui_root: Path, runtime_dir: Path, runtime_files: set[str])
 def run_gui(args: argparse.Namespace) -> dict[str, Any]:
     apply_suite_args(args)
     projects = normalize_projects(args.project)
+    probes = normalize_names(getattr(args, "probe", None))
     label = project_label(projects)
     package = ensure_runtime(args.radio, args.region, args.ethos_version, args.no_download)
     run_root = new_run_root(label, package, args.run_dir)
     persist_root = resolve_persist_root(package, args.persist_dir)
     persist_root = stage_projects(projects, persist_root)
+    persist_root = stage_probes(probes, persist_root, projects)
     gui_root = write_gui_files(
         package,
         persist_root,
@@ -704,6 +811,18 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Project under scripts/ to stage and reload. Repeat to stage multiple projects into one simulator persist tree.",
     )
+    headless.add_argument(
+        "--probe",
+        action="append",
+        default=None,
+        help="Harness probe under tools/sim/harness/probes/ to stage into /scripts for runtime API capture.",
+    )
+    headless.add_argument(
+        "--expect-probe-report",
+        action="append",
+        default=None,
+        help="Require a [SimProbe:NAME] JSON report in simulator output.",
+    )
     headless.add_argument("--node", default="node", help="Node.js executable.")
     headless.add_argument("--startup-ms", type=int, default=1000, help="Delay after simulator start.")
     headless.add_argument("--settle-ms", type=int, default=1500, help="Delay after script reload.")
@@ -727,6 +846,12 @@ def parse_args() -> argparse.Namespace:
         action="append",
         default=None,
         help="Project under scripts/ to stage and reload. Repeat to stage multiple projects into one simulator persist tree.",
+    )
+    gui.add_argument(
+        "--probe",
+        action="append",
+        default=None,
+        help="Harness probe under tools/sim/harness/probes/ to stage into /scripts for runtime API capture.",
     )
     gui.add_argument("--port", type=int, default=8765, help="Local HTTP port for the GUI view.")
     gui.add_argument("--no-open", action="store_true", help="Serve without opening the default browser.")
@@ -809,6 +934,7 @@ const log = (message) => {
 const canvas = document.getElementById("screen");
 const context = canvas.getContext("2d");
 const writeDefaultModel = __WRITE_DEFAULT_MODEL__;
+const persistPrefix = __PERSIST_PREFIX__;
 let runtimeModule = null;
 let mouseDown = false;
 let longPressTimer = null;
@@ -821,7 +947,8 @@ const ensureDir = (FS, path) => {
   }
 };
 const writeFile = (FS, relative, encoded) => {
-  const path = "/" + relative.replaceAll("\\\\", "/");
+  const cleanRelative = relative.replaceAll("\\\\", "/").replace(/^\/+/, "");
+  const path = persistPrefix + "/" + cleanRelative;
   ensureDir(FS, path.split("/").slice(0, -1).join("/"));
   const binary = atob(encoded);
   const bytes = new Uint8Array(binary.length);

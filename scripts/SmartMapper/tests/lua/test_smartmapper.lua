@@ -3,44 +3,28 @@ _G.FONT_XS = 0
 _G.FONT_STD = 0
 _G.FONT_STD_BOLD = 0
 _G.EVT_TOUCH = 1
+_G.TOUCH_START = 16640
 _G.TOUCH_END = 16641
-_G.CATEGORY_NONE = 0
-_G.CATEGORY_ALWAYS_ON = 1
-_G.CATEGORY_ANALOG = 43
-_G.CATEGORY_SWITCH = 44
-_G.CATEGORY_SWITCH_POSITION = 42
-_G.CATEGORY_FUNCTION_SWITCH = 45
-_G.CATEGORY_LOGIC_SWITCH = 46
-_G.CATEGORY_TRIM = 47
-_G.CATEGORY_TRIM_POSITION = 48
-_G.CATEGORY_CHANNEL = 49
-_G.CATEGORY_GYRO = 50
-_G.CATEGORY_GYRO_SWITCH = 51
-_G.CATEGORY_TRAINER = 52
-_G.CATEGORY_FLIGHT = 53
-_G.CATEGORY_FLIGHT_VALUE = 54
-_G.CATEGORY_TIMER = 55
-_G.CATEGORY_TELEMETRY_SENSOR = 56
-_G.CATEGORY_SYSTEM = 57
-_G.CATEGORY_SYSTEM_EVENT = 58
-_G.CATEGORY_SPECIAL = 59
+_G.TOUCH_MOVE = 16642
+_G.EVT_VIRTUAL_NEXT = 200
+_G.EVT_VIRTUAL_PREV = 201
+_G.EVT_ENTER_BREAK = 202
+_G.CATEGORY_ANALOG = 8
+_G.CATEGORY_SWITCH = 9
+_G.CATEGORY_SWITCH_POSITION = 10
+_G.CATEGORY_FUNCTION_SWITCH = 12
+_G.CATEGORY_LOGIC_SWITCH = 13
+_G.CATEGORY_TRIM = 14
+_G.CATEGORY_TRIM_POSITION = 15
+_G.CATEGORY_CHANNEL = 16
+_G.CATEGORY_TIMER = 21
+_G.CATEGORY_TELEMETRY_SENSOR = 22
 
-local registeredTool = nil
-local printed = {}
-local written = {}
+local registeredWidget = nil
 local drawCalls = {}
 local invalidated = false
-local realPrint = print
 local loadedIconPath = nil
-
-local function contains(lines, needle)
-  for _, line in ipairs(lines) do
-    if tostring(line):find(needle, 1, true) then
-      return true
-    end
-  end
-  return false
-end
+local realPrint = print
 
 local function fail(message)
   io.stderr:write(message .. "\n")
@@ -59,63 +43,105 @@ local function assert_equal(actual, expected, label)
   end
 end
 
-_G.print = function(line)
-  printed[#printed + 1] = tostring(line)
+local function contains_row(rows, needle)
+  for _, row in ipairs(rows) do
+    for _, value in pairs(row) do
+      if tostring(value):find(needle, 1, true) then
+        return true
+      end
+    end
+  end
+  return false
+end
+
+local function contains_assignment(mapping, control, target)
+  for _, assignment in ipairs(mapping.assignments) do
+    if assignment.controlLabel == control and assignment.target == target then
+      return true
+    end
+  end
+  return false
+end
+
+local function assert_source_used(mapping, label, expected, context)
+  local source = mapping.sourceByKey[label:lower()]
+  assert_true(source ~= nil, "source exists: " .. label)
+  assert_equal(source.used, expected, context or ("source used: " .. label))
+end
+
+local function sourceHandle(label)
+  return {
+    name = function()
+      return label
+    end,
+  }
 end
 
 _G.system = {
-  registerSystemTool = function(spec)
-    registeredTool = spec
+  registerWidget = function(spec)
+    registeredWidget = spec
+  end,
+  getSource = function(query)
+    if query.category == _G.CATEGORY_SWITCH_POSITION and query.member == 5 then
+      return sourceHandle("SD up")
+    end
+    return nil
   end,
   getSources = function(category)
     assert_true(type(category) == "number", "getSources receives category number")
     if category == _G.CATEGORY_SWITCH_POSITION then
-      return { "SAup", "SAmid", "SAdown" }
+      return { "SA up", "SA mid", "SA down", "SB up", "SC up", "SD up" }
+    elseif category == _G.CATEGORY_FUNCTION_SWITCH then
+      return { "FS1", "FS2" }
+    elseif category == _G.CATEGORY_ANALOG then
+      return { "Throttle" }
+    elseif category == _G.CATEGORY_CHANNEL then
+      return { "CH1" }
     end
     return {}
-  end,
-  getSource = function(query)
-    return { category = query.category, member = query.member }
   end,
 }
 
 _G.model = {
   name = function()
-    return "Probe Model"
+    return "Mapping Model"
   end,
-  createMix = function()
-    return true
+  getMixes = function()
+    return {
+      { name = "Gear", input = "SA up" },
+      { name = "Throttle mix", source = "Throttle", weight = 80 },
+      { name = "Mode", input = { category = _G.CATEGORY_SWITCH_POSITION, member = 5 } },
+    }
   end,
-  getMix = function(index)
+  getLogicSwitch = function(index)
     if index == 0 then
-      return { name = "Throttle", input = "SA" }
+      return {
+        name = "L01",
+        operation = "a>x",
+        values = function()
+          return { sourceHandle("SB up"), sourceHandle("SC up") }
+        end,
+      }
     end
     return nil
   end,
-  getLogicalSwitches = function()
-    return { { name = "L01" } }
-  end,
-}
-
-local realIo = io
-_G.io = {
-  stderr = realIo.stderr,
-  open = function(path, mode)
-    if mode ~= "w" then
-      return nil
+  getChannel = function(index)
+    if index == 0 then
+      return { name = "Aileron" }
     end
+    return nil
+  end,
+  getSpecialFunctions = function()
     return {
-      write = function(_, content)
-        written[path] = content
-      end,
-      close = function() end,
+      { switch = "SA down", action = { type = "playFile", file = "gear_down.wav" } },
+      { activeCondition = "SA mid", action = { type = "playText", text = "mid mode" } },
     }
   end,
 }
 
 _G.lcd = {
   getWindowSize = function()
-    return 480, 272
+    return 480, 90
   end,
   font = function(_) end,
   drawText = function(x, y, text)
@@ -135,32 +161,66 @@ local test = module._test
 assert_true(type(test) == "table", "expected _test export table")
 
 module.init()
-assert_true(type(registeredTool) == "table", "tool registers")
-assert_true(type(registeredTool.create) == "function", "create registered")
-assert_true(type(registeredTool.paint) == "function", "paint registered")
-assert_true(type(registeredTool.event) == "function", "event registered")
-assert_true(type(registeredTool.icon) == "table", "icon registered")
+assert_true(type(registeredWidget) == "table", "widget registers")
+assert_equal(registeredWidget.key, "smrtmpr", "widget key")
+assert_equal(registeredWidget.name(), "SmartMapper", "widget name")
+assert_true(type(registeredWidget.create) == "function", "create registered")
+assert_true(type(registeredWidget.paint) == "function", "paint registered")
+assert_true(type(registeredWidget.wakeup) == "function", "wakeup registered")
+assert_true(type(registeredWidget.event) == "function", "event registered")
 assert_equal(loadedIconPath, "/scripts/SmartMapper/smartmapper.png", "icon loads from SmartMapper path first")
-assert_equal(registeredTool.name(), "SmartMapper Probe", "tool name")
 
-local lines, path = test.runProbe()
-assert_true(type(lines) == "table" and #lines > 8, "probe returns report lines")
-assert_equal(path, "/documents/SmartMapper-api-probe.txt", "first writable report path")
-assert_true(written[path]:find("SmartMapper Ethos API Probe", 1, true) ~= nil, "report content written")
-assert_true(contains(lines, "model.name(): Probe Model"), "model name captured")
-assert_true(contains(lines, "model.createMix=function"), "createMix availability captured")
-assert_true(contains(lines, "model.getMix(0/1): ok"), "mix read probe captured")
-assert_true(contains(lines, "Source category constants:"), "category section captured")
-assert_true(contains(lines, "- CATEGORY_SWITCH_POSITION=42"), "category value captured")
-assert_true(contains(lines, "system.getSources CATEGORY_SWITCH_POSITION (42): ok"), "getSources category captured")
-assert_true(contains(lines, "- mixes: candidate support"), "mix surface summarized")
-assert_true(contains(lines, "- special functions: no candidate read/enumeration API found"), "missing special functions summarized")
+local mapping = test.buildMapping()
+assert_equal(mapping.modelName, "Mapping Model", "model name captured")
+assert_true(#mapping.sources >= 8, "source inventory captured")
+assert_true(#mapping.assignments >= 6, "assignments captured")
+assert_true(contains_assignment(mapping, "SA up", "Gear"), "mix input mapped")
+assert_true(contains_assignment(mapping, "Throttle", "Throttle mix"), "mix source mapped")
+assert_true(contains_assignment(mapping, "SD up", "Mode"), "source query mix input mapped")
+assert_true(contains_assignment(mapping, "SB up", "L01"), "logic switch values source mapped")
+assert_true(contains_assignment(mapping, "SC up", "L01"), "second logic switch values source mapped")
+assert_true(contains_assignment(mapping, "SA down", "gear_down.wav"), "special function audio target mapped")
+assert_true(contains_assignment(mapping, "SA mid", "mid mode"), "special function text target mapped")
+assert_source_used(mapping, "SB up", true, "logic switch values mark SB up used")
+assert_source_used(mapping, "SC up", true, "logic switch values mark SC up used")
+assert_true(not contains_assignment(mapping, "Aileron", "Aileron"), "channel name-only record is not mapped")
 
-local state = test.create()
-assert_true(type(state.lines) == "table", "create stores report lines")
-registeredTool.paint(state)
-assert_true(#drawCalls > 2, "paint renders report")
-assert_true(test.event(state, _G.EVT_TOUCH, _G.TOUCH_END), "touch end reruns probe")
-assert_true(invalidated, "rerun invalidates display")
+local rows = test.buildRows(mapping)
+assert_true(contains_row(rows, "Assigned controls"), "assigned section rendered")
+assert_true(contains_row(rows, "Gear"), "mix name used as target")
+assert_true(contains_row(rows, "L01"), "logic switch name used as target")
+assert_true(not contains_row(rows, "Aileron"), "channel name-only record does not render as assignment")
+assert_true(contains_row(rows, "gear_down.wav"), "special function audio label used")
+assert_true(contains_row(rows, "mid mode"), "special function text label used")
+assert_true(contains_row(rows, "Unused switches"), "unused section rendered")
+assert_true(contains_row(rows, "SD up"), "unused switch position rendered")
+assert_true(contains_row(rows, "FS1"), "unused function switch rendered")
+assert_true(contains_row(rows, "Status"), "API status rows rendered for unavailable surfaces")
+
+local widget = test.create()
+registeredWidget.paint(widget)
+assert_true(#drawCalls > 4, "paint renders rows")
+assert_equal(drawCalls[1].text, "SmartMapper", "title should render")
+
+local before = widget.scroll
+assert_true(test.event(widget, nil, _G.EVT_VIRTUAL_NEXT), "next event scrolls")
+assert_true(widget.scroll > before, "scroll increased")
+assert_true(invalidated, "scroll invalidates display")
+
+invalidated = false
+assert_true(test.event(widget, _G.EVT_TOUCH, _G.TOUCH_START, 20, 60), "touch start handled")
+test.event(widget, _G.EVT_TOUCH, _G.TOUCH_MOVE, 20, 20)
+assert_true(widget.scroll > before, "touch drag scrolls")
+assert_true(invalidated, "touch drag invalidates display")
+assert_true(test.event(widget, _G.EVT_TOUCH, _G.TOUCH_END, 20, 20), "touch end handled")
+
+_G.model = {}
+_G.system.getSources = function()
+  return {}
+end
+
+local emptyMapping = test.buildMapping()
+local emptyRows = test.buildRows(emptyMapping)
+assert_true(contains_row(emptyRows, "No accessible model mappings found."), "empty state rendered")
 
 realPrint("smartmapper lua tests passed")

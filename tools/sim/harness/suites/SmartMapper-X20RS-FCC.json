@@ -1,0 +1,10 @@
+{
+  "name": "smartmapper-x20rs-fcc-smoke",
+  "projects": ["SmartMapper"],
+  "radio": "X20RS-FCC",
+  "ethosVersion": "latest-26.1",
+  "startupMs": 1000,
+  "settleMs": 1500,
+  "timeoutMs": 12000,
+  "writeDefaultModel": false
+}

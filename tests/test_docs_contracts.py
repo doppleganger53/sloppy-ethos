@@ -218,10 +218,11 @@ def test_ethos_26_1_api_surface_matrix_lists_shared_surfaces_and_smoke_targets()
         "SensorList: yes",
         "BoundryMap: yes",
         "ethos_events: yes",
-        "SmartMapper: no",
+        "SmartMapper: yes",
         "FBus: no",
         "python -m pytest scripts/SensorList/tests -q",
         "tools/sim/harness/suites/SensorList-X20RS-FCC.json",
+        "tools/sim/harness/suites/SmartMapper-X20RS-FCC.json",
         "python -m pytest scripts/BoundryMap/tests -q",
         "python tools/build.py --project ethos_events --deploy",
     ):
@@ -258,6 +259,7 @@ def test_script_local_tests_are_discovered_from_repo_root():
     assert "scripts" in pytest_config
     assert (REPO_ROOT / "scripts" / "SensorList" / "tests" / "test_sensorlist_widget.py").exists()
     assert (REPO_ROOT / "scripts" / "BoundryMap" / "tests" / "test_boundrymap_widget.py").exists()
+    assert (REPO_ROOT / "scripts" / "SmartMapper" / "tests" / "test_smartmapper_widget.py").exists()
     assert not (REPO_ROOT / "tests" / "lua").exists()
 
 

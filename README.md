@@ -65,6 +65,7 @@ or GIF walkthrough will be added in a follow-up docs update.
 ```powershell
 python tools/build.py --project SensorList --dist
 python tools/build.py --project BoundryMap --dist
+python tools/build.py --project SmartMapper --dist
 python tools/build.py --project SensorList --project ethos_events --dist
 python tools/build.py --project SensorList --deploy
 python tools/build.py --project ethos_events --deploy
@@ -89,6 +90,7 @@ python tools/build.py --help
 python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1
 python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1
 python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json
+python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SmartMapper-X20RS-FCC.json
 python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1
 ```
 
@@ -117,6 +119,9 @@ To build a single install ZIP with multiple scripts:
 - `scripts/BoundryMap/README.md`: BoundryMap usage notes
 - `scripts/BoundryMap/assets/icons/`: tracked widget icon assets
 - `scripts/BoundryMap/assets/maps/`: ignored local-only map asset folder, created by contributors when packaging private maps
+- `scripts/SmartMapper/main.lua`: SmartMapper source and assignment mapping widget
+- `scripts/SmartMapper/README.md`: SmartMapper usage and validation notes
+- [docs/SmartMapper/SMARTMAPPER_USER_GUIDE.md](docs/SmartMapper/SMARTMAPPER_USER_GUIDE.md): SmartMapper installation and screenshot user guide
 - `scripts/ethos_events/main.lua`: system-tool event tracer entrypoint
 - `scripts/ethos_events/README.md`: event tracer usage notes
 - `tools/build.py`: syntax-check + packaging + simulator deploy script

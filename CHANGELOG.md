@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Implemented the `SmartMapper` Ethos `26.1+` widget for issue #45. The widget inventories source categories through `system.getSources(categoryNumber)`, reads accessible model assignment surfaces defensively, labels special-function audio/text actions, and shows unused switch-like controls without mutating model configuration.
+- Added a SmartMapper WebSimulator smoke suite plus harness-only API probe staging/report parsing for activated simulator probe workflows.
+
+### Testing
+
+- `luac -p scripts/SmartMapper/main.lua`
+- `python -m pytest scripts/SmartMapper/tests -q`
+- `python -m pytest tests/test_sim_harness.py -q`
+- `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SmartMapper-X20RS-FCC.json`
+- `python tools/build.py --project SmartMapper --dist`
+- `python tools/build.py --project SmartMapper --deploy`
+- `python -m pytest -q`
+
 ## [SensorList v1.0.1] - 2026-03-09
 
 ### Changed
