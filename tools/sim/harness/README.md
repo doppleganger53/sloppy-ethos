@@ -10,6 +10,7 @@ Common commands:
 python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1
 python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1
 python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json
+python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SmartMapper-X20RS-FCC.json
 python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1
 ```
 
@@ -45,3 +46,13 @@ By default, the headless and GUI paths do not call the WebSimulator export
 `_writeDefaultSettingsAndModel()` because some X20RS-FCC runtimes can block or
 abort in that call during automated startup. Use `--write-default-model` only
 when validating that behavior against a runtime known not to block.
+
+Harness-only probes can be staged alongside projects with repeated `--probe`
+values or suite `probes` entries. When the Ethos runtime actually activates a
+staged probe script, the probe can print one structured `[SimProbe:NAME]` JSON
+line; headless mode collects those lines under `probeReports` and can fail the
+run when an expected report is missing through `--expect-probe-report` or suite
+`expectProbeReports`. The WebSimulator `reloadScripts` export does not open
+standalone tools, widgets, or tasks by itself, so only require a probe report
+when the suite also provides a model or interaction path that activates that
+script.

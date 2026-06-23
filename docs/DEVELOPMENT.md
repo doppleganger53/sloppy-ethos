@@ -35,6 +35,7 @@
 - Package and deploy:
   `python tools/build.py --project SensorList --dist`
   `python tools/build.py --project BoundryMap --dist`
+  `python tools/build.py --project SmartMapper --dist`
   `python tools/build.py --project SensorList --project ethos_events --dist`
   `python tools/build.py --project SensorList --deploy`
   `python tools/build.py --project ethos_events --deploy`
@@ -44,6 +45,7 @@
   `python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1`
   `python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1`
   `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`
+  `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SmartMapper-X20RS-FCC.json`
   `python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1`
 
 ## Debugging Session Rule
@@ -92,6 +94,9 @@
 - stages scripts into the Ethos Suite persist directory for the selected radio/runtime by calling the existing `tools/build.py` install-spec helpers.
 - accepts repeated `--project` values so GUI and headless sessions can stage one project or a project set into the same simulator persist tree.
 - supports JSON smoke suites, starting with `tools/sim/harness/suites/SensorList-X20RS-FCC.json`.
+- supports harness-only probes through repeated `--probe` values and suite
+  `probes` entries; expected probe reports can be enforced with
+  `--expect-probe-report` or suite `expectProbeReports`.
 - runs headless smoke checks through Node.js and reports structured statuses for success, missing runtime, download failure, startup failure, script failure, and timeout.
 - can prepare and serve a browser-based GUI view for manual confirmation without hand-copying scripts.
 - serves GUI runtime JS/WASM from the cached package under `tools/sim/radios/` instead of copying runtime files into each run directory.

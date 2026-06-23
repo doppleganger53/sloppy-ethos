@@ -27,14 +27,15 @@ function ensureDir(FS, targetPath) {
   }
 }
 
-function writeHostTree(FS, hostRoot, relative = "") {
+function writeHostTree(FS, hostRoot, relative = "", simRoot = "") {
   const current = path.join(hostRoot, relative);
   for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
     const childRelative = path.join(relative, entry.name);
-    const simPath = `/${childRelative.replaceAll(path.sep, "/")}`;
+    const childSimPath = childRelative.replaceAll(path.sep, "/");
+    const simPath = path.posix.join(simRoot, childSimPath);
     if (entry.isDirectory()) {
       ensureDir(FS, simPath);
-      writeHostTree(FS, hostRoot, childRelative);
+      writeHostTree(FS, hostRoot, childRelative, simRoot);
       continue;
     }
     if (entry.isFile()) {
@@ -71,6 +72,7 @@ async function main() {
   const runtimeJs = path.resolve(args["runtime-js"]);
   const runtimeDir = path.resolve(args["runtime-dir"]);
   const persist = path.resolve(args.persist);
+  const persistPrefix = args["persist-prefix"] || "";
   const project = args.project || "SensorList";
   const startupMs = Number(args["startup-ms"] || 1000);
   const settleMs = Number(args["settle-ms"] || 1500);
@@ -112,9 +114,9 @@ async function main() {
     });
 
     progress("staging persist tree");
-    ensureDir(module.FS, "/models");
-    ensureDir(module.FS, "/scripts");
-    writeHostTree(module.FS, persist);
+    ensureDir(module.FS, path.posix.join(persistPrefix, "models"));
+    ensureDir(module.FS, path.posix.join(persistPrefix, "scripts"));
+    writeHostTree(module.FS, persist, "", persistPrefix);
     if (args["write-default-model"] === "true" || args["write-default-model"] === "1") {
       progress("writing default settings and model");
       module._writeDefaultSettingsAndModel();

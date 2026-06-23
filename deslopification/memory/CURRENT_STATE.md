@@ -111,6 +111,13 @@ Historical detail remains in individual session notes referenced from
 - Harness `headless` and `gui` modes accept repeated `--project` values so one
   simulator session can stage any single project or a project set through the
   same `tools/build.py` install contract.
+- Harness `headless` and `gui` modes can stage harness-only probes from
+  `tools/sim/harness/probes/` with repeated `--probe` values or suite
+  `probes` entries; headless mode records `[SimProbe:NAME]` JSON lines under
+  `probeReports` and can require them with `--expect-probe-report` or suite
+  `expectProbeReports`. The WebSimulator `reloadScripts` export does not open
+  standalone tools, widgets, or tasks by itself, so expected probe reports need
+  a model or interaction path that actually activates the probe script.
 - For SensorList on the current Ethos `26.1` line, the repeatable runtime smoke
   command is
   `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`.
@@ -132,10 +139,12 @@ Historical detail remains in individual session notes referenced from
   form, source, and touch APIs, with BoundryMap's local harness aligned to the
   checked `26.1` form surface by keeping `addBooleanField` optional and
   modeling `addSourceField`.
-- SmartMapper now has a `SmartMapper Probe` system tool for issue `#83`; it
-  records candidate `model.*`, `system.getSources(...)`, and required
-  read/enumeration surfaces before issue `#45` implementation resumes. Runtime
-  capture in the `26.1` simulator or target radio is still the next gate.
+- SmartMapper is now an Ethos `26.1+` widget for issue `#45`; it inventories
+  controls through `system.getSources(categoryNumber)`, reads accessible model
+  assignment surfaces defensively, shows unused switch-like controls, and uses
+  `tools/sim/harness/suites/SmartMapper-X20RS-FCC.json` for repeatable
+  WebSimulator staging/startup smoke coverage. `SmartMapperApiProbe` remains a
+  harness-only probe for activated simulator workflows.
 - Ethos release assets can contain API evidence not present in the public repo
   checkout. For `26.1.0-RC1`, the release `lua-doc.zip` documents
   `system.getSources(categoryNumber)` and the source `CATEGORY_*` list; check

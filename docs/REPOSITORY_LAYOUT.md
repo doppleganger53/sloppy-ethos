@@ -7,7 +7,8 @@ This document explains the purpose of the top-level folders and key root files i
 ### `scripts/`
 
 - Source for Ethos Lua projects.
-- Current active widget: `scripts/SensorList/`.
+- Current active widgets include `scripts/SensorList/`, `scripts/BoundryMap/`,
+  and `scripts/SmartMapper/`.
 - Each script project contains a local `VERSION` file used for single-script dist artifact versioning.
 - Script-owned tests live under `scripts/{ProjectName}/tests/` and are discovered from the repo root by pytest.
 
@@ -42,6 +43,8 @@ This document explains the purpose of the top-level folders and key root files i
   - `scripts/SensorList/tests/lua/test_sensorlist.lua`
   - `scripts/BoundryMap/tests/test_boundrymap_widget.py`
   - `scripts/BoundryMap/tests/lua/test_boundrymap.lua`
+  - `scripts/SmartMapper/tests/test_smartmapper_widget.py`
+  - `scripts/SmartMapper/tests/lua/test_smartmapper.lua`
 
 ### `docs/`
 

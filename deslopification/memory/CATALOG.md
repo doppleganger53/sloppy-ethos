@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 135
-- Total size: 233,089 bytes
-- Total lines: 6,178
+- Files: 136
+- Total size: 237,201 bytes
+- Total lines: 6,267
 - Distribution by artifact:
-  - session notes: 129
+  - session notes: 130
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 80 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 81 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 16 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
   - 15 -- memory ( Memory system structure and retrieval policy )
@@ -33,7 +33,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 3 -- handoff ( Session continuity and restart handoffs )
 
 - Distribution by concern:
-  - 32 -- implementation
+  - 33 -- implementation
   - 28 -- workflow
   - 17 -- build
   - 16 -- testing
@@ -208,3 +208,4 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-05-30 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_ZIP_TRAVERSAL_TEST.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_ZIP_TRAVERSAL_TEST.md) | # Session Notes 2026-05-30 - WebSimulator ZIP Traversal Test |
 | 2026-05-30 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md](notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md) | # Session Notes 2026-05-30 - Issue #95 workspace AGENTS transition |
 | 2026-05-30 | session | repo | workflow | [notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md](notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md) | # Session Notes 2026-05-30 - PR #94 conflict resolution |
+| 2026-06-23 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-06-23_ISSUE_45_SMARTMAPPER_IMPLEMENTATION.md](notes/session/repo/SESSION_NOTES_2026-06-23_ISSUE_45_SMARTMAPPER_IMPLEMENTATION.md) | # Session Notes 2026-06-23 - Issue #45 SmartMapper Implementation |

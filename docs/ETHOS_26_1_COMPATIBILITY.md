@@ -9,9 +9,9 @@ across the repo.
 
 - Repository:
   `https://github.com/FrSkyRC/ETHOS-Feedback-Community.git`
-- Local path: `..\ETHOS-Feedback-Community`
+- Local path: `..\ETHOS-Feedback-Community-prerelease`
 - Branch: `26.1`
-- Commit: `e9d7afb7`
+- Commit: `9a89bdae`
 - Baseline rule:
   the original request mentioned Ethos `21.1`, but the concrete checked and
   requested reference branch was `26.1`. Keep `26.1` as the evidence source
@@ -20,11 +20,11 @@ across the repo.
 ## Recreate Or Refresh
 
 ```powershell
-git clone --branch 26.1 --single-branch https://github.com/FrSkyRC/ETHOS-Feedback-Community.git ..\ETHOS-Feedback-Community
-git -C ..\ETHOS-Feedback-Community fetch origin 26.1 --depth 1
-git -C ..\ETHOS-Feedback-Community checkout 26.1
-git -C ..\ETHOS-Feedback-Community pull --ff-only origin 26.1
-git -C ..\ETHOS-Feedback-Community rev-parse --short HEAD
+git clone --branch 26.1 --single-branch https://github.com/FrSkyRC/ETHOS-Feedback-Community.git ..\ETHOS-Feedback-Community-prerelease
+git -C ..\ETHOS-Feedback-Community-prerelease fetch origin 26.1 --depth 1
+git -C ..\ETHOS-Feedback-Community-prerelease checkout 26.1
+git -C ..\ETHOS-Feedback-Community-prerelease pull --ff-only origin 26.1
+git -C ..\ETHOS-Feedback-Community-prerelease rev-parse --short HEAD
 ```
 
 Use the clone command when the reference checkout is missing. Use the
@@ -76,10 +76,9 @@ confirm that it is still pinned to the tracked `26.1` branch.
 - Sensor/source access patterns:
   `system.getSource(...)`, then `source:value(...)` or
   `source:stringValue(...)`
-- Source enumeration under validation:
+- Source enumeration:
   `system.getSources(categoryNumber)` is documented in the `26.1.0-RC1` Lua
-  docs and probed by `SmartMapper` before reviving the issue `#45`
-  function-mapping implementation.
+  docs and is now used by `SmartMapper` for source/control inventory.
 - Touch constants and categories:
   `EVT_TOUCH*`, raw values `16640`, `16641`, `16642`
 - Model surfaces confirmed during triage:
@@ -91,10 +90,10 @@ confirm that it is still pinned to the tracked `26.1` branch.
 
 | Surface | Used by | 26.1 evidence | Smoke target | Notes |
 | --- | --- | --- | --- | --- |
-| `system.registerWidget` / widget callbacks | SensorList: yes; BoundryMap: yes; ethos_events: no; SmartMapper: no; FBus: no | `lua/templates/widget/main.lua`, `lua/examples/widget-rssi/main.lua`, `lua/examples/widget-sinus/main.lua` | `python -m pytest scripts/SensorList/tests -q`, `python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1`, `python -m pytest scripts/BoundryMap/tests -q` | callback set includes `create`, `configure`, `paint`, `wakeup`, `event`, `read`, `write`, `menu`, `persistent` |
-| `system.registerSystemTool` / `lcd.loadMask` / `lcd.loadBitmap` | SensorList: no; BoundryMap: no; ethos_events: yes; SmartMapper: yes; FBus: no | `lua/tests/emergency-test/main.lua`, `lua/tests/latency-test/main.lua`, `lua/examples/bluetooth/main.lua`, `lua/examples/widget-lcddemo/main.lua` | `python tools/build.py --project ethos_events --deploy`, `python -m pytest scripts/SmartMapper/tests -q` | `ethos_events` probes events and touch logging; `SmartMapper` probes model/source API availability before feature implementation |
+| `system.registerWidget` / widget callbacks | SensorList: yes; BoundryMap: yes; ethos_events: no; SmartMapper: yes; FBus: no | `lua/templates/widget/main.lua`, `lua/examples/widget-rssi/main.lua`, `lua/examples/widget-sinus/main.lua` | `python -m pytest scripts/SensorList/tests -q`, `python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1`, `python -m pytest scripts/BoundryMap/tests -q`, `python -m pytest scripts/SmartMapper/tests -q`, `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SmartMapper-X20RS-FCC.json` | callback set includes `create`, `configure`, `paint`, `wakeup`, `event`, `read`, `write`, `menu`, `persistent` |
+| `system.registerSystemTool` / `lcd.loadMask` / `lcd.loadBitmap` | SensorList: no; BoundryMap: no; ethos_events: yes; SmartMapper: no; FBus: no | `lua/tests/emergency-test/main.lua`, `lua/tests/latency-test/main.lua`, `lua/examples/bluetooth/main.lua`, `lua/examples/widget-lcddemo/main.lua` | `python tools/build.py --project ethos_events --deploy` | `ethos_events` probes events and touch logging; SmartMapper is now a widget, with harness-only API probing handled outside the installable script |
 | `system.registerTask` / `system.getMemoryUsage` | SensorList: no; BoundryMap: no; ethos_events: no; SmartMapper: no; FBus: no | `lua/examples/task/main.lua`, `lua/examples/memstatus/main.lua` | reference-only until a task-based script lands | budget-sensitive helper APIs, no current local consumer |
-| `system.getSource` / `system.getSources` / `system.getSensors` / `model.getSensors` | SensorList: yes; BoundryMap: yes; ethos_events: no; SmartMapper: yes; FBus: no | `lua/examples/widget-rssi/main.lua`, `lua/examples/widget-jet/main.lua`, `lua/examples/wizard/main.lua`; runtime `system.getSources` evidence pending from issue `#83` probe | `python -m pytest scripts/SensorList/tests -q`, `python -m pytest scripts/BoundryMap/tests -q`, `python -m pytest scripts/SmartMapper/tests -q` | `SensorList` also exercises method-vs-field drift; `BoundryMap` uses source-handle reads for GPS and altitude; `SmartMapper` records source enumeration behavior |
+| `system.getSource` / `system.getSources` / `system.getSensors` / `model.getSensors` | SensorList: yes; BoundryMap: yes; ethos_events: no; SmartMapper: yes; FBus: no | `lua/examples/widget-rssi/main.lua`, `lua/examples/widget-jet/main.lua`, `lua/examples/wizard/main.lua`; `26.1.0-RC1` Lua docs for `system.getSources(categoryNumber)` | `python -m pytest scripts/SensorList/tests -q`, `python -m pytest scripts/BoundryMap/tests -q`, `python -m pytest scripts/SmartMapper/tests -q`, `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SmartMapper-X20RS-FCC.json` | `SensorList` also exercises method-vs-field drift; `BoundryMap` uses source-handle reads for GPS and altitude; `SmartMapper` uses source enumeration for control inventory |
 | `form.addSensorField` / `form.addSourceField` / `form.addChoiceField` / `form.addNumberField` / `form.addTextButton` / `form.addBitmapField` / `form.addStaticText` / `form.addBooleanField` | SensorList: yes; BoundryMap: yes; ethos_events: no; SmartMapper: no; FBus: no | `lua/examples/tool-form/main.lua`, `lua/examples/widget-jet/main.lua`, `lua/modules/crossfire/main.lua`, `lua/modules/elrs/main.lua` | `python -m pytest scripts/SensorList/tests -q`, `python -m pytest scripts/BoundryMap/tests -q` | `form.addBooleanField` was not surfaced in the checked `26.1` examples, so BoundryMap keeps that row optional and the local test harness omits the stub |
 | `EVT_TOUCH*` and raw touch values `16640`, `16641`, `16642` | SensorList: yes; BoundryMap: yes; ethos_events: yes; SmartMapper: no; FBus: no | `scripts/SensorList/main.lua`, `scripts/BoundryMap/main.lua`, `scripts/ethos_events/main.lua` | `python -m pytest scripts/SensorList/tests -q`, `python -m pytest scripts/BoundryMap/tests -q`, `python tools/build.py --project ethos_events --deploy` | local tests lock the raw-value mapping, while `ethos_events` remains the manual simulator probe |
 
@@ -106,7 +105,7 @@ confirm that it is still pinned to the tracked `26.1` branch.
 | `SensorList` | Automated X20RS-FCC WebSimulator harness added; broader runtime coverage still incomplete | Existing defensive source discovery may still miss method-vs-field or table-vs-userdata drift on `26.1`, especially in simulator startup paths. | Run `python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1`; recheck `X20S` whenever the reproduction overlaps the existing simulator bug surface. | [#82](https://github.com/doppleganger53/sloppy-ethos/issues/82), [#30](https://github.com/doppleganger53/sloppy-ethos/issues/30) |
 | `BoundryMap` | Highest active compatibility risk | GPS sub-value reads currently rely on `system.getSource({ ..., options = ... })`, and the `26.1` surface keeps boolean config fields optional rather than guaranteed. | Validate packaged and deployed assets on `X20RS`, then confirm GPS/config behavior on hardware if simulator results are ambiguous. | [#78](https://github.com/doppleganger53/sloppy-ethos/issues/78), [#79](https://github.com/doppleganger53/sloppy-ethos/issues/79), [#80](https://github.com/doppleganger53/sloppy-ethos/issues/80) |
 | `ethos_events` | Best local runtime probe, `26.1` capture pending | The repo can already log raw events, but the current docs still point at an older upstream path and the `26.1` event map has not been recorded yet. | Deploy to both simulator targets and capture current raw touch/key constants before treating local event assumptions as settled. | [#81](https://github.com/doppleganger53/sloppy-ethos/issues/81) |
-| `SmartMapper` | API probe added, runtime capture pending | Reference examples confirm `model.createMix(...)` and `model.name()`, but do not yet prove the read/enumeration APIs needed to inspect existing mixes, switches, trims, or special functions. | Run `SmartMapper Probe` on the `26.1` simulator or target radio, then document the captured `model.*` and `system.getSources(...)` results before reviving implementation on the stale feature branch. | [#83](https://github.com/doppleganger53/sloppy-ethos/issues/83), [#45](https://github.com/doppleganger53/sloppy-ethos/issues/45) |
+| `SmartMapper` | Widget implemented for issue #45 | `system.getSources(categoryNumber)` provides the source/control inventory path; mix, trim, channel, input, and special-function assignment reads remain defensive because model read/enumeration support can vary by runtime/model. | `python -m pytest scripts/SmartMapper/tests -q`, `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SmartMapper-X20RS-FCC.json`, then deploy with `python tools/build.py --project SmartMapper --deploy` for manual simulator or radio confirmation. | [#45](https://github.com/doppleganger53/sloppy-ethos/issues/45) |
 | `Arduino FBus` | Feasibility unresolved | The surviving remote branch appears prompt-only, and the `26.1` reference scan did not expose a proven widget pattern for this work. | Decide whether to revive or retire the branch after reviewing the telemetry use case against current Ethos surfaces. | [#84](https://github.com/doppleganger53/sloppy-ethos/issues/84) |
 
 ## Repo-Level Follow-Ups
