@@ -16,8 +16,23 @@ If you want to play around with finding repeatable, low-maintenance ways to effi
 
 `</human>`
 
-Ethos Lua script workspace. Current active projects include `SensorList`,
-`BoundryMap`, `SmartMapper`, and `ethos_events`.
+Ethos Lua script workspace. Current active script directories include
+`SensorList`, `BoundryMap`, `SmartMapper`, and `ethos_events`.
+
+## Script Inventory and 26.1 Compatibility Status
+
+- `SensorList` (released): active and tracked in the published release list.
+- `BoundryMap` (in progress): active, local development present under
+  `scripts/BoundryMap/`; not released yet.
+- `SmartMapper` (in progress): active, implemented for issue [#45](https://github.com/doppleganger53/sloppy-ethos/issues/45),
+  but not yet part of the published script release list.
+- `ethos_events` (released): active utility script with a published release asset.
+- `Arduino FBus` (deferred): feasibility remains unresolved under issue
+  [#84](https://github.com/doppleganger53/sloppy-ethos/issues/84), with no checked-in script release target yet.
+
+For contributor-facing compatibility context, see
+[docs/ETHOS_26_1_COMPATIBILITY.md](docs/ETHOS_26_1_COMPATIBILITY.md) and
+issue [#87](https://github.com/doppleganger53/sloppy-ethos/issues/87).
 
 ## Current Status
 
@@ -33,6 +48,9 @@ Unreleased scripts may exist under `scripts/` without appearing here yet.
 
 - [Download SensorList (v1.0.1)](https://github.com/doppleganger53/sloppy-ethos/releases/download/SensorList-v1.0.1/SensorList-1.0.1.zip)
 - [Download ethos_events (v0.1.0)](https://github.com/doppleganger53/sloppy-ethos/releases/download/ethos_events-v0.1.0/ethos_events-0.1.0.zip)
+
+BoundryMap and SmartMapper are intentionally absent from this section until
+their first release artifacts are published.
 
 
 ## Visual Overview

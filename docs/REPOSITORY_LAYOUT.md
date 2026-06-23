@@ -7,8 +7,13 @@ This document explains the purpose of the top-level folders and key root files i
 ### `scripts/`
 
 - Source for Ethos Lua projects.
-- Current active widgets include `scripts/SensorList/`, `scripts/BoundryMap/`,
-  and `scripts/SmartMapper/`.
+- Current active script directories are:
+  - `scripts/SensorList/` (released)
+  - `scripts/BoundryMap/` (open/in progress, unreleased)
+  - `scripts/SmartMapper/` (implemented for issue `#45`, unreleased)
+  - `scripts/ethos_events/` (released)
+- `Arduino FBus` is deferred work (issue [#84](https://github.com/doppleganger53/sloppy-ethos/issues/84))
+  and does not currently have a checked-in script directory.
 - Each script project contains a local `VERSION` file used for single-script dist artifact versioning.
 - Script-owned tests live under `scripts/{ProjectName}/tests/` and are discovered from the repo root by pytest.
 
