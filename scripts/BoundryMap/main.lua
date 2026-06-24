@@ -50,6 +50,9 @@ local ICON_PATH = "assets/icons"
 local COORDS_TEXT_X = 4
 local COORDS_TEXT_BOTTOM = 40
 local DIST_TEXT_BOTTOM = 24
+local OVERLAY_TEXT_CHAR_WIDTH = 6
+local OVERLAY_TEXT_HEIGHT = 10
+local OVERLAY_TEXT_CONTROL_GAP = 2
 
 local gpsLatQuery = { name = "GPS", options = nil }
 local gpsLonQuery = { name = "GPS", options = nil }
@@ -57,6 +60,7 @@ local gpsQueriesReady = false
 local gpsSensorQuery = { name = "" }
 local altSensorQuery = { name = "" }
 local saveBoundaries
+local setColor
 
 local function safeCall(fn, ...)
   if type(fn) ~= "function" then
@@ -754,6 +758,23 @@ local function drawTextSafe(x, y, text, flags)
   lcd.drawText(x, y, text, flags)
 end
 
+local function drawShadowText(widget, x, y, text, colorKey, flags)
+  if type(lcd) ~= "table" or type(lcd.drawText) ~= "function" then
+    return
+  end
+  if type(lcd.color) ~= "function" or type(widget) ~= "table" or type(widget.colors) ~= "table" or not widget.colors.black then
+    drawTextSafe(x, y, text, flags)
+    return
+  end
+  setColor(widget, "black")
+  drawTextSafe(x - 1, y - 1, text, flags)
+  drawTextSafe(x + 1, y - 1, text, flags)
+  drawTextSafe(x - 1, y + 1, text, flags)
+  drawTextSafe(x + 1, y + 1, text, flags)
+  setColor(widget, colorKey or "white")
+  drawTextSafe(x, y, text, flags)
+end
+
 local function drawFilledRectangleSafe(x, y, w, h)
   if type(lcd) == "table" and type(lcd.drawFilledRectangle) == "function" then
     lcd.drawFilledRectangle(x, y, w, h)
@@ -801,7 +822,7 @@ local function loadWidgetIcons(widget)
   widget.iconsLoaded = true
 end
 
-local function setColor(widget, key)
+setColor = function(widget, key)
   if type(lcd) ~= "table" or type(lcd.color) ~= "function" then
     return
   end
@@ -811,11 +832,39 @@ local function setColor(widget, key)
   end
 end
 
+local function estimateTextBounds(x, y, text, flags)
+  local width = #tostring(text or "") * OVERLAY_TEXT_CHAR_WIDTH
+  local left = x
+  if flags == RIGHT then
+    left = x - width
+  end
+  return {
+    left = left,
+    top = y,
+    right = left + width,
+    bottom = y + OVERLAY_TEXT_HEIGHT,
+  }
+end
+
+local function rectsOverlap(a, b)
+  return a.left < b.right and a.right > b.left and a.top < b.bottom and a.bottom > b.top
+end
+
+local function placeOverlayText(widget, x, y, text, flags)
+  local rects = controlRects(widget)
+  local bounds = estimateTextBounds(x, y, text, flags)
+  if rectsOverlap(bounds, rects.draw) or rectsOverlap(bounds, rects.delete) or rectsOverlap(bounds, rects.save) then
+    y = max(0, rects.draw.top - OVERLAY_TEXT_HEIGHT - OVERLAY_TEXT_CONTROL_GAP)
+  end
+  return x, y
+end
+
 local function initializeColors(widget)
   if widget.colorsInitialized or type(lcd) ~= "table" or type(lcd.RGB) ~= "function" then
     return
   end
   widget.colors = {
+    black = lcd.RGB(0, 0, 0),
     white = lcd.RGB(255, 255, 255),
     red = lcd.RGB(255, 48, 48),
     orange = lcd.RGB(255, 165, 0),
@@ -1167,10 +1216,11 @@ local function drawOverlay(widget)
     lcd.font(FONT_XS or FONT_STD)
   end
   local status = widget.boundaryDirty and "Unsaved *" or sformat("%d/%d lines", #widget.boundaries, MAX_BOUNDARIES)
-  drawTextSafe(4, 4, status)
+  local statusX, statusY = placeOverlayText(widget, 4, 4, status)
+  drawShadowText(widget, statusX, statusY, status, "white")
   if widget.warningActive then
-    setColor(widget, "red")
-    drawTextSafe(4, 18, "Boundary exceeded")
+    local warningX, warningY = placeOverlayText(widget, 4, 18, "Boundary exceeded")
+    drawShadowText(widget, warningX, warningY, "Boundary exceeded", "red")
   end
 end
 
@@ -1584,15 +1634,26 @@ local function paint(widget)
     end
     setColor(widget, "white")
     local bottomTextY = (widget.windowH or 272) - DIST_TEXT_BOTTOM
+    local previousBottomOverlayY = nil
     if widget.coordsEnabled and widget.lastCoordsText then
-      drawTextSafe(COORDS_TEXT_X, (widget.windowH or 272) - COORDS_TEXT_BOTTOM, widget.lastCoordsText)
+      local coordsX, coordsY = placeOverlayText(widget, COORDS_TEXT_X, (widget.windowH or 272) - COORDS_TEXT_BOTTOM, widget.lastCoordsText)
+      drawShadowText(widget, coordsX, coordsY, widget.lastCoordsText, "white")
+      previousBottomOverlayY = coordsY
     end
     if widget.gpsStale then
       if widget.lastGroundDistText then
-        drawTextSafe(4, bottomTextY, widget.lastGroundDistText)
+        local staleX, staleY = placeOverlayText(widget, 4, bottomTextY, widget.lastGroundDistText)
+        if previousBottomOverlayY and abs(staleY - previousBottomOverlayY) < OVERLAY_TEXT_HEIGHT then
+          staleY = max(0, previousBottomOverlayY - OVERLAY_TEXT_HEIGHT - OVERLAY_TEXT_CONTROL_GAP)
+        end
+        drawShadowText(widget, staleX, staleY, widget.lastGroundDistText, "red")
       end
     elseif widget.distEnabled and widget.distText then
-      drawTextSafe(4, bottomTextY, widget.distText)
+      local distX, distY = placeOverlayText(widget, 4, bottomTextY, widget.distText)
+      if previousBottomOverlayY and abs(distY - previousBottomOverlayY) < OVERLAY_TEXT_HEIGHT then
+        distY = max(0, previousBottomOverlayY - OVERLAY_TEXT_HEIGHT - OVERLAY_TEXT_CONTROL_GAP)
+      end
+      drawShadowText(widget, distX, distY, widget.distText, "white")
     end
   end)
   if not ok then

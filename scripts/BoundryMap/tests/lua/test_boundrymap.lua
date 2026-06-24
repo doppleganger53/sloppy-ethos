@@ -22,6 +22,7 @@ local ioWriteCounts = {}
 local formRows = {}
 local drawTexts = {}
 local drawnBitmaps = {}
+local currentColor = nil
 
 local function resetFormRows()
   formRows = {}
@@ -38,6 +39,7 @@ end
 local function resetDrawCalls()
   drawTexts = {}
   drawnBitmaps = {}
+  currentColor = nil
 end
 
 _G.system = {
@@ -116,10 +118,12 @@ _G.lcd = {
   getWindowSize = function()
     return 480, 272
   end,
-  color = function(_) end,
+  color = function(value)
+    currentColor = value
+  end,
   font = function(_) end,
   drawText = function(x, y, text, flags)
-    drawTexts[#drawTexts + 1] = { x = x, y = y, text = text, flags = flags }
+    drawTexts[#drawTexts + 1] = { x = x, y = y, text = text, flags = flags, color = currentColor }
   end,
   drawFilledRectangle = function(_, _, _, _) end,
   drawRectangle = function(_, _, _, _) end,
@@ -213,6 +217,7 @@ _G.io = {
 
 local function fail(message)
   io.stderr:write(message .. "\n")
+  print(message)
   os.exit(1)
 end
 
@@ -226,6 +231,52 @@ local function assert_true(value, label)
   if not value then
     fail(label or "assert_true failed")
   end
+end
+
+local function findDrawText(text, x, y)
+  for _, call in ipairs(drawTexts) do
+    if call.text == text and call.x == x and call.y == y then
+      return call
+    end
+  end
+  return nil
+end
+
+local function assert_shadowed_text(text, x, y, label)
+  local prefix = label or text
+  local upperLeft = findDrawText(text, x - 1, y - 1)
+  local upperRight = findDrawText(text, x + 1, y - 1)
+  local lowerLeft = findDrawText(text, x - 1, y + 1)
+  local lowerRight = findDrawText(text, x + 1, y + 1)
+  assert_true(upperLeft ~= nil, prefix .. " shadow upper-left")
+  assert_true(upperRight ~= nil, prefix .. " shadow upper-right")
+  assert_true(lowerLeft ~= nil, prefix .. " shadow lower-left")
+  assert_true(lowerRight ~= nil, prefix .. " shadow lower-right")
+  assert_equal(upperLeft.color, 0, prefix .. " shadow upper-left color")
+  assert_equal(upperRight.color, 0, prefix .. " shadow upper-right color")
+  assert_equal(lowerLeft.color, 0, prefix .. " shadow lower-left color")
+  assert_equal(lowerRight.color, 0, prefix .. " shadow lower-right color")
+  local mainCall = findDrawText(text, x, y)
+  assert_true(mainCall ~= nil, prefix .. " main text")
+  assert_true(mainCall.color ~= 0, prefix .. " main text color")
+  return mainCall
+end
+
+local function estimatedTextIntersectsRect(call, rect)
+  local width = #tostring(call.text or "") * 6
+  local bounds = {
+    left = call.x,
+    top = call.y,
+    right = call.x + width,
+    bottom = call.y + 10,
+  }
+  return bounds.left < rect.right and bounds.right > rect.left and bounds.top < rect.bottom and bounds.bottom > rect.top
+end
+
+local function assert_text_avoids_controls(call, rects, label)
+  assert_true(not estimatedTextIntersectsRect(call, rects.draw), label .. " avoids draw")
+  assert_true(not estimatedTextIntersectsRect(call, rects.delete), label .. " avoids delete")
+  assert_true(not estimatedTextIntersectsRect(call, rects.save), label .. " avoids save")
 end
 
 local module = dofile("scripts/BoundryMap/main.lua")
@@ -680,8 +731,10 @@ for _, call in ipairs(drawTexts) do
   end
 end
 assert_true(coordText ~= nil, "coordinate toggle draws coordinates")
-assert_equal(coordText.x, 4, "coordinates render away from lower-right controls")
-assert_equal(coordText.y, 232, "coordinates render above distance text")
+coordText = assert_shadowed_text("39.12345, -75.54321", 4, 232, "coordinates")
+assert_text_avoids_controls(coordText, test.controlRects(widget), "normal coordinates")
+assert_shadowed_text("0/6 lines", 4, 4, "status")
+assert_shadowed_text("123 m", 4, 248, "distance")
 
 widget.coordsEnabled = false
 resetDrawCalls()
@@ -689,5 +742,34 @@ registeredWidget.paint(widget)
 for _, call in ipairs(drawTexts) do
   assert_true(call.text ~= "39.12345, -75.54321", "coordinate toggle hides coordinates")
 end
+
+widget = test.create()
+widget.bitmapFile = "TestMap.bmp"
+widget.loadedBitmap = true
+widget.loadedFile = "TestMap.bmp"
+widget.mapMeta = meta
+widget.boundaryLoadPending = false
+widget.coordsEnabled = true
+widget.gpsStale = true
+widget.lastCoordsText = "39.12345, -75.54321"
+widget.lastGroundDistText = "Distance: 12345.6 km"
+widget.warningActive = true
+widget.boundaryDirty = true
+local originalGetWindowSize = _G.lcd.getWindowSize
+_G.lcd.getWindowSize = function()
+  return 190, 160
+end
+resetDrawCalls()
+registeredWidget.paint(widget)
+local compactRects = test.controlRects(widget)
+local compactStatus = assert_shadowed_text("Unsaved *", 4, 4, "compact status")
+local compactWarning = assert_shadowed_text("Boundary exceeded", 4, 18, "compact warning")
+local compactCoords = assert_shadowed_text("39.12345, -75.54321", 4, 62, "compact coordinates")
+local compactDistance = assert_shadowed_text("Distance: 12345.6 km", 4, 50, "compact stale distance")
+assert_text_avoids_controls(compactStatus, compactRects, "compact status")
+assert_text_avoids_controls(compactWarning, compactRects, "compact warning")
+assert_text_avoids_controls(compactCoords, compactRects, "compact coordinates")
+assert_text_avoids_controls(compactDistance, compactRects, "compact stale distance")
+_G.lcd.getWindowSize = originalGetWindowSize
 
 print("boundrymap lua tests passed")
