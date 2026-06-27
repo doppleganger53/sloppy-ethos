@@ -832,10 +832,20 @@ setColor = function(widget, key)
   end
 end
 
+local function isRightAligned(flags)
+  if flags == nil then
+    return false
+  end
+  if type(RIGHT) == "number" and flags == RIGHT then
+    return true
+  end
+  return type(TEXT_RIGHT) == "number" and flags == TEXT_RIGHT
+end
+
 local function estimateTextBounds(x, y, text, flags)
   local width = #tostring(text or "") * OVERLAY_TEXT_CHAR_WIDTH
   local left = x
-  if flags == RIGHT then
+  if isRightAligned(flags) then
     left = x - width
   end
   return {

@@ -770,6 +770,16 @@ assert_text_avoids_controls(compactStatus, compactRects, "compact status")
 assert_text_avoids_controls(compactWarning, compactRects, "compact warning")
 assert_text_avoids_controls(compactCoords, compactRects, "compact coordinates")
 assert_text_avoids_controls(compactDistance, compactRects, "compact stale distance")
+local originalRight = _G.RIGHT
+_G.RIGHT = nil
+resetDrawCalls()
+registeredWidget.paint(widget)
+compactRects = test.controlRects(widget)
+compactCoords = assert_shadowed_text("39.12345, -75.54321", 4, 62, "compact coordinates without RIGHT")
+compactDistance = assert_shadowed_text("Distance: 12345.6 km", 4, 50, "compact stale distance without RIGHT")
+assert_text_avoids_controls(compactCoords, compactRects, "compact coordinates without RIGHT")
+assert_text_avoids_controls(compactDistance, compactRects, "compact stale distance without RIGHT")
+_G.RIGHT = originalRight
 _G.lcd.getWindowSize = originalGetWindowSize
 
 print("boundrymap lua tests passed")
