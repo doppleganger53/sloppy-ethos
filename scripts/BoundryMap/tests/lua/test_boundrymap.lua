@@ -428,11 +428,11 @@ assert_equal(rowValue(1), "Not configured", "diagnostics reports unconfigured gp
 assert_equal(rowLabel(2), "GPS Lat/Lon", "diagnostics includes coords")
 assert_equal(rowValue(2), "-", "diagnostics coords absent without gps")
 assert_equal(rowLabel(3), "Map Bitmap", "diagnostics includes bitmap")
-assert_equal(rowValue(3), "Available, not loaded (/scripts/BoundryMap/assets/maps/ChangedBeforeDiagnostics.bmp)", "diagnostics checks bitmap path")
+assert_equal(rowValue(3), "Available, not loaded (ChangedBeforeDiagnostics.bmp)", "diagnostics checks bitmap path")
 assert_equal(rowLabel(4), "JSON Metadata", "diagnostics includes metadata")
-assert_equal(rowValue(4), "Missing (/scripts/BoundryMap/assets/maps/ChangedBeforeDiagnostics.json)", "diagnostics reports missing metadata")
+assert_equal(rowValue(4), "Missing (ChangedBeforeDiagnostics.json)", "diagnostics reports missing metadata")
 assert_equal(rowLabel(5), "Boundary Sidecar", "diagnostics includes sidecar")
-assert_equal(rowValue(5), "Missing (/scripts/BoundryMap/assets/maps/ChangedBeforeDiagnostics.boundries.json)", "diagnostics reports missing sidecar")
+assert_equal(rowValue(5), "Missing (ChangedBeforeDiagnostics.boundries.json)", "diagnostics reports missing sidecar")
 assert_equal(rowLabel(6), "Last Error", "diagnostics includes last error")
 assert_equal(rowValue(6), "None", "diagnostics reports no error")
 assert_equal(formRows[8].text, "Back", "diagnostics adds back button")
@@ -455,7 +455,7 @@ widget = test.create()
 widget.bitmapFile = "MissingMap.bmp"
 registeredWidget.configure(widget)
 formRows[11].callback()
-assert_equal(rowValue(3), "Missing (/scripts/BoundryMap/assets/maps/MissingMap.bmp)", "diagnostics reports missing bitmap")
+assert_equal(rowValue(3), "Missing (MissingMap.bmp)", "diagnostics reports missing bitmap")
 _G.lcd.loadBitmap = originalLoadBitmap
 
 local originalGetSource = _G.system.getSource
@@ -513,9 +513,9 @@ widget.boundaries = {
 }
 registeredWidget.configure(widget)
 formRows[11].callback()
-assert_equal(rowValue(3), "Loaded (/scripts/BoundryMap/assets/maps/DiagMap.bmp)", "diagnostics reports loaded bitmap")
-assert_equal(rowValue(4), "OK (/scripts/BoundryMap/assets/maps/DiagMap.json)", "diagnostics reports valid metadata")
-assert_equal(rowValue(5), "Loaded 1 lines (/scripts/BoundryMap/assets/maps/DiagMap.boundries.json)", "diagnostics reports loaded sidecar count")
+assert_equal(rowValue(3), "Loaded (DiagMap.bmp)", "diagnostics reports loaded bitmap")
+assert_equal(rowValue(4), "OK (DiagMap.json)", "diagnostics reports valid metadata")
+assert_equal(rowValue(5), "Loaded 1 lines (DiagMap.boundries.json)", "diagnostics reports loaded sidecar count")
 assert_equal(rowValue(6), "paint: bad draw", "diagnostics reports last error")
 assert_equal(#widget.boundaries, 1, "diagnostics does not reload boundaries")
 assert_equal(widget.boundaries[1].x1, 99, "diagnostics leaves current boundaries untouched")
@@ -523,12 +523,12 @@ assert_equal(widget.boundaries[1].x1, 99, "diagnostics leaves current boundaries
 ioReads["/scripts/BoundryMap/assets/maps/DiagMap.boundries.json"] = '{"schemaVersion":1,"mapFile":"DiagMap.bmp","boundaries":[{"oops":1}]}'
 registeredWidget.configure(widget)
 formRows[11].callback()
-assert_equal(rowValue(5), "Malformed (/scripts/BoundryMap/assets/maps/DiagMap.boundries.json: sidecar malformed)", "diagnostics reports malformed sidecar")
+assert_equal(rowValue(5), "Malformed (DiagMap.boundries.json: sidecar malformed)", "diagnostics reports malformed sidecar")
 
 ioReads["/scripts/BoundryMap/assets/maps/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129}'
 registeredWidget.configure(widget)
 formRows[11].callback()
-assert_equal(rowValue(4), "Malformed (/scripts/BoundryMap/assets/maps/DiagMap.json: metadata invalid)", "diagnostics reports malformed metadata")
+assert_equal(rowValue(4), "Malformed (DiagMap.json: metadata invalid)", "diagnostics reports malformed metadata")
 
 widget = test.create()
 widget.windowW = 480
@@ -673,6 +673,17 @@ test.updateWarnings(widget, 1.0, 39.001, -74.999)
 assert_equal(plays, 1, "momentary warning fires on entering exceeded while moving away")
 test.updateWarnings(widget, 1.5, 39.001, -74.999)
 assert_equal(plays, 1, "momentary warning does not repeat while still exceeded")
+
+widget = test.create()
+widget.homeLat = 39.0
+widget.homeLon = -75.0
+widget.distEnabled = true
+test.updateDistanceTexts(widget, 39.001, -75.0)
+assert_true(type(widget.distText) == "string" and widget.distText:find("Distance:", 1, true) ~= nil, "distance uses ground distance without altitude")
+assert_true(widget.distFromHome ~= nil and widget.distFromHome > 100, "ground distance is stored without altitude")
+widget.distEnabled = false
+test.updateDistanceTexts(widget, 39.001, -75.0)
+assert_true(widget.distText == nil, "distance disabled hides distance text")
 
 widget = test.create()
 widget.boundryWarningMode = 2

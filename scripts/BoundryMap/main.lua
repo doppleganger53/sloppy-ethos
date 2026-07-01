@@ -1045,12 +1045,12 @@ local function updateDistanceTexts(widget, lat, lon)
     end
   end
 
-  if widget.distEnabled and widget.altSrc then
-    local alt = getSourceValue(widget.altSrc)
+  if widget.distEnabled then
+    local alt = widget.altSrc and getSourceValue(widget.altSrc) or nil
     if type(alt) == "number" then
       widget.distFromHome = sqrt((groundDist * groundDist) + (alt * alt))
     else
-      widget.distFromHome = nil
+      widget.distFromHome = groundDist
     end
   else
     widget.distFromHome = nil
@@ -1333,6 +1333,21 @@ local function addStaticLine(label, text)
   return line
 end
 
+local function displayFileName(path)
+  if type(path) ~= "string" or path == "" then
+    return ""
+  end
+  return path:match("([^/]+)$") or path
+end
+
+local function fileStatus(status, path)
+  return status .. " (" .. displayFileName(path) .. ")"
+end
+
+local function fileStatusDetail(status, path, detail)
+  return status .. " (" .. displayFileName(path) .. ": " .. tostring(detail or "unknown") .. ")"
+end
+
 local function callSourceValue(source)
   return getSourceValue(source)
 end
@@ -1379,16 +1394,16 @@ local function bitmapDiagnostics(widget)
   end
   local path = bitmapsPath .. "/" .. bmpFile
   if widget.loadedBitmap and widget.loadedFile == bmpFile then
-    return "Loaded (" .. path .. ")"
+    return fileStatus("Loaded", path)
   end
   local bitmap = nil
   if type(lcd) == "table" and type(lcd.loadBitmap) == "function" then
     bitmap = safeCall(lcd.loadBitmap, path)
   end
   if bitmap then
-    return "Available, not loaded (" .. path .. ")"
+    return fileStatus("Available, not loaded", path)
   end
-  return "Missing (" .. path .. ")"
+  return fileStatus("Missing", path)
 end
 
 local function metadataDiagnostics(widget)
@@ -1400,12 +1415,12 @@ local function metadataDiagnostics(widget)
   local path = metadataDir .. "/" .. stem .. ".json"
   local meta, metaErr = loadMapMetadata(bmpFile)
   if meta then
-    return "OK (" .. path .. ")"
+    return fileStatus("OK", path)
   end
   if metaErr == "metadata not found" then
-    return "Missing (" .. path .. ")"
+    return fileStatus("Missing", path)
   end
-  return "Malformed (" .. path .. ": " .. tostring(metaErr or "metadata invalid") .. ")"
+  return fileStatusDetail("Malformed", path, metaErr or "metadata invalid")
 end
 
 local function sidecarDiagnostics(widget)
@@ -1418,18 +1433,18 @@ local function sidecarDiagnostics(widget)
   end
   local file = io.open(path, "r")
   if not file then
-    return "Missing (" .. path .. ")"
+    return fileStatus("Missing", path)
   end
   local content = file:read(65535)
   file:close()
   if type(content) ~= "string" or content == "" then
-    return "Malformed (" .. path .. ": sidecar empty)"
+    return fileStatusDetail("Malformed", path, "sidecar empty")
   end
   local boundaries, parseErr = parseBoundaryObjects(content)
   if parseErr and parseErr ~= "" then
-    return "Malformed (" .. path .. ": " .. parseErr .. ")"
+    return fileStatusDetail("Malformed", path, parseErr)
   end
-  return sformat("Loaded %d lines (%s)", #boundaries, path)
+  return sformat("Loaded %d lines (%s)", #boundaries, displayFileName(path))
 end
 
 local function buildDiagnostics(widget)
@@ -1939,6 +1954,7 @@ local function testExports()
     controlRects = controlRects,
     controlAtPoint = controlAtPoint,
     pointSegmentDistance = pointSegmentDistance,
+    updateDistanceTexts = updateDistanceTexts,
     updateWarnings = updateWarnings,
     markBoundariesDirty = markBoundariesDirty,
   }

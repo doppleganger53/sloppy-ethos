@@ -1,31 +1,33 @@
 # BoundryMap
 
-BoundryMap is an Ethos widget that overlays editable boundary lines on a GPS map.
+BoundryMap is an Ethos widget for flying with a GPS map and editable boundary
+lines. It shows your home point, aircraft position, optional coordinates and
+distance, and warns when the line from home to the aircraft crosses a boundary.
 
-## Display Features
+The screenshots below use a neutral demo map named `GuideField` so no private
+flying-site map or real field coordinates are published in this repository.
 
-- Home and aircraft position use the same icon assets as GPS AccuMap when available, with drawn fallbacks if an icon cannot be loaded.
-- The aircraft indicator can be configured as a dot or a heading arrow.
-- GPS coordinate text is optional. When enabled, coordinates render in the lower-left area above distance text instead of the lower-right touch controls.
+## Quick Start
 
-## Map Assets And Privacy
+1. Create a map with the
+   [Ethos GPS Map Generator](https://martinovem.github.io/Ethos-GPS-Map-Generator/).
+2. Put the exported bitmap and JSON metadata in a local folder under
+   `scripts/BoundryMap/assets/maps/`.
+3. Build the install ZIP:
 
-Maps usually identify a specific flying site, so the `assets/maps/` directory is local-only and ignored by git. Do not commit personal field maps, generated metadata, or boundary sidecars to the public repository.
+   ```powershell
+   python tools/build.py --project BoundryMap --dist
+   ```
 
-Install with Ethos Suite:
+4. Import the generated ZIP with Ethos Suite.
+5. Add the `BoundryMap` widget to a screen.
+6. Open the widget settings, choose your map and GPS source, then enable the
+   options you want.
 
-1. Build a package with `python tools/build.py --project BoundryMap --dist`
-2. Import the generated ZIP through Ethos Suite Lua install/import.
+## Map Files
 
-When local maps exist under `scripts/BoundryMap/assets/maps/`, the build scans them using the generic asset rules in [build.json](build.json):
-
-- BMP and PNG files install to `/scripts/BoundryMap/assets/maps/`
-- matching JSON map metadata files install to `/scripts/BoundryMap/assets/maps/`
-- generator metadata text files are ignored by the package because BoundryMap reads the JSON metadata
-- boundary edits are saved next to the selected map using the `<map-stem>.boundries.json` filename pattern
-- built-in widget icons install under `/scripts/BoundryMap/assets/icons/`
-
-Multiple maps can be packaged together without adding each map filename to [build.json](build.json). Use one folder per map:
+BoundryMap expects each map bitmap to have a matching JSON metadata file with
+the same stem:
 
 ```text
 scripts/BoundryMap/assets/maps/
@@ -37,14 +39,128 @@ scripts/BoundryMap/assets/maps/
     └── PracticeSite.json
 ```
 
-Clean checkouts without a local `assets/maps/` directory still build the widget ZIP; they just do not include private map assets.
+The build scans `assets/maps/` automatically:
 
-## Creating Maps
+- BMP and PNG map files install to `/scripts/BoundryMap/assets/maps/`.
+- matching JSON metadata files install to the same radio folder.
+- generator text metadata is not packaged because the widget reads the JSON.
+- boundary sidecars are saved as `<map-stem>.boundries.json`.
 
-Create map files with the [Ethos GPS Map Generator](https://martinovem.github.io/Ethos-GPS-Map-Generator/), the same tool used by AccuMap. Choose the flying area, export the map, and place the generated bitmap plus JSON metadata in a local folder under `scripts/BoundryMap/assets/maps/`.
+Maps usually identify a specific flying site. The local map folders are ignored
+by Git; do not commit personal maps, generated metadata, or boundary sidecars
+to the public repository.
 
-The generator may also create a human-readable metadata text file. Keep it locally if useful, but it is not installed by the build.
+## Widget Settings
 
-Boundary edits are stored per map in `/scripts/BoundryMap/assets/maps/` using the `<map-stem>.boundries.json` filename pattern so Ethos Suite script-folder backups retain them.
+![BoundryMap settings screen](docs/images/boundrymap-settings.png)
 
-Map functionality derived from: [AccuMap](https://github.com/MartinovEm/Ethos-GPS-AccuMap)
+Use the widget settings to choose the map and tune how the in-flight overlay
+behaves.
+
+| Setting | Use |
+| --- | --- |
+| `Map` | Select the packaged bitmap map file. |
+| `GPS Source` | Select the GPS telemetry source used for latitude and longitude. |
+| `Heading Indicator` | Choose `Dot` or `Arrow` for the aircraft marker. |
+| `Signal Timeout (s)` | Mark GPS data stale after this many seconds without a fresh fix. |
+| `Coordinates` | Show or hide the current GPS coordinates on the map. |
+| `Distance` | Show or hide distance readouts. Without altitude, this is 2D ground distance. |
+| `Altitude Source` | Optional altitude telemetry source for 3D distance. |
+| `Reset Home` | Clear the learned home point so the widget can learn it again. |
+| `Boundry Warning` | Choose `None`, `Audio`, `Haptic`, or `Both`. |
+| `Warning Type` | Choose one-time `Momentary` feedback or repeating `Constant` feedback. |
+| `Diagnostics` | Open a status page for GPS, map, metadata, sidecar, and last error. |
+
+## Diagnostics
+
+![BoundryMap diagnostics screen](docs/images/boundrymap-diagnostics.png)
+
+Run diagnostics when the widget is not showing the map or telemetry you expect.
+The diagnostics page checks:
+
+- GPS source selection and current latitude/longitude availability.
+- selected map bitmap availability.
+- JSON metadata availability and shape.
+- boundary sidecar availability and line count.
+- the last runtime error captured by the widget.
+
+Use `Back` to return to the main settings page.
+
+## In-Flight Display
+
+![BoundryMap normal flight display](docs/images/boundrymap-normal-flight.png)
+
+The map screen shows the selected map, boundary lines, the home icon, and
+the aircraft indicator. The lower-left overlays show coordinates and distance
+when those settings are enabled. The top-left status shows how many boundary
+lines are on the map out of the six-line limit, or `Unsaved *` when changes
+need to be saved.
+
+Home is learned from stable GPS telemetry. If the home point is wrong, use
+`Reset Home` in the settings page, wait for a stable GPS fix, and verify the
+home icon appears where expected.
+
+If GPS telemetry becomes stale for longer than `Signal Timeout (s)`, the
+aircraft indicator switches to the stale style and the widget keeps the last
+known distance visible.
+
+## Drawing Boundaries
+
+![BoundryMap draw mode](docs/images/boundrymap-draw-boundary.png)
+
+Tap `Draw` to enter draw mode. Drag on the map from the start of a boundary
+line to the end of it. The draft line is yellow while you are drawing. When you
+release, the line is added and the status changes to `Unsaved *`.
+
+BoundryMap stores up to six boundary lines per map. Short accidental drags are
+ignored.
+
+## Deleting And Saving
+
+![BoundryMap delete and save controls](docs/images/boundrymap-delete-save.png)
+
+Tap `Delete` to enter delete mode, then tap near a boundary line to remove it.
+Tap `Save` after adding or deleting lines. Saved boundaries are written next to
+the selected map as `<map-stem>.boundries.json`, so each map keeps its own
+boundary set.
+
+Unsaved edits remain visible while the widget is running, but they are not
+persisted until you tap `Save`.
+
+## Boundary Warnings
+
+![BoundryMap boundary warning](docs/images/boundrymap-warning.png)
+
+The warning overlay appears when the line from home to the aircraft crosses one
+of the current boundary lines. Unsaved edits can trigger warnings while the
+widget is running, but they must be saved to persist after restart. Warning
+feedback depends on the settings:
+
+- `None`: show the overlay only.
+- `Audio`: play tone feedback.
+- `Haptic`: play haptic feedback.
+- `Both`: play tone and haptic feedback.
+- `Momentary`: alert when first entering an exceeded state while moving away
+  from home.
+- `Constant`: repeat feedback while the boundary remains exceeded.
+
+For best results, draw boundary lines across the route you want to avoid rather
+than around the full perimeter of the field. The widget compares the
+home-to-aircraft line against your saved lines.
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| `No map selected` | Select a map in the widget settings. |
+| `Map metadata unavailable` | Confirm the bitmap and JSON metadata have the same file stem. |
+| GPS coordinates do not update | Run diagnostics and confirm the selected GPS source reports latitude and longitude. |
+| Distance is hidden | Enable `Distance`; select an altitude source only when you want 3D distance. |
+| Boundary edits disappear after restart | Draw or delete the lines again, then tap `Save`. |
+| No warning feedback | Confirm `Boundry Warning` is not `None` and the aircraft is moving farther from home when entering the exceeded state. |
+
+## Attribution
+
+Map handling is derived from
+[AccuMap](https://github.com/MartinovEm/Ethos-GPS-AccuMap). See
+[LICENSE](LICENSE) for BoundryMap licensing details.
