@@ -4,8 +4,12 @@ BoundryMap is an Ethos widget for flying with a GPS map and editable boundary
 lines. It shows your home point, aircraft position, optional coordinates and
 distance, and warns when the line from home to the aircraft crosses a boundary.
 
-The screenshots below use a neutral demo map named `GuideField` so no private
+The screenshots below were captured from the actual Ethos 1.6.6 X20RS-FCC
+WebSimulator canvas using a neutral demo map named `GuideField`, so no private
 flying-site map or real field coordinates are published in this repository.
+The boundary-warning screenshot uses a run-scoped simulated GPS state because
+the stock simulator model used for capture does not expose a GPS telemetry
+source.
 
 ## Quick Start
 
@@ -90,11 +94,11 @@ Use `Back` to return to the main settings page.
 
 ![BoundryMap normal flight display](docs/images/boundrymap-normal-flight.png)
 
-The map screen shows the selected map, boundary lines, the home icon, and
-the aircraft indicator. The lower-left overlays show coordinates and distance
-when those settings are enabled. The top-left status shows how many boundary
-lines are on the map out of the six-line limit, or `Unsaved *` when changes
-need to be saved.
+The map screen shows the selected map and boundary lines. With GPS telemetry,
+it also shows the home icon and aircraft indicator. The lower-left overlays
+show coordinates and distance when those settings are enabled. The top-left
+status shows how many boundary lines are on the map out of the six-line limit,
+or `Unsaved *` when changes need to be saved.
 
 Home is learned from stable GPS telemetry. If the home point is wrong, use
 `Reset Home` in the settings page, wait for a stable GPS fix, and verify the

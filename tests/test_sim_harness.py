@@ -382,7 +382,13 @@ def test_parse_runner_result_reads_last_json_line():
     assert result == {"status": "success", "project": "SensorList"}
 
 
-def _run_websim_runner_with_fake_runtime(tmp_path: Path, runtime_source: str) -> subprocess.CompletedProcess:
+def _run_websim_runner_with_fake_runtime(
+    tmp_path: Path,
+    runtime_source: str,
+    *,
+    persist_mount: str | None = None,
+    persist_files: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess:
     node = shutil.which("node")
     if node is None:
         pytest.skip("Node.js is required to execute websim_runner.js")
@@ -393,24 +399,32 @@ def _run_websim_runner_with_fake_runtime(tmp_path: Path, runtime_source: str) ->
     runtime_js.write_text(runtime_source, encoding="utf-8")
     persist = tmp_path / "persist"
     persist.mkdir()
+    for relative, content in (persist_files or {}).items():
+        target = persist / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+
+    command = [
+        node,
+        str(harness.RUNNER_JS),
+        "--runtime-js",
+        str(runtime_js),
+        "--runtime-dir",
+        str(runtime_dir),
+        "--persist",
+        str(persist),
+        "--project",
+        "FakeProject",
+        "--startup-ms",
+        "0",
+        "--settle-ms",
+        "0",
+    ]
+    if persist_mount is not None:
+        command.extend(["--persist-mount", persist_mount])
 
     return subprocess.run(
-        [
-            node,
-            str(harness.RUNNER_JS),
-            "--runtime-js",
-            str(runtime_js),
-            "--runtime-dir",
-            str(runtime_dir),
-            "--persist",
-            str(persist),
-            "--project",
-            "FakeProject",
-            "--startup-ms",
-            "0",
-            "--settle-ms",
-            "0",
-        ],
+        command,
         cwd=harness.REPO_ROOT,
         capture_output=True,
         text=True,
@@ -454,6 +468,29 @@ module.exports = async (options) => ({{
     else:
         assert result["messages"][0]["code"] == "reloadScripts_unavailable"
         assert result["messages"][0]["export"] == "_reloadScripts"
+
+
+def test_websim_runner_writes_persist_tree_to_requested_mount(tmp_path: Path):
+    completed = _run_websim_runner_with_fake_runtime(
+        tmp_path,
+        """
+module.exports = async (options) => ({
+  FS: {
+    mkdir: () => {},
+    writeFile: (path) => { options.print('write:' + path); },
+  },
+  _start: () => { options.print('fake runtime started'); },
+});
+""",
+        persist_mount="/persist/X20RS",
+        persist_files={"scripts/FakeProject/main.lua": "-- fake\n"},
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    result = harness.parse_runner_result(completed.stdout, {"status": "startup_failure"})
+    assert result["status"] == "success"
+    assert result["persistMount"] == "/persist/X20RS"
+    assert "write:/persist/X20RS/scripts/FakeProject/main.lua" in result["stdout"]
 
 
 def test_websim_runner_detects_script_errors_without_reload_scripts(tmp_path: Path):
@@ -514,6 +551,8 @@ def test_run_headless_invokes_node_runner_and_logs_output(monkeypatch, tmp_path:
     assert result["status"] == "success"
     assert result["projects"] == ["SensorList", "BoundryMap"]
     assert result["persistDir"] == str(tmp_path / "persist")
+    assert "--persist-mount" in calls["command"]
+    assert "/persist/X20RS" in calls["command"]
     assert "--project" in calls["command"]
     assert "SensorList+BoundryMap" in calls["command"]
     assert str(harness.RUNNER_JS) in calls["command"]
@@ -587,10 +626,13 @@ def test_run_gui_controls_default_model_writer(monkeypatch, tmp_path: Path, writ
 
     result = harness.run_gui(args)
     index_html = Path(result["runDir"]) / "gui" / "index.html"
+    persist_manifest = Path(result["runDir"]) / "gui" / "persist_manifest.json"
     gui_runtime_dir = Path(result["runDir"]) / "gui" / "runtime"
     html = index_html.read_text(encoding="utf-8")
+    manifest = json.loads(persist_manifest.read_text(encoding="utf-8"))
 
     assert result["status"] == "gui_ready"
+    assert "persist/X20RS/scripts/SensorList/main.lua" in manifest
     assert not gui_runtime_dir.exists()
     assert expected_value in html
     assert '<link rel="icon" href="data:,">' in html

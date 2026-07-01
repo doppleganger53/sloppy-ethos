@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 139
-- Total size: 240,284 bytes
-- Total lines: 6,364
+- Files: 140
+- Total size: 243,408 bytes
+- Total lines: 6,436
 - Distribution by artifact:
-  - session notes: 133
+  - session notes: 134
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 83 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 84 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
@@ -35,7 +35,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - Distribution by concern:
   - 33 -- implementation
   - 28 -- workflow
-  - 18 -- testing
+  - 19 -- testing
   - 17 -- build
   - 15 -- docs
   - 15 -- release
@@ -46,10 +46,10 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent High-Signal Notes (Auto-generated)
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
+- 2026-07-01 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md](notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md) | # Session Notes 2026-07-01 - Issue #102 BoundryMap Real WebSimulator Screenshots
 - 2026-06-30 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-06-30_ISSUE_102_BOUNDRYMAP_README_GUIDE.md](notes/session/repo/SESSION_NOTES_2026-06-30_ISSUE_102_BOUNDRYMAP_README_GUIDE.md) | # Session Notes 2026-06-30 - Issue #102 BoundryMap README Guide
 - 2026-06-27 | testing | ethos-platform | [notes/session/ethos-platform/SESSION_NOTES_2026-06-27_WEBSIM_1_6_6_OPTIONAL_RELOAD.md](notes/session/ethos-platform/SESSION_NOTES_2026-06-27_WEBSIM_1_6_6_OPTIONAL_RELOAD.md) | # Session Notes 2026-06-27 - WebSimulator 1.6.6 Optional Reload
 - 2026-06-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-06-27_ISSUE_102_BOUNDRYMAP_QA.md](notes/session/repo/SESSION_NOTES_2026-06-27_ISSUE_102_BOUNDRYMAP_QA.md) | # Session Notes 2026-06-27 - Issue #102 BoundryMap QA
-- 2026-05-30 | testing | ethos-platform | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_ZIP_TRAVERSAL_TEST.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_ZIP_TRAVERSAL_TEST.md) | # Session Notes 2026-05-30 - WebSimulator ZIP Traversal Test
 - 2026-05-30 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md](notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md) | # Session Notes 2026-05-30 - PR #94 conflict resolution
 - 2026-05-30 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md](notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md) | # Session Notes 2026-05-30 - Issue #95 workspace AGENTS transition
 - 2026-05-05 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md](notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md) | # Session Notes 2026-05-05 - Issue #76 Ethos 26.1 Baseline
@@ -212,3 +212,4 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-06-27 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-06-27_WEBSIM_1_6_6_OPTIONAL_RELOAD.md](notes/session/ethos-platform/SESSION_NOTES_2026-06-27_WEBSIM_1_6_6_OPTIONAL_RELOAD.md) | # Session Notes 2026-06-27 - WebSimulator 1.6.6 Optional Reload |
 | 2026-06-27 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-06-27_ISSUE_102_BOUNDRYMAP_QA.md](notes/session/repo/SESSION_NOTES_2026-06-27_ISSUE_102_BOUNDRYMAP_QA.md) | # Session Notes 2026-06-27 - Issue #102 BoundryMap QA |
 | 2026-06-30 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-06-30_ISSUE_102_BOUNDRYMAP_README_GUIDE.md](notes/session/repo/SESSION_NOTES_2026-06-30_ISSUE_102_BOUNDRYMAP_README_GUIDE.md) | # Session Notes 2026-06-30 - Issue #102 BoundryMap README Guide |
+| 2026-07-01 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md](notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md) | # Session Notes 2026-07-01 - Issue #102 BoundryMap Real WebSimulator Screenshots |

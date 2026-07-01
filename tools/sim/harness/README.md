@@ -17,7 +17,9 @@ By default, headless and GUI runs stage projects into the same Ethos Suite
 persist directory for the selected radio and runtime version:
 `{Ethos Suite data}/.simulator/{EthosVersion}/persist/{Radio}`. Use
 `--persist-dir` only when you need to point the WebSimulator at a nonstandard
-persist tree.
+persist tree. The runner writes that staged tree into the WebSimulator
+filesystem at `/persist/{Radio}` so `USER:/` paths match the runtime's user
+directory.
 
 Runtime ZIPs and extracted JavaScript/WASM files are stored under
 `tools/sim/radios/`. GUI mode serves those cached runtime files directly

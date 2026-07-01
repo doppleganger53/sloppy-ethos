@@ -515,7 +515,7 @@ registeredWidget.configure(widget)
 formRows[11].callback()
 assert_equal(rowValue(3), "Loaded (DiagMap.bmp)", "diagnostics reports loaded bitmap")
 assert_equal(rowValue(4), "OK (DiagMap.json)", "diagnostics reports valid metadata")
-assert_equal(rowValue(5), "Loaded 1 lines (DiagMap.boundries.json)", "diagnostics reports loaded sidecar count")
+assert_equal(rowValue(5), "Loaded 1 lines (DiagMap)", "diagnostics reports loaded sidecar count")
 assert_equal(rowValue(6), "paint: bad draw", "diagnostics reports last error")
 assert_equal(#widget.boundaries, 1, "diagnostics does not reload boundaries")
 assert_equal(widget.boundaries[1].x1, 99, "diagnostics leaves current boundaries untouched")
@@ -547,6 +547,25 @@ assert_equal(rects.draw.right - rects.draw.left, 72, "draw button width expanded
 assert_equal(rects.draw.bottom - rects.draw.top, 24, "draw button height expanded")
 local drawX = rects.draw.left + 2
 local drawY = rects.draw.top + 2
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, rawTouchY(drawY)), "draw button end-only tap consumed")
+assert_true(widget.drawMode, "draw mode toggled on by end-only tap")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, rawTouchY(drawY)), "draw button duplicate end-only tap consumed")
+assert_true(widget.drawMode, "draw mode stays on after duplicate end-only tap")
+widget.lastEndOnlyAt = os.clock() - 1
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, rawTouchY(drawY)), "draw button later end-only tap consumed")
+assert_true(not widget.drawMode, "draw mode toggled off by later end-only tap")
+local deleteX = rects.delete.left + 2
+local deleteY = rects.delete.top + 2
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, deleteX, rawTouchY(deleteY)), "delete button end-only tap consumed")
+assert_true(widget.deleteMode, "delete mode toggled on by end-only tap")
+widget.deleteMode = false
+widget.boundaryDirty = true
+local unarmedSaveX = rects.save.left + 2
+local unarmedSaveY = rects.save.top + 2
+ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = 0
+assert_true(not test.event(widget, _G.EVT_TOUCH, 16641, unarmedSaveX, rawTouchY(unarmedSaveY)), "save button end-only tap remains unconsumed")
+assert_true(widget.boundaryDirty, "save button end-only tap does not clear dirty state")
+assert_equal(ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"], 0, "save button end-only tap does not write")
 assert_true(test.event(widget, _G.EVT_TOUCH, 16640, drawX, rawTouchY(drawY)), "draw button start consumed")
 assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, rawTouchY(drawY)), "draw button end consumed")
 assert_true(widget.drawMode, "draw mode toggled on")

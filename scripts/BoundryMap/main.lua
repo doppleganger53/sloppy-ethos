@@ -45,6 +45,7 @@ local CONTROL_BUTTON_HEIGHT = 24
 local CONTROL_BUTTON_GAP = 4
 local CONTROL_MARGIN = 6
 local CONTROL_RELEASE_SLOP = 8
+local END_ONLY_TOGGLE_DEBOUNCE = 0.2
 local TOUCH_CONTENT_Y_OFFSET = 18
 local ICON_PATH = "assets/icons"
 local COORDS_TEXT_X = 4
@@ -1311,6 +1312,8 @@ local function create()
     gpsStale = false,
     needsInvalidate = true,
     lastInvalidate = 0,
+    lastEndOnlyControl = nil,
+    lastEndOnlyAt = nil,
     aircraftX = nil,
     aircraftY = nil,
     aircraftScreenX = nil,
@@ -1444,7 +1447,7 @@ local function sidecarDiagnostics(widget)
   if parseErr and parseErr ~= "" then
     return fileStatusDetail("Malformed", path, parseErr)
   end
-  return sformat("Loaded %d lines (%s)", #boundaries, displayFileName(path))
+  return sformat("Loaded %d lines (%s)", #boundaries, mapStem(widget.bitmapFile) or displayFileName(path))
 end
 
 local function buildDiagnostics(widget)
@@ -1705,6 +1708,16 @@ local function handleControlTouch(widget, phase, x, y)
 
   local armed = widget.touchArmed
   if not armed then
+    if phase == "end" and (exactControl == "draw" or exactControl == "delete") then
+      local now = os.clock()
+      if widget.lastEndOnlyControl == exactControl and widget.lastEndOnlyAt and (now - widget.lastEndOnlyAt) < END_ONLY_TOGGLE_DEBOUNCE then
+        return true
+      end
+      widget.lastEndOnlyControl = exactControl
+      widget.lastEndOnlyAt = now
+      activateControl(widget, exactControl)
+      return true
+    end
     return false
   end
 
@@ -1844,6 +1857,9 @@ local function event(widget, category, value, x, y)
     local phase = resolveTouchPhase(category, value)
     if not phase then
       return false
+    end
+    if handleControlTouch(widget, phase, x, y) then
+      return true
     end
     local contentX, contentY = normalizeTouchPoint(x, y)
     if handleControlTouch(widget, phase, contentX, contentY) then

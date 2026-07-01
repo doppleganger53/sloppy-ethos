@@ -408,6 +408,10 @@ def resolve_persist_root(package: RuntimePackage, explicit: str | None = None) -
     return ethos_suite_data_root() / ".simulator" / package.version / "persist" / package.target.radio
 
 
+def simulator_persist_mount(package: RuntimePackage) -> str:
+    return f"/persist/{package.target.radio}"
+
+
 def apply_suite_args(args: argparse.Namespace) -> None:
     suite_path = getattr(args, "suite", None)
     if not suite_path:
@@ -497,6 +501,8 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
         str(package.runtime_dir),
         "--persist",
         str(persist_root),
+        "--persist-mount",
+        simulator_persist_mount(package),
         "--project",
         label,
         "--startup-ms",
@@ -560,12 +566,14 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
     return result
 
 
-def _persist_manifest(root: Path) -> dict[str, str]:
+def _persist_manifest(root: Path, mount: str | None = None) -> dict[str, str]:
     manifest: dict[str, str] = {}
+    prefix = (mount or "").strip("/")
     for path in sorted(root.rglob("*")):
         if path.is_file():
             relative = path.relative_to(root).as_posix()
-            manifest[relative] = base64.b64encode(path.read_bytes()).decode("ascii")
+            manifest_path = f"{prefix}/{relative}" if prefix else relative
+            manifest[manifest_path] = base64.b64encode(path.read_bytes()).decode("ascii")
     return manifest
 
 
@@ -581,7 +589,7 @@ def write_gui_files(
         shutil.rmtree(gui_root)
     gui_root.mkdir(parents=True)
     (gui_root / "persist_manifest.json").write_text(
-        json.dumps(_persist_manifest(persist_root), indent=2) + "\n",
+        json.dumps(_persist_manifest(persist_root, simulator_persist_mount(package)), indent=2) + "\n",
         encoding="utf-8",
     )
     runtime_token = f"{package.version}-{_sha256(package.runtime_js)[:12]}"

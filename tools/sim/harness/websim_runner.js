@@ -27,14 +27,20 @@ function ensureDir(FS, targetPath) {
   }
 }
 
-function writeHostTree(FS, hostRoot, relative = "") {
+function normalizeSimPath(value) {
+  const raw = String(value || "/").replaceAll("\\", "/");
+  const prefixed = raw.startsWith("/") ? raw : `/${raw}`;
+  return path.posix.normalize(prefixed);
+}
+
+function writeHostTree(FS, hostRoot, relative = "", targetRoot = "/") {
   const current = path.join(hostRoot, relative);
   for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
     const childRelative = path.join(relative, entry.name);
-    const simPath = `/${childRelative.replaceAll(path.sep, "/")}`;
+    const simPath = normalizeSimPath(path.posix.join(targetRoot, childRelative.replaceAll(path.sep, "/")));
     if (entry.isDirectory()) {
       ensureDir(FS, simPath);
-      writeHostTree(FS, hostRoot, childRelative);
+      writeHostTree(FS, hostRoot, childRelative, targetRoot);
       continue;
     }
     if (entry.isFile()) {
@@ -71,6 +77,7 @@ async function main() {
   const runtimeJs = path.resolve(args["runtime-js"]);
   const runtimeDir = path.resolve(args["runtime-dir"]);
   const persist = path.resolve(args.persist);
+  const persistMount = normalizeSimPath(args["persist-mount"] || "/");
   const project = args.project || "SensorList";
   const startupMs = Number(args["startup-ms"] || 1000);
   const settleMs = Number(args["settle-ms"] || 1500);
@@ -85,6 +92,7 @@ async function main() {
     project,
     runtimeJs,
     persist,
+    persistMount,
     started: false,
     reloaded: false,
     canvasUpdates: 0,
@@ -113,9 +121,9 @@ async function main() {
     });
 
     progress("staging persist tree");
-    ensureDir(module.FS, "/models");
-    ensureDir(module.FS, "/scripts");
-    writeHostTree(module.FS, persist);
+    ensureDir(module.FS, path.posix.join(persistMount, "models"));
+    ensureDir(module.FS, path.posix.join(persistMount, "scripts"));
+    writeHostTree(module.FS, persist, "", persistMount);
     if (args["write-default-model"] === "true" || args["write-default-model"] === "1") {
       progress("writing default settings and model");
       module._writeDefaultSettingsAndModel();
