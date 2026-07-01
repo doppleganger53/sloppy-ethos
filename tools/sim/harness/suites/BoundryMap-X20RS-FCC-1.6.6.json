@@ -1,0 +1,10 @@
+{
+  "name": "boundrymap-x20rs-fcc-1.6.6-smoke",
+  "projects": ["BoundryMap"],
+  "radio": "X20RS-FCC",
+  "ethosVersion": "1.6.6",
+  "startupMs": 1000,
+  "settleMs": 1500,
+  "timeoutMs": 20000,
+  "writeDefaultModel": false
+}

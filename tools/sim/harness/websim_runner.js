@@ -90,6 +90,7 @@ async function main() {
     canvasUpdates: 0,
     modelJsonCallbacks: 0,
     errors: [],
+    messages: [],
   };
 
   try {
@@ -124,10 +125,22 @@ async function main() {
     result.started = true;
     progress("waiting after start");
     await sleep(startupMs);
-    progress("reloading scripts");
-    module._reloadScripts();
-    result.reloaded = true;
-    progress("waiting after reload");
+    if (typeof module._reloadScripts === "function") {
+      progress("reloading scripts");
+      module._reloadScripts();
+      result.reloaded = true;
+      progress("waiting after reload");
+    } else {
+      const message = {
+        level: "info",
+        code: "reloadScripts_unavailable",
+        export: "_reloadScripts",
+        message: "module._reloadScripts is unavailable; continuing without script reload.",
+      };
+      result.messages.push(message);
+      progress(`${message.code}: ${message.message}`);
+      progress("waiting after start settle");
+    }
     await sleep(settleMs);
     const errors = findScriptErrors([...stdout, ...stderr]);
     result.status = errors.length ? "script_failure" : "success";

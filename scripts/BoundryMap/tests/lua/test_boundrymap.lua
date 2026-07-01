@@ -782,4 +782,117 @@ assert_text_avoids_controls(compactDistance, compactRects, "compact stale distan
 _G.RIGHT = originalRight
 _G.lcd.getWindowSize = originalGetWindowSize
 
+ioReads["/scripts/BoundryMap/assets/maps/UATMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
+ioReads["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"] = nil
+ioWrites["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"] = nil
+widget = test.create()
+registeredWidget.configure(widget)
+formRows[1].setter("UATMap.bmp")
+widget.gpsSensorName = "GPS"
+widget.coordsEnabled = true
+widget.distEnabled = true
+widget.altSensorName = "Alt"
+widget.indicatorType = 1
+widget.signalTimeout = 2
+widget.boundryWarningMode = 3
+widget.warningType = 1
+resetDrawCalls()
+registeredWidget.paint(widget)
+assert_true(widget.loadedBitmap ~= nil, "uat loads selected bitmap")
+assert_true(type(widget.mapMeta) == "table", "uat loads selected metadata")
+assert_true(type(widget.mapRect) == "table", "uat computes map rect")
+local uatRects = test.controlRects(widget)
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, uatRects.draw.left + 4, rawTouchY(uatRects.draw.top + 4)), "uat draw control start")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, uatRects.draw.left + 4, rawTouchY(uatRects.draw.top + 4)), "uat draw control end")
+assert_true(widget.drawMode, "uat draw mode enabled")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, 240, rawTouchY(70)), "uat boundary start")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16642, 240, rawTouchY(136)), "uat boundary move")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, 240, rawTouchY(210)), "uat boundary end")
+assert_equal(#widget.boundaries, 1, "uat boundary drawn")
+assert_true(widget.boundaryDirty, "uat boundary dirty after draw")
+
+local homeLat, homeLon = test.bitmapLocalToLatLon(widget, 120, 136)
+local aircraftLat, aircraftLon = test.bitmapLocalToLatLon(widget, 360, 136)
+widget.homeLat = homeLat
+widget.homeLon = homeLon
+widget.homeX = 120
+widget.homeY = 136
+widget.prevHomeDistance = 1
+widget.altSrc = {
+  value = function()
+    return 20
+  end,
+}
+local currentLat = aircraftLat
+local currentLon = aircraftLon
+local warningTones = 0
+local warningHaptics = 0
+_G.system.playTone = function(...)
+  warningTones = warningTones + 1
+  return true
+end
+_G.system.playHaptic = function(_)
+  warningHaptics = warningHaptics + 1
+  return true
+end
+_G.system.getSource = function(query)
+  if query and query.name == "GPS" and query.options == _G.OPTION_LATITUDE then
+    return {
+      value = function()
+        return currentLat
+      end,
+      age = function()
+        return 0
+      end,
+    }
+  end
+  if query and query.name == "GPS" and query.options == _G.OPTION_LONGITUDE then
+    return {
+      value = function()
+        return currentLon
+      end,
+      age = function()
+        return 0
+      end,
+    }
+  end
+  if query and query.name == "Alt" then
+    return widget.altSrc
+  end
+  return nil
+end
+registeredWidget.wakeup(widget)
+assert_true(type(widget.aircraftX) == "number" and widget.aircraftX > 300, "uat telemetry updates aircraft x")
+assert_true(widget.warningActive, "uat crossing activates boundary warning")
+assert_equal(warningTones, 1, "uat audio warning emitted")
+assert_equal(warningHaptics, 1, "uat haptic warning emitted")
+assert_true(type(widget.lastCoordsText) == "string" and widget.lastCoordsText:find("39.", 1, true) ~= nil, "uat coordinates updated")
+assert_true(type(widget.distText) == "string" and widget.distText:find("Distance:", 1, true) ~= nil, "uat distance updated")
+resetDrawCalls()
+registeredWidget.paint(widget)
+assert_shadowed_text("Boundary exceeded", 4, 18, "uat warning overlay")
+
+local uatSaveRects = test.controlRects(widget)
+ioWriteCounts["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"] = 0
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, uatSaveRects.save.left + 3, rawTouchY(uatSaveRects.save.top + 3)), "uat save control start")
+assert_equal(ioWriteCounts["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"], 1, "uat save writes sidecar")
+assert_true(not widget.boundaryDirty, "uat save clears dirty state")
+local uatPayload = ioWrites["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"]
+assert_true(type(uatPayload) == "string" and uatPayload:find('"mapFile":"UATMap.bmp"', 1, true) ~= nil, "uat sidecar records map file")
+ioReads["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"] = uatPayload
+local uatRestored = test.create()
+uatRestored.bitmapFile = "UATMap.bmp"
+registeredWidget.paint(uatRestored)
+assert_equal(#uatRestored.boundaries, 1, "uat restored sidecar boundary")
+registeredWidget.write(widget)
+local uatStoredConfig = storageValues.cfg
+assert_true(type(uatStoredConfig) == "string" and uatStoredConfig:find("UATMap.bmp", 1, true) ~= nil, "uat writes widget config")
+storageValues.cfg = uatStoredConfig
+local uatConfigRestored = test.create()
+registeredWidget.read(uatConfigRestored)
+assert_equal(uatConfigRestored.bitmapFile, "UATMap.bmp", "uat reads widget config map")
+assert_equal(uatConfigRestored.gpsSensorName, "GPS", "uat reads widget config gps")
+assert_true(uatConfigRestored.coordsEnabled, "uat reads widget config coordinates")
+assert_true(uatConfigRestored.distEnabled, "uat reads widget config distance")
+
 print("boundrymap lua tests passed")
