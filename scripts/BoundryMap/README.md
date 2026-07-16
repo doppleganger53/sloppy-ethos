@@ -2,7 +2,8 @@
 
 BoundryMap is an Ethos widget for flying with a GPS map and editable boundary
 lines. It shows your home point, aircraft position, optional coordinates and
-distance, and warns when the line from home to the aircraft crosses a boundary.
+distance, and warns when a boundary is crossed or lies directly ahead on the
+current flight path.
 
 The screenshots below were captured from the actual Ethos 1.6.6 X20RS-FCC
 WebSimulator canvas using a neutral demo map named `GuideField`, so no private
@@ -74,6 +75,8 @@ behaves.
 | `Reset Home` | Clear the learned home point so the widget can learn it again. |
 | `Boundry Warning` | Choose `None`, `Audio`, `Haptic`, or `Both`. |
 | `Warning Type` | Choose one-time `Momentary` feedback or repeating `Constant` feedback. |
+| `Speed Source` | Optional ground-speed or airspeed telemetry source used for predictive warnings. |
+| `Pre-warning Time` | Keep prediction `Off`, or warn when the projected path reaches a boundary in 1 to 10 seconds. |
 | `Diagnostics` | Open a status page for GPS, map, metadata, sidecar, and last error. |
 
 ## Diagnostics
@@ -107,7 +110,8 @@ home icon appears where expected.
 
 If GPS telemetry becomes stale for longer than `Signal Timeout (s)`, the
 aircraft indicator switches to the stale style and the widget keeps the last
-known distance visible.
+known 2D ground distance visible. The normal live distance can still use the
+optional altitude source to show 3D slant distance.
 
 ## Drawing Boundaries
 
@@ -136,18 +140,27 @@ persisted until you tap `Save`.
 
 ![BoundryMap boundary warning](docs/images/boundrymap-warning.png)
 
-The warning overlay appears when the line from home to the aircraft crosses one
-of the current boundary lines. Unsaved edits can trigger warnings while the
-widget is running, but they must be saved to persist after restart. Warning
-feedback depends on the settings:
+The red `Boundary exceeded` overlay appears when the line from home to the
+aircraft crosses one of the current boundary lines. When `Speed Source` and a
+1-to-10-second `Pre-warning Time` are configured, a yellow `Boundary ahead`
+overlay appears when the current heading and speed project an outbound crossing
+within that time. Unsaved edits can trigger warnings while the widget is
+running, but they must be saved to persist after restart. Warning feedback
+depends on the settings:
 
 - `None`: show the overlay only.
 - `Audio`: play tone feedback.
 - `Haptic`: play haptic feedback.
 - `Both`: play tone and haptic feedback.
-- `Momentary`: alert when first entering an exceeded state while moving away
-  from home.
-- `Constant`: repeat feedback while the boundary remains exceeded.
+- `Momentary`: alert once when first entering an ahead or exceeded state while
+  moving away from home.
+- `Constant`: repeat feedback while the ahead or exceeded state remains active.
+
+Predictive warnings require fresh GPS and speed telemetry plus a heading derived
+from recent GPS movement. GPS ground speed is usually the best source for the
+projected ground track. Airspeed is supported, but wind can make an airspeed-only
+projection differ from the actual ground path. A turn after the last GPS heading
+update can also briefly make the projection lag the aircraft.
 
 For best results, keep boundary sets simple and non-crossing. A three-sided box
 is a practical default when you want a readable keep-out shape without closing a
@@ -165,6 +178,7 @@ saved segment independently.
 | Distance is hidden | Enable `Distance`; select an altitude source only when you want 3D distance. |
 | Boundary edits disappear after restart | Draw or delete the lines again, then tap `Save`. |
 | No warning feedback | Confirm `Boundry Warning` is not `None` and the aircraft is moving farther from home when entering the exceeded state. |
+| No predictive warning | Select a supported speed source, choose a 1-to-10-second pre-warning time, and confirm both GPS and speed telemetry are fresh. |
 
 ## Attribution
 

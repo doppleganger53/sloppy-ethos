@@ -1,4 +1,4 @@
-# Current State (2026-05-30)
+# Current State (2026-07-16)
 
 This file is the high-signal memory entrypoint for cold-start sessions.
 Historical detail remains in individual session notes referenced from
@@ -126,6 +126,16 @@ Historical detail remains in individual session notes referenced from
   `tools/sim/harness/suites/BoundryMap-X20RS-FCC-1.6.6.json` and
   `tools/sim/harness/suites/BoundryMap-X20PROAW-FCC-1.6.6.json`. The latter is
   the release asset spelling for X20PRO AW.
+- BoundryMap keeps its shared latitude/longitude query tables synchronized with
+  each widget instance's selected GPS source. Clearing a source no longer
+  reuses the previous query name, and alternating widget instances are safe.
+- BoundryMap `0.1.8` keeps active 3D distance separate from the retained 2D
+  ground-distance text used during stale GPS recovery. Optional predictive
+  warnings project a fresh selected speed source along the derived GPS heading
+  for 1 to 10 seconds; prediction remains off for existing configurations.
+- SensorList clean-start smoke checks pass on X20S-FCC Ethos 1.6.4 and 1.6.6
+  after a current clean deploy, so the prior X20S startup error is no longer a
+  known active blocker.
 - For WebSimulator GUI mode, stage manifest writes run through Emscripten
   `preRun`, then the harness lets generated `main` initialize before calling
   `_start()`. Browser canvas updates arrive as `(width, height, pointer)` and

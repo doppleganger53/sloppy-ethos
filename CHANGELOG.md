@@ -4,6 +4,25 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Bumped the BoundryMap script artifact to `0.1.8` with an optional selectable
+  speed source and 1-to-10-second predictive boundary warning, while preserving
+  the existing warning behavior when prediction is off.
+- Kept live 3D distance text separate from the retained 2D ground-distance
+  recovery text shown when GPS becomes stale.
+
+### Fixed
+
+- Updated BoundryMap's reusable latitude/longitude query tables whenever the
+  configured GPS source changes, including alternating widget instances,
+  restored settings, and cleared sources.
+
+### Testing
+
+- `luac -p scripts/BoundryMap/main.lua`
+- `python -m pytest scripts/BoundryMap/tests -q`
+
 ## [SensorList v1.0.1] - 2026-03-09
 
 ### Changed
