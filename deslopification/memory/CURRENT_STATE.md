@@ -118,6 +118,14 @@ Historical detail remains in individual session notes referenced from
   WebSimulator starts and `reloadScripts` completes under Node, but
   `_writeDefaultSettingsAndModel()` blocks in that runtime, so the harness keeps
   that call behind optional `--write-default-model` in headless and GUI modes.
+- Ethos 1.6.6 WebSimulator runtimes for `X20RS-FCC` and `X20PROAW-FCC` do not
+  export `_reloadScripts`; the headless harness treats that export as optional
+  and reports `messages[].code = "reloadScripts_unavailable"` while still
+  treating clean startup/settle as a successful smoke.
+- BoundryMap Ethos 1.6.6 simulator smoke suites live at
+  `tools/sim/harness/suites/BoundryMap-X20RS-FCC-1.6.6.json` and
+  `tools/sim/harness/suites/BoundryMap-X20PROAW-FCC-1.6.6.json`. The latter is
+  the release asset spelling for X20PRO AW.
 - For WebSimulator GUI mode, stage manifest writes run through Emscripten
   `preRun`, then the harness lets generated `main` initialize before calling
   `_start()`. Browser canvas updates arrive as `(width, height, pointer)` and

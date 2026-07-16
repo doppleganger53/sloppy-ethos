@@ -45,6 +45,7 @@ local CONTROL_BUTTON_HEIGHT = 24
 local CONTROL_BUTTON_GAP = 4
 local CONTROL_MARGIN = 6
 local CONTROL_RELEASE_SLOP = 8
+local END_ONLY_TOGGLE_DEBOUNCE = 0.2
 local TOUCH_CONTENT_Y_OFFSET = 18
 local ICON_PATH = "assets/icons"
 local COORDS_TEXT_X = 4
@@ -1045,12 +1046,12 @@ local function updateDistanceTexts(widget, lat, lon)
     end
   end
 
-  if widget.distEnabled and widget.altSrc then
-    local alt = getSourceValue(widget.altSrc)
+  if widget.distEnabled then
+    local alt = widget.altSrc and getSourceValue(widget.altSrc) or nil
     if type(alt) == "number" then
       widget.distFromHome = sqrt((groundDist * groundDist) + (alt * alt))
     else
-      widget.distFromHome = nil
+      widget.distFromHome = groundDist
     end
   else
     widget.distFromHome = nil
@@ -1311,6 +1312,8 @@ local function create()
     gpsStale = false,
     needsInvalidate = true,
     lastInvalidate = 0,
+    lastEndOnlyControl = nil,
+    lastEndOnlyAt = nil,
     aircraftX = nil,
     aircraftY = nil,
     aircraftScreenX = nil,
@@ -1331,6 +1334,21 @@ local function addStaticLine(label, text)
     form.addStaticText(line, nil, tostring(text or ""))
   end
   return line
+end
+
+local function displayFileName(path)
+  if type(path) ~= "string" or path == "" then
+    return ""
+  end
+  return path:match("([^/]+)$") or path
+end
+
+local function fileStatus(status, path)
+  return status .. " (" .. displayFileName(path) .. ")"
+end
+
+local function fileStatusDetail(status, path, detail)
+  return status .. " (" .. displayFileName(path) .. ": " .. tostring(detail or "unknown") .. ")"
 end
 
 local function callSourceValue(source)
@@ -1379,16 +1397,16 @@ local function bitmapDiagnostics(widget)
   end
   local path = bitmapsPath .. "/" .. bmpFile
   if widget.loadedBitmap and widget.loadedFile == bmpFile then
-    return "Loaded (" .. path .. ")"
+    return fileStatus("Loaded", path)
   end
   local bitmap = nil
   if type(lcd) == "table" and type(lcd.loadBitmap) == "function" then
     bitmap = safeCall(lcd.loadBitmap, path)
   end
   if bitmap then
-    return "Available, not loaded (" .. path .. ")"
+    return fileStatus("Available, not loaded", path)
   end
-  return "Missing (" .. path .. ")"
+  return fileStatus("Missing", path)
 end
 
 local function metadataDiagnostics(widget)
@@ -1400,12 +1418,12 @@ local function metadataDiagnostics(widget)
   local path = metadataDir .. "/" .. stem .. ".json"
   local meta, metaErr = loadMapMetadata(bmpFile)
   if meta then
-    return "OK (" .. path .. ")"
+    return fileStatus("OK", path)
   end
   if metaErr == "metadata not found" then
-    return "Missing (" .. path .. ")"
+    return fileStatus("Missing", path)
   end
-  return "Malformed (" .. path .. ": " .. tostring(metaErr or "metadata invalid") .. ")"
+  return fileStatusDetail("Malformed", path, metaErr or "metadata invalid")
 end
 
 local function sidecarDiagnostics(widget)
@@ -1418,18 +1436,18 @@ local function sidecarDiagnostics(widget)
   end
   local file = io.open(path, "r")
   if not file then
-    return "Missing (" .. path .. ")"
+    return fileStatus("Missing", path)
   end
   local content = file:read(65535)
   file:close()
   if type(content) ~= "string" or content == "" then
-    return "Malformed (" .. path .. ": sidecar empty)"
+    return fileStatusDetail("Malformed", path, "sidecar empty")
   end
   local boundaries, parseErr = parseBoundaryObjects(content)
   if parseErr and parseErr ~= "" then
-    return "Malformed (" .. path .. ": " .. parseErr .. ")"
+    return fileStatusDetail("Malformed", path, parseErr)
   end
-  return sformat("Loaded %d lines (%s)", #boundaries, path)
+  return sformat("Loaded %d lines (%s)", #boundaries, mapStem(widget.bitmapFile) or displayFileName(path))
 end
 
 local function buildDiagnostics(widget)
@@ -1690,6 +1708,16 @@ local function handleControlTouch(widget, phase, x, y)
 
   local armed = widget.touchArmed
   if not armed then
+    if phase == "end" and (exactControl == "draw" or exactControl == "delete") then
+      local now = os.clock()
+      if widget.lastEndOnlyControl == exactControl and widget.lastEndOnlyAt and (now - widget.lastEndOnlyAt) < END_ONLY_TOGGLE_DEBOUNCE then
+        return true
+      end
+      widget.lastEndOnlyControl = exactControl
+      widget.lastEndOnlyAt = now
+      activateControl(widget, exactControl)
+      return true
+    end
     return false
   end
 
@@ -1830,6 +1858,9 @@ local function event(widget, category, value, x, y)
     if not phase then
       return false
     end
+    if handleControlTouch(widget, phase, x, y) then
+      return true
+    end
     local contentX, contentY = normalizeTouchPoint(x, y)
     if handleControlTouch(widget, phase, contentX, contentY) then
       return true
@@ -1939,6 +1970,7 @@ local function testExports()
     controlRects = controlRects,
     controlAtPoint = controlAtPoint,
     pointSegmentDistance = pointSegmentDistance,
+    updateDistanceTexts = updateDistanceTexts,
     updateWarnings = updateWarnings,
     markBoundariesDirty = markBoundariesDirty,
   }

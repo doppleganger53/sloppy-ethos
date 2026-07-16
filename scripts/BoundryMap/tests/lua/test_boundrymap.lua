@@ -428,11 +428,11 @@ assert_equal(rowValue(1), "Not configured", "diagnostics reports unconfigured gp
 assert_equal(rowLabel(2), "GPS Lat/Lon", "diagnostics includes coords")
 assert_equal(rowValue(2), "-", "diagnostics coords absent without gps")
 assert_equal(rowLabel(3), "Map Bitmap", "diagnostics includes bitmap")
-assert_equal(rowValue(3), "Available, not loaded (/scripts/BoundryMap/assets/maps/ChangedBeforeDiagnostics.bmp)", "diagnostics checks bitmap path")
+assert_equal(rowValue(3), "Available, not loaded (ChangedBeforeDiagnostics.bmp)", "diagnostics checks bitmap path")
 assert_equal(rowLabel(4), "JSON Metadata", "diagnostics includes metadata")
-assert_equal(rowValue(4), "Missing (/scripts/BoundryMap/assets/maps/ChangedBeforeDiagnostics.json)", "diagnostics reports missing metadata")
+assert_equal(rowValue(4), "Missing (ChangedBeforeDiagnostics.json)", "diagnostics reports missing metadata")
 assert_equal(rowLabel(5), "Boundary Sidecar", "diagnostics includes sidecar")
-assert_equal(rowValue(5), "Missing (/scripts/BoundryMap/assets/maps/ChangedBeforeDiagnostics.boundries.json)", "diagnostics reports missing sidecar")
+assert_equal(rowValue(5), "Missing (ChangedBeforeDiagnostics.boundries.json)", "diagnostics reports missing sidecar")
 assert_equal(rowLabel(6), "Last Error", "diagnostics includes last error")
 assert_equal(rowValue(6), "None", "diagnostics reports no error")
 assert_equal(formRows[8].text, "Back", "diagnostics adds back button")
@@ -455,7 +455,7 @@ widget = test.create()
 widget.bitmapFile = "MissingMap.bmp"
 registeredWidget.configure(widget)
 formRows[11].callback()
-assert_equal(rowValue(3), "Missing (/scripts/BoundryMap/assets/maps/MissingMap.bmp)", "diagnostics reports missing bitmap")
+assert_equal(rowValue(3), "Missing (MissingMap.bmp)", "diagnostics reports missing bitmap")
 _G.lcd.loadBitmap = originalLoadBitmap
 
 local originalGetSource = _G.system.getSource
@@ -513,9 +513,9 @@ widget.boundaries = {
 }
 registeredWidget.configure(widget)
 formRows[11].callback()
-assert_equal(rowValue(3), "Loaded (/scripts/BoundryMap/assets/maps/DiagMap.bmp)", "diagnostics reports loaded bitmap")
-assert_equal(rowValue(4), "OK (/scripts/BoundryMap/assets/maps/DiagMap.json)", "diagnostics reports valid metadata")
-assert_equal(rowValue(5), "Loaded 1 lines (/scripts/BoundryMap/assets/maps/DiagMap.boundries.json)", "diagnostics reports loaded sidecar count")
+assert_equal(rowValue(3), "Loaded (DiagMap.bmp)", "diagnostics reports loaded bitmap")
+assert_equal(rowValue(4), "OK (DiagMap.json)", "diagnostics reports valid metadata")
+assert_equal(rowValue(5), "Loaded 1 lines (DiagMap)", "diagnostics reports loaded sidecar count")
 assert_equal(rowValue(6), "paint: bad draw", "diagnostics reports last error")
 assert_equal(#widget.boundaries, 1, "diagnostics does not reload boundaries")
 assert_equal(widget.boundaries[1].x1, 99, "diagnostics leaves current boundaries untouched")
@@ -523,12 +523,12 @@ assert_equal(widget.boundaries[1].x1, 99, "diagnostics leaves current boundaries
 ioReads["/scripts/BoundryMap/assets/maps/DiagMap.boundries.json"] = '{"schemaVersion":1,"mapFile":"DiagMap.bmp","boundaries":[{"oops":1}]}'
 registeredWidget.configure(widget)
 formRows[11].callback()
-assert_equal(rowValue(5), "Malformed (/scripts/BoundryMap/assets/maps/DiagMap.boundries.json: sidecar malformed)", "diagnostics reports malformed sidecar")
+assert_equal(rowValue(5), "Malformed (DiagMap.boundries.json: sidecar malformed)", "diagnostics reports malformed sidecar")
 
 ioReads["/scripts/BoundryMap/assets/maps/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129}'
 registeredWidget.configure(widget)
 formRows[11].callback()
-assert_equal(rowValue(4), "Malformed (/scripts/BoundryMap/assets/maps/DiagMap.json: metadata invalid)", "diagnostics reports malformed metadata")
+assert_equal(rowValue(4), "Malformed (DiagMap.json: metadata invalid)", "diagnostics reports malformed metadata")
 
 widget = test.create()
 widget.windowW = 480
@@ -547,6 +547,25 @@ assert_equal(rects.draw.right - rects.draw.left, 72, "draw button width expanded
 assert_equal(rects.draw.bottom - rects.draw.top, 24, "draw button height expanded")
 local drawX = rects.draw.left + 2
 local drawY = rects.draw.top + 2
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, rawTouchY(drawY)), "draw button end-only tap consumed")
+assert_true(widget.drawMode, "draw mode toggled on by end-only tap")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, rawTouchY(drawY)), "draw button duplicate end-only tap consumed")
+assert_true(widget.drawMode, "draw mode stays on after duplicate end-only tap")
+widget.lastEndOnlyAt = os.clock() - 1
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, rawTouchY(drawY)), "draw button later end-only tap consumed")
+assert_true(not widget.drawMode, "draw mode toggled off by later end-only tap")
+local deleteX = rects.delete.left + 2
+local deleteY = rects.delete.top + 2
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, deleteX, rawTouchY(deleteY)), "delete button end-only tap consumed")
+assert_true(widget.deleteMode, "delete mode toggled on by end-only tap")
+widget.deleteMode = false
+widget.boundaryDirty = true
+local unarmedSaveX = rects.save.left + 2
+local unarmedSaveY = rects.save.top + 2
+ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = 0
+assert_true(not test.event(widget, _G.EVT_TOUCH, 16641, unarmedSaveX, rawTouchY(unarmedSaveY)), "save button end-only tap remains unconsumed")
+assert_true(widget.boundaryDirty, "save button end-only tap does not clear dirty state")
+assert_equal(ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"], 0, "save button end-only tap does not write")
 assert_true(test.event(widget, _G.EVT_TOUCH, 16640, drawX, rawTouchY(drawY)), "draw button start consumed")
 assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, rawTouchY(drawY)), "draw button end consumed")
 assert_true(widget.drawMode, "draw mode toggled on")
@@ -675,6 +694,17 @@ test.updateWarnings(widget, 1.5, 39.001, -74.999)
 assert_equal(plays, 1, "momentary warning does not repeat while still exceeded")
 
 widget = test.create()
+widget.homeLat = 39.0
+widget.homeLon = -75.0
+widget.distEnabled = true
+test.updateDistanceTexts(widget, 39.001, -75.0)
+assert_true(type(widget.distText) == "string" and widget.distText:find("Distance:", 1, true) ~= nil, "distance uses ground distance without altitude")
+assert_true(widget.distFromHome ~= nil and widget.distFromHome > 100, "ground distance is stored without altitude")
+widget.distEnabled = false
+test.updateDistanceTexts(widget, 39.001, -75.0)
+assert_true(widget.distText == nil, "distance disabled hides distance text")
+
+widget = test.create()
 widget.boundryWarningMode = 2
 widget.warningType = 1
 widget.homeLat = 39.0
@@ -781,5 +811,118 @@ assert_text_avoids_controls(compactCoords, compactRects, "compact coordinates wi
 assert_text_avoids_controls(compactDistance, compactRects, "compact stale distance without RIGHT")
 _G.RIGHT = originalRight
 _G.lcd.getWindowSize = originalGetWindowSize
+
+ioReads["/scripts/BoundryMap/assets/maps/UATMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
+ioReads["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"] = nil
+ioWrites["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"] = nil
+widget = test.create()
+registeredWidget.configure(widget)
+formRows[1].setter("UATMap.bmp")
+widget.gpsSensorName = "GPS"
+widget.coordsEnabled = true
+widget.distEnabled = true
+widget.altSensorName = "Alt"
+widget.indicatorType = 1
+widget.signalTimeout = 2
+widget.boundryWarningMode = 3
+widget.warningType = 1
+resetDrawCalls()
+registeredWidget.paint(widget)
+assert_true(widget.loadedBitmap ~= nil, "uat loads selected bitmap")
+assert_true(type(widget.mapMeta) == "table", "uat loads selected metadata")
+assert_true(type(widget.mapRect) == "table", "uat computes map rect")
+local uatRects = test.controlRects(widget)
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, uatRects.draw.left + 4, rawTouchY(uatRects.draw.top + 4)), "uat draw control start")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, uatRects.draw.left + 4, rawTouchY(uatRects.draw.top + 4)), "uat draw control end")
+assert_true(widget.drawMode, "uat draw mode enabled")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, 240, rawTouchY(70)), "uat boundary start")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16642, 240, rawTouchY(136)), "uat boundary move")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, 240, rawTouchY(210)), "uat boundary end")
+assert_equal(#widget.boundaries, 1, "uat boundary drawn")
+assert_true(widget.boundaryDirty, "uat boundary dirty after draw")
+
+local homeLat, homeLon = test.bitmapLocalToLatLon(widget, 120, 136)
+local aircraftLat, aircraftLon = test.bitmapLocalToLatLon(widget, 360, 136)
+widget.homeLat = homeLat
+widget.homeLon = homeLon
+widget.homeX = 120
+widget.homeY = 136
+widget.prevHomeDistance = 1
+widget.altSrc = {
+  value = function()
+    return 20
+  end,
+}
+local currentLat = aircraftLat
+local currentLon = aircraftLon
+local warningTones = 0
+local warningHaptics = 0
+_G.system.playTone = function(...)
+  warningTones = warningTones + 1
+  return true
+end
+_G.system.playHaptic = function(_)
+  warningHaptics = warningHaptics + 1
+  return true
+end
+_G.system.getSource = function(query)
+  if query and query.name == "GPS" and query.options == _G.OPTION_LATITUDE then
+    return {
+      value = function()
+        return currentLat
+      end,
+      age = function()
+        return 0
+      end,
+    }
+  end
+  if query and query.name == "GPS" and query.options == _G.OPTION_LONGITUDE then
+    return {
+      value = function()
+        return currentLon
+      end,
+      age = function()
+        return 0
+      end,
+    }
+  end
+  if query and query.name == "Alt" then
+    return widget.altSrc
+  end
+  return nil
+end
+registeredWidget.wakeup(widget)
+assert_true(type(widget.aircraftX) == "number" and widget.aircraftX > 300, "uat telemetry updates aircraft x")
+assert_true(widget.warningActive, "uat crossing activates boundary warning")
+assert_equal(warningTones, 1, "uat audio warning emitted")
+assert_equal(warningHaptics, 1, "uat haptic warning emitted")
+assert_true(type(widget.lastCoordsText) == "string" and widget.lastCoordsText:find("39.", 1, true) ~= nil, "uat coordinates updated")
+assert_true(type(widget.distText) == "string" and widget.distText:find("Distance:", 1, true) ~= nil, "uat distance updated")
+resetDrawCalls()
+registeredWidget.paint(widget)
+assert_shadowed_text("Boundary exceeded", 4, 18, "uat warning overlay")
+
+local uatSaveRects = test.controlRects(widget)
+ioWriteCounts["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"] = 0
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, uatSaveRects.save.left + 3, rawTouchY(uatSaveRects.save.top + 3)), "uat save control start")
+assert_equal(ioWriteCounts["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"], 1, "uat save writes sidecar")
+assert_true(not widget.boundaryDirty, "uat save clears dirty state")
+local uatPayload = ioWrites["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"]
+assert_true(type(uatPayload) == "string" and uatPayload:find('"mapFile":"UATMap.bmp"', 1, true) ~= nil, "uat sidecar records map file")
+ioReads["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"] = uatPayload
+local uatRestored = test.create()
+uatRestored.bitmapFile = "UATMap.bmp"
+registeredWidget.paint(uatRestored)
+assert_equal(#uatRestored.boundaries, 1, "uat restored sidecar boundary")
+registeredWidget.write(widget)
+local uatStoredConfig = storageValues.cfg
+assert_true(type(uatStoredConfig) == "string" and uatStoredConfig:find("UATMap.bmp", 1, true) ~= nil, "uat writes widget config")
+storageValues.cfg = uatStoredConfig
+local uatConfigRestored = test.create()
+registeredWidget.read(uatConfigRestored)
+assert_equal(uatConfigRestored.bitmapFile, "UATMap.bmp", "uat reads widget config map")
+assert_equal(uatConfigRestored.gpsSensorName, "GPS", "uat reads widget config gps")
+assert_true(uatConfigRestored.coordsEnabled, "uat reads widget config coordinates")
+assert_true(uatConfigRestored.distEnabled, "uat reads widget config distance")
 
 print("boundrymap lua tests passed")
