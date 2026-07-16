@@ -15,17 +15,17 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 140
-- Total size: 243,408 bytes
-- Total lines: 6,436
+- Files: 141
+- Total size: 246,374 bytes
+- Total lines: 6,502
 - Distribution by artifact:
-  - session notes: 134
+  - session notes: 135
   - handoff/restart notes: 3
   - reference notes: 2
   - summary notes: 1
 
 - Distribution by scope:
-  - 84 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
+  - 85 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
   - 17 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 15 -- memory ( Memory system structure and retrieval policy )
@@ -37,7 +37,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 28 -- workflow
   - 19 -- testing
   - 17 -- build
-  - 15 -- docs
+  - 16 -- docs
   - 15 -- release
   - 6 -- issue-admin
   - 5 -- prompts
@@ -47,6 +47,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
 - 2026-07-01 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md](notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md) | # Session Notes 2026-07-01 - Issue #102 BoundryMap Real WebSimulator Screenshots
+- 2026-07-01 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_FULLSCREEN_SCREENSHOTS.md](notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_FULLSCREEN_SCREENSHOTS.md) | # Session Notes 2026-07-01 - Issue #102 BoundryMap Fullscreen Screenshots
 - 2026-06-30 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-06-30_ISSUE_102_BOUNDRYMAP_README_GUIDE.md](notes/session/repo/SESSION_NOTES_2026-06-30_ISSUE_102_BOUNDRYMAP_README_GUIDE.md) | # Session Notes 2026-06-30 - Issue #102 BoundryMap README Guide
 - 2026-06-27 | testing | ethos-platform | [notes/session/ethos-platform/SESSION_NOTES_2026-06-27_WEBSIM_1_6_6_OPTIONAL_RELOAD.md](notes/session/ethos-platform/SESSION_NOTES_2026-06-27_WEBSIM_1_6_6_OPTIONAL_RELOAD.md) | # Session Notes 2026-06-27 - WebSimulator 1.6.6 Optional Reload
 - 2026-06-27 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-06-27_ISSUE_102_BOUNDRYMAP_QA.md](notes/session/repo/SESSION_NOTES_2026-06-27_ISSUE_102_BOUNDRYMAP_QA.md) | # Session Notes 2026-06-27 - Issue #102 BoundryMap QA
@@ -56,7 +57,6 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md](notes/session/repo/SESSION_NOTES_2026-04-27_PR71_EXCLUDE_SOURCE_FIX.md) | # Session Notes 2026-04-27 - PR71 Exclude Source Fix
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_GENERIC_BUILD_ASSETS.md) | # Session Notes 2026-04-27 - Generic Build Assets
 - 2026-04-27 | build | repo | [notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_LOCAL_ASSETS.md](notes/session/repo/SESSION_NOTES_2026-04-27_BOUNDRYMAP_SCRIPT_LOCAL_ASSETS.md) | # Session Notes 2026-04-27 - BoundryMap Script-Local Assets
-- 2026-03-28 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md](notes/session/repo/SESSION_NOTES_2026-03-28_README_PUBLISHED_SCRIPT_LINK_POLICY.md) | # Session Notes 2026-03-28 - README Published Script Link Policy
 - 2026-03-09 | release | sensorlist | [notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md](notes/session/sensorlist/SESSION_NOTES_2026-03-09_SENSORLIST_V101_RELEASE.md) | # Session Notes 2026-03-09 - SensorList-v1.0.1 Release
 
 ## Recent Ethos Platform Notes
@@ -212,4 +212,5 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-06-27 | session | ethos-platform | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-06-27_WEBSIM_1_6_6_OPTIONAL_RELOAD.md](notes/session/ethos-platform/SESSION_NOTES_2026-06-27_WEBSIM_1_6_6_OPTIONAL_RELOAD.md) | # Session Notes 2026-06-27 - WebSimulator 1.6.6 Optional Reload |
 | 2026-06-27 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-06-27_ISSUE_102_BOUNDRYMAP_QA.md](notes/session/repo/SESSION_NOTES_2026-06-27_ISSUE_102_BOUNDRYMAP_QA.md) | # Session Notes 2026-06-27 - Issue #102 BoundryMap QA |
 | 2026-06-30 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-06-30_ISSUE_102_BOUNDRYMAP_README_GUIDE.md](notes/session/repo/SESSION_NOTES_2026-06-30_ISSUE_102_BOUNDRYMAP_README_GUIDE.md) | # Session Notes 2026-06-30 - Issue #102 BoundryMap README Guide |
+| 2026-07-01 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_FULLSCREEN_SCREENSHOTS.md](notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_FULLSCREEN_SCREENSHOTS.md) | # Session Notes 2026-07-01 - Issue #102 BoundryMap Fullscreen Screenshots |
 | 2026-07-01 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md](notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md) | # Session Notes 2026-07-01 - Issue #102 BoundryMap Real WebSimulator Screenshots |

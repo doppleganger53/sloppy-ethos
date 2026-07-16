@@ -7,9 +7,10 @@ distance, and warns when the line from home to the aircraft crosses a boundary.
 The screenshots below were captured from the actual Ethos 1.6.6 X20RS-FCC
 WebSimulator canvas using a neutral demo map named `GuideField`, so no private
 flying-site map or real field coordinates are published in this repository.
-The boundary-warning screenshot uses a run-scoped simulated GPS state because
-the stock simulator model used for capture does not expose a GPS telemetry
-source.
+The map views use Ethos' `Full screen` layout and a three-sided, non-crossing
+demo boundary. The boundary-warning screenshot uses a run-scoped simulated GPS
+state because the stock simulator model used for capture does not expose a GPS
+telemetry source.
 
 ## Quick Start
 
@@ -148,9 +149,11 @@ feedback depends on the settings:
   from home.
 - `Constant`: repeat feedback while the boundary remains exceeded.
 
-For best results, draw boundary lines across the route you want to avoid rather
-than around the full perimeter of the field. The widget compares the
-home-to-aircraft line against your saved lines.
+For best results, keep boundary sets simple and non-crossing. A three-sided box
+is a practical default when you want a readable keep-out shape without closing a
+full perimeter. Closing the shape is optional, but it does not enable polygon
+containment; the widget still compares the home-to-aircraft line against each
+saved segment independently.
 
 ## Troubleshooting
 
