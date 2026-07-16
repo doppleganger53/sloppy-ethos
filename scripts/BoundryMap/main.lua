@@ -28,6 +28,7 @@ local HOME_STABLE_DEG = 0.001
 local DIST_JITTER_M = 5
 local DRAW_PREVIEW_INTERVAL = 0.2
 local WARNING_REPEAT_SECONDS = 2
+local MAX_PREDICTION_SECONDS = 10
 local MAX_BOUNDARIES = 6
 local DELETE_TOLERANCE_PX = 12
 local MIN_BOUNDARY_LENGTH_PX = 3
@@ -55,11 +56,13 @@ local OVERLAY_TEXT_CHAR_WIDTH = 6
 local OVERLAY_TEXT_HEIGHT = 10
 local OVERLAY_TEXT_CONTROL_GAP = 2
 
-local gpsLatQuery = { name = "GPS", options = nil }
-local gpsLonQuery = { name = "GPS", options = nil }
+local gpsLatQuery = { name = "", options = nil }
+local gpsLonQuery = { name = "", options = nil }
 local gpsQueriesReady = false
+local gpsQuerySourceName = nil
 local gpsSensorQuery = { name = "" }
 local altSensorQuery = { name = "" }
+local speedSensorQuery = { name = "" }
 local saveBoundaries
 local setColor
 
@@ -913,6 +916,107 @@ local function getSourceAge(source)
   return nil
 end
 
+local function getSourceUnit(source)
+  if not source then
+    return nil
+  end
+  local unitMember = source.unit
+  if type(unitMember) == "function" then
+    return safeCall(unitMember, source)
+  end
+  if type(unitMember) ~= "nil" then
+    return unitMember
+  end
+  return nil
+end
+
+local function getSourceStringUnit(source)
+  if not source then
+    return nil
+  end
+  local unitMember = source.stringUnit
+  if type(unitMember) == "function" then
+    return safeCall(unitMember, source)
+  end
+  if type(unitMember) ~= "nil" then
+    return unitMember
+  end
+  return nil
+end
+
+local function unitEquals(unit, globalName)
+  local expected = rawget(_G, globalName)
+  return expected ~= nil and unit == expected
+end
+
+local function speedUnitScale(source)
+  local unit = getSourceUnit(source)
+  if unitEquals(unit, "UNIT_CENTIMETER_PER_SECOND") then
+    return 0.01
+  end
+  if unitEquals(unit, "UNIT_METER_PER_SECOND") then
+    return 1
+  end
+  if unitEquals(unit, "UNIT_FOOT_PER_SECOND") then
+    return 0.3048
+  end
+  if unitEquals(unit, "UNIT_METER_PER_MINUTE") then
+    return 1 / 60
+  end
+  if unitEquals(unit, "UNIT_FOOT_PER_MINUTE") then
+    return 0.00508
+  end
+  if unitEquals(unit, "UNIT_KILOMETER_PER_HOUR") then
+    return 1 / 3.6
+  end
+  if unitEquals(unit, "UNIT_MILE_PER_HOUR") then
+    return 0.44704
+  end
+  if unitEquals(unit, "UNIT_KNOT") then
+    return 0.514444
+  end
+
+  local unitText = getSourceStringUnit(source)
+  if type(unitText) ~= "string" then
+    return nil
+  end
+  local normalized = unitText:lower():gsub("%s+", "")
+  if normalized == "cm/s" or normalized == "cmps" then
+    return 0.01
+  end
+  if normalized == "m/s" or normalized == "mps" then
+    return 1
+  end
+  if normalized == "ft/s" or normalized == "fps" then
+    return 0.3048
+  end
+  if normalized == "m/min" or normalized == "mpm" then
+    return 1 / 60
+  end
+  if normalized == "ft/min" or normalized == "fpm" then
+    return 0.00508
+  end
+  if normalized == "km/h" or normalized == "kmh" or normalized == "kph" then
+    return 1 / 3.6
+  end
+  if normalized == "mi/h" or normalized == "mph" then
+    return 0.44704
+  end
+  if normalized == "kt" or normalized == "kts" or normalized == "knot" or normalized == "knots" then
+    return 0.514444
+  end
+  return nil
+end
+
+local function speedMetersPerSecond(source)
+  local value = getSourceValue(source)
+  local scale = speedUnitScale(source)
+  if type(value) ~= "number" or value ~= value or value <= 0 or value == math.huge or not scale then
+    return nil
+  end
+  return value * scale
+end
+
 local function ensureGpsQueries()
   if gpsQueriesReady then
     return true
@@ -926,8 +1030,28 @@ local function ensureGpsQueries()
   return true
 end
 
+local function syncGpsQueryName(widget)
+  local sourceName = type(widget) == "table" and widget.gpsSensorName or ""
+  if type(sourceName) ~= "string" then
+    sourceName = ""
+  end
+  if sourceName ~= gpsQuerySourceName then
+    gpsLatQuery.name = sourceName
+    gpsLonQuery.name = sourceName
+    gpsQuerySourceName = sourceName
+  end
+  if type(widget) == "table" and widget.telemetrySourceName ~= sourceName then
+    widget.telemetrySourceName = sourceName
+    widget.prevHeadingLat = nil
+    widget.prevHeadingLon = nil
+    widget.headingValid = false
+  end
+  return sourceName ~= ""
+end
+
 local function refreshTelemetry(widget)
-  if not ensureGpsQueries() or type(system) ~= "table" or type(system.getSource) ~= "function" then
+  if not ensureGpsQueries() or not syncGpsQueryName(widget)
+    or type(system) ~= "table" or type(system.getSource) ~= "function" then
     return nil, nil
   end
   local srcLat = safeCall(system.getSource, gpsLatQuery)
@@ -971,11 +1095,15 @@ local function resetHome(widget)
   widget.homeX = nil
   widget.homeY = nil
   widget.distFromHome = nil
+  widget.distText = nil
   widget.lastGroundDistText = nil
+  widget.prevGroundDistance = nil
   widget.prevHomeDistance = nil
   widget.wasExceeded = false
+  widget.wasWarningCondition = false
   widget.lastWarningAt = nil
   widget.warningActive = false
+  widget.warningImminent = false
 end
 
 local function updateHomeIfStable(widget, lat, lon)
@@ -1017,6 +1145,7 @@ local function updateHeading(widget, lat, lon)
         - sin(widget.prevHeadingLat * DEG_TO_RAD) * cos(lat * DEG_TO_RAD) * cos(dlon * DEG_TO_RAD)
       local atan2fn = math.atan2 or math.atan
       widget.lastHeading = (deg(atan2fn(y, x)) + 360) % 360
+      widget.headingValid = true
       widget.prevHeadingLat = lat
       widget.prevHeadingLon = lon
       return true
@@ -1031,6 +1160,9 @@ end
 local function updateDistanceTexts(widget, lat, lon)
   if not widget.homeLat or not widget.homeLon then
     widget.distFromHome = nil
+    widget.distText = nil
+    widget.prevGroundDistance = nil
+    widget.lastGroundDistText = nil
     return false
   end
   local groundDist = haversine(widget.homeLat, widget.homeLon, lat or widget.prevLat, lon or widget.prevLon)
@@ -1084,6 +1216,81 @@ local function isExceeded(widget, aircraftX, aircraftY)
   return false
 end
 
+local function projectLatLon(lat, lon, bearingDegrees, distanceMeters)
+  if type(lat) ~= "number" or type(lon) ~= "number"
+    or type(bearingDegrees) ~= "number" or type(distanceMeters) ~= "number"
+    or distanceMeters < 0 then
+    return nil, nil
+  end
+
+  local angularDistance = distanceMeters / EARTH_R
+  local bearing = bearingDegrees * DEG_TO_RAD
+  local lat1 = lat * DEG_TO_RAD
+  local lon1 = lon * DEG_TO_RAD
+  local sinLat2 = sin(lat1) * cos(angularDistance)
+    + cos(lat1) * sin(angularDistance) * cos(bearing)
+  local lat2 = asin(clamp(sinLat2, -1, 1))
+  local atan2fn = math.atan2 or math.atan
+  local lon2 = lon1 + atan2fn(
+    sin(bearing) * sin(angularDistance) * cos(lat1),
+    cos(angularDistance) - sin(lat1) * sin(lat2)
+  )
+  return deg(lat2), ((deg(lon2) + 540) % 360) - 180
+end
+
+local function predictionCrossesBoundary(widget, lat, lon)
+  local predictionSeconds = tonumber(widget.predictionSeconds) or 0
+  if predictionSeconds < 1 or predictionSeconds > MAX_PREDICTION_SECONDS
+    or widget.gpsStale or not widget.headingValid then
+    return false
+  end
+  if type(widget.homeLat) ~= "number" or type(widget.homeLon) ~= "number"
+    or type(widget.aircraftX) ~= "number" or type(widget.aircraftY) ~= "number"
+    or type(widget.boundaries) ~= "table" or #widget.boundaries == 0 then
+    return false
+  end
+
+  local speedAge = getSourceAge(widget.speedSrc)
+  if type(speedAge) ~= "number" or speedAge < 0 or speedAge > (tonumber(widget.staleMs) or 2000) then
+    return false
+  end
+  local speed = speedMetersPerSecond(widget.speedSrc)
+  if not speed then
+    return false
+  end
+
+  local projectedLat, projectedLon = projectLatLon(lat, lon, widget.lastHeading, speed * predictionSeconds)
+  if not projectedLat or not projectedLon then
+    return false
+  end
+  local projectedX, projectedY = latLonToBitmapLocal(widget, projectedLat, projectedLon)
+  if not projectedX or not projectedY then
+    return false
+  end
+
+  local currentHomeDistance = haversine(widget.homeLat, widget.homeLon, lat, lon)
+  local projectedHomeDistance = haversine(widget.homeLat, widget.homeLon, projectedLat, projectedLon)
+  if projectedHomeDistance <= currentHomeDistance then
+    return false
+  end
+
+  for _, boundary in ipairs(widget.boundaries) do
+    if segmentsIntersect(
+      widget.aircraftX,
+      widget.aircraftY,
+      projectedX,
+      projectedY,
+      boundary.x1,
+      boundary.y1,
+      boundary.x2,
+      boundary.y2
+    ) then
+      return true, projectedLat, projectedLon
+    end
+  end
+  return false, projectedLat, projectedLon
+end
+
 local function updateWarnings(widget, now, lat, lon)
   local exceeded = false
   local homeDistance = nil
@@ -1097,19 +1304,26 @@ local function updateWarnings(widget, now, lat, lon)
     movingAway = true
   end
 
+  local imminent = false
+  if not exceeded and lat and lon then
+    imminent = predictionCrossesBoundary(widget, lat, lon)
+  end
+  local warningCondition = exceeded or imminent
+  local wasWarningCondition = widget.wasWarningCondition or false
+
   local warningMode = widget.boundryWarningMode or WARNING_MODE_NONE
   local warningType = widget.warningType or WARNING_TYPE_MOMENTARY
 
   if warningMode ~= WARNING_MODE_NONE then
     if warningType == WARNING_TYPE_MOMENTARY then
-      if exceeded and not widget.wasExceeded and movingAway then
+      if warningCondition and not wasWarningCondition and (imminent or movingAway) then
         triggerWarningFeedback(widget)
       end
     else
-      if exceeded then
+      if warningCondition then
         local shouldReplay = false
-        if not widget.wasExceeded then
-          shouldReplay = movingAway
+        if not wasWarningCondition then
+          shouldReplay = imminent or movingAway
         elseif not widget.lastWarningAt or (now - widget.lastWarningAt) >= WARNING_REPEAT_SECONDS then
           shouldReplay = true
         end
@@ -1126,7 +1340,9 @@ local function updateWarnings(widget, now, lat, lon)
   end
 
   widget.warningActive = exceeded
+  widget.warningImminent = imminent
   widget.wasExceeded = exceeded
+  widget.wasWarningCondition = warningCondition
   if homeDistance then
     widget.prevHomeDistance = homeDistance
   end
@@ -1232,6 +1448,9 @@ local function drawOverlay(widget)
   if widget.warningActive then
     local warningX, warningY = placeOverlayText(widget, 4, 18, "Boundary exceeded")
     drawShadowText(widget, warningX, warningY, "Boundary exceeded", "red")
+  elseif widget.warningImminent then
+    local warningX, warningY = placeOverlayText(widget, 4, 18, "Boundary ahead")
+    drawShadowText(widget, warningX, warningY, "Boundary ahead", "yellow")
   end
 end
 
@@ -1259,6 +1478,9 @@ local function create()
     distEnabled = false,
     altSensorName = "",
     altSrc = nil,
+    speedSensorName = "",
+    speedSrc = nil,
+    predictionSeconds = 0,
     indicatorType = 0,
     signalTimeout = 2,
     coordsEnabled = false,
@@ -1289,7 +1511,9 @@ local function create()
     draftBoundary = nil,
     lastWarningAt = nil,
     warningActive = false,
+    warningImminent = false,
     wasExceeded = false,
+    wasWarningCondition = false,
     prevHomeDistance = nil,
     prevGroundDistance = nil,
     prevLat = nil,
@@ -1297,6 +1521,8 @@ local function create()
     prevHeadingLat = nil,
     prevHeadingLon = nil,
     lastHeading = 0,
+    headingValid = false,
+    telemetrySourceName = nil,
     homeLat = nil,
     homeLon = nil,
     homeX = nil,
@@ -1521,6 +1747,7 @@ buildMainForm = function(widget)
       else
         widget.gpsSensorName = ""
       end
+      widget.telemetrySourceName = nil
     end)
   end
 
@@ -1606,6 +1833,42 @@ buildMainForm = function(widget)
       return widget.warningType
     end, function(value)
       widget.warningType = tonumber(value) or WARNING_TYPE_MOMENTARY
+    end)
+  end
+
+  local line6a = form.addLine("Speed Source")
+  if type(form.addSensorField) == "function" then
+    form.addSensorField(line6a, nil, function()
+      return widget.speedSrc
+    end, function(value)
+      widget.speedSrc = value
+      if value then
+        local name = safeCall(value.name, value)
+        widget.speedSensorName = (type(name) == "string" and name ~= "---") and name or ""
+      else
+        widget.speedSensorName = ""
+      end
+    end)
+  end
+
+  local line6b = form.addLine("Pre-warning Time")
+  if type(form.addChoiceField) == "function" then
+    form.addChoiceField(line6b, nil, {
+      { "Off", 0 },
+      { "1 s", 1 },
+      { "2 s", 2 },
+      { "3 s", 3 },
+      { "4 s", 4 },
+      { "5 s", 5 },
+      { "6 s", 6 },
+      { "7 s", 7 },
+      { "8 s", 8 },
+      { "9 s", 9 },
+      { "10 s", 10 },
+    }, function()
+      return widget.predictionSeconds
+    end, function(value)
+      widget.predictionSeconds = clamp(tonumber(value) or 0, 0, MAX_PREDICTION_SECONDS)
     end)
   end
 
@@ -1791,6 +2054,19 @@ local function wakeup(widget)
     clearWidgetError(widget)
     local now = os.clock()
 
+    if not widget.altSrc and widget.altSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
+      altSensorQuery.name = widget.altSensorName
+      widget.altSrc = safeCall(system.getSource, altSensorQuery)
+    end
+    if not widget.gpsSensor and widget.gpsSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
+      gpsSensorQuery.name = widget.gpsSensorName
+      widget.gpsSensor = safeCall(system.getSource, gpsSensorQuery)
+    end
+    if not widget.speedSrc and widget.speedSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
+      speedSensorQuery.name = widget.speedSensorName
+      widget.speedSrc = safeCall(system.getSource, speedSensorQuery)
+    end
+
     local telemetry, lat, lon = refreshTelemetry(widget)
     if telemetry then
       local staleMs = (tonumber(widget.signalTimeout) or 2) * 1000
@@ -1816,17 +2092,10 @@ local function wakeup(widget)
       updateWarnings(widget, now, lat, lon)
     else
       widget.warningActive = false
+      widget.warningImminent = false
       widget.wasExceeded = false
+      widget.wasWarningCondition = false
       widget.lastWarningAt = nil
-    end
-
-    if not widget.altSrc and widget.altSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
-      altSensorQuery.name = widget.altSensorName
-      widget.altSrc = safeCall(system.getSource, altSensorQuery)
-    end
-    if not widget.gpsSensor and widget.gpsSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
-      gpsSensorQuery.name = widget.gpsSensorName
-      widget.gpsSensor = safeCall(system.getSource, gpsSensorQuery)
     end
 
     if widget.pendingDraftPoint and widget.draftBoundary and (now - (widget.lastDraftPreviewAt or 0)) >= DRAW_PREVIEW_INTERVAL then
@@ -1896,12 +2165,21 @@ local function read(widget)
   widget.boundryWarningMode = tonumber(parts[7]) or WARNING_MODE_NONE
   widget.warningType = tonumber(parts[8]) or WARNING_TYPE_MOMENTARY
   widget.coordsEnabled = parts[9] == "1"
+  widget.speedSensorName = parts[10] or ""
+  widget.predictionSeconds = floor(clamp(tonumber(parts[11]) or 0, 0, MAX_PREDICTION_SECONDS))
+  widget.telemetrySourceName = nil
+  widget.gpsSensor = nil
+  widget.altSrc = nil
+  widget.speedSrc = nil
 
   if widget.gpsSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
     widget.gpsSensor = safeCall(system.getSource, { name = widget.gpsSensorName })
   end
   if widget.altSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
     widget.altSrc = safeCall(system.getSource, { name = widget.altSensorName })
+  end
+  if widget.speedSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
+    widget.speedSrc = safeCall(system.getSource, { name = widget.speedSensorName })
   end
   widget.loadedFile = ""
   widget.boundaryLoadPending = true
@@ -1929,6 +2207,10 @@ local function write(widget)
     .. tostring(widget.warningType or WARNING_TYPE_MOMENTARY)
     .. CFG_SEP
     .. (widget.coordsEnabled and "1" or "0")
+    .. CFG_SEP
+    .. (widget.speedSensorName or "")
+    .. CFG_SEP
+    .. tostring(floor(clamp(tonumber(widget.predictionSeconds) or 0, 0, MAX_PREDICTION_SECONDS)))
   safeInvoke(storage.write, "cfg", payload)
 end
 
@@ -1972,6 +2254,11 @@ local function testExports()
     pointSegmentDistance = pointSegmentDistance,
     updateDistanceTexts = updateDistanceTexts,
     updateWarnings = updateWarnings,
+    refreshTelemetry = refreshTelemetry,
+    projectLatLon = projectLatLon,
+    predictionCrossesBoundary = predictionCrossesBoundary,
+    speedMetersPerSecond = speedMetersPerSecond,
+    resetHome = resetHome,
     markBoundariesDirty = markBoundariesDirty,
   }
 end

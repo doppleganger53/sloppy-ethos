@@ -6,6 +6,14 @@ _G.FONT_STD_BOLD = 0
 _G.FONT_BOLD = 0
 _G.OPTION_LATITUDE = 1
 _G.OPTION_LONGITUDE = 2
+_G.UNIT_CENTIMETER_PER_SECOND = 101
+_G.UNIT_METER_PER_SECOND = 102
+_G.UNIT_FOOT_PER_SECOND = 103
+_G.UNIT_METER_PER_MINUTE = 104
+_G.UNIT_FOOT_PER_MINUTE = 105
+_G.UNIT_KILOMETER_PER_HOUR = 106
+_G.UNIT_MILE_PER_HOUR = 107
+_G.UNIT_KNOT = 108
 _G.EVT_TOUCH = 1
 _G.EVT_TOUCH_FIRST = 100
 _G.EVT_TOUCH_MOVE = 101
@@ -34,6 +42,15 @@ end
 
 local function rowValue(row)
   return formRows[row] and formRows[row].value or nil
+end
+
+local function findFormRow(label)
+  for index, row in ipairs(formRows) do
+    if row.label == label then
+      return index, row
+    end
+  end
+  return nil, nil
 end
 
 local function resetDrawCalls()
@@ -76,10 +93,11 @@ _G.form = {
     formRows[row].getter = getter
     formRows[row].setter = setter
   end,
-  addSensorField = function(row, _, getter, setter)
+  addSensorField = function(row, _, getter, setter, filter)
     formRows[row].type = "sensor"
     formRows[row].getter = getter
     formRows[row].setter = setter
+    formRows[row].filter = filter
   end,
   -- Ethos 26.1 examples surface source fields, but not boolean fields.
   addSourceField = function(row, _, getter, setter)
@@ -242,6 +260,15 @@ local function findDrawText(text, x, y)
   return nil
 end
 
+local function hasDrawText(text)
+  for _, call in ipairs(drawTexts) do
+    if call.text == text then
+      return true
+    end
+  end
+  return false
+end
+
 local function assert_shadowed_text(text, x, y, label)
   local prefix = label or text
   local upperLeft = findDrawText(text, x - 1, y - 1)
@@ -386,6 +413,8 @@ widget.signalTimeout = 9
 widget.boundryWarningMode = 3
 widget.warningType = 1
 widget.coordsEnabled = true
+widget.speedSensorName = "GPS speed"
+widget.predictionSeconds = 7
 test.write(widget)
 assert_true(type(storageValues.cfg) == "string", "write persists config")
 
@@ -400,9 +429,12 @@ assert_equal(restored.signalTimeout, 9, "read restores signal timeout")
 assert_equal(restored.boundryWarningMode, 3, "read restores warning mode")
 assert_equal(restored.warningType, 1, "read restores warning type")
 assert_true(restored.coordsEnabled, "read restores coordinate toggle")
+assert_equal(restored.speedSensorName, "GPS speed", "read restores speed sensor")
+assert_equal(restored.predictionSeconds, 7, "read restores prediction time")
 
 storageValues.cfg = "LegacyMap.bmp|GPS|1|Alt"
 local legacy = test.create()
+legacy.speedSrc = { value = 99 }
 test.read(legacy)
 assert_equal(legacy.bitmapFile, "LegacyMap.bmp", "legacy read restores bitmap")
 assert_equal(legacy.gpsSensorName, "GPS", "legacy read restores gps")
@@ -413,15 +445,100 @@ assert_equal(legacy.signalTimeout, 2, "legacy read defaults signal timeout")
 assert_equal(legacy.boundryWarningMode, 0, "legacy read defaults warning mode")
 assert_equal(legacy.warningType, 0, "legacy read defaults warning type")
 assert_true(not legacy.coordsEnabled, "legacy read defaults coordinates hidden")
+assert_equal(legacy.speedSensorName, "", "legacy read defaults speed source")
+assert_equal(legacy.predictionSeconds, 0, "legacy read defaults prediction off")
+assert_true(legacy.speedSrc == nil, "legacy read clears any previous speed source handle")
+
+local originalTelemetryGetSource = _G.system.getSource
+local telemetryQueryCalls = {}
+local telemetryValues = {
+  GPS1 = { lat = 39.101, lon = -75.101, age = 25 },
+  GPS2 = { lat = 39.202, lon = -75.202, age = 3500 },
+  RestoredGPS = { lat = 39.303, lon = -75.303, age = 50 },
+}
+_G.system.getSource = function(query)
+  local name = query and query.name or ""
+  local options = query and query.options or nil
+  telemetryQueryCalls[#telemetryQueryCalls + 1] = { name = name, options = options }
+  local values = telemetryValues[name]
+  if not values then
+    return nil
+  end
+  return {
+    value = function()
+      if options == _G.OPTION_LATITUDE then
+        return values.lat
+      end
+      if options == _G.OPTION_LONGITUDE then
+        return values.lon
+      end
+      return nil
+    end,
+    age = function()
+      return values.age
+    end,
+  }
+end
+
+local function assert_near(actual, expected, tolerance, label)
+  assert_true(type(actual) == "number" and math.abs(actual - expected) <= tolerance,
+    (label or "assert_near failed") .. ": expected=" .. tostring(expected) .. " actual=" .. tostring(actual))
+end
+
+local gpsWidget1 = test.create()
+gpsWidget1.gpsSensorName = "GPS1"
+local telemetry1, gps1Lat, gps1Lon = test.refreshTelemetry(gpsWidget1)
+assert_equal(gps1Lat, telemetryValues.GPS1.lat, "gps query uses first widget latitude name")
+assert_equal(gps1Lon, telemetryValues.GPS1.lon, "gps query uses first widget longitude name")
+assert_equal(telemetry1.age, telemetryValues.GPS1.age, "gps query preserves first widget source age")
+
+local gpsWidget2 = test.create()
+gpsWidget2.gpsSensorName = "GPS2"
+local telemetry2, gps2Lat, gps2Lon = test.refreshTelemetry(gpsWidget2)
+assert_equal(gps2Lat, telemetryValues.GPS2.lat, "gps query refreshes second widget latitude name")
+assert_equal(gps2Lon, telemetryValues.GPS2.lon, "gps query refreshes second widget longitude name")
+assert_equal(telemetry2.age, telemetryValues.GPS2.age, "gps query preserves second widget source age")
+gpsWidget2.signalTimeout = 2
+registeredWidget.wakeup(gpsWidget2)
+assert_true(gpsWidget2.gpsStale, "gps age above configured timeout is stale")
+gpsWidget2.signalTimeout = 4
+registeredWidget.wakeup(gpsWidget2)
+assert_true(not gpsWidget2.gpsStale, "gps age below configured timeout is fresh")
+
+local _, gps1AgainLat, gps1AgainLon = test.refreshTelemetry(gpsWidget1)
+assert_equal(gps1AgainLat, telemetryValues.GPS1.lat, "gps query switches back to first widget latitude name")
+assert_equal(gps1AgainLon, telemetryValues.GPS1.lon, "gps query switches back to first widget longitude name")
+
+local blankGpsWidget = test.create()
+local callsBeforeBlank = #telemetryQueryCalls
+local blankTelemetry, blankLat, blankLon = test.refreshTelemetry(blankGpsWidget)
+assert_true(blankTelemetry == nil and blankLat == nil and blankLon == nil, "blank gps source returns no telemetry")
+assert_equal(#telemetryQueryCalls, callsBeforeBlank, "blank gps source does not query the previous sensor")
+
+storageValues.cfg = "RestoredMap.bmp|RestoredGPS|0||0|2|0|0|0||0"
+local restoredGpsWidget = test.create()
+test.read(restoredGpsWidget)
+local restoredTelemetry, restoredLat, restoredLon = test.refreshTelemetry(restoredGpsWidget)
+assert_equal(restoredLat, telemetryValues.RestoredGPS.lat, "read config refreshes gps latitude query name")
+assert_equal(restoredLon, telemetryValues.RestoredGPS.lon, "read config refreshes gps longitude query name")
+assert_equal(restoredTelemetry.age, telemetryValues.RestoredGPS.age, "read config keeps restored gps age")
+_G.system.getSource = originalTelemetryGetSource
 
 widget = test.create()
 widget.bitmapFile = "UnsavedMap.bmp"
 registeredWidget.configure(widget)
 assert_equal(rowLabel(1), "Map", "main form keeps map first")
-assert_equal(rowLabel(11), "Diagnostics", "main form adds diagnostics row")
-assert_equal(formRows[11].text, "Run", "diagnostics button text")
+local diagnosticsRow = findFormRow("Diagnostics")
+assert_true(diagnosticsRow ~= nil, "main form adds diagnostics row")
+assert_equal(formRows[diagnosticsRow].text, "Run", "diagnostics button text")
+local speedSourceRow = findFormRow("Speed Source")
+local predictionRow = findFormRow("Pre-warning Time")
+assert_true(speedSourceRow ~= nil, "main form adds speed source row")
+assert_true(predictionRow ~= nil, "main form adds prediction time row")
+assert_equal(formRows[predictionRow].choices[1][1], "Off", "prediction defaults include off choice")
+assert_equal(formRows[predictionRow].choices[11][2], 10, "prediction choices include ten seconds")
 formRows[1].setter("ChangedBeforeDiagnostics.bmp")
-formRows[11].callback()
+formRows[diagnosticsRow].callback()
 assert_equal(widget.bitmapFile, "ChangedBeforeDiagnostics.bmp", "diagnostics keeps unsaved map edit")
 assert_equal(rowLabel(1), "GPS Source", "diagnostics form first row")
 assert_equal(rowValue(1), "Not configured", "diagnostics reports unconfigured gps")
@@ -442,7 +559,8 @@ assert_equal(widget.bitmapFile, "ChangedBeforeDiagnostics.bmp", "back keeps unsa
 
 widget = test.create()
 registeredWidget.configure(widget)
-formRows[11].callback()
+diagnosticsRow = findFormRow("Diagnostics")
+formRows[diagnosticsRow].callback()
 assert_equal(rowValue(3), "No map selected", "diagnostics reports no selected bitmap")
 assert_equal(rowValue(4), "No map selected", "diagnostics reports no selected metadata")
 assert_equal(rowValue(5), "No map selected", "diagnostics reports no selected sidecar")
@@ -454,7 +572,8 @@ end
 widget = test.create()
 widget.bitmapFile = "MissingMap.bmp"
 registeredWidget.configure(widget)
-formRows[11].callback()
+diagnosticsRow = findFormRow("Diagnostics")
+formRows[diagnosticsRow].callback()
 assert_equal(rowValue(3), "Missing (MissingMap.bmp)", "diagnostics reports missing bitmap")
 _G.lcd.loadBitmap = originalLoadBitmap
 
@@ -485,19 +604,22 @@ end
 widget = test.create()
 widget.gpsSensorName = "GPS1"
 registeredWidget.configure(widget)
-formRows[11].callback()
+diagnosticsRow = findFormRow("Diagnostics")
+formRows[diagnosticsRow].callback()
 assert_equal(rowValue(1), "Found (GPS1)", "diagnostics reports found gps")
 assert_equal(rowValue(2), "39.12346, -75.65432", "diagnostics reports gps coords")
 widget = test.create()
 widget.gpsSensorName = "GPS2"
 registeredWidget.configure(widget)
-formRows[11].callback()
+diagnosticsRow = findFormRow("Diagnostics")
+formRows[diagnosticsRow].callback()
 assert_equal(rowValue(1), "Found, no fix (GPS2)", "diagnostics reports gps without fix")
 assert_equal(rowValue(2), "-", "diagnostics hides coords without fix")
 widget = test.create()
 widget.gpsSensorName = "MissingGPS"
 registeredWidget.configure(widget)
-formRows[11].callback()
+diagnosticsRow = findFormRow("Diagnostics")
+formRows[diagnosticsRow].callback()
 assert_equal(rowValue(1), "Not found (MissingGPS)", "diagnostics reports missing gps")
 _G.system.getSource = originalGetSource
 
@@ -512,7 +634,8 @@ widget.boundaries = {
   { x1 = 99, y1 = 99, x2 = 100, y2 = 100, lat1 = 1, lon1 = 1, lat2 = 2, lon2 = 2 },
 }
 registeredWidget.configure(widget)
-formRows[11].callback()
+diagnosticsRow = findFormRow("Diagnostics")
+formRows[diagnosticsRow].callback()
 assert_equal(rowValue(3), "Loaded (DiagMap.bmp)", "diagnostics reports loaded bitmap")
 assert_equal(rowValue(4), "OK (DiagMap.json)", "diagnostics reports valid metadata")
 assert_equal(rowValue(5), "Loaded 1 lines (DiagMap)", "diagnostics reports loaded sidecar count")
@@ -522,12 +645,14 @@ assert_equal(widget.boundaries[1].x1, 99, "diagnostics leaves current boundaries
 
 ioReads["/scripts/BoundryMap/assets/maps/DiagMap.boundries.json"] = '{"schemaVersion":1,"mapFile":"DiagMap.bmp","boundaries":[{"oops":1}]}'
 registeredWidget.configure(widget)
-formRows[11].callback()
+diagnosticsRow = findFormRow("Diagnostics")
+formRows[diagnosticsRow].callback()
 assert_equal(rowValue(5), "Malformed (DiagMap.boundries.json: sidecar malformed)", "diagnostics reports malformed sidecar")
 
 ioReads["/scripts/BoundryMap/assets/maps/DiagMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129}'
 registeredWidget.configure(widget)
-formRows[11].callback()
+diagnosticsRow = findFormRow("Diagnostics")
+formRows[diagnosticsRow].callback()
 assert_equal(rowValue(4), "Malformed (DiagMap.json: metadata invalid)", "diagnostics reports malformed metadata")
 
 widget = test.create()
@@ -693,6 +818,156 @@ assert_equal(plays, 1, "momentary warning fires on entering exceeded while movin
 test.updateWarnings(widget, 1.5, 39.001, -74.999)
 assert_equal(plays, 1, "momentary warning does not repeat while still exceeded")
 
+local function mockSpeedSource(value, unit, age, stringUnit)
+  return {
+    value = function()
+      return value
+    end,
+    unit = function()
+      return unit
+    end,
+    age = function()
+      return age
+    end,
+    stringUnit = function()
+      return stringUnit
+    end,
+  }
+end
+
+assert_near(test.speedMetersPerSecond(mockSpeedSource(12, _G.UNIT_METER_PER_SECOND, 0)), 12, 0.0001,
+  "meters per second conversion")
+assert_near(test.speedMetersPerSecond(mockSpeedSource(36, _G.UNIT_KILOMETER_PER_HOUR, 0)), 10, 0.0001,
+  "kilometers per hour conversion")
+assert_near(test.speedMetersPerSecond(mockSpeedSource(10, _G.UNIT_MILE_PER_HOUR, 0)), 4.4704, 0.0001,
+  "miles per hour conversion")
+assert_near(test.speedMetersPerSecond(mockSpeedSource(100, _G.UNIT_CENTIMETER_PER_SECOND, 0)), 1, 0.0001,
+  "centimeters per second conversion")
+assert_near(test.speedMetersPerSecond(mockSpeedSource(10, _G.UNIT_FOOT_PER_SECOND, 0)), 3.048, 0.0001,
+  "feet per second conversion")
+assert_near(test.speedMetersPerSecond(mockSpeedSource(600, _G.UNIT_METER_PER_MINUTE, 0)), 10, 0.0001,
+  "meters per minute conversion")
+assert_near(test.speedMetersPerSecond(mockSpeedSource(600, _G.UNIT_FOOT_PER_MINUTE, 0)), 3.048, 0.0001,
+  "feet per minute conversion")
+assert_near(test.speedMetersPerSecond(mockSpeedSource(10, _G.UNIT_KNOT, 0)), 5.14444, 0.0001,
+  "knot conversion")
+assert_near(test.speedMetersPerSecond(mockSpeedSource(10, nil, 0, "knots")), 5.14444, 0.0001,
+  "string speed unit fallback conversion")
+assert_true(test.speedMetersPerSecond(mockSpeedSource(10, nil, 0, "widgets")) == nil,
+  "unsupported speed unit disables prediction")
+assert_true(test.speedMetersPerSecond(mockSpeedSource(0, _G.UNIT_METER_PER_SECOND, 0)) == nil,
+  "nonpositive speed disables prediction")
+
+local predictionWidget = test.create()
+predictionWidget.mapMeta = meta
+predictionWidget.bmpW = 480
+predictionWidget.bmpH = 272
+predictionWidget.homeLat, predictionWidget.homeLon = test.bitmapLocalToLatLon(predictionWidget, 100, 136)
+local predictionLat, predictionLon = test.bitmapLocalToLatLon(predictionWidget, 200, 136)
+predictionWidget.homeX = 100
+predictionWidget.homeY = 136
+predictionWidget.aircraftX = 200
+predictionWidget.aircraftY = 136
+predictionWidget.boundaries = {
+  { x1 = 240, y1 = 40, x2 = 240, y2 = 230, lat1 = 0, lon1 = 0, lat2 = 0, lon2 = 0 },
+}
+predictionWidget.headingValid = true
+predictionWidget.lastHeading = 90
+predictionWidget.speedSrc = mockSpeedSource(30, _G.UNIT_METER_PER_SECOND, 0)
+predictionWidget.predictionSeconds = 5
+predictionWidget.staleMs = 2000
+predictionWidget.gpsStale = false
+local projectedLat, projectedLon = test.projectLatLon(predictionLat, predictionLon, 90, 150)
+assert_true(type(projectedLat) == "number" and type(projectedLon) == "number", "prediction projects coordinates")
+assert_true(test.predictionCrossesBoundary(predictionWidget, predictionLat, predictionLon),
+  "outbound projected path crosses boundary")
+
+predictionWidget.lastHeading = 270
+predictionWidget.boundaries[1].x1 = 180
+predictionWidget.boundaries[1].x2 = 180
+assert_true(not test.predictionCrossesBoundary(predictionWidget, predictionLat, predictionLon),
+  "inbound projected crossing is rejected by outbound gate")
+predictionWidget.lastHeading = 90
+predictionWidget.boundaries[1].x1 = 240
+predictionWidget.boundaries[1].x2 = 240
+predictionWidget.speedSrc = mockSpeedSource(30, _G.UNIT_METER_PER_SECOND, 2501)
+assert_true(not test.predictionCrossesBoundary(predictionWidget, predictionLat, predictionLon),
+  "stale speed source disables prediction")
+predictionWidget.speedSrc = mockSpeedSource(30, _G.UNIT_METER_PER_SECOND, nil)
+assert_true(not test.predictionCrossesBoundary(predictionWidget, predictionLat, predictionLon),
+  "speed source without age disables prediction")
+predictionWidget.speedSrc = mockSpeedSource(30, _G.UNIT_METER_PER_SECOND, 0)
+predictionWidget.gpsStale = true
+assert_true(not test.predictionCrossesBoundary(predictionWidget, predictionLat, predictionLon),
+  "stale gps disables prediction")
+predictionWidget.gpsStale = false
+predictionWidget.predictionSeconds = 0
+assert_true(not test.predictionCrossesBoundary(predictionWidget, predictionLat, predictionLon),
+  "prediction off preserves legacy warning behavior")
+predictionWidget.predictionSeconds = 11
+assert_true(not test.predictionCrossesBoundary(predictionWidget, predictionLat, predictionLon),
+  "prediction beyond ten seconds is rejected")
+predictionWidget.predictionSeconds = 5
+predictionWidget.headingValid = false
+assert_true(not test.predictionCrossesBoundary(predictionWidget, predictionLat, predictionLon),
+  "prediction requires a derived heading")
+predictionWidget.headingValid = true
+
+predictionWidget.predictionSeconds = 5
+predictionWidget.boundryWarningMode = 1
+predictionWidget.warningType = 0
+predictionWidget.prevHomeDistance = 1
+local predictionPlays = 0
+_G.system.playTone = function(...)
+  predictionPlays = predictionPlays + 1
+  return true
+end
+test.updateWarnings(predictionWidget, 10.0, predictionLat, predictionLon)
+assert_true(predictionWidget.warningImminent, "prediction activates ahead state")
+assert_true(not predictionWidget.warningActive, "prediction does not mark boundary exceeded")
+assert_equal(predictionPlays, 1, "prediction alerts on entering ahead state")
+test.updateWarnings(predictionWidget, 10.5, predictionLat, predictionLon)
+assert_equal(predictionPlays, 1, "momentary prediction does not repeat while ahead")
+
+local crossedLat, crossedLon = test.bitmapLocalToLatLon(predictionWidget, 260, 136)
+predictionWidget.aircraftX = 260
+predictionWidget.aircraftY = 136
+test.updateWarnings(predictionWidget, 11.0, crossedLat, crossedLon)
+assert_true(predictionWidget.warningActive, "actual crossing replaces ahead state")
+assert_true(not predictionWidget.warningImminent, "actual crossing clears ahead state")
+assert_equal(predictionPlays, 1, "ahead to exceeded transition does not double alert")
+
+predictionWidget.aircraftX = 200
+predictionWidget.aircraftY = 136
+predictionWidget.lastHeading = 270
+test.updateWarnings(predictionWidget, 11.5, predictionLat, predictionLon)
+assert_true(not predictionWidget.wasWarningCondition, "leaving predicted path rearms warning")
+predictionWidget.lastHeading = 90
+test.updateWarnings(predictionWidget, 12.0, predictionLat, predictionLon)
+assert_equal(predictionPlays, 2, "re-entering predicted path alerts again")
+
+predictionWidget.warningType = 1
+predictionWidget.warningActive = false
+predictionWidget.warningImminent = false
+predictionWidget.wasExceeded = false
+predictionWidget.wasWarningCondition = false
+predictionWidget.lastWarningAt = nil
+predictionWidget.prevHomeDistance = 1
+predictionWidget.aircraftX = 200
+predictionWidget.aircraftY = 136
+predictionWidget.lastHeading = 90
+predictionPlays = 0
+test.updateWarnings(predictionWidget, 20.0, predictionLat, predictionLon)
+assert_equal(predictionPlays, 1, "constant prediction alerts on entry")
+predictionWidget.aircraftX = 260
+predictionWidget.aircraftY = 136
+test.updateWarnings(predictionWidget, 20.5, crossedLat, crossedLon)
+assert_equal(predictionPlays, 1, "constant ahead to exceeded transition keeps cadence")
+test.updateWarnings(predictionWidget, 21.9, crossedLat, crossedLon)
+assert_equal(predictionPlays, 1, "constant prediction waits for repeat interval")
+test.updateWarnings(predictionWidget, 22.1, crossedLat, crossedLon)
+assert_equal(predictionPlays, 2, "constant prediction repeats after interval")
+
 widget = test.create()
 widget.homeLat = 39.0
 widget.homeLon = -75.0
@@ -700,9 +975,29 @@ widget.distEnabled = true
 test.updateDistanceTexts(widget, 39.001, -75.0)
 assert_true(type(widget.distText) == "string" and widget.distText:find("Distance:", 1, true) ~= nil, "distance uses ground distance without altitude")
 assert_true(widget.distFromHome ~= nil and widget.distFromHome > 100, "ground distance is stored without altitude")
+local groundDistanceText = widget.lastGroundDistText
+widget.altSrc = {
+  value = function()
+    return 120
+  end,
+}
+test.updateDistanceTexts(widget, 39.001, -75.0)
+assert_true(widget.distText ~= groundDistanceText, "active distance uses 3d text when altitude is configured")
+assert_equal(widget.lastGroundDistText, groundDistanceText, "cached stale distance remains 2d ground text")
 widget.distEnabled = false
 test.updateDistanceTexts(widget, 39.001, -75.0)
 assert_true(widget.distText == nil, "distance disabled hides distance text")
+assert_equal(widget.lastGroundDistText, groundDistanceText, "distance toggle does not erase stale ground text")
+test.resetHome(widget)
+assert_true(widget.distText == nil and widget.lastGroundDistText == nil and widget.prevGroundDistance == nil,
+  "reset home clears active and stale distance state")
+
+widget = test.create()
+widget.homeLat = 39.0
+widget.homeLon = -75.0
+widget.distEnabled = true
+test.updateDistanceTexts(widget, 39.00001, -75.0)
+assert_equal(widget.lastGroundDistText, "Distance: 0 m", "ground jitter under five meters displays zero")
 
 widget = test.create()
 widget.boundryWarningMode = 2
@@ -783,7 +1078,10 @@ widget.coordsEnabled = true
 widget.gpsStale = true
 widget.lastCoordsText = "39.12345, -75.54321"
 widget.lastGroundDistText = "Distance: 12345.6 km"
+widget.distEnabled = true
+widget.distText = "Distance: 3D active"
 widget.warningActive = true
+widget.warningImminent = true
 widget.boundaryDirty = true
 local originalGetWindowSize = _G.lcd.getWindowSize
 _G.lcd.getWindowSize = function()
@@ -800,6 +1098,8 @@ assert_text_avoids_controls(compactStatus, compactRects, "compact status")
 assert_text_avoids_controls(compactWarning, compactRects, "compact warning")
 assert_text_avoids_controls(compactCoords, compactRects, "compact coordinates")
 assert_text_avoids_controls(compactDistance, compactRects, "compact stale distance")
+assert_true(not hasDrawText("Distance: 3D active"), "stale paint suppresses active 3d distance text")
+assert_true(not hasDrawText("Boundary ahead"), "exceeded overlay takes priority over ahead overlay")
 local originalRight = _G.RIGHT
 _G.RIGHT = nil
 resetDrawCalls()
@@ -810,6 +1110,15 @@ compactDistance = assert_shadowed_text("Distance: 12345.6 km", 4, 50, "compact s
 assert_text_avoids_controls(compactCoords, compactRects, "compact coordinates without RIGHT")
 assert_text_avoids_controls(compactDistance, compactRects, "compact stale distance without RIGHT")
 _G.RIGHT = originalRight
+
+widget.warningActive = false
+widget.warningImminent = true
+widget.distEnabled = false
+widget.distText = nil
+resetDrawCalls()
+registeredWidget.paint(widget)
+assert_shadowed_text("Boundary ahead", 4, 18, "prediction warning overlay")
+assert_shadowed_text("Distance: 12345.6 km", 4, 50, "stale distance remains visible when disabled")
 _G.lcd.getWindowSize = originalGetWindowSize
 
 ioReads["/scripts/BoundryMap/assets/maps/UATMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
