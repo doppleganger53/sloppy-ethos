@@ -295,6 +295,12 @@ def test_ethos_platform_scope_exists():
     assert "ethos-platform" in scopes
 
 
+def test_boundrymap_scope_exists():
+    entries = tool.collect_entries()
+    scopes = {item.scope for item in entries}
+    assert "boundrymap" in scopes
+
+
 def test_ethos_platform_reference_exists():
     path = tool.MEMORY_DIR / "notes" / "reference" / "ethos-platform" / "EthosPlatform.md"
     assert path.exists()

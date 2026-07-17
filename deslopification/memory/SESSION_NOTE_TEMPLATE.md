@@ -3,7 +3,7 @@
 ## Note Placement
 
 - Artifact: `{session|reference|summary|handoff}`
-- Scope: `{repo|memory|ethos-platform|sensorlist|ethos-events|handoff}`
+- Scope: `{repo|memory|ethos-platform|boundrymap|sensorlist|ethos-events|handoff}`
 - Concern: `{implementation|release|build|docs|testing|workflow|prompts|issue-admin|metadata}`
 - Store this file under:
   - `deslopification/memory/notes/{artifact}/{scope}/`

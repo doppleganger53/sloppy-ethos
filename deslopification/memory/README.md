@@ -57,8 +57,8 @@ When adding a new memory note:
    - Choose the most reusable scope that fits the note.
    - Use `ethos-platform` for reusable Ethos runtime/API/simulator knowledge,
      even when it was discovered during work on one script.
-   - Use script scopes such as `sensorlist` or `ethos-events` only for
-     script-local behavior, architecture, or release history.
+   - Use script scopes such as `boundrymap`, `sensorlist`, or `ethos-events`
+     only for script-local behavior, architecture, or release history.
    - If a session yields both reusable Ethos knowledge and script-local detail,
      prefer two short notes rather than one mixed note.
    - If creating a new scope folder, add a non-empty `.desc` file in that
