@@ -9,7 +9,7 @@ This document explains the purpose of the top-level folders and key root files i
 - Source for Ethos Lua projects.
 - Current active script directories are:
   - `scripts/SensorList/` (released)
-  - `scripts/BoundryMap/` (open/in progress, unreleased)
+  - `scripts/BoundryMap/` (released)
   - `scripts/SmartMapper/` (open/in progress, unreleased)
   - `scripts/ethos_events/` (released)
 - `Arduino FBus` is deferred work (issue [#84](https://github.com/doppleganger53/sloppy-ethos/issues/84))
