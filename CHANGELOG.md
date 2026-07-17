@@ -4,24 +4,54 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [BoundryMap v0.2.0] - 2026-07-17
+
+### Added
+
+- Introduced the first public installable release of `BoundryMap`, including GPS
+  map display, learned home and aircraft positions, optional coordinates and
+  2D/3D distance, touch-driven boundary drawing and deletion, per-map boundary
+  sidecars, diagnostics, and configurable visual, audio, and haptic warnings.
+- Added an optional selectable speed source and 1-to-10-second predictive
+  boundary warning. Existing configurations retain the previous behavior when
+  prediction is off.
+
 ### Changed
 
-- Bumped the BoundryMap script artifact to `0.1.8` with an optional selectable
-  speed source and 1-to-10-second predictive boundary warning, while preserving
-  the existing warning behavior when prediction is off.
+- Promoted the BoundryMap script artifact from development version `0.1.8` to
+  public minor version `0.2.0` after the Issue #102 documentation and Ethos
+  1.6.6 validation gate was completed.
 - Kept live 3D distance text separate from the retained 2D ground-distance
   recovery text shown when GPS becomes stale.
+- Kept the repository version at `1.0.3`; this entry tracks only the
+  BoundryMap script artifact.
 
 ### Fixed
 
 - Updated BoundryMap's reusable latitude/longitude query tables whenever the
   configured GPS source changes, including alternating widget instances,
   restored settings, and cleared sources.
+- Stabilized touch controls for the Ethos 1.6.6 WebSimulator's end-only and
+  duplicate touch-event sequences.
+
+### Compatibility
+
+- Validated the packaged script on Ethos 1.6.6 WebSimulator targets
+  `X20RS-FCC` and `X20PROAW-FCC`.
+- Ethos 26.1 compatibility work remains tracked in Issues #78, #79, and #80;
+  this release does not claim Ethos 26.1 support.
+- Built the public artifact from tracked repository content so private/local
+  flying-site maps and generated boundary sidecars are not included.
 
 ### Testing
 
 - `luac -p scripts/BoundryMap/main.lua`
 - `python -m pytest scripts/BoundryMap/tests -q`
+- `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py tests/test_memory_catalog_sync.py -q`
+- `python -m pytest -q`
+- `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/BoundryMap-X20RS-FCC-1.6.6.json --no-download --timeout-ms 20000`
+- `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/BoundryMap-X20PROAW-FCC-1.6.6.json --no-download --timeout-ms 20000`
+- `python tools/build.py --project BoundryMap --dist`
 
 ## [SensorList v1.0.1] - 2026-03-09
 

@@ -1,4 +1,4 @@
-# Current State (2026-07-16)
+# Current State (2026-07-17)
 
 This file is the high-signal memory entrypoint for cold-start sessions.
 Historical detail remains in individual session notes referenced from
@@ -51,8 +51,8 @@ Historical detail remains in individual session notes referenced from
   metadata, with path and metadata aligned.
 - Reusable Ethos runtime/API/simulator knowledge belongs under scope
   `ethos-platform`.
-- Script-local notes should use script scopes such as `sensorlist` or
-  `ethos-events`.
+- Script-local notes should use script scopes such as `boundrymap`,
+  `sensorlist`, or `ethos-events`.
 - If a change yields both reusable Ethos knowledge and script-local detail,
   prefer split notes over one mixed note.
 - Session compaction summaries use weekly rollups stored under:
@@ -129,10 +129,12 @@ Historical detail remains in individual session notes referenced from
 - BoundryMap keeps its shared latitude/longitude query tables synchronized with
   each widget instance's selected GPS source. Clearing a source no longer
   reuses the previous query name, and alternating widget instances are safe.
-- BoundryMap `0.1.8` keeps active 3D distance separate from the retained 2D
-  ground-distance text used during stale GPS recovery. Optional predictive
-  warnings project a fresh selected speed source along the derived GPS heading
-  for 1 to 10 seconds; prediction remains off for existing configurations.
+- BoundryMap release candidate `0.2.0` keeps active 3D distance separate from
+  the retained 2D ground-distance text used during stale GPS recovery.
+  Optional predictive warnings project a fresh selected speed source along the
+  derived GPS heading for 1 to 10 seconds; prediction remains off for existing
+  configurations. Its first public release package is prepared locally and
+  remains unpublished until the GitHub publish workflow can be completed.
 - SensorList clean-start smoke checks pass on X20S-FCC Ethos 1.6.4 and 1.6.6
   after a current clean deploy, so the prior X20S startup error is no longer a
   known active blocker.

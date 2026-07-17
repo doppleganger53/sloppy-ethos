@@ -33,7 +33,15 @@ RECENT_HIGH_SIGNAL_PER_CONCERN_LIMIT = 3
 RECENT_ETHOS_PLATFORM_LIMIT = 6
 
 ALLOWED_ARTIFACTS = {"session", "reference", "summary", "handoff"}
-ALLOWED_SCOPES = {"repo", "memory", "ethos-platform", "sensorlist", "ethos-events", "handoff"}
+ALLOWED_SCOPES = {
+    "repo",
+    "memory",
+    "ethos-platform",
+    "boundrymap",
+    "sensorlist",
+    "ethos-events",
+    "handoff",
+}
 ALLOWED_CONCERNS = {
     "implementation",
     "release",
