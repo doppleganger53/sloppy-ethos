@@ -129,12 +129,15 @@ Historical detail remains in individual session notes referenced from
 - BoundryMap keeps its shared latitude/longitude query tables synchronized with
   each widget instance's selected GPS source. Clearing a source no longer
   reuses the previous query name, and alternating widget instances are safe.
-- BoundryMap release candidate `0.2.0` keeps active 3D distance separate from
-  the retained 2D ground-distance text used during stale GPS recovery.
-  Optional predictive warnings project a fresh selected speed source along the
-  derived GPS heading for 1 to 10 seconds; prediction remains off for existing
-  configurations. Its first public release package is prepared locally and
-  remains unpublished until the GitHub publish workflow can be completed.
+- BoundryMap `0.2.0` is its first published script release, tagged
+  `BoundryMap-v0.2.0`, with asset `BoundryMap-0.2.0.zip`. The public artifact
+  was built from tracked repository content and excludes private/local maps
+  and generated boundary sidecars.
+- BoundryMap `0.2.0` is validated on Ethos 1.6.6 WebSimulator targets
+  `X20RS-FCC` and `X20PROAW-FCC`; it does not claim Ethos 26.1 compatibility.
+  It keeps active 3D distance separate from retained 2D ground-distance text
+  during stale GPS recovery, with optional predictive warnings remaining off
+  for existing configurations.
 - SensorList clean-start smoke checks pass on X20S-FCC Ethos 1.6.4 and 1.6.6
   after a current clean deploy, so the prior X20S startup error is no longer a
   known active blocker.

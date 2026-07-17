@@ -16,8 +16,8 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
 - Files: 143
-- Total size: 254,417 bytes
-- Total lines: 6,672
+- Total size: 255,759 bytes
+- Total lines: 6,696
 - Distribution by artifact:
   - session notes: 137
   - handoff/restart notes: 3
@@ -47,7 +47,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent High-Signal Notes (Auto-generated)
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
-- 2026-07-17 | release | boundrymap | [notes/session/boundrymap/SESSION_NOTES_2026-07-17_BOUNDRYMAP_V020_RELEASE.md](notes/session/boundrymap/SESSION_NOTES_2026-07-17_BOUNDRYMAP_V020_RELEASE.md) | # Session Notes 2026-07-17 - BoundryMap-v0.2.0 Release Preparation
+- 2026-07-17 | release | boundrymap | [notes/session/boundrymap/SESSION_NOTES_2026-07-17_BOUNDRYMAP_V020_RELEASE.md](notes/session/boundrymap/SESSION_NOTES_2026-07-17_BOUNDRYMAP_V020_RELEASE.md) | # Session Notes 2026-07-17 - BoundryMap-v0.2.0 Release
 - 2026-07-01 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md](notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md) | # Session Notes 2026-07-01 - Issue #102 BoundryMap Real WebSimulator Screenshots
 - 2026-07-01 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_FULLSCREEN_SCREENSHOTS.md](notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_FULLSCREEN_SCREENSHOTS.md) | # Session Notes 2026-07-01 - Issue #102 BoundryMap Fullscreen Screenshots
 - 2026-06-30 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-06-30_ISSUE_102_BOUNDRYMAP_README_GUIDE.md](notes/session/repo/SESSION_NOTES_2026-06-30_ISSUE_102_BOUNDRYMAP_README_GUIDE.md) | # Session Notes 2026-06-30 - Issue #102 BoundryMap README Guide
@@ -216,4 +216,4 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-07-01 | session | repo | docs | [notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_FULLSCREEN_SCREENSHOTS.md](notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_FULLSCREEN_SCREENSHOTS.md) | # Session Notes 2026-07-01 - Issue #102 BoundryMap Fullscreen Screenshots |
 | 2026-07-01 | session | repo | testing | [notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md](notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md) | # Session Notes 2026-07-01 - Issue #102 BoundryMap Real WebSimulator Screenshots |
 | 2026-07-16 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-07-16_UNMILESTONED_ISSUE_CLOSEOUT.md](notes/session/repo/SESSION_NOTES_2026-07-16_UNMILESTONED_ISSUE_CLOSEOUT.md) | # Session Notes 2026-07-16 - Unmilestoned issue closeout |
-| 2026-07-17 | session | boundrymap | release | [notes/session/boundrymap/SESSION_NOTES_2026-07-17_BOUNDRYMAP_V020_RELEASE.md](notes/session/boundrymap/SESSION_NOTES_2026-07-17_BOUNDRYMAP_V020_RELEASE.md) | # Session Notes 2026-07-17 - BoundryMap-v0.2.0 Release Preparation |
+| 2026-07-17 | session | boundrymap | release | [notes/session/boundrymap/SESSION_NOTES_2026-07-17_BOUNDRYMAP_V020_RELEASE.md](notes/session/boundrymap/SESSION_NOTES_2026-07-17_BOUNDRYMAP_V020_RELEASE.md) | # Session Notes 2026-07-17 - BoundryMap-v0.2.0 Release |

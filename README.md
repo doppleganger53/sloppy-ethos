@@ -22,8 +22,8 @@ Ethos Lua script workspace. Current active script directories include
 ## Script Inventory and 26.1 Compatibility Status
 
 - `SensorList` (released): active and tracked in the published release list.
-- `BoundryMap` (in progress): active, local development present under
-  `scripts/BoundryMap/`; not released yet.
+- `BoundryMap` (released): active and tracked in the published release list;
+  release `0.2.0` is validated on Ethos 1.6.6.
 - `SmartMapper` (in progress): active, implemented for issue [#45](https://github.com/doppleganger53/sloppy-ethos/issues/45),
   but not yet part of the published script release list.
 - `ethos_events` (released): active utility script with a published release asset.
@@ -47,10 +47,11 @@ This section tracks currently published single-script GitHub release assets.
 Unreleased scripts may exist under `scripts/` without appearing here yet.
 
 - [Download SensorList (v1.0.1)](https://github.com/doppleganger53/sloppy-ethos/releases/download/SensorList-v1.0.1/SensorList-1.0.1.zip)
+- [Download BoundryMap (v0.2.0)](https://github.com/doppleganger53/sloppy-ethos/releases/download/BoundryMap-v0.2.0/BoundryMap-0.2.0.zip)
 - [Download ethos_events (v0.1.0)](https://github.com/doppleganger53/sloppy-ethos/releases/download/ethos_events-v0.1.0/ethos_events-0.1.0.zip)
 
-BoundryMap and SmartMapper are intentionally absent from this section until
-their first release artifacts are published.
+SmartMapper is intentionally absent from this section until its first release
+artifact is published.
 
 
 ## Visual Overview
