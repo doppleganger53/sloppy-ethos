@@ -73,8 +73,22 @@
   - result: success; Ethos `1.6.6` `X20PROAW-FCC` started with no errors.
     The informational `reloadScripts_unavailable` message is expected for this
     runtime.
-- Tracked-only artifact audit and checksum:
-  - result: pending in this local preparation session.
+- `git archive 1cd0cdb2b92ae7eed3f50d71727435acc6395b71` followed by
+  `python tools/build.py --project BoundryMap --dist` in the extracted archive:
+  - result: passed; built the install ZIP from the exact committed tracked
+    snapshot rather than from the working tree.
+  - artifact:
+    `dist/release/BoundryMap-v0.2.0/BoundryMap-0.2.0.zip`
+- ZIP entry and embedded-version audit:
+  - result: passed; 20 entries, embedded version `0.2.0`, all required files
+    present, and zero forbidden entries.
+  - exclusions verified: local map folders, `*.boundries.json`, tests,
+    `build.json`, Python caches, `GuideField`, and `WJRC` content.
+  - size: `133153` bytes.
+  - SHA-256:
+    `CCE6FA9248AD52C347EC2E08BE1315FFA31441C395BEE6ED12654BBA799A5843`.
+- `python tools/write_release_notes.py --version 0.2.0 --project BoundryMap --output dist/release/BoundryMap-v0.2.0/release-notes.md`
+  - result: passed; generated the release body from the dated changelog entry.
 
 ## Follow-up items
 
