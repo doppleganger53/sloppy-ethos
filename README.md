@@ -197,9 +197,13 @@ luac -p scripts/SensorList/main.lua
 - Use `.github/PULL_REQUEST_TEMPLATE.md` when opening PRs.
 - See `CODE_OF_CONDUCT.md` for collaboration expectations.
 - See `SECURITY.md` for responsible vulnerability reporting.
-- Start session-memory context with `deslopification/memory/README.md`.
-- Use `deslopification/memory/CATALOG.md` for full historical note lookup.
-- Workflow/process guidance is intentionally mutable; issue-linked workflow updates must keep `AGENTS.md`, `CONTRIBUTING.md`, and `docs/DEVELOPMENT.md` synchronized.
+- Follow [AGENTS.md](AGENTS.md) for canonical operational policy and the
+  [validation matrix](AGENTS.md#validation-matrix).
+- Consult the [current-state index](deslopification/memory/CURRENT_STATE.md)
+  only when prior decisions or unresolved work matter; search the linked
+  catalog for relevant notes.
+- Follow [documentation and memory sync](AGENTS.md#documentation-and-memory-sync)
+  for durable decisions, reusable findings, and handoffs.
 - Parent-workspace policy changes live outside this repo; repo behavior,
   validation, release, and memory work still happens inside `sloppy-ethos/`.
 

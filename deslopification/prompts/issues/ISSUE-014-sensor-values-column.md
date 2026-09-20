@@ -21,8 +21,8 @@ Add an optional sensor-value display mode to `SensorList`:
 - `scripts/SensorList/main.lua`
 - `scripts/SensorList/README.md`
 - `docs/SensorList/SENSORLIST_ARCHITECTURE.md`
-- `tests/lua/test_sensorlist.lua`
-- `tests/test_sensorlist_widget.py`
+- `scripts/SensorList/tests/lua/test_sensorlist.lua`
+- `scripts/SensorList/tests/test_sensorlist_widget.py`
 
 ## Branch/Worktree Gate (Required Before Editing)
 
@@ -86,7 +86,7 @@ Add an optional sensor-value display mode to `SensorList`:
 ## Validation (Required)
 
 - `luac -p scripts/SensorList/main.lua`
-- `python -m pytest tests/test_sensorlist_widget.py -q`
+- `python -m pytest scripts/SensorList/tests/test_sensorlist_widget.py -q`
 - If docs change:
   `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
 

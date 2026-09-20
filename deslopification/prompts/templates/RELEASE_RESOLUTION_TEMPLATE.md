@@ -28,7 +28,8 @@ scope clarity, explicit gate handling, and auditable validation output.
 
 ## Mandatory Startup Workflow
 
-1. Read latest relevant note in `deslopification/memory/`.
+1. Follow [AGENTS.md](../../../AGENTS.md). Consult relevant project notes only
+   when prior release decisions or unresolved gates affect this release.
 2. Check branch/worktree state:
    - `git branch --show-current`
    - `git status --short --branch`
@@ -81,13 +82,12 @@ scope clarity, explicit gate handling, and auditable validation output.
 Run the minimum required checks for this release action:
 
 1. If `{RELEASE_KIND}` is `repo`:
-   - run validation based on touched files (see `AGENTS.md` matrix)
-   - if scope is broad/cross-cutting, run `python -m pytest -q`
+   - run checks for touched files from the [validation matrix](../../../AGENTS.md#validation-matrix)
 2. If `{RELEASE_KIND}` is `script`:
    - `python tools/build.py --project {PROJECT_NAME} --dist`
    - confirm expected artifact exists:
      - `dist/{PROJECT_NAME}-{SCRIPT_VERSION}.zip`
-   - run validation based on touched files (see `AGENTS.md` matrix)
+   - run checks for touched files from the [validation matrix](../../../AGENTS.md#validation-matrix)
 3. Prefer `--notes-file` when publishing release notes to avoid truncation risk.
 4. Generate `{RELEASE_NOTES_FILE}` from `CHANGELOG.md` before publishing:
    - For `repo` releases:
@@ -131,7 +131,10 @@ Return:
 
 ## Session Memory Sync
 
-Record release work in `deslopification/memory/notes/{artifact}/{scope}/` with explicit `Artifact`, `Scope`, and `Concern` metadata:
+Follow [documentation and memory sync](../../../AGENTS.md#documentation-and-memory-sync).
+Published releases and unresolved release gates are durable context.
+
+For that record, include:
 
 - release kind and scope boundaries
 - blocking/out-of-scope gate issues

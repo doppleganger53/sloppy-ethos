@@ -2,17 +2,13 @@
 
 Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
-## Repository Goals And Mutable Workflow Model
+## Repository Goals And Policy Maintenance
 
-- Repository goals:
-  - Build practical Ethos utilities and scripts.
-  - Keep Lua contribution workflow approachable for non-experts.
-  - Prioritize repeatable, low-maintenance workflows that help contributors spend more time flying and less time on process overhead.
-- Workflow model is intentionally mutable:
-  - Agent workflow/process metadata is allowed to evolve when repository goals, tooling, or contributor needs change.
-  - Workflow mutations must be issue-linked, documented, and kept consistent across `AGENTS.md`, `CONTRIBUTING.md`, `README.md`, and `docs/DEVELOPMENT.md` in the same session.
-- Stability rule:
-  - Treat this file as the operational policy source of truth for agent execution guardrails; when policy changes, synchronize related contributor docs immediately.
+- Build practical Ethos utilities with an approachable, repeatable Lua workflow.
+- This file is the canonical operational policy and validation matrix.
+- Workflow changes remain issue-linked and documented. Update this policy and
+  affected links or command examples together; contributor docs and prompts
+  reference it instead of repeating policy wording.
 
 ## Priority And Scope
 
@@ -48,24 +44,21 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
 ## Required Startup Workflow
 
-1. If launched from the parent `EthosLua` workspace, `cd sloppy-ethos` before
-   running repository commands.
-2. Read memory entrypoint files:
-   - `deslopification/memory/README.md`
-   - `deslopification/memory/CURRENT_STATE.md`
-3. Use `deslopification/memory/CATALOG.md` to open only the latest relevant
-   note(s) for the current task.
-4. Determine session type:
-   - issue-linked work (GitHub issue URL/number present, or session driven by
-     `deslopification/prompts/issues/*.md`)
-   - non-issue work
-5. For issue-linked work, run preflight before editing:
+1. If launched from the parent `EthosLua` workspace, enter `sloppy-ethos/`
+   before running repository commands. Check `git status --short --branch`.
+2. Determine whether the task is issue-linked (a GitHub issue number/URL or a
+   prompt under `deslopification/prompts/issues/`) or non-issue work. Follow
+   the [session branch gate](#session-branch-gate).
+3. For issue-linked work, run preflight before editing:
    - `python tools/session_preflight.py --mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {short-slug}`
-6. Check branch/worktree state: `git status --short --branch`.
-7. Confirm active package version from `VERSION`.
-8. Before introducing or changing workflow commands, cross-check command docs in:
-   - `README.md`
-   - `docs/DEVELOPMENT.md`
+4. Read linked guidance when its trigger applies. Consult the
+   [current-state index](deslopification/memory/CURRENT_STATE.md) and search
+   [CATALOG.md](deslopification/memory/CATALOG.md) only when prior decisions
+   or unresolved work matter; open matching references or notes, not the
+   complete history. Verify version-dependent facts against current evidence.
+5. Check `VERSION` and affected script versions when the task affects build or
+   release state. When changing workflow commands, check the relevant examples
+   in [README.md](README.md) and [DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Validation Policy
 
@@ -80,7 +73,8 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
 ### Validation Matrix
 
-- Documentation changes (`README.md`, `docs/`, `CONTRIBUTING.md`, PR/issue templates):
+- Documentation or guidance changes (`AGENTS.md`, `README.md`, `docs/`,
+  `CONTRIBUTING.md`, PR/issue templates):
   - `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
 - Lua widget behavior changes (`scripts/**/*.lua`):
   - `luac -p scripts/SensorList/main.lua`
@@ -90,6 +84,10 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 - Build/tooling changes (`tools/`, Python build/test harness):
   - `python -m pytest tests/test_build_py.py -q`
   - For simulator harness changes, also run `python -m pytest tests/test_sim_harness.py -q`
+- Formatting changes:
+  - `stylua --config-path tools/config/stylua.toml scripts`
+- Packaging changes: build the affected package using
+  [Core Commands](docs/DEVELOPMENT.md#core-commands) and inspect its contents.
 - Broad or cross-cutting changes:
   - `python -m pytest -q`
 
@@ -102,30 +100,19 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 
 ## Documentation And Memory Sync
 
-- When workflow, behavior, or contributor process changes, update docs in the same session.
-- Record meaningful work in `deslopification/memory/` using:
-  - what changed
-  - validation run(s)
-  - follow-up items
-- Store new memory notes under:
-  - `deslopification/memory/notes/{artifact}/{scope}/`
-  - examples:
-    - `notes/session/{scope}/SESSION_NOTES_YYYY-MM-DD_...md`
-    - `notes/reference/{scope}/{Topic}.md`
-    - `notes/handoff/handoff/HANDOFF_YYYY-MM-DD...md`
-- Every note must declare explicit `Artifact`, `Scope`, and `Concern`
-  metadata, and the path is the source of truth for `Artifact` and `Scope`.
-- Prefer the most reusable `scope` that fits the note.
-- Use `ethos-platform` for reusable Ethos runtime/API/simulator knowledge,
-  even when discovered while working on one script.
-- Use script scopes such as `sensorlist` and `ethos-events` only for
-  script-local behavior, architecture, or release history.
-- If a session yields both reusable Ethos knowledge and script-local detail,
-  split it into two short notes when both retrieval paths matter.
-- Keep memory indexes synchronized when adding notes:
-  - run `python tools/update_memory_catalog.py`
-  - update `deslopification/memory/CURRENT_STATE.md` when durable workflow or
-    behavior decisions change
+- Update affected user-facing behavior and command documentation in the same
+  session; link to this policy rather than maintaining parallel copies.
+- Preserve existing notes. Add a project-memory note for a durable decision,
+  reusable finding, or unresolved handoff; routine activity and command
+  transcripts do not require a new historical note.
+- When a note is warranted, record what changed, evidence/validation, and
+  follow-up items using the [memory guide](deslopification/memory/README.md)
+  and [note template](deslopification/memory/SESSION_NOTE_TEMPLATE.md).
+- Place notes under `deslopification/memory/notes/{artifact}/{scope}/` with
+  matching `Artifact`, `Scope`, and `Concern` metadata. Use `ethos-platform`
+  for reusable runtime/API/simulator findings and script scopes for local facts.
+- After adding notes, run `python tools/update_memory_catalog.py`. Update
+  the current-state index only when a durable retrieval pointer changes.
 
 ## Bug Issue Hygiene
 

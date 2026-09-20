@@ -1,13 +1,10 @@
 # Development Notes
 
-## Repository Goals And Workflow Mutability
+## Repository Policy
 
-- Repository goals:
-  - Build practical Ethos utilities and scripts.
-  - Keep Lua contribution workflow approachable for non-experts.
-  - Prioritize repeatable, low-maintenance workflows that reduce process overhead.
-- Workflow/process guidance is intentionally mutable and can evolve through issue-linked updates.
-- `AGENTS.md` is the operational policy source of truth for agent execution guardrails; keep `README.md`, `CONTRIBUTING.md`, and this file synchronized when workflow policy changes.
+[AGENTS.md](../AGENTS.md) is the canonical operational policy. Use its
+[validation matrix](../AGENTS.md#validation-matrix) for the files changed;
+this document describes tooling and release procedures.
 
 ## Prerequisites
 
@@ -48,12 +45,9 @@
 
 ## Debugging Session Rule
 
-- When a session is actively debugging simulator-visible Lua behavior, run the automated WebSimulator harness when it supports the target, then deploy the touched script before closing out the session when live Ethos Suite state also needs to be updated.
-- For SensorList debugging, the minimum closeout command is:
-  `python tools/build.py --project SensorList --deploy`
-- Add `--dist` only when you also need a fresh install ZIP; deploy is the required debugging-session step.
-- For repeatable SensorList simulator smoke coverage, run:
-  `python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1`
+Follow the [validation policy](../AGENTS.md#validation-policy) for simulator
+smoke and live deploy requirements. The relevant commands are listed above;
+use `--dist` only when a fresh install ZIP is also needed.
 
 ## Configuring Simulator Path
 
@@ -107,22 +101,12 @@
 
 ## Session Memory Navigation
 
-- Memory entrypoint: `deslopification/memory/README.md`.
-- Current high-signal context: `deslopification/memory/CURRENT_STATE.md`.
-- Full historical index: `deslopification/memory/CATALOG.md`.
-- Reusable Ethos reference:
-  `deslopification/memory/notes/reference/ethos-platform/EthosPlatform.md`.
-- Weekly rollup example for compact history review:
-  `deslopification/memory/notes/summary/memory/SUMMARY_2026-02-21_to_2026-02-27.md`.
-- When adding notes, follow `deslopification/memory/SESSION_NOTE_TEMPLATE.md`.
-- New notes are stored under:
-  `deslopification/memory/notes/{artifact}/{scope}/`.
-- Notes must declare explicit `Artifact`, `Scope`, and `Concern` metadata.
-- Use `ethos-platform` for reusable Ethos runtime/API/simulator knowledge.
-- Use script scopes such as `sensorlist` or `ethos-events` only for
-  script-local behavior or release history.
-- If a session yields both reusable Ethos knowledge and script-local detail,
-  prefer two short notes over one mixed note.
+Use [documentation and memory sync](../AGENTS.md#documentation-and-memory-sync)
+to decide when a note is useful. When prior decisions or unresolved work are
+relevant, consult the [current-state index](../deslopification/memory/CURRENT_STATE.md)
+and search [CATALOG.md](../deslopification/memory/CATALOG.md) by topic.
+The [memory guide](../deslopification/memory/README.md) describes note placement
+and catalog maintenance; historical notes need not be loaded for routine work.
 
 ## Simulator Tips
 
@@ -136,7 +120,7 @@
 - Run all repo-level and script-local tests: `python -m pytest -q`.
 - Run one script's tests directly, for example: `python -m pytest scripts/SensorList/tests -q`.
 - Place script-owned pytest wrappers and Lua harnesses under `scripts/{ProjectName}/tests/`; keep generic tooling and documentation contracts under the root `tests/` folder.
-- For any documentation updates, run docs contract checks: `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`.
+- Select required checks from the [validation matrix](../AGENTS.md#validation-matrix).
 - Use the VS Code Testing view to run/discover tests and trigger coverage once dependencies are installed for the selected interpreter.
 
 ## Lua Coverage In VS Code
@@ -174,24 +158,10 @@ This repository uses `main` as the only long-lived integration branch and aligns
 
 ### Branch Roles And Naming
 
-- `main` is the only long-lived branch.
-- All issue work uses short-lived branches created from the latest `main`.
-- Branch naming conventions:
-  - `feature/{issue-number}-{short-slug}` for enhancements.
-  - `fix/{issue-number}-{short-slug}` for defects.
-  - `docs/{issue-number}-{short-slug}` for docs/process-only changes.
-  - `chore/{issue-number}-{short-slug}` for maintenance/tooling work.
-- Release-prep work uses short-lived branches created from `main`:
-  - repo releases use `release/v{VERSION}`
-  - script releases use `release/{ProjectName}-v{VERSION}`
-- Every PR targets `main` and should include linked-closing keywords when applicable (for example, `Closes #29`).
-- Delete merged short-lived branches after PR merge.
-
-### PR Merge Strategy
-
-- Default merge method for normal issue PRs (`feature/`, `fix/`, `docs/`, `chore/`) is `squash`.
-- Use `merge commit` for release-prep PRs (`release/v{VERSION}` or `release/{ProjectName}-v{VERSION}`) and lineage-sensitive PRs where preserving branch commit structure is intentional.
-- `rebase` merge is not the repository default.
+Follow the [branching conventions](../AGENTS.md#branching-conventions),
+[session branch gate](../AGENTS.md#session-branch-gate), and
+[PR merge strategy](../AGENTS.md#pr-merge-strategy). Delete merged short-lived
+branches after PR merge.
 
 ### Version Bump Timing
 
@@ -232,7 +202,7 @@ This repository uses `main` as the only long-lived integration branch and aligns
    - `git push -u origin {RELEASE_BRANCH}`
    - `git pull --ff-only origin {RELEASE_BRANCH}`
    - `git rev-list --left-right --count origin/{RELEASE_BRANCH}...{RELEASE_BRANCH}`
-4. Validate according to touched files (see `AGENTS.md` validation matrix).
+4. Validate according to the [validation matrix](../AGENTS.md#validation-matrix).
 5. Generate the standalone release body from the matching `CHANGELOG.md` entry with `tools/write_release_notes.py` (use `--version`, plus `--project` for script releases, and write to a temporary `--output` file), then reuse that file with `gh release create --notes-file`.
 6. Open and merge a release-prep PR from `{RELEASE_BRANCH}` into `main`.
 7. Sync `main`, tag, and push:

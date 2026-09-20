@@ -22,7 +22,15 @@ REQUIRED_EXTERNAL_LINKS = (
     ("Visual Studio Code", "https://code.visualstudio.com/"),
     ("OpenAI Codex", "https://openai.com/codex/"),
 )
-MUTABLE_WORKFLOW_PHRASE = "Workflow/process guidance is intentionally mutable"
+AGENTS_PATH = REPO_ROOT / "AGENTS.md"
+PROMPTS_ROOT = REPO_ROOT / "deslopification" / "prompts"
+LIVE_GUIDANCE_FILES = [
+    AGENTS_PATH,
+    REPO_ROOT / "deslopification" / "memory" / "README.md",
+    REPO_ROOT / "deslopification" / "memory" / "CURRENT_STATE.md",
+    *sorted((PROMPTS_ROOT / "templates").glob("*.md")),
+    *sorted((PROMPTS_ROOT / "issues").glob("*.md")),
+]
 
 
 def _read(path: Path) -> str:
@@ -238,11 +246,54 @@ def test_contributing_has_workflow_section():
     assert "## Workflow" in _read(CONTRIBUTING_PATH)
 
 
-def test_mutable_workflow_policy_is_documented_across_agent_and_contributor_docs():
-    assert MUTABLE_WORKFLOW_PHRASE in _read(README_PATH)
-    assert MUTABLE_WORKFLOW_PHRASE in _read(DEVELOPMENT_PATH)
-    assert MUTABLE_WORKFLOW_PHRASE in _read(CONTRIBUTING_PATH)
-    assert "Workflow model is intentionally mutable" in _read(REPO_ROOT / "AGENTS.md")
+@pytest.mark.parametrize(
+    "path",
+    [
+        README_PATH,
+        DEVELOPMENT_PATH,
+        CONTRIBUTING_PATH,
+        PROMPTS_ROOT / "templates" / "ISSUE_RESOLUTION_TEMPLATE.md",
+        PROMPTS_ROOT / "templates" / "RELEASE_RESOLUTION_TEMPLATE.md",
+    ],
+)
+def test_workflow_entrypoints_link_to_canonical_validation(path: Path):
+    targets = [target for _, target in _extract_markdown_links(_read(path))]
+    canonical_links = [
+        target
+        for target in targets
+        if (path.parent / target.split("#", 1)[0]).resolve() == AGENTS_PATH.resolve()
+    ]
+    assert canonical_links, f"Missing canonical policy link in {path}"
+    assert any(target.endswith("#validation-matrix") for target in canonical_links), (
+        f"Missing canonical validation link in {path}"
+    )
+
+
+@pytest.mark.parametrize("path", LIVE_GUIDANCE_FILES)
+def test_live_guidance_local_links_and_sections_exist(path: Path):
+    for label, target in _extract_markdown_links(_read(path)):
+        if urlparse(target).scheme:
+            continue
+        local_path, _, anchor = target.partition("#")
+        destination = (path.parent / local_path).resolve() if local_path else path
+        assert destination.is_file(), f"Broken link in {path}: [{label}]({target})"
+        if anchor:
+            headings = re.findall(r"^#{1,6}\s+(.+)$", _read(destination), re.MULTILINE)
+            anchors = {
+                re.sub(r"[^\w\- ]", "", heading.lower()).replace(" ", "-")
+                for heading in headings
+            }
+            assert anchor in anchors, f"Missing section in {path}: [{label}]({target})"
+
+
+@pytest.mark.parametrize("path", LIVE_GUIDANCE_FILES)
+def test_live_guidance_concrete_source_and_test_paths_exist(path: Path):
+    # Inspect references only: never execute deployment/release commands or
+    # treat completed issue prompts as current instructions. Placeholder paths
+    # deliberately do not match; concrete examples must resolve in this checkout.
+    refs = re.findall(r"\b(?:scripts|tests|tools)/[\w./-]+\.(?:py|lua|json)\b", _read(path))
+    for ref in refs:
+        assert (REPO_ROOT / ref).is_file(), f"Missing live guidance path in {path}: {ref}"
 
 
 def test_vscode_pytest_enabled_in_repo_settings():

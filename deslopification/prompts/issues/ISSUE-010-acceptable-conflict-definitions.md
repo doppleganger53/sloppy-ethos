@@ -19,8 +19,8 @@ known-safe duplicates are de-emphasized without being hidden.
 - `docs/SensorList/SENSORLIST_ARCHITECTURE.md`
 - `deslopification/prompts/SensorList-Roadmap-AcceptableConflicts.md`
 - `scripts/SensorList/main.lua`
-- `tests/lua/test_sensorlist.lua`
-- `tests/test_sensorlist_widget.py`
+- `scripts/SensorList/tests/lua/test_sensorlist.lua`
+- `scripts/SensorList/tests/test_sensorlist_widget.py`
 
 ## Branch/Worktree Gate (Required Before Editing)
 
@@ -62,7 +62,7 @@ known-safe duplicates are de-emphasized without being hidden.
 ## Validation (Required)
 
 - `luac -p scripts/SensorList/main.lua`
-- `python -m pytest tests/test_sensorlist_widget.py -q`
+- `python -m pytest scripts/SensorList/tests/test_sensorlist_widget.py -q`
 
 ## Done Criteria
 

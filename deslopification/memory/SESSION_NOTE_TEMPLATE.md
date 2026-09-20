@@ -34,7 +34,7 @@
 
 - {none | actionable item with owner/context}
 
-## Current State Sync
+## Current-State Index
 
-- `CURRENT_STATE.md` updated: {yes|no}
-- If `no`, reason: {not a durable workflow/behavior change}
+- Retrieval pointer in `CURRENT_STATE.md` updated: {yes|no}
+- If `no`, reason: {existing pointers cover this topic}

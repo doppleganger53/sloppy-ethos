@@ -19,31 +19,13 @@ Replace all `{...}` placeholders before execution.
 Implement issue `{ISSUE_NUMBER}` with a root-cause-first approach, scoped to
 the stated acceptance criteria and repository policies.
 
-## Operating Mode
+## Operating Policy And Startup
 
-You are Codex working directly in this repository.
-
-- If launched from the parent `EthosLua` workspace, first read the parent
-  `AGENTS.MD`, then enter `sloppy-ethos/` before applying this template.
-- Keep changes focused on this issue only.
-- Preserve existing behavior unless this issue explicitly changes behavior.
-- Prefer minimal, high-signal diffs over broad refactors.
-- If uncertain, inspect code/tests/history before editing.
-
-## Mandatory Startup Workflow
-
-1. Confirm the working directory is the `sloppy-ethos` repository, not the
-   parent `EthosLua` workspace or a sibling reference checkout.
-2. Read memory entrypoint files:
-   - `deslopification/memory/README.md`
-   - `deslopification/memory/CURRENT_STATE.md`
-3. Use `deslopification/memory/CATALOG.md` to load only task-relevant note(s).
-4. Run `git status --short --branch`.
-5. Confirm root version from `VERSION`.
-6. Cross-check workflow commands in:
-   - `README.md`
-   - `docs/DEVELOPMENT.md`
-7. Review issue body/comments and linked artifacts.
+Follow [AGENTS.md](../../../AGENTS.md) and its
+[startup workflow](../../../AGENTS.md#required-startup-workflow).
+Read the issue body/comments and linked artifacts. Consult relevant project
+memory only when prior decisions or unresolved work affect this issue.
+The task-specific context and acceptance criteria below supplement that policy.
 
 ## Branch And Worktree Gate (Required Before Editing)
 
@@ -100,7 +82,8 @@ Document the runtime interaction contract before editing:
 2. Implement the smallest coherent change-set.
 3. Add/update tests for new behavior and regressions.
 4. Update docs only when behavior/workflow changes.
-5. Record session notes in `deslopification/memory/notes/{artifact}/{scope}/` using explicit `Artifact`, `Scope`, and `Concern` metadata.
+5. Apply [documentation and memory sync](../../../AGENTS.md#documentation-and-memory-sync)
+   when the result is durable or needed for handoff.
 
 ## Implementation Constraints
 
@@ -119,25 +102,12 @@ Document the runtime interaction contract before editing:
   user request explicitly asks to update them. Before copying reference code,
   docs, or assets, verify license and attribution requirements.
 
-## Validation Matrix (Required)
+## Validation (Required)
 
-Choose the minimum required checks based on touched files:
-
-- Documentation-only changes:
-  - `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
-- Lua widget/script behavior changes (`scripts/**/*.lua`):
-  - `luac -p scripts/SensorList/main.lua`
-  - `python -m pytest tests/test_sensorlist_widget.py -q`
-- Build/tooling changes (`tools/`, Python harness):
-  - `python -m pytest tests/test_build_py.py -q`
-- Broad/cross-cutting changes:
-  - `python -m pytest -q`
-
-If a required command times out/hangs:
-
-1. rerun once with higher timeout;
-2. if still failing, report exact command and failure mode;
-3. do not claim validation passed.
+Run the checks for touched files in the
+[canonical validation matrix](../../../AGENTS.md#validation-matrix).
+Apply its [failure handling](../../../AGENTS.md#timeout-and-failure-handling)
+and report commands with actual pass/fail results.
 
 ## Manual Acceptance Scenarios (Required For UI/Input Changes)
 
@@ -148,7 +118,8 @@ Define and execute at least one scenario for each bucket:
 - Regression prevention behavior: `{MANUAL_REGRESSION_1}`
 - Navigation/system interoperability behavior: `{MANUAL_NAVIGATION_1}`
 
-Record results in session notes.
+Report results in the delivery summary; retain a note when the
+[documentation and memory policy](../../../AGENTS.md#documentation-and-memory-sync) applies.
 
 ## Delivery Contract
 
@@ -167,13 +138,11 @@ Return:
 ## Quality Gates
 
 - Acceptance criteria satisfied.
-- Required validation completed in this session.
-- `.gitignore`/workspace reviewed for accidental sensitive artifacts.
-- Security concerns (PII/PHI/secrets/unsafe config) explicitly called out.
-- Memory sync completed:
-  - new session note added
-  - `python tools/update_memory_catalog.py` executed (or `--check` in CI/tests)
-  - `deslopification/memory/CURRENT_STATE.md` updated when durable decisions changed
+- [Definition of done](../../../AGENTS.md#definition-of-done-before-commitpush)
+  satisfied, including validation and sensitive-artifact review.
+- Durable findings or unresolved handoffs recorded under the
+  [memory policy](../../../AGENTS.md#documentation-and-memory-sync), with the
+  catalog regenerated if a note was added.
 
 ## Best-Practice Anchors
 

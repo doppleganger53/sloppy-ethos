@@ -1,25 +1,26 @@
 # Memory Operating Guide
 
-This folder is append-only session memory for repository workflow and delivery
-history. The goal is fast cold-start context without losing auditability.
+This folder preserves project decisions and delivery history. The canonical
+[memory policy](../../AGENTS.md#documentation-and-memory-sync) defines when to
+read or add notes; routine tasks do not require a memory preload or new note.
 
-## Cold-Start Path (Default)
+## Retrieve Relevant Context
 
-1. Read [CURRENT_STATE.md](CURRENT_STATE.md).
-2. Use [CATALOG.md](CATALOG.md) to select only task-relevant historical notes.
-3. Read reusable Ethos references first when the task touches Ethos runtime
-   behavior (for example,
-   [notes/reference/ethos-platform/EthosPlatform.md](notes/reference/ethos-platform/EthosPlatform.md)).
-4. Read script-specific references only when the task narrows to that script
-   (for example,
-   [notes/reference/sensorlist/SensorList.md](notes/reference/sensorlist/SensorList.md)).
-5. For compact historical context by week, read summary rollups (for example,
-   [notes/summary/memory/SUMMARY_2026-02-21_to_2026-02-27.md](notes/summary/memory/SUMMARY_2026-02-21_to_2026-02-27.md)).
+1. If prior decisions or unresolved work matter, use [CURRENT_STATE.md](CURRENT_STATE.md)
+   for a topic pointer, or search [CATALOG.md](CATALOG.md) by topic, Scope, and Concern.
+2. Read only matching current references or the latest relevant note. Check
+   changing facts against the source/version/runtime being used.
+3. For Ethos runtime behavior, consult the concise
+   [platform reference](notes/reference/ethos-platform/EthosPlatform.md);
+   read a [script reference](notes/reference/sensorlist/SensorList.md) only
+   when that script is in scope.
+4. Read weekly summaries or archived snapshots only when historical context is
+   needed. They preserve prior evidence, not current policy.
 
 ## File Roles
 
 - `CURRENT_STATE.md`:
-  high-signal current decisions and active workflow state.
+  short topic index pointing to current sources and relevant historical evidence.
 - `CATALOG.md`:
   note-artifact index (`notes/**`) with `Date`/`Artifact`/`Scope`/`Concern`,
   plus auto-generated recent high-signal and Ethos-platform shortlists and a
@@ -46,7 +47,7 @@ history. The goal is fast cold-start context without losing auditability.
 - Do not delete historical notes without a replacement summary file.
 - Prefer adding/maintaining summary+index artifacts instead of rewriting old notes.
 - Keep new session notes concise and scoped to one coherent change-set.
-- Update `CURRENT_STATE.md` only for durable behavior/workflow decisions.
+- Update `CURRENT_STATE.md` only when a durable retrieval pointer changes.
 
 ## Maintenance Checklist
 
@@ -65,7 +66,7 @@ When adding a new memory note:
      folder.
 2. Regenerate `CATALOG.md`:
    - `python tools/update_memory_catalog.py`
-3. If the change alters durable workflow/behavior, update `CURRENT_STATE.md`.
+3. If the change needs a different retrieval pointer, update `CURRENT_STATE.md`.
 4. If the change affects the compact weekly process narrative, update the
    relevant `notes/summary/memory/SUMMARY_YYYY-MM-DD_to_YYYY-MM-DD.md`
    rollup.
