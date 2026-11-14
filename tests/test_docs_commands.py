@@ -58,6 +58,8 @@ def is_manual_command(command: str) -> bool:
         return True
     if command.startswith("python tools/sim/harness/run.py"):
         return True
+    if command.startswith("python tools/prepare_public_zip.py "):
+        return True  # Packaging runs only in an explicit prep or disposable fixture.
     if "--dist" in command or "--deploy" in command or "--clean" in command:
         return True
     if command.startswith("python -m pytest"):

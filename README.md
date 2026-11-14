@@ -178,11 +178,7 @@ luac -p scripts/SensorList/main.lua
 - Release branch naming is scope-specific:
   - repo releases use `release/v{VERSION}`
   - script releases use `release/{ProjectName}-v{VERSION}`
-- Repo release install deliverables include:
-  - `dist/sloppy-ethos_scripts.zip` (built via `python tools/build.py --project SensorList --project ethos_events --dist`)
-- Release publishing checklist for repo releases:
-  - run `python tools/build.py --project SensorList --project ethos_events --dist`
-  - attach only `dist/sloppy-ethos_scripts.zip` in the GitHub release
+- Follow [Prepare a public ZIP](docs/DEVELOPMENT.md#prepare-a-public-zip) for a repo bundle or an individual script. The repo release attaches only `sloppy-ethos_scripts.zip` (SensorList and ethos_events). Personal builds can include local maps; the public prep command uses a committed snapshot and records the ZIP's SHA-256.
 - Main-branch workflow, branch naming conventions, version bump timing, optional `-rc.N`, and release-prep flow:
   [Development policy](docs/DEVELOPMENT.md#main-branch-release-and-versioning-policy).
 - Published release notes and install assets: [GitHub Releases](https://github.com/doppleganger53/sloppy-ethos/releases).

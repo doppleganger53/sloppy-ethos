@@ -18,13 +18,16 @@ Replace all `{...}` placeholders before execution.
 - Release tag: `{RELEASE_TAG}`
 - Release title: `{RELEASE_TITLE}`
 - Release notes file: `{RELEASE_NOTES_FILE}`
+- Prep source: `{SOURCE_COMMIT}` (full local commit ID); new output directory: `{PREP_DIR}`.
 - Prerelease flag for `gh release create` (use `--prerelease` for `-rc.N`, else leave empty): `{PRERELEASE_FLAG}`
 - Snapshot date: `{YYYY-MM-DD}`
 
 ## Mission
 
-Package and publish `{RELEASE_KIND}` release `{RELEASE_TAG}` with strict
-scope clarity, explicit gate handling, and auditable validation output.
+For a **local packaging dry run**, read [AGENTS.md](../../../AGENTS.md), then
+use only **Packaging And Validation** below. No GitHub access is required.
+For an actual release, complete the gates below and obtain separate authorization
+to publish. A successful prep does not authorize a push, merge, tag, or upload.
 
 ## Mandatory Startup Workflow
 
@@ -74,42 +77,45 @@ scope clarity, explicit gate handling, and auditable validation output.
 
 ## Packaging And Validation
 
-Run the minimum required checks for this release action:
-
-1. If `{RELEASE_KIND}` is `repo`:
-   - run checks for touched files from the [validation matrix](../../../AGENTS.md#validation-matrix)
-2. If `{RELEASE_KIND}` is `script`:
-   - `python tools/build.py --project {PROJECT_NAME} --dist`
-   - confirm expected artifact exists:
-     - `dist/{PROJECT_NAME}-{SCRIPT_VERSION}.zip`
-   - run checks for touched files from the [validation matrix](../../../AGENTS.md#validation-matrix)
-3. Prefer `--notes-file` when publishing release notes to avoid truncation risk.
-4. Generate `{RELEASE_NOTES_FILE}` from `CHANGELOG.md` before publishing:
+1. Use an existing committed candidate (including its intended version changes).
+   Run checks for touched files from the [validation matrix](../../../AGENTS.md#validation-matrix).
+2. Build exactly one scope into a directory that does not yet exist:
+   - Repo bundle (SensorList + ethos_events): `python tools/prepare_public_zip.py --ref {SOURCE_COMMIT} --bundle --expect-version {REPO_VERSION} --out-dir "{PREP_DIR}"`
+   - Single script: `python tools/prepare_public_zip.py --ref {SOURCE_COMMIT} --project {PROJECT_NAME} --expect-version {SCRIPT_VERSION} --out-dir "{PREP_DIR}"`
+3. Review the JSON receipt beside the ZIP. Confirm the commit, project list,
+   embedded versions and install entries; record the exact ZIP path and SHA-256.
+   A dry run ends here. Never substitute an existing personal build.
+4. For release readiness, generate `{RELEASE_NOTES_FILE}` from `CHANGELOG.md`:
    - For `repo` releases:
      - `python tools/write_release_notes.py --version {REPO_VERSION} --output {RELEASE_NOTES_FILE}`
    - For `script` releases:
      - `python tools/write_release_notes.py --version {SCRIPT_VERSION} --project {PROJECT_NAME} --output {RELEASE_NOTES_FILE}`
 
-## Publish Steps
+## Publish Steps (Separately Authorized Release Only)
 
-1. Commit release-branch version/documentation updates.
+1. Confirm the reviewed release metadata and candidate commit.
 2. Push release branch to origin.
 3. Open and merge PR from `{RELEASE_BRANCH}` into `main`.
 4. Sync `main` after merge:
    - `git checkout main`
    - `git pull --ff-only origin main`
-5. Tag merged `main` commit and push tag:
-   - `git tag {RELEASE_TAG}`
+5. Set `{SOURCE_COMMIT}` to the full merged `main` commit ID; repeat the same
+   prep recipe in a fresh directory. Review its new receipt. Use the **final**
+   receipt for `{SOURCE_COMMIT}`, `{AUDITED_ZIP}`, `{ASSET_NAME}` and SHA-256
+   from here on. Tag that exact commit and push the tag:
+   - `git tag {RELEASE_TAG} {SOURCE_COMMIT}`
    - `git push origin {RELEASE_TAG}`
 6. Generate `{RELEASE_NOTES_FILE}` from the matching `CHANGELOG.md` entry with the helper command for this scope.
-7. Create release:
-   - For `repo` releases:
-     - `gh release create {RELEASE_TAG} dist/sloppy-ethos_scripts.zip --title "{RELEASE_TITLE}" --notes-file {RELEASE_NOTES_FILE} {PRERELEASE_FLAG}`
-   - For `script` releases:
-     - `gh release create {RELEASE_TAG} dist/{PROJECT_NAME}-{SCRIPT_VERSION}.zip --title "{RELEASE_TITLE}" --notes-file {RELEASE_NOTES_FILE} {PRERELEASE_FLAG}`
-8. Verify release metadata:
+7. Compare the local ZIP's SHA-256 with the final receipt (PowerShell:
+   `Get-FileHash -Algorithm SHA256 -LiteralPath "{AUDITED_ZIP}"`). Stop on mismatch.
+   Attach only this ZIP:
+   - `gh release create {RELEASE_TAG} "{AUDITED_ZIP}" --verify-tag --title "{RELEASE_TITLE}" --notes-file "{RELEASE_NOTES_FILE}" {PRERELEASE_FLAG}`
+8. Verify release metadata and download the published asset into a new directory:
    - `gh release view {RELEASE_TAG} --json tagName,name,url,isDraft,isPrerelease,publishedAt`
-9. Delete release branch after publication:
+   - `gh release download {RELEASE_TAG} --pattern "{ASSET_NAME}" --dir "{NEW_DOWNLOAD_DIR}"`
+   - `Get-FileHash -Algorithm SHA256 -LiteralPath "{NEW_DOWNLOAD_DIR}/{ASSET_NAME}"`
+   - Require the downloaded SHA-256 to match the final receipt. Report a mismatch before updating links or cleaning up.
+9. Delete release branch after verification:
    - `git push origin --delete {RELEASE_BRANCH}`
    - `git branch -d {RELEASE_BRANCH}`
 
@@ -119,8 +125,8 @@ Return:
 
 1. Exact commit(s) included.
 2. Release kind and explicit gate issue outcomes.
-3. Exact artifact path produced (`script` only).
-4. Release URL and tag.
+3. Audited artifact path, project versions, source commit and SHA-256 for either scope.
+4. For a published release: URL, tag and downloaded SHA-256 verification.
 5. Validation commands with pass/fail results.
 6. Remaining risks/follow-up (if any).
 

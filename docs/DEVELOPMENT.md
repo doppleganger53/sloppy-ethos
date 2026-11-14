@@ -177,6 +177,31 @@ branches after PR merge.
 
 ## Release Workflow
 
+### Prepare a public ZIP
+
+With Git, Python and `luac` on PATH, choose a committed revision, its expected
+release version, and an output directory that does **not** exist. Local prep
+does not need GitHub access. Examples (replace the ref and version for your release):
+
+- Repo bundle (SensorList and ethos_events):
+  `python tools/prepare_public_zip.py --ref HEAD --bundle --expect-version 1.0.3 --out-dir dist/review-bundle`
+- One script (BoundryMap shown):
+  `python tools/prepare_public_zip.py --ref HEAD --project BoundryMap --expect-version 0.2.0 --out-dir dist/review-script`
+
+The helper exports the selected projects, version and builder from the resolved
+commit into temporary storage and runs that builder there. It opens the new ZIP,
+checks its install paths, project versions and bundle manifest, and rejects map
+directories and boundary sidecars. Current public projects install under their
+own script directories. Review any new radio-root destination before permitting
+it in a public ZIP. Keep using the ordinary build command for personal packages
+with local maps.
+
+Review the entry list, versions, source commit, archive name and SHA-256 in the
+JSON receipt beside the ZIP. Existing archives are never reused or replaced.
+Stop here for a dry run. Only for a separately authorized release, prepare the
+final artifact from the exact commit to be tagged, upload that ZIP, then download
+the published asset to a new directory and compare its SHA-256 to this receipt.
+
 ### Shared Steps (All Release Kinds)
 
 1. Use the [release branch and worktree gate](../deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md#branchworktree-gate-required-before-release-actions)
@@ -192,15 +217,15 @@ branches after PR merge.
    prepare locally from the verified base. Set the upstream on the first push
    when sharing the release-prep PR.
 4. Validate according to the [validation matrix](../AGENTS.md#validation-matrix).
-5. Generate the standalone release body from the matching `CHANGELOG.md` entry with `tools/write_release_notes.py` (use `--version`, plus `--project` for script releases, and write to a temporary `--output` file), then reuse that file with `gh release create --notes-file`.
-6. Open and merge a release-prep PR from `{RELEASE_BRANCH}` into `main`.
-7. Sync `main`, tag, and push:
+5. Commit release metadata, [prepare a public ZIP](#prepare-a-public-zip) and generate the standalone release body from the matching `CHANGELOG.md` entry with `tools/write_release_notes.py` (use `--version`, plus `--project` for script releases, and write to a temporary `--output` file).
+6. During a separately authorized release, open and merge a release-prep PR from `{RELEASE_BRANCH}` into `main`.
+7. Sync `main`, prepare the final ZIP in a **new** directory from the merged commit, inspect the receipt, and tag that same commit:
    - `git checkout main`
    - `git pull --ff-only origin main`
-   - `git tag {RELEASE_TAG}`
+   - `git tag {RELEASE_TAG} {AUDITED_COMMIT}`
    - `git push origin {RELEASE_TAG}`
-8. Publish GitHub release notes from the generated notes file sourced from `CHANGELOG.md`.
-9. Delete release-prep branch after publication:
+8. Recheck the ZIP's SHA-256 against the receipt. Publish the audited ZIP with the generated notes file (`gh release create --verify-tag` and `--notes-file`), download the asset into a new directory, and verify its SHA-256 matches the receipt.
+9. Delete release-prep branch after successful verification:
    - `git push origin --delete {RELEASE_BRANCH}`
    - `git branch -d {RELEASE_BRANCH}`
 
@@ -210,12 +235,8 @@ branches after PR merge.
    - root `VERSION`
    - `CHANGELOG.md`
    - any repo-level workflow/docs/process files
-2. Build repo release install artifacts:
-   - `python tools/build.py --project SensorList --project ethos_events --dist`
-3. Ensure GitHub release assets include:
-   - `dist/sloppy-ethos_scripts.zip`
-4. Do not treat script-only manual gates as implicit blockers unless that script is in scope.
-5. Publish release notes and install assets with `gh release create v{VERSION} dist/sloppy-ethos_scripts.zip --title "{TITLE}" --notes-file {RELEASE_NOTES_FILE}` after generating `{RELEASE_NOTES_FILE}` with `tools/write_release_notes.py`.
+2. Use the [public bundle recipe](#prepare-a-public-zip) with the expected root version. Attach only the audited bundle at publication.
+3. Do not treat script-only manual gates as implicit blockers unless that script is in scope.
 
 ### Script Release (`release-kind=script`)
 
@@ -224,11 +245,7 @@ branches after PR merge.
    - touched `scripts/{ProjectName}/VERSION` file(s)
    - `CHANGELOG.md`
 2. Require all script gate issues passed through `--script-gate-issue` to be closed before tag/publish.
-3. Build release artifact(s), for example:
-   - `python tools/build.py --project SensorList --dist`
+3. Use the [public single-script recipe](#prepare-a-public-zip) with the target project and expected script version.
 4. Generate the script release notes file from `CHANGELOG.md` with `tools/write_release_notes.py` (use `--version`, `--project`, and `--output`) so the published GitHub release keeps the changelog markdown formatting.
-5. Attach script artifact(s) to the release, for example:
-   - `dist/SensorList-{scripts/SensorList/VERSION}.zip`
-6. Publish the script release with `gh release create ... --notes-file {RELEASE_NOTES_FILE}` instead of inline `--notes`.
-7. After the script release is published, update `README.md` `Download Latest Script Releases` so it reflects the newly published asset.
+5. Attach only the audited script ZIP. After the published download is verified, update `README.md` `Download Latest Script Releases` so it reflects the newly published asset.
    - Do not add unreleased script ZIP names to that README section before the GitHub release exists.
