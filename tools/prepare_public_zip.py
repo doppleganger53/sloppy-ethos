@@ -5,11 +5,10 @@ import hashlib
 import json
 import re
 import shutil
-import stat
 import subprocess
 import sys
 import tempfile
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from zipfile import BadZipFile, ZipFile
 
 
@@ -22,24 +21,41 @@ def private_map(name):
     return "maps" in parts or parts[-1].endswith((".boundries.json", ".boundaries.json"))
 
 
+def tracked_path(name):
+    parts = name.split("/")
+    if any(p in {"", ".", ".."} or p.casefold() == ".git" or p.endswith((" ", "."))
+           or re.search(r'[\\:<>"|?*\x00-\x1f]', p) or PureWindowsPath(p).is_reserved()
+           for p in parts):
+        raise ValueError(f"Unsafe release input path: {name!r}")
+    return Path(*parts)
+
+
 def snapshot(repo, ref, projects, dest):
+    git = ["git", "--no-replace-objects"]
     commit = subprocess.check_output(
-        ["git", "--no-replace-objects", "rev-parse", "--verify", "--end-of-options", ref + "^{commit}"],
+        [*git, "rev-parse", "--verify", "--end-of-options", ref + "^{commit}"],
         cwd=repo, text=True,
     ).strip()
-    export = dest.parent / "source.zip"
-    subprocess.run(
-        ["git", "--no-replace-objects", "archive", "--format=zip", "-o", str(export), commit,
+    tree = subprocess.check_output(
+        [*git, "ls-tree", "--full-tree", "-rz", commit,
          "--", "VERSION", "tools/build.py", *(f"scripts/{p}" for p in projects)],
-        cwd=repo, check=True,
+        cwd=repo,
     )
-    with ZipFile(export) as source:
-        for info in source.infolist():
-            if stat.S_ISLNK(info.external_attr >> 16):
-                raise ValueError(f"Public inputs must be regular files: {info.filename}")
-            if private_map(info.filename):
-                raise ValueError(f"Private map or sidecar in release inputs: {info.filename}")
-        source.extractall(dest)
+    # git archive/checkout honors machine-local attributes and EOL filters. Read
+    # raw blobs into a new private tree so only the named commit chooses bytes.
+    dest.mkdir()
+    for entry in tree.split(b"\0")[:-1]:  # ls-tree -z terminates each record with NUL.
+        metadata, path_bytes = entry.split(b"\t", 1)
+        mode, object_type, oid = metadata.split()
+        name = path_bytes.decode("utf-8")
+        if object_type != b"blob" or mode not in (b"100644", b"100755"):
+            raise ValueError(f"Public inputs must be regular files: {name}")
+        if private_map(name):
+            raise ValueError(f"Private map or sidecar in release inputs: {name}")
+        target = dest / tracked_path(name)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open("xb") as stream:
+            subprocess.run([*git, "cat-file", "blob", oid.decode("ascii")], cwd=repo, stdout=stream, check=True)
     return commit
 
 

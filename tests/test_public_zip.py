@@ -8,7 +8,7 @@ from zipfile import ZipFile
 import pytest
 
 from tests.helpers import REPO_ROOT
-from tools.prepare_public_zip import audit, prepare
+from tools.prepare_public_zip import audit, prepare, tracked_path
 
 
 def git(repo, *args):
@@ -22,6 +22,7 @@ def release(tmp_path):
     git(repo, "init", "-q")
     git(repo, "config", "user.email", "fixture@example.invalid")
     git(repo, "config", "user.name", "Fixture")
+    git(repo, "config", "core.autocrlf", "false")
     (repo / "tools").mkdir()
     shutil.copyfile(REPO_ROOT / "tools/build.py", repo / "tools/build.py")
     (repo / "VERSION").write_text("1.0.3\n")
@@ -29,7 +30,8 @@ def release(tmp_path):
         script = repo / "scripts" / name
         script.mkdir(parents=True)
         (script / "VERSION").write_text(ver + "\n")
-        (script / "main.lua").write_text("-- committed script\n")
+        (script / "main.lua").write_bytes(b"-- committed script\n")
+        (script / "icon.png").write_bytes(b"\x89PNG\r\n\x00binary marker")
     boundry = repo / "scripts/BoundryMap"
     for name in ("build.json", ".gitignore"):
         shutil.copyfile(REPO_ROOT / "scripts/BoundryMap" / name, boundry / name)
@@ -57,6 +59,9 @@ def release(tmp_path):
 ])
 def test_public_build_uses_selected_commit_and_never_overwrites(release, tmp_path, project, expected, versions, name):
     repo, commit = release
+    # These local settings would omit an icon and rewrite Lua in a Git archive.
+    (repo / ".git/info/attributes").write_bytes(b"*.png export-ignore\n*.lua text eol=crlf\n")
+    git(repo, "config", "core.autocrlf", "true")
     dist = repo / "dist"
     dist.mkdir()
     old = dist / name
@@ -87,7 +92,10 @@ def test_public_build_uses_selected_commit_and_never_overwrites(release, tmp_pat
         assert installed == set(versions)
         for p, v in versions.items():
             assert archive.read(f"scripts/{p}/VERSION").decode().strip() == v
-            assert archive.read(f"scripts/{p}/main.lua").decode().strip() == "-- committed script"
+            for file in ("main.lua", "VERSION", "icon.png"):
+                tracked = f"scripts/{p}/{file}"
+                blob = subprocess.check_output(["git", "cat-file", "blob", f"{commit}:{tracked}"], cwd=repo)
+                assert archive.read(tracked) == blob
     with pytest.raises(ValueError, match="already exists"):
         prepare(repo, commit, project, expected, dist)
     assert old.read_bytes() == stale_bytes
@@ -121,6 +129,25 @@ def test_wrong_requested_version_is_refused(release, tmp_path):
     with pytest.raises(ValueError, match="Expected release version"):
         prepare(repo, commit, None, "9.9.9", out)
     assert not out.exists()
+
+
+def test_tracked_symlink_is_refused_without_following_target(release, tmp_path):
+    repo, _ = release
+    # Install a link in the Git index without requiring OS symlink privileges.
+    oid = subprocess.check_output(["git", "hash-object", "-w", "--stdin"], cwd=repo,
+                                  input=b"../../outside").decode().strip()
+    git(repo, "update-index", "--add", "--cacheinfo", "120000", oid, "scripts/BoundryMap/link")
+    git(repo, "commit", "-qm", "synthetic link")
+    out = tmp_path / "rejected-link"
+    with pytest.raises(ValueError, match="regular files"):
+        prepare(repo, "HEAD", "BoundryMap", "0.2.0", out)
+    assert not out.exists()
+
+
+@pytest.mark.parametrize("tail", ["../outside", "bad\\path", "C:/outside", "stream:ads", "aux.png"])
+def test_nonportable_tree_paths_are_rejected(tail):
+    with pytest.raises(ValueError, match="Unsafe release input"):
+        tracked_path("scripts/BoundryMap/" + tail)
 
 
 @pytest.mark.parametrize(("extra", "value", "error"), [

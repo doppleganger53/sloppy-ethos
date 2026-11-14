@@ -188,8 +188,9 @@ does not need GitHub access. Examples (replace the ref and version for your rele
 - One script (BoundryMap shown):
   `python tools/prepare_public_zip.py --ref HEAD --project BoundryMap --expect-version 0.2.0 --out-dir dist/review-script`
 
-The helper exports the selected projects, version and builder from the resolved
-commit into temporary storage and runs that builder there. It opens the new ZIP,
+The helper reads the selected projects, version and builder directly from the
+resolved commit's Git blobs, preserving tracked bytes independently of local
+attributes and line-ending settings. It runs that builder in temporary storage, opens the new ZIP,
 checks its install paths, project versions and bundle manifest, and rejects map
 directories and boundary sidecars. Current public projects install under their
 own script directories. Review any new radio-root destination before permitting
