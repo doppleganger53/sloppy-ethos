@@ -206,12 +206,14 @@ the published asset to a new directory and compare its SHA-256 to this receipt.
 ### Shared Steps (All Release Kinds)
 
 1. Use the [release branch and worktree gate](../deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md#branchworktree-gate-required-before-release-actions)
-   to select a clean worktree for `release/v{VERSION}` (repo) or
-   `release/{ProjectName}-v{VERSION}` (script).
+   to verify the release project's GitHub `OWNER/REPO` and Git remote. Identify
+   the remote that holds the PR head separately; it can be a contributor's fork.
+   Select a clean worktree for `release/v{VERSION}` (repo) or `release/{ProjectName}-v{VERSION}` (script).
 2. Run issue preflight with scope:
    - run `tools/session_preflight.py` with:
      - `--mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {slug} --release-kind {repo|script} --target-branch {RELEASE_BRANCH}`
    - For `script` releases also include:
+     - `--release-repo {RELEASE_REPO}` for the verified project's gate issues
      - `--project {ProjectName}`
      - one or more `--script-gate-issue {N}` flags
 3. Sync an existing branch only with its verified upstream. For a new branch,
@@ -219,16 +221,17 @@ the published asset to a new directory and compare its SHA-256 to this receipt.
    when sharing the release-prep PR.
 4. Validate according to the [validation matrix](../AGENTS.md#validation-matrix).
 5. Commit release metadata, [prepare a public ZIP](#prepare-a-public-zip) and generate the standalone release body from the matching `CHANGELOG.md` entry with `tools/write_release_notes.py` (use `--version`, plus `--project` for script releases, and write to a temporary `--output` file).
-6. During a separately authorized release, open and merge a release-prep PR from `{RELEASE_BRANCH}` into `main`.
-7. Sync `main`, prepare the final ZIP in a **new** directory from the merged commit, inspect the receipt, and tag that same commit:
-   - `git checkout main`
-   - `git pull --ff-only origin main`
-   - `git tag {RELEASE_TAG} {AUDITED_COMMIT}`
-   - `git push origin {RELEASE_TAG}`
-8. Recheck the ZIP's SHA-256 against the receipt. Publish the audited ZIP with the generated notes file (`gh release create --verify-tag` and `--notes-file`), download the asset into a new directory, and verify its SHA-256 matches the receipt.
-9. Delete release-prep branch after successful verification:
-   - `git push origin --delete {RELEASE_BRANCH}`
-   - `git branch -d {RELEASE_BRANCH}`
+6. During a separately authorized release, follow the
+   [publish steps](../deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md#publish-steps-separately-authorized-release-only).
+   Push the candidate to the head repository and merge its PR into the release
+   project's `main`. Read the merge SHA from that PR in the release project
+   and verify its ancestry in freshly fetched `main`; the branch may have
+   advanced since the merge.
+7. At that exact SHA, prepare the final ZIP in a new directory and generate
+   notes from the matching changelog. Verify the receipt, push the tag to the
+   release project's remote, and confirm its target SHA. Publish and download
+   the asset in the same GitHub repository. Compare its SHA-256 to the receipt
+   before cleaning up the reviewed branch in the head repository.
 
 ### Repository Release (`release-kind=repo`)
 

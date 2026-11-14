@@ -58,8 +58,8 @@ def build_recommended_branch(issue_kind: str, issue_number: str, slug: str) -> s
     return f"{ISSUE_KIND_TO_PREFIX[issue_kind]}/{issue_number}-{slug}"
 
 
-def get_issue_metadata(issue_number: str) -> tuple[str, str, str]:
-    payload = run_gh(["issue", "view", issue_number, "--json", "state,title,url"])
+def get_issue_metadata(issue_number: str, release_repo: str) -> tuple[str, str, str]:
+    payload = run_gh(["issue", "view", issue_number, "--repo", release_repo, "--json", "state,title,url"])
     data = json.loads(payload)
     state = str(data.get("state", "")).upper()
     if state not in {"OPEN", "CLOSED"}:
@@ -69,10 +69,10 @@ def get_issue_metadata(issue_number: str) -> tuple[str, str, str]:
     return state, title, url
 
 
-def find_open_script_gate_issues(gate_issues: list[str]) -> list[tuple[str, str, str]]:
+def find_open_script_gate_issues(gate_issues: list[str], release_repo: str) -> list[tuple[str, str, str]]:
     open_issues: list[tuple[str, str, str]] = []
     for issue_number in gate_issues:
-        state, title, url = get_issue_metadata(issue_number)
+        state, title, url = get_issue_metadata(issue_number, release_repo)
         if state != "CLOSED":
             open_issues.append((issue_number, title, url))
     return open_issues
@@ -86,6 +86,7 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     parser.add_argument("--slug")
     parser.add_argument("--target-branch", help="Require this exact issue or release branch in a clean worktree.")
     parser.add_argument("--release-kind", choices=RELEASE_KINDS)
+    parser.add_argument("--release-repo", help="GitHub OWNER/REPO holding the script release gate issues.")
     parser.add_argument("--project")
     parser.add_argument("--script-gate-issue", action="append", default=[])
     args = parser.parse_args(argv)
@@ -106,12 +107,16 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
         if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", args.slug):
             parser.error("--slug must be lowercase kebab-case (a-z, 0-9, hyphen).")
 
+        if args.release_repo and args.release_kind != "script":
+            parser.error("--release-repo applies to script release gate issues.")
         if args.release_kind == "repo":
             if args.project:
                 parser.error("--release-kind repo does not accept --project.")
             if args.script_gate_issue:
                 parser.error("--release-kind repo does not accept --script-gate-issue.")
         elif args.release_kind == "script":
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+", args.release_repo or ""):
+                parser.error("--release-kind script requires --release-repo OWNER/REPO.")
             if not args.project:
                 parser.error("--release-kind script requires --project.")
             if not re.fullmatch(r"[A-Za-z0-9_-]+", args.project):
@@ -127,7 +132,7 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     else:
         if args.issue_number or args.issue_kind or args.slug or args.target_branch is not None:
             parser.error("--mode non-issue does not accept issue-specific arguments.")
-        if args.release_kind or args.project or args.script_gate_issue:
+        if args.release_kind or args.release_repo or args.project or args.script_gate_issue:
             parser.error("--mode non-issue does not accept release-specific arguments.")
 
     return args
@@ -188,7 +193,7 @@ def run_preflight(args: argparse.Namespace) -> int:
 
         if release_kind == "script":
             try:
-                open_issues = find_open_script_gate_issues(script_gate_issues)
+                open_issues = find_open_script_gate_issues(script_gate_issues, args.release_repo)
             except RuntimeError as exc:
                 print(f"Result: ERROR\n{exc}")
                 return 1

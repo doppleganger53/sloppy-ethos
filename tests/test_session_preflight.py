@@ -254,6 +254,8 @@ def test_parse_args_accepts_valid_script_release_scope():
             "repo-release-workflow-failures",
             "--release-kind",
             "script",
+            "--release-repo",
+            "upstream/widgets",
             "--project",
             "WidgetX",
             "--script-gate-issue",
@@ -261,6 +263,7 @@ def test_parse_args_accepts_valid_script_release_scope():
         ]
     )
     assert args.release_kind == "script"
+    assert args.release_repo == "upstream/widgets"
     assert args.project == "WidgetX"
     assert args.script_gate_issue == ["32"]
 
@@ -336,6 +339,8 @@ def test_parse_args_rejects_issue_fields_for_non_issue_mode(argv):
             "repo-release-workflow-failures",
             "--release-kind",
             "script",
+            "--release-repo",
+            "upstream/widgets",
             "--project",
             "WidgetX",
         ],
@@ -350,6 +355,8 @@ def test_parse_args_rejects_issue_fields_for_non_issue_mode(argv):
             "repo-release-workflow-failures",
             "--release-kind",
             "script",
+            "--release-repo",
+            "upstream/widgets",
             "--script-gate-issue",
             "32",
         ],
@@ -372,20 +379,33 @@ def test_parse_args_rejects_invalid_release_scope_combinations(argv):
         preflight.parse_args(argv)
 
 
+@pytest.mark.parametrize("repo_args", [[], ["--release-repo", "widgets"], ["--release-repo", "owner/repo/extra"]])
+def test_script_gate_requires_explicit_repository(repo_args):
+    with pytest.raises(SystemExit):
+        preflight.parse_args([
+            "--mode", "issue", "--issue-number", "39", "--issue-kind", "chore", "--slug", "release",
+            "--release-kind", "script", "--project", "WidgetX", "--script-gate-issue", "32", *repo_args,
+        ])
+
+
 def test_issue_mode_script_release_blocks_when_gate_issue_open(monkeypatch, capsys):
     monkeypatch.setattr(preflight, "get_current_branch", lambda: "fix/39-repo-release-workflow-failures")
     monkeypatch.setattr(preflight, "is_worktree_dirty", lambda: False)
-    monkeypatch.setattr(
-        preflight,
-        "get_issue_metadata",
-        lambda _issue_number: ("OPEN", "Manual testing of WidgetX-v1.0.0 changes", "https://github.com/example/32"),
-    )
+
+    def gh_with_fork_default(args):
+        if args == ["issue", "view", "32", "--repo", "upstream/widgets", "--json", "state,title,url"]:
+            return '{"state":"OPEN","title":"Test on radio","url":"https://github.com/upstream/widgets/issues/32"}'
+        raise AssertionError(f"Unexpected repository or query: {args}")
+
+    monkeypatch.setenv("GH_REPO", "contributor/widgets")
+    monkeypatch.setattr(preflight, "run_gh", gh_with_fork_default)
     args = Namespace(
         mode="issue",
         issue_number="39",
         issue_kind="bug",
         slug="repo-release-workflow-failures",
         release_kind="script",
+        release_repo="upstream/widgets",
         project="WidgetX",
         script_gate_issue=["32"],
     )
@@ -403,7 +423,7 @@ def test_issue_mode_script_release_passes_when_gate_issue_closed(monkeypatch, ca
     monkeypatch.setattr(
         preflight,
         "get_issue_metadata",
-        lambda _issue_number: ("CLOSED", "Manual testing complete", "https://github.com/example/32"),
+        lambda _issue_number, _repo: ("CLOSED", "Manual testing complete", "https://github.com/upstream/widgets/issues/32"),
     )
     args = Namespace(
         mode="issue",
@@ -411,6 +431,7 @@ def test_issue_mode_script_release_passes_when_gate_issue_closed(monkeypatch, ca
         issue_kind="bug",
         slug="repo-release-workflow-failures",
         release_kind="script",
+        release_repo="upstream/widgets",
         project="WidgetX",
         script_gate_issue=["32"],
     )
