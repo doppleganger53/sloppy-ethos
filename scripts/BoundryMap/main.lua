@@ -46,7 +46,7 @@ local CONTROL_BUTTON_HEIGHT = 24
 local CONTROL_BUTTON_GAP = 4
 local CONTROL_MARGIN = 6
 local CONTROL_RELEASE_SLOP = 8
-local END_ONLY_TOGGLE_DEBOUNCE = 0.2
+local END_ONLY_CONTROL_DEBOUNCE = 0.2
 local TOUCH_CONTENT_Y_OFFSET = 18
 local ICON_PATH = "assets/icons"
 local COORDS_TEXT_X = 4
@@ -64,6 +64,7 @@ local gpsSensorQuery = { name = "" }
 local altSensorQuery = { name = "" }
 local speedSensorQuery = { name = "" }
 local saveBoundaries
+local saveCurrentBoundaries
 local setColor
 
 local function safeCall(fn, ...)
@@ -470,7 +471,7 @@ local function activateControl(widget, control)
     return true
   end
   if control == "save" then
-    local okSave, saveErr = saveBoundaries(widget)
+    local okSave, saveErr = saveCurrentBoundaries(widget)
     if not okSave then
       logRuntimeError("sidecar-save", saveErr)
     end
@@ -726,7 +727,7 @@ local function commitDraftBoundary(widget, x, y)
   return addBoundary(widget, draft.x1, draft.y1, draft.x2, draft.y2)
 end
 
-local function saveCurrentBoundaries(widget)
+saveCurrentBoundaries = function(widget)
   -- Save must persist the in-progress draft without turning the save tap into a new endpoint.
   if type(widget) == "table" and type(widget.draftBoundary) == "table" then
     commitDraftBoundary(widget)
@@ -1506,6 +1507,7 @@ local function create()
     drawMode = false,
     deleteMode = false,
     touchArmed = nil,
+    mapTouchActive = false,
     pendingDraftPoint = nil,
     lastDraftPreviewAt = 0,
     draftBoundary = nil,
@@ -1971,9 +1973,12 @@ local function handleControlTouch(widget, phase, x, y)
 
   local armed = widget.touchArmed
   if not armed then
-    if phase == "end" and (exactControl == "draw" or exactControl == "delete") then
+    if phase == "end" and exactControl then
+      if exactControl == "save" and widget.mapTouchActive then
+        return false
+      end
       local now = os.clock()
-      if widget.lastEndOnlyControl == exactControl and widget.lastEndOnlyAt and (now - widget.lastEndOnlyAt) < END_ONLY_TOGGLE_DEBOUNCE then
+      if widget.lastEndOnlyControl == exactControl and widget.lastEndOnlyAt and (now - widget.lastEndOnlyAt) < END_ONLY_CONTROL_DEBOUNCE then
         return true
       end
       widget.lastEndOnlyControl = exactControl
@@ -2005,6 +2010,7 @@ end
 local function handleMapTouch(widget, phase, x, y)
   if type(widget.mapRect) ~= "table" or not hitRect(x, y, widget.mapRect) then
     if phase == "end" then
+      widget.mapTouchActive = false
       widget.draftBoundary = nil
       widget.pendingDraftPoint = nil
     end
@@ -2013,6 +2019,7 @@ local function handleMapTouch(widget, phase, x, y)
 
   if widget.drawMode then
     if phase == "start" then
+      widget.mapTouchActive = true
       local localX, localY = screenToBitmapLocal(widget, x, y)
       widget.pendingDraftPoint = { x = localX, y = localY }
       widget.draftBoundary = {
@@ -2028,6 +2035,7 @@ local function handleMapTouch(widget, phase, x, y)
       return true
     end
     if phase == "end" and widget.draftBoundary then
+      widget.mapTouchActive = false
       local localX, localY = screenToBitmapLocal(widget, x, y)
       local startX = widget.draftBoundary.x1
       local startY = widget.draftBoundary.y1
@@ -2122,20 +2130,25 @@ local function event(widget, category, value, x, y)
   if type(widget) ~= "table" then
     return false
   end
+  local phase
   local ok, result = pcall(function()
-    local phase = resolveTouchPhase(category, value)
+    phase = resolveTouchPhase(category, value)
     if not phase then
       return false
     end
-    if handleControlTouch(widget, phase, x, y) then
-      return true
-    end
+    -- Controls and map geometry share content coordinates. Raw hits can select
+    -- the next button down before the content offset has been removed.
     local contentX, contentY = normalizeTouchPoint(x, y)
     if handleControlTouch(widget, phase, contentX, contentY) then
       return true
     end
     return handleMapTouch(widget, phase, contentX, contentY)
   end)
+  -- Keep the drag flag during dispatch to guard Save, then end the gesture
+  -- even when a control consumed the release or a handler failed.
+  if phase == "end" then
+    widget.mapTouchActive = false
+  end
   if not ok then
     setWidgetError(widget, "event", result)
     return false

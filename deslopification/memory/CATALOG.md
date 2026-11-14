@@ -20,6 +20,7 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 - Total lines: 6,924
 - Distribution by artifact:
   - session notes: 138
+  - session notes: 138
   - handoff/restart notes: 3
   - reference notes: 3
   - summary notes: 1
@@ -31,10 +32,10 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 4 -- ethos-events ( ethos_events-specific behavior, release history, and operating notes )
   - 3 -- handoff ( Session continuity and restart handoffs )
-  - 1 -- boundrymap ( BoundryMap-specific behavior, release history, and operating notes )
+  - 2 -- boundrymap ( BoundryMap-specific behavior, release history, and operating notes )
 
 - Distribution by concern:
-  - 34 -- implementation
+  - 35 -- implementation
   - 30 -- workflow
   - 19 -- testing
   - 17 -- build
@@ -218,4 +219,5 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-07-16 | session | repo | implementation | [notes/session/repo/SESSION_NOTES_2026-07-16_UNMILESTONED_ISSUE_CLOSEOUT.md](notes/session/repo/SESSION_NOTES_2026-07-16_UNMILESTONED_ISSUE_CLOSEOUT.md) | # Session Notes 2026-07-16 - Unmilestoned issue closeout |
 | 2026-07-17 | reference | memory | workflow | [notes/reference/memory/CURRENT_STATE_2026-07-17_ARCHIVE.md](notes/reference/memory/CURRENT_STATE_2026-07-17_ARCHIVE.md) | # Archived Current State — 2026-07-17 |
 | 2026-07-17 | session | boundrymap | release | [notes/session/boundrymap/SESSION_NOTES_2026-07-17_BOUNDRYMAP_V020_RELEASE.md](notes/session/boundrymap/SESSION_NOTES_2026-07-17_BOUNDRYMAP_V020_RELEASE.md) | # Session Notes 2026-07-17 - BoundryMap-v0.2.0 Release |
+| 2026-08-01 | session | boundrymap | implementation | [notes/session/boundrymap/SESSION_NOTES_2026-08-01_ISSUE_108_BOUNDRYMAP_SAVE_DRAFT.md](notes/session/boundrymap/SESSION_NOTES_2026-08-01_ISSUE_108_BOUNDRYMAP_SAVE_DRAFT.md) | # Session Notes 2026-08-01 - Issue #108 BoundryMap Save Draft |
 | 2026-09-20 | session | memory | workflow | [notes/session/memory/SESSION_NOTES_2026-09-20_GUIDANCE_CONSOLIDATION.md](notes/session/memory/SESSION_NOTES_2026-09-20_GUIDANCE_CONSOLIDATION.md) | # Session Notes 2026-09-20 — Guidance consolidation |

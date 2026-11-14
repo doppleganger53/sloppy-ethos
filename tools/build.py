@@ -500,9 +500,22 @@ def copy_radio_files(radio_files: tuple[RadioFile, ...], destination_root: Path)
         shutil.copy2(radio_file.source, target)
 
 
+def remove_stale_compiled_lua(project_dir: Path, script_destination: Path):
+    """Remove deployed bytecode that would shadow a source-only Lua file."""
+    for lua_source in project_dir.rglob("*.lua"):
+        relative = lua_source.relative_to(project_dir)
+        compiled_relative = relative.with_suffix(".luac")
+        if (project_dir / compiled_relative).exists():
+            continue
+        compiled_target = script_destination / compiled_relative
+        if compiled_target.is_file():
+            compiled_target.unlink()
+
+
 def stage_project_files(install_spec: ProjectInstallSpec, destination_root: Path, dirs_exist_ok: bool = False):
     script_destination = destination_root / install_spec.script_destination
     shutil.copytree(install_spec.project_dir, script_destination, dirs_exist_ok=dirs_exist_ok)
+    remove_stale_compiled_lua(install_spec.project_dir, script_destination)
     prune_script_exclusions(script_destination, install_spec.script_exclusions)
     ensure_packaged_readme(script_destination, install_spec.project_name)
     copy_radio_files(install_spec.radio_files, destination_root)
