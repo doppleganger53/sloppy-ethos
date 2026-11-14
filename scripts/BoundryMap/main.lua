@@ -2135,9 +2135,8 @@ local function event(widget, category, value, x, y)
     if not phase then
       return false
     end
-    if handleControlTouch(widget, phase, x, y) then
-      return true
-    end
+    -- Controls and map geometry share content coordinates. Raw hits can select
+    -- the next button down before the content offset has been removed.
     local contentX, contentY = normalizeTouchPoint(x, y)
     if handleControlTouch(widget, phase, contentX, contentY) then
       return true

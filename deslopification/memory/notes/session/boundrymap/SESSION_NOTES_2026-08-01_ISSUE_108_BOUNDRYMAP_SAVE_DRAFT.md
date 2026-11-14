@@ -76,3 +76,17 @@
   radio verification was repeated during this commit/PR closeout.
 - Reviewed the diff and ignore rules; no private maps, local deployment config,
   or generated runtime files are included.
+
+## PR #109 review remediation — 2026-11-14
+
+- Confirmed review comment `discussion_r4574401960`: raw y=242 for a Delete
+  tap at content y=224 was accepted as Save before coordinate normalization.
+- Removed raw-coordinate control dispatch. Controls and map now use the same
+  normalized content coordinates, including start/end and end-only input.
+- Added Lua regression coverage for every vertical pixel of all three buttons
+  with both touch sequences, asserting that only Save writes the sidecar.
+- Validation: `uv run --with pytest --with pytest-cov python -m pytest
+  scripts/BoundryMap/tests -q` completed with 2 passed, 1 skipped.
+  The Lua regression harness is skipped because Lua is unavailable; luac is
+  also unavailable. `git diff --check` passed. No simulator check was performed.
+- Follow-up: execute the Lua harness and verify touch behavior on Ethos.

@@ -668,6 +668,31 @@ local function rawTouchY(contentY)
   return contentY + TOUCH_CONTENT_Y_OFFSET
 end
 
+-- Check every vertical pixel: raw Delete coordinates overlap the Save button.
+do
+  for _, control in ipairs({ "draw", "delete", "save" }) do
+    for _, endOnly in ipairs({ true, false }) do
+      for contentY = rects[control].top, rects[control].bottom - 1 do
+        local candidate = test.create()
+        candidate.windowW = 480
+        candidate.windowH = 272
+        candidate.bitmapFile = "TestMap.bmp"
+        candidate.boundaryDirty = true
+        local path = "/scripts/BoundryMap/assets/maps/TestMap.boundries.json"
+        ioWriteCounts[path] = 0
+        local x = rects[control].left + 2
+        if not endOnly then
+          assert_true(test.event(candidate, _G.EVT_TOUCH, 16640, x, rawTouchY(contentY)), "control start consumed")
+        end
+        assert_true(test.event(candidate, _G.EVT_TOUCH, 16641, x, rawTouchY(contentY)), "control end consumed")
+        assert_equal(candidate.drawMode, control == "draw", "normalized tap selects Draw only")
+        assert_equal(candidate.deleteMode, control == "delete", "normalized tap selects Delete only")
+        assert_equal(ioWriteCounts[path], control == "save" and 1 or 0, "only Save writes sidecar")
+      end
+    end
+  end
+end
+
 assert_equal(rects.draw.right - rects.draw.left, 72, "draw button width expanded")
 assert_equal(rects.draw.bottom - rects.draw.top, 24, "draw button height expanded")
 local drawX = rects.draw.left + 2
