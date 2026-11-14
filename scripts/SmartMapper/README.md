@@ -22,21 +22,25 @@ full function-mapping feature in issue
 The probe does not create or mutate model configuration. It intentionally
 reports `model.createMix` as availability evidence only.
 
-## Simulator Or Radio Run
+## Run the probe in an isolated simulator
 
-1. Deploy the probe:
+From the repository folder, start an isolated X20RS-FCC preview:
 
-   ```powershell
-   python tools/build.py --project SmartMapper --deploy
-   ```
+```powershell
+$preview = Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString())
+python tools/sim/harness/run.py gui --project SmartMapper --radio X20RS-FCC --ethos-version latest-26.1 --persist-dir "$preview"
+```
 
-2. Open the Ethos `SmartMapper Probe` system tool on the `26.1` simulator or
-   target radio.
-3. Capture the printed `[SmartMapperProbe]` lines or copy the generated report
-   file when the runtime exposes a writable path.
-4. Add the observed results to issue
-   [#45](https://github.com/doppleganger53/sloppy-ethos/issues/45) before
-   reviving implementation work from any stale branch.
+Open **SmartMapper Probe** in the simulator's system tools. Capture the
+`[SmartMapperProbe]` lines or the generated report if the runtime exposes the
+file. Record the radio and resolved firmware from the harness result when
+reporting observations for [#45](https://github.com/doppleganger53/sloppy-ethos/issues/45).
+
+If the task specifically calls for updating a live Suite installation,
+verify its configured path and select that radio explicitly. For the X20RS
+entry, use `python tools/build.py --project SmartMapper --deploy --sim-radio X20RS`.
+For a requested physical-radio check, use the install ZIP below and record
+the probe output on that radio.
 
 ## Validation
 

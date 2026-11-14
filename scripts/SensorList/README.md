@@ -41,11 +41,20 @@ color-grouped to make true duplicates easier to identify.
 Installed path on radio: `scripts/SensorList`.
 Artifact version source: `scripts/SensorList/VERSION`.
 
-## Simulator Deploy
+## Try the widget in the simulator
 
-- Deploy script files into simulator scripts directory:
-  `python tools/build.py --project SensorList --deploy`
-- Configure simulator paths via `tools/deploy.config.json` `ETHOS_SIM_PATHS`, with one entry marked `"default": true`.
+From the repository folder, run the isolated smoke suite:
+
+```powershell
+$smoke = Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString())
+python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json --persist-dir "$smoke"
+```
+
+For a visible check, use the [WebSimulator GUI](../../tools/sim/harness/README.md)
+and add SensorList to a widget area. If a task calls for updating a live Suite
+installation, verify its path in `tools/deploy.config.json` and select its
+radio explicitly, for example
+`python tools/build.py --project SensorList --deploy --sim-radio X20RS`.
 
 ## Lua Coverage In VS Code
 

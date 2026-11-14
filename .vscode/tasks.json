@@ -53,14 +53,16 @@
       "problemMatcher": []
     },
     {
-      "label": "Python Deploy Simulator",
+      "label": "Deploy SensorList to live Suite profile (X20RS)",
       "type": "shell",
       "command": "python",
       "args": [
         "tools/build.py",
         "--project",
         "SensorList",
-        "--deploy"
+        "--deploy",
+        "--sim-radio",
+        "X20RS"
       ],
       "group": "build",
       "presentation": {
