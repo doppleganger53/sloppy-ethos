@@ -194,7 +194,10 @@ def test_ethos_26_1_compatibility_baseline_captures_reference_targets_and_follow
     assert re.search(r"git\s+(-C\s+\S+\s+)?fetch\b", text)
     assert "X20RS" in text
     assert "X20S" in text
-    assert "tools/sim/harness/run.py" in text
+    for target in ("../tools/sim/harness/README.md",
+                   "../tools/sim/harness/suites/SensorList-X20RS-FCC.json"):
+        assert f"]({target})" in text
+        assert (COMPATIBILITY_BASELINE_PATH.parent / target).is_file()
     for area in ("SensorList", "BoundryMap", "ethos_events", "SmartMapper", "Arduino FBus"):
         assert area in text
 
