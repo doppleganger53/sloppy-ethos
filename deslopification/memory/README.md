@@ -70,3 +70,8 @@ When adding a new memory note:
 4. If the change affects the compact weekly process narrative, update the
    relevant `notes/summary/memory/SUMMARY_YYYY-MM-DD_to_YYYY-MM-DD.md`
    rollup.
+
+After resolving a merge that touched `CATALOG.md`, run
+`python tools/update_memory_catalog.py --check` from the repository root.
+If it reports a stale index, regenerate it from the merged notes with the
+command in step 2, then rerun the check.
