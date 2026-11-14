@@ -189,7 +189,7 @@ luac -p scripts/SensorList/main.lua
 
 ## Collaboration
 
-- See `CONTRIBUTING.md` for contribution flow.
+- [Suggest an idea, report a radio test, or share an implementation](CONTRIBUTING.md#ways-to-contribute).
 - Use `.github/PULL_REQUEST_TEMPLATE.md` when opening PRs.
 - See `CODE_OF_CONDUCT.md` for collaboration expectations.
 - See `SECURITY.md` for responsible vulnerability reporting.

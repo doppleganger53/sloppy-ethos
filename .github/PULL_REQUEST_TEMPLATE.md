@@ -2,11 +2,15 @@
 
 ## Summary
 
--
+What changed, and what can a pilot or contributor do now?
 
-## Changes
+## How to try it
 
--
+Which build or commit should a reviewer use? Give the shortest steps to repeat
+the check and the result to look for.
+
+- What you observed (name the simulator or radio, model, and ETHOS version if applicable):
+- What still needs testing:
 
 ## Verification
 
