@@ -26,15 +26,11 @@ Add an optional sensor-value display mode to `SensorList`:
 
 ## Branch/Worktree Gate (Required Before Editing)
 
-1. Run issue preflight:
-   - `python tools/session_preflight.py --mode issue --issue-number 14 --issue-kind enhancement --slug sensor-values-column`
-2. Confirm target branch and current branch:
-   - `git branch --show-current`
-   - `git status --short --branch`
-3. If preflight blocks due to `main`, create/switch to the recommended branch before editing.
-4. If branch mismatch or dirty worktree is present, stop and confirm stash/commit/switch strategy.
-5. After switching branches, sync before editing:
-   - `git pull --ff-only origin {target-branch}`
+Follow the [issue branch and worktree gate](../templates/ISSUE_RESOLUTION_TEMPLATE.md#branch-and-worktree-gate-required-before-editing).
+Verify the live issue, linked PR head and available branches before using the
+snapshot's default. In the selected worktree, substitute the verified branch
+name for `{TARGET_BRANCH}` and run
+`python tools/session_preflight.py --mode issue --issue-number 14 --issue-kind enhancement --slug sensor-values-column --target-branch {TARGET_BRANCH}`.
 
 ## UI Output Contract
 

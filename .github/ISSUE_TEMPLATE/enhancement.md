@@ -1,35 +1,23 @@
 ---
-name: Enhancement
-about: Propose an improvement to widget behavior, tooling, or workflow
+name: Idea or enhancement
+about: Describe a behavior you want on your radio, or an improvement to tools or workflow
 title: "[Enhancement] "
 labels: enhancement
 assignees: ""
 ---
 
-## Problem Statement
+## What would you like to do?
 
-What gap or pain point exists today?
+What are you trying to see or do, and what happens today?
 
-## Enhancement Type
+## How would you tell it worked?
 
-- [] Widget behavior
-- [] Tooling / automation
-- [] Workflow / process
+Describe a visible result or a short check a second pilot could try.
 
-## Desired Outcome
+## Setup (if known)
 
-What should be true after this enhancement is completed?
+Widget, radio model, ETHOS version, or relevant tool.
 
-## Proposed Approach
+## Optional implementation idea or constraints
 
-Describe the implementation approach at a high level.
-
-## Acceptance Criteria
-
-1.
-2.
-3.
-
-## Risks / Edge Cases
-
-List constraints, regressions to avoid, or uncertain behavior to validate.
+Leave this blank if you only have a behavior in mind.

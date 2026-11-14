@@ -4,22 +4,24 @@ This harness downloads cached Ethos WebSimulator runtimes, stages repository
 scripts with the same install contract as `tools/build.py`, and runs repeatable
 smoke checks against the staged project or project set.
 
-Common commands:
+From the repository folder, choose a radio/version (or a checked-in suite).
+In PowerShell, give each independent preview a fresh scratch path:
 
 ```powershell
 python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1
-python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1
-python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json
-python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1
+$smoke = Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString())
+python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json --persist-dir "$smoke"
+$preview = Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString())
+python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1 --persist-dir "$preview"
 ```
 
-By default, headless and GUI runs stage projects into the same Ethos Suite
-persist directory for the selected radio and runtime version:
-`{Ethos Suite data}/.simulator/{EthosVersion}/persist/{Radio}`. Use
-`--persist-dir` only when you need to point the WebSimulator at a nonstandard
-persist tree. The runner writes that staged tree into the WebSimulator
-filesystem at `/persist/{Radio}` so `USER:/` paths match the runtime's user
-directory.
+Without `--persist-dir`, both modes use `persist/` inside the run directory;
+the default run directory is new for each invocation. Use an empty directory
+for an explicit scratch path: existing files there are included in the run
+and staged scripts can overwrite files of the same name. Neither mode needs a
+Suite profile, connected radio or deployment config. The JSON result names
+the host directories (`runDir` and `persistDir`); the runtime sees the staged
+files under `/persist/{Radio}`. Close the GUI server with Ctrl+C.
 
 Runtime ZIPs and extracted JavaScript/WASM files are stored under
 `tools/sim/radios/`. GUI mode serves those cached runtime files directly
@@ -33,8 +35,9 @@ can refresh the latest-release lookup explicitly.
 
 The headless command exits with structured status:
 
-- `success`: simulator started and `reloadScripts` completed without detected
-  script errors.
+- `success`: simulator started with no detected script errors. Check
+  `reloaded` to see whether this runtime supported a script reload. Startup
+  does not establish what was drawn or what a physical receiver reported.
 - `missing_runtime`: the requested radio/version WebSimulator package is not
   available or is not cached when `--no-download` is used.
 - `download_failure`: release metadata, download, or checksum validation failed.

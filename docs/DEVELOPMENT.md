@@ -16,7 +16,7 @@ this document describes tooling and release procedures.
 
 - `sloppy-ethos/` is the primary implementation repository inside the parent
   `EthosLua` workspace.
-- If a session starts from the parent workspace, read the parent `AGENTS.MD`,
+- A standalone checkout needs no parent. If starting from the parent workspace, read its `AGENTS.md`,
   then enter `sloppy-ethos/` before running repository commands or applying
   this repo's policy.
 - Keep sibling reference checkouts outside this repo's Git scope. Use scoped
@@ -27,30 +27,23 @@ this document describes tooling and release procedures.
 
 ## Core Commands
 
-- Syntax check:
+- Parse each changed Lua file. For example, to check the SensorList entry point, run
   `luac -p scripts/SensorList/main.lua`
-- Package and deploy:
+- Package locally:
   `python tools/build.py --project SensorList --dist`
   `python tools/build.py --project BoundryMap --dist`
   `python tools/build.py --project SensorList --project ethos_events --dist`
-  `python tools/build.py --project SensorList --deploy`
-  `python tools/build.py --project ethos_events --deploy`
-  `python tools/build.py --project SensorList --clean --sim-radio X20RS`
   `python tools/build.py --help`
-- Automated WebSimulator harness:
-  `python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1`
-  `python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1`
-  `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`
-  `python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1`
-
-## Debugging Session Rule
-
-Follow the [validation policy](../AGENTS.md#validation-policy) for simulator
-smoke and live deploy requirements. The relevant commands are listed above;
-use `--dist` only when a fresh install ZIP is also needed.
+- For an isolated headless or GUI run, use the examples in the
+  [WebSimulator harness guide](../tools/sim/harness/README.md).
 
 ## Configuring Simulator Path
 
+- Only for a requested change to a named live Suite profile: verify its
+  configured path and select the radio, for example
+  `python tools/build.py --project SensorList --deploy --sim-radio X20RS`.
+  `--clean` removes installed files **and** build outputs. Neither command is
+  needed for the WebSimulator.
 - Copy `tools/deploy.config.example.json` to `tools/deploy.config.json` and populate `ETHOS_SIM_PATHS`.
 - `ETHOS_SIM_PATHS` must be an array of entries with `radio` and `path`.
 - Mark exactly one entry as `"default": true` for deploy/clean when `--sim-radio` is not provided.
@@ -83,7 +76,7 @@ use `--dist` only when a fresh install ZIP is also needed.
 - keeps the `download` command as the explicit path for refreshing a latest-alias release lookup.
 - downloads the requested radio WebSimulator package, such as `X20RS-FCC-WebSimulator.zip`, into `tools/sim/radios/{Radio}-{Region}/{EthosVersion}/{PackageName}/`.
 - validates the GitHub asset SHA-256 digest when release metadata provides one.
-- stages scripts into the Ethos Suite persist directory for the selected radio/runtime by calling the existing `tools/build.py` install-spec helpers.
+- stages scripts in a disposable persist directory using the existing `tools/build.py` install-spec helpers.
 - accepts repeated `--project` values so GUI and headless sessions can stage one project or a project set into the same simulator persist tree.
 - supports JSON smoke suites, starting with `tools/sim/harness/suites/SensorList-X20RS-FCC.json`.
 - runs headless smoke checks through Node.js and reports structured statuses for success, missing runtime, download failure, startup failure, script failure, and timeout.
@@ -184,36 +177,61 @@ branches after PR merge.
 
 ## Release Workflow
 
+### Prepare a public ZIP
+
+With Git, Python and `luac` on PATH, choose a committed revision, its expected
+release version, and an output directory that does **not** exist. Local prep
+does not need GitHub access. Examples (replace the ref and version for your release):
+
+- Repo bundle (SensorList and ethos_events):
+  `python tools/prepare_public_zip.py --ref HEAD --bundle --expect-version 1.0.3 --out-dir dist/review-bundle`
+- One script (BoundryMap shown):
+  `python tools/prepare_public_zip.py --ref HEAD --project BoundryMap --expect-version 0.2.0 --out-dir dist/review-script`
+
+The helper reads the selected projects, version and builder directly from the
+resolved commit's Git blobs, preserving tracked bytes independently of local
+attributes and line-ending settings. It runs that builder in temporary storage, opens the new ZIP,
+checks its install paths, project versions and bundle manifest, and rejects map
+directories and boundary sidecars. Current public projects install under their
+own script directories. Review any new radio-root destination before permitting
+it in a public ZIP. Keep using the ordinary build command for personal packages
+with local maps.
+
+Review the entry list, versions, source commit, archive name and SHA-256 in the
+JSON receipt beside the ZIP. Existing archives are never reused or replaced.
+Stop here for a dry run. Only for a separately authorized release, prepare the
+final artifact from the exact commit to be tagged, upload that ZIP, then download
+the published asset to a new directory and compare its SHA-256 to this receipt.
+
 ### Shared Steps (All Release Kinds)
 
-1. Sync `main` and create release-prep branch:
-   - `git checkout main`
-   - `git pull --ff-only origin main`
-   - repo release: `git checkout -b release/v{VERSION}`
-   - script release: `git checkout -b release/{ProjectName}-v{VERSION}`
+1. Use the [release branch and worktree gate](../deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md#branchworktree-gate-required-before-release-actions)
+   to verify the release project's GitHub `OWNER/REPO` and Git remote. Identify
+   the remote that holds the PR head separately; it can be a contributor's fork.
+   Select a clean worktree for `release/v{VERSION}` (repo) or `release/{ProjectName}-v{VERSION}` (script).
 2. Run issue preflight with scope:
    - run `tools/session_preflight.py` with:
-     - `--mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {slug} --release-kind {repo|script}`
+     - `--mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {slug} --release-kind {repo|script} --target-branch {RELEASE_BRANCH}`
    - For `script` releases also include:
+     - `--release-repo {RELEASE_REPO}` for the verified project's gate issues
      - `--project {ProjectName}`
      - one or more `--script-gate-issue {N}` flags
-3. Sync release branch and confirm drift:
-   - `git fetch origin`
-   - `git push -u origin {RELEASE_BRANCH}`
-   - `git pull --ff-only origin {RELEASE_BRANCH}`
-   - `git rev-list --left-right --count origin/{RELEASE_BRANCH}...{RELEASE_BRANCH}`
+3. Sync an existing branch only with its verified upstream. For a new branch,
+   prepare locally from the verified base. Set the upstream on the first push
+   when sharing the release-prep PR.
 4. Validate according to the [validation matrix](../AGENTS.md#validation-matrix).
-5. Generate the standalone release body from the matching `CHANGELOG.md` entry with `tools/write_release_notes.py` (use `--version`, plus `--project` for script releases, and write to a temporary `--output` file), then reuse that file with `gh release create --notes-file`.
-6. Open and merge a release-prep PR from `{RELEASE_BRANCH}` into `main`.
-7. Sync `main`, tag, and push:
-   - `git checkout main`
-   - `git pull --ff-only origin main`
-   - `git tag {RELEASE_TAG}`
-   - `git push origin {RELEASE_TAG}`
-8. Publish GitHub release notes from the generated notes file sourced from `CHANGELOG.md`.
-9. Delete release-prep branch after publication:
-   - `git push origin --delete {RELEASE_BRANCH}`
-   - `git branch -d {RELEASE_BRANCH}`
+5. Commit release metadata, [prepare a public ZIP](#prepare-a-public-zip) and generate the standalone release body from the matching `CHANGELOG.md` entry with `tools/write_release_notes.py` (use `--version`, plus `--project` for script releases, and write to a temporary `--output` file).
+6. During a separately authorized release, follow the
+   [publish steps](../deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md#publish-steps-separately-authorized-release-only).
+   Push the candidate to the head repository and merge its PR into the release
+   project's `main`. Read the merge SHA from that PR in the release project
+   and verify its ancestry in freshly fetched `main`; the branch may have
+   advanced since the merge.
+7. At that exact SHA, prepare the final ZIP in a new directory and generate
+   notes from the matching changelog. Verify the receipt, push the tag to the
+   release project's remote, and confirm its target SHA. Publish and download
+   the asset in the same GitHub repository. Compare its SHA-256 to the receipt
+   before cleaning up the reviewed branch in the head repository.
 
 ### Repository Release (`release-kind=repo`)
 
@@ -221,12 +239,8 @@ branches after PR merge.
    - root `VERSION`
    - `CHANGELOG.md`
    - any repo-level workflow/docs/process files
-2. Build repo release install artifacts:
-   - `python tools/build.py --project SensorList --project ethos_events --dist`
-3. Ensure GitHub release assets include:
-   - `dist/sloppy-ethos_scripts.zip`
-4. Do not treat script-only manual gates as implicit blockers unless that script is in scope.
-5. Publish release notes and install assets with `gh release create v{VERSION} dist/sloppy-ethos_scripts.zip --title "{TITLE}" --notes-file {RELEASE_NOTES_FILE}` after generating `{RELEASE_NOTES_FILE}` with `tools/write_release_notes.py`.
+2. Use the [public bundle recipe](#prepare-a-public-zip) with the expected root version. Attach only the audited bundle at publication.
+3. Do not treat script-only manual gates as implicit blockers unless that script is in scope.
 
 ### Script Release (`release-kind=script`)
 
@@ -235,11 +249,7 @@ branches after PR merge.
    - touched `scripts/{ProjectName}/VERSION` file(s)
    - `CHANGELOG.md`
 2. Require all script gate issues passed through `--script-gate-issue` to be closed before tag/publish.
-3. Build release artifact(s), for example:
-   - `python tools/build.py --project SensorList --dist`
+3. Use the [public single-script recipe](#prepare-a-public-zip) with the target project and expected script version.
 4. Generate the script release notes file from `CHANGELOG.md` with `tools/write_release_notes.py` (use `--version`, `--project`, and `--output`) so the published GitHub release keeps the changelog markdown formatting.
-5. Attach script artifact(s) to the release, for example:
-   - `dist/SensorList-{scripts/SensorList/VERSION}.zip`
-6. Publish the script release with `gh release create ... --notes-file {RELEASE_NOTES_FILE}` instead of inline `--notes`.
-7. After the script release is published, update `README.md` `Download Latest Script Releases` so it reflects the newly published asset.
+5. Attach only the audited script ZIP. After the published download is verified, update `README.md` `Download Latest Script Releases` so it reflects the newly published asset.
    - Do not add unreleased script ZIP names to that README section before the GitHub release exists.

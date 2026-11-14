@@ -2,19 +2,23 @@
 
 ## Summary
 
--
+What changed, and what can a pilot or contributor do now?
 
-## Changes
+## How to try it
 
--
+Which build or commit should a reviewer use? Give the shortest steps to repeat
+the check and the result to look for.
+
+- What you observed (name the simulator or radio, model, and ETHOS version if applicable):
+- What still needs testing:
 
 ## Verification
 
 Check all items that apply to touched files (see `AGENTS.md` validation matrix):
 
-- [ ] Lua script behavior changes:
-  - `luac -p scripts/SensorList/main.lua`
-  - `python -m pytest tests/test_sensorlist_widget.py -q`
+- [ ] Lua changes: list the affected script, files parsed, local tests run
+  (e.g. `python -m pytest scripts/SensorList/tests -q` for SensorList), and
+  the matching runtime check or coverage gap.
 - [ ] Documentation changes:
   - `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
 - [ ] Build/tooling changes:
@@ -24,7 +28,8 @@ Check all items that apply to touched files (see `AGENTS.md` validation matrix):
 - [ ] Packaging/build command run for touched project(s), as needed:
   - `python tools/build.py --project SensorList --dist`
   - `python tools/build.py --project ethos_events --dist`
-- [ ] Manual simulator/radio check performed (required for UI/input behavior changes)
+- [ ] UI/input changes: describe the interaction and observed result on the
+  named simulator or radio, or identify what still needs checking.
 
 ## Notes
 

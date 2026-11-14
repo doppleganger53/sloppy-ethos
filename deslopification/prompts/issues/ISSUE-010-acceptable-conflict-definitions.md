@@ -24,15 +24,11 @@ known-safe duplicates are de-emphasized without being hidden.
 
 ## Branch/Worktree Gate (Required Before Editing)
 
-1. Run issue preflight:
-   - `python tools/session_preflight.py --mode issue --issue-number 10 --issue-kind enhancement --slug acceptable-conflict-definitions`
-2. Confirm target branch and current branch:
-   - `git branch --show-current`
-   - `git status --short --branch`
-3. If preflight blocks due to `main`, create/switch to the recommended branch before editing.
-4. If worktree is dirty, stop and confirm stash/commit/continue strategy.
-5. After switching branches, sync before editing:
-   - `git pull --ff-only origin {target-branch}`
+Follow the [issue branch and worktree gate](../templates/ISSUE_RESOLUTION_TEMPLATE.md#branch-and-worktree-gate-required-before-editing).
+Verify the live issue, linked PR head and available branches before using the
+snapshot's default. In the selected worktree, substitute the verified branch
+name for `{TARGET_BRANCH}` and run
+`python tools/session_preflight.py --mode issue --issue-number 10 --issue-kind enhancement --slug acceptable-conflict-definitions --target-branch {TARGET_BRANCH}`.
 
 ## Scope
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import shlex
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -193,7 +194,10 @@ def test_ethos_26_1_compatibility_baseline_captures_reference_targets_and_follow
     assert re.search(r"git\s+(-C\s+\S+\s+)?fetch\b", text)
     assert "X20RS" in text
     assert "X20S" in text
-    assert "tools/sim/harness/run.py" in text
+    for target in ("../tools/sim/harness/README.md",
+                   "../tools/sim/harness/suites/SensorList-X20RS-FCC.json"):
+        assert f"]({target})" in text
+        assert (COMPATIBILITY_BASELINE_PATH.parent / target).is_file()
     for area in ("SensorList", "BoundryMap", "ethos_events", "SmartMapper", "Arduino FBus"):
         assert area in text
 
@@ -231,7 +235,7 @@ def test_ethos_26_1_api_surface_matrix_lists_shared_surfaces_and_smoke_targets()
         "python -m pytest scripts/SensorList/tests -q",
         "tools/sim/harness/suites/SensorList-X20RS-FCC.json",
         "python -m pytest scripts/BoundryMap/tests -q",
-        "python tools/build.py --project ethos_events --deploy",
+        "luac -p scripts/ethos_events/main.lua",
     ):
         assert token in text
 
@@ -294,6 +298,47 @@ def test_live_guidance_concrete_source_and_test_paths_exist(path: Path):
     refs = re.findall(r"\b(?:scripts|tests|tools)/[\w./-]+\.(?:py|lua|json)\b", _read(path))
     for ref in refs:
         assert (REPO_ROOT / ref).is_file(), f"Missing live guidance path in {path}: {ref}"
+
+
+def _check_validation_targets(root: Path, command: str):
+    # Resolve the concrete arguments even for commands we never execute in docs CI.
+    args = shlex.split(command)
+    if args[:3] == ["python", "-m", "pytest"]:
+        for arg in args[3:]:
+            if arg.startswith("-") or "{" in arg:
+                continue
+            path = root / arg.split("::", 1)[0]
+            assert path.is_file() or (path.is_dir() and any(path.rglob("test_*.py"))), (
+                f"Missing pytest target: {arg}"
+            )
+    if args[:2] == ["python", "tools/sim/harness/run.py"]:
+        for index, arg in enumerate(args):
+            if arg == "--suite" or arg.startswith("--suite="):
+                if arg == "--suite":
+                    assert index + 1 < len(args), f"Missing suite path: {command}"
+                    suite = args[index + 1]
+                else:
+                    suite = arg.partition("=")[2]
+                if "{" not in suite:
+                    assert (root / suite).is_file(), f"Missing suite: {suite}"
+
+
+@pytest.mark.parametrize("path", sorted(set(DOC_FILES + LIVE_GUIDANCE_FILES)))
+def test_documented_validation_targets_exist(path: Path):
+    for command in discover_commands([path]):
+        _check_validation_targets(REPO_ROOT, command)
+
+
+@pytest.mark.parametrize("command", [
+    "python -m pytest existing/tests missing/tests -q",
+    "python tools/sim/harness/run.py headless --suite missing.json",
+])
+def test_missing_validation_target_is_reported_offline(tmp_path: Path, command: str):
+    existing = tmp_path / "existing" / "tests"
+    existing.mkdir(parents=True)
+    (existing / "test_example.py").touch()
+    with pytest.raises(AssertionError, match="missing"):
+        _check_validation_targets(tmp_path, command)
 
 
 def test_vscode_pytest_enabled_in_repo_settings():

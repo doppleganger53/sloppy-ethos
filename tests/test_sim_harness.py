@@ -270,20 +270,45 @@ def test_stage_projects_does_not_delete_existing_persist_files(tmp_path: Path):
     assert (persist / "scripts" / "SensorList" / "main.lua").exists()
 
 
-def test_resolve_persist_root_defaults_to_ethos_suite_version_and_radio(monkeypatch, tmp_path: Path):
+@pytest.mark.parametrize("mode", ["headless", "gui"])
+@pytest.mark.parametrize("explicit_persist", [False, True])
+def test_smoke_stages_only_in_requested_or_per_run_tree(monkeypatch, tmp_path: Path, mode, explicit_persist):
     package = _make_runtime_package(tmp_path)
-    monkeypatch.setattr(harness, "ethos_suite_data_root", lambda: tmp_path / "Ethos Suite")
+    monkeypatch.setattr(harness, "ensure_runtime", lambda *_: package)
+    monkeypatch.setattr(harness, "RUNS_ROOT", tmp_path / "runs")
+    monkeypatch.setattr(harness.subprocess, "run", lambda *a, **k: subprocess.CompletedProcess(a, 0, '{"status":"success"}', ""))
+    fake_home = tmp_path / "user"
+    config = fake_home / "Library" / "Application Support"
+    monkeypatch.setenv("APPDATA", str(config))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(config))
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: fake_home))
+    live = config / "Ethos Suite" / ".simulator" / package.version / "persist" / package.target.radio
+    live.mkdir(parents=True)
+    sentinel = live / "keep.bin"
+    sentinel.write_bytes(b"pilot settings")
+    custom = tmp_path / "chosen-scratch"
+    argv = ["run.py", mode, "--project", "SensorList"]
+    if mode == "gui":
+        argv.append("--dry-run")
+    if explicit_persist:
+        argv.extend(["--persist-dir", str(custom)])
+    monkeypatch.setattr(sys, "argv", argv)
+    run = harness.run_gui if mode == "gui" else harness.run_headless
+    result = run(harness.parse_args())
 
-    persist = harness.resolve_persist_root(package)
-
-    assert persist == tmp_path / "Ethos Suite" / ".simulator" / "26.1.0-RC2" / "persist" / "X20RS"
-
-
-def test_resolve_persist_root_accepts_explicit_override(tmp_path: Path):
-    package = _make_runtime_package(tmp_path)
-    explicit = tmp_path / "custom-persist"
-
-    assert harness.resolve_persist_root(package, str(explicit)) == explicit.resolve()
+    run_dir = Path(result["runDir"])
+    assert run_dir.parent == tmp_path / "runs"
+    persist = custom if explicit_persist else run_dir / "persist"
+    assert Path(result["persistDir"]) == persist
+    assert (persist / "scripts" / "SensorList" / "main.lua").is_file()
+    assert list(live.iterdir()) == [sentinel]
+    assert sentinel.read_bytes() == b"pilot settings"
+    if not explicit_persist:
+        # A second run of the same project cannot inherit the first model or scripts.
+        (persist / "first-run-only").touch()
+        next_run = run(harness.parse_args())
+        assert Path(next_run["persistDir"]) != persist
+        assert not (Path(next_run["persistDir"]) / "first-run-only").exists()
 
 
 def test_gui_handler_serves_runtime_files_from_cached_package(tmp_path: Path):

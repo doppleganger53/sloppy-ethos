@@ -1,36 +1,45 @@
 # Contributing
 
-## Repository Policy
+## Ways to contribute
 
-Read [AGENTS.md](AGENTS.md) for repository goals, operational policy, and
-change-specific validation. This guide covers contributor entry points and
-links to that policy rather than maintaining another copy.
+You can experiment in your own copy for as long as you like. If you want to
+share something, choose the route that fits.
+
+- **Suggest an idea.** Start a local draft using the [idea template](.github/ISSUE_TEMPLATE/enhancement.md). Describe what you want to see or do on the radio and how you would tell it worked. For example, “On my X20S, I want to see receiver voltage from across the bench. When the receiver is off, I'd expect a dash. I don't know my ETHOS version.”
+- **Try a widget and report back.** Fill in the [radio test report](.github/ISSUE_TEMPLATE/radio_test.md) with the steps you tried and what you saw. Both a successful check and a surprise help. If you share it, paste the report on the issue or pull request where the test was requested. For a standalone observation, choose **Radio test** under **Issues → New issue**.
+- **Share an implementation.** Start with the [code contribution workflow](#workflow). A pull request (PR) lets a maintainer review a change from your own copy of the project.
+
+An assistant can help with any route. Ask “Draft this for me here so I can
+review it.” The draft stays local. You decide whether to paste the idea into an
+**Idea or enhancement** issue, submit a test report, or share your code.
 
 ## Workflow
 
-1. If you start from the parent `EthosLua` workspace, enter `sloppy-ethos/`
-   before running repository commands. The parent `AGENTS.MD` defines workspace
-   boundaries; this repo's `AGENTS.md` defines the contribution and agent
-   workflow once inside the checkout.
-2. Create a short-lived branch from the latest `main` using naming conventions:
-   - `feature/{issue-number}-{short-slug}` for enhancements
-   - `fix/{issue-number}-{short-slug}` for bugs
-   - `docs/{issue-number}-{short-slug}` for docs/process changes
-   - `chore/{issue-number}-{short-slug}` for maintenance/tooling changes
-3. Keep changes focused and scoped to one concern.
-4. If installable script behavior/assets changed, bump that script `scripts/{ProjectName}/VERSION` in the same PR. Do not bump version files for docs-only or workflow-only changes.
-   If the script needs installable files outside `/scripts` or optional local assets under its own script folder, declare them in a project-local build manifest so `tools/build.py` can package, deploy, and clean them consistently.
-   Keep user-specific location assets local. For BoundryMap, place private flying-site maps under the ignored `scripts/BoundryMap/assets/maps/` folder and let the generic `assets` manifest entries package them.
-5. Do not bump root `VERSION` on issue branches; root release versioning is finalized on `release/v{VERSION}`.
-6. Run the checks for touched files in the
-   [canonical validation matrix](AGENTS.md#validation-matrix), including
-   packaging or simulator checks when applicable.
-
-7. Open a PR into `main` using the repository PR template and include linked-closing issue keywords (for example, `Closes #29`).
-8. Follow the [PR merge strategy](AGENTS.md#pr-merge-strategy).
-
-9. Do not manually close linked issues before merge; let GitHub close them from the merged PR closing keywords.
-10. Follow release branch/tag flow in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#main-branch-release-and-versioning-policy) and [Release Workflow](docs/DEVELOPMENT.md#release-workflow).
+1. Open this repository in your assistant. Ask it to read [AGENTS.md](AGENTS.md)
+   and find the open issue for the change. If a new issue is needed, review a
+   local draft and submit it when ready. If you started from the parent
+   `EthosLua` workspace, read its `AGENTS.md` and enter `sloppy-ethos/`.
+2. Ask the assistant to prepare the [issue branch](AGENTS.md#branching-conventions)
+   and run the [startup checks](AGENTS.md#required-startup-workflow). A branch
+   keeps this contribution together while you try it.
+3. Keep the change focused. Ask the assistant to follow the project's
+   [versioning policy](docs/DEVELOPMENT.md#main-branch-release-and-versioning-policy)
+   and [validation matrix](AGENTS.md#validation-matrix) for the files it changes.
+   For installable script files or optional local assets, follow the
+   [packaging documentation](docs/DEVELOPMENT.md#packaging-behavior).
+4. Ask the assistant to draft the [PR description](.github/PULL_REQUEST_TEMPLATE.md)
+   locally. Review the change, steps another pilot can repeat, what you observed,
+   and what still needs a simulator or radio test.
+5. When you choose to share, use **Fork** on GitHub to create a copy under your
+   account. Have the assistant help you save the changes in a commit and
+   upload (push) the contribution branch to **your fork**. On the original
+   repository, choose **New pull request → compare across forks**, select the
+   original project's `main` as the base and your fork's branch as the head.
+   Check the displayed changes, paste your reviewed description, and submit it.
+6. Link the issue. Use a closing keyword such as `Closes #29` when the PR
+   resolves it, or `Refs #29` for partial work. Maintainers handle review and
+   [merge](AGENTS.md#pr-merge-strategy), then follow the
+   [release workflow](docs/DEVELOPMENT.md#release-workflow) for publication.
 
 ## Reference Checkouts
 

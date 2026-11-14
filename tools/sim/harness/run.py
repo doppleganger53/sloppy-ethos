@@ -7,7 +7,6 @@ import datetime as dt
 import hashlib
 import importlib.util
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -391,21 +390,10 @@ def stage_project(project: str, persist_root: Path) -> Path:
     return stage_projects([project], persist_root)
 
 
-def ethos_suite_data_root() -> Path:
-    if os.name == "nt":
-        appdata = os.environ.get("APPDATA")
-        if appdata:
-            return Path(appdata) / "Ethos Suite"
-        return Path.home() / "AppData" / "Roaming" / "Ethos Suite"
-    if sys.platform == "darwin":
-        return Path.home() / "Library" / "Application Support" / "Ethos Suite"
-    return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "Ethos Suite"
-
-
-def resolve_persist_root(package: RuntimePackage, explicit: str | None = None) -> Path:
+def resolve_persist_root(run_root: Path, explicit: str | None = None) -> Path:
     if explicit:
         return Path(explicit).expanduser().resolve()
-    return ethos_suite_data_root() / ".simulator" / package.version / "persist" / package.target.radio
+    return run_root / "persist"
 
 
 def simulator_persist_mount(package: RuntimePackage) -> str:
@@ -456,7 +444,8 @@ def new_run_root(project: str, package: RuntimePackage, explicit: str | None = N
     if explicit:
         return Path(explicit).resolve()
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    return RUNS_ROOT / f"{stamp}-{project}-{package.target.key}-{package.version}"
+    RUNS_ROOT.mkdir(parents=True, exist_ok=True)
+    return Path(tempfile.mkdtemp(dir=RUNS_ROOT, prefix=f"{stamp}-{project}-{package.target.key}-{package.version}-"))
 
 
 def parse_runner_result(stdout: str, fallback: dict[str, Any]) -> dict[str, Any]:
@@ -487,7 +476,7 @@ def run_headless(args: argparse.Namespace) -> dict[str, Any]:
     label = project_label(projects)
     package = ensure_runtime(args.radio, args.region, args.ethos_version, args.no_download)
     run_root = new_run_root(label, package, args.run_dir)
-    persist_root = resolve_persist_root(package, args.persist_dir)
+    persist_root = resolve_persist_root(run_root, args.persist_dir)
     persist_root = stage_projects(projects, persist_root)
     logs_dir = run_root / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
@@ -641,7 +630,7 @@ def run_gui(args: argparse.Namespace) -> dict[str, Any]:
     label = project_label(projects)
     package = ensure_runtime(args.radio, args.region, args.ethos_version, args.no_download)
     run_root = new_run_root(label, package, args.run_dir)
-    persist_root = resolve_persist_root(package, args.persist_dir)
+    persist_root = resolve_persist_root(run_root, args.persist_dir)
     persist_root = stage_projects(projects, persist_root)
     gui_root = write_gui_files(
         package,
@@ -724,7 +713,7 @@ def parse_args() -> argparse.Namespace:
     headless.add_argument("--run-dir", help="Explicit run artifact directory.")
     headless.add_argument(
         "--persist-dir",
-        help="Explicit simulator persist directory. Defaults to the Ethos Suite persist path for the selected radio and version.",
+        help="Stage scripts in this directory. Default: persist/ inside this run's artifact directory.",
     )
 
     gui = subparsers.add_parser("gui", help="Stage a project and launch a browser-based manual simulator view.")
@@ -747,7 +736,7 @@ def parse_args() -> argparse.Namespace:
     gui.add_argument("--run-dir", help="Explicit run artifact directory.")
     gui.add_argument(
         "--persist-dir",
-        help="Explicit simulator persist directory. Defaults to the Ethos Suite persist path for the selected radio and version.",
+        help="Stage scripts in this directory. Default: persist/ inside this run's artifact directory.",
     )
     return parser.parse_args()
 

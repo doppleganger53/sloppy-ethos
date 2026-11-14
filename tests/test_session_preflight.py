@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 from argparse import Namespace
 from pathlib import Path
 
@@ -29,6 +30,89 @@ def test_branch_name_mapping():
     assert preflight.build_recommended_branch("chore", "22", "tooling-cleanup") == "chore/22-tooling-cleanup"
 
 
+@pytest.fixture
+def issue_checkout(tmp_path, monkeypatch):
+    """A private upstream and a checkout independent of the developer's Git settings."""
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    repo = tmp_path / "working"
+    repo.mkdir()
+    monkeypatch.chdir(repo)
+    git = preflight.run_git
+    git(["init", "--bare", "-b", "main", str(tmp_path / "upstream.git")])
+    git(["init", "-b", "main"])
+    git(["config", "user.name", "Fixture"])
+    git(["config", "user.email", "fixture@example.invalid"])
+    git(["commit", "--allow-empty", "-m", "Verified base"])
+    git(["remote", "add", "origin", str(tmp_path / "upstream.git")])
+    git(["push", "-u", "origin", "main"])
+    return repo
+
+
+def test_exact_target_isolates_new_branch_then_syncs_existing_upstream(issue_checkout, monkeypatch, capsys):
+    git = preflight.run_git
+    target = "docs/16-pilot-guide"
+    args = ["--mode", "issue", "--issue-number", "16", "--issue-kind", "docs",
+            "--slug", "pilot-guide", "--target-branch", target]
+    base = git(["rev-parse", "refs/remotes/origin/main"])
+    git(["switch", "-c", "other-task"])
+    sentinel = issue_checkout / "notes.txt"
+    sentinel.write_text("edits in progress", encoding="utf-8")
+    assert preflight.main(args) == 2
+    assert "Expected branch" in capsys.readouterr().out
+
+    isolated = issue_checkout.parent / "pilot-guide"
+    git(["worktree", "add", "--no-track", "-b", target, str(isolated), base])
+    monkeypatch.chdir(isolated)
+    assert git(["rev-parse", "HEAD"]) == base
+    assert preflight.main(args) == 0
+    assert "No upstream configured. Skip pull." in capsys.readouterr().out
+
+    git(["push", "-u", "origin", target])
+    # Another author advances the fixture's published branch.
+    author = issue_checkout.parent / "author"
+    git(["clone", "--branch", target, str(issue_checkout.parent / "upstream.git"), str(author)])
+    git(["-C", str(author), "-c", "user.name=Author", "-c", "user.email=author@example.invalid",
+         "commit", "--allow-empty", "-m", "Remote update"])
+    git(["-C", str(author), "push"])
+    assert preflight.main(args) == 0
+    assert f"Local tracking ref: refs/remotes/origin/{target}" in capsys.readouterr().out
+    remote = git(["config", "--get", f"branch.{target}.remote"])
+    merge_ref = git(["config", "--get", f"branch.{target}.merge"])
+    assert (remote, merge_ref) == ("origin", f"refs/heads/{target}")
+    assert git(["ls-remote", "--exit-code", "--heads", remote, merge_ref]).split()[0] == git(
+        ["-C", str(author), "rev-parse", "HEAD"]
+    )
+    git(["pull", "--ff-only"])
+    assert git(["rev-parse", "HEAD"]) == git(["-C", str(author), "rev-parse", "HEAD"])
+    git(["update-ref", "-d", f"refs/remotes/origin/{target}"])
+    assert preflight.main(args) == 2
+    assert "Could not verify the tracking ref" in capsys.readouterr().out
+    assert sentinel.read_text(encoding="utf-8") == "edits in progress"
+    assert git(["-C", str(issue_checkout), "branch", "--show-current"]) == "other-task"
+
+
+def test_release_target_and_detached_head(issue_checkout, capsys):
+    release = "release/v1.0.0"
+    args = ["--mode", "issue", "--issue-number", "16", "--issue-kind", "chore",
+            "--slug", "prepare-release", "--release-kind", "repo"]
+    git = preflight.run_git
+    git(["switch", "-c", release])
+    assert preflight.main(args) == 0
+    assert "PASS_WITH_WARNING" in capsys.readouterr().out
+    exact = [*args, "--target-branch", release]
+    assert preflight.main(exact) == 0
+    assert "Result: PASS\n" in capsys.readouterr().out
+    draft = issue_checkout / "draft.txt"
+    draft.write_text("previous task", encoding="utf-8")
+    assert preflight.main(exact) == 2
+    assert "contains changes" in capsys.readouterr().out
+    git(["switch", "--detach"])
+    assert preflight.main(exact) == 2
+    assert "Detached HEAD" in capsys.readouterr().out
+    assert draft.read_text(encoding="utf-8") == "previous task"
+
+
 def test_issue_mode_blocks_on_main(monkeypatch, capsys):
     monkeypatch.setattr(preflight, "get_current_branch", lambda: "main")
     monkeypatch.setattr(preflight, "is_worktree_dirty", lambda: True)
@@ -46,7 +130,7 @@ def test_issue_mode_blocks_on_main(monkeypatch, capsys):
     assert result == 2
     assert "Result: BLOCKED" in output
     assert "Issue-linked work cannot mutate on 'main'." in output
-    assert "git checkout -b feature/16-memory-optimization" in output
+    assert "Prepare the issue worktree from a verified base" in output
 
 
 def test_issue_mode_passes_on_recommended_branch(monkeypatch, capsys):
@@ -170,6 +254,8 @@ def test_parse_args_accepts_valid_script_release_scope():
             "repo-release-workflow-failures",
             "--release-kind",
             "script",
+            "--release-repo",
+            "upstream/widgets",
             "--project",
             "WidgetX",
             "--script-gate-issue",
@@ -177,6 +263,7 @@ def test_parse_args_accepts_valid_script_release_scope():
         ]
     )
     assert args.release_kind == "script"
+    assert args.release_repo == "upstream/widgets"
     assert args.project == "WidgetX"
     assert args.script_gate_issue == ["32"]
 
@@ -216,6 +303,7 @@ def test_parse_args_rejects_invalid_issue_field_formats(argv):
         ["--mode", "non-issue", "--issue-number", "16"],
         ["--mode", "non-issue", "--issue-kind", "enhancement"],
         ["--mode", "non-issue", "--slug", "memory-optimization"],
+        ["--mode", "non-issue", "--target-branch", "feature/16-memory-optimization"],
     ],
 )
 def test_parse_args_rejects_issue_fields_for_non_issue_mode(argv):
@@ -251,6 +339,8 @@ def test_parse_args_rejects_issue_fields_for_non_issue_mode(argv):
             "repo-release-workflow-failures",
             "--release-kind",
             "script",
+            "--release-repo",
+            "upstream/widgets",
             "--project",
             "WidgetX",
         ],
@@ -265,6 +355,8 @@ def test_parse_args_rejects_issue_fields_for_non_issue_mode(argv):
             "repo-release-workflow-failures",
             "--release-kind",
             "script",
+            "--release-repo",
+            "upstream/widgets",
             "--script-gate-issue",
             "32",
         ],
@@ -287,20 +379,33 @@ def test_parse_args_rejects_invalid_release_scope_combinations(argv):
         preflight.parse_args(argv)
 
 
+@pytest.mark.parametrize("repo_args", [[], ["--release-repo", "widgets"], ["--release-repo", "owner/repo/extra"]])
+def test_script_gate_requires_explicit_repository(repo_args):
+    with pytest.raises(SystemExit):
+        preflight.parse_args([
+            "--mode", "issue", "--issue-number", "39", "--issue-kind", "chore", "--slug", "release",
+            "--release-kind", "script", "--project", "WidgetX", "--script-gate-issue", "32", *repo_args,
+        ])
+
+
 def test_issue_mode_script_release_blocks_when_gate_issue_open(monkeypatch, capsys):
     monkeypatch.setattr(preflight, "get_current_branch", lambda: "fix/39-repo-release-workflow-failures")
     monkeypatch.setattr(preflight, "is_worktree_dirty", lambda: False)
-    monkeypatch.setattr(
-        preflight,
-        "get_issue_metadata",
-        lambda _issue_number: ("OPEN", "Manual testing of WidgetX-v1.0.0 changes", "https://github.com/example/32"),
-    )
+
+    def gh_with_fork_default(args):
+        if args == ["issue", "view", "32", "--repo", "upstream/widgets", "--json", "state,title,url"]:
+            return '{"state":"OPEN","title":"Test on radio","url":"https://github.com/upstream/widgets/issues/32"}'
+        raise AssertionError(f"Unexpected repository or query: {args}")
+
+    monkeypatch.setenv("GH_REPO", "contributor/widgets")
+    monkeypatch.setattr(preflight, "run_gh", gh_with_fork_default)
     args = Namespace(
         mode="issue",
         issue_number="39",
         issue_kind="bug",
         slug="repo-release-workflow-failures",
         release_kind="script",
+        release_repo="upstream/widgets",
         project="WidgetX",
         script_gate_issue=["32"],
     )
@@ -318,7 +423,7 @@ def test_issue_mode_script_release_passes_when_gate_issue_closed(monkeypatch, ca
     monkeypatch.setattr(
         preflight,
         "get_issue_metadata",
-        lambda _issue_number: ("CLOSED", "Manual testing complete", "https://github.com/example/32"),
+        lambda _issue_number, _repo: ("CLOSED", "Manual testing complete", "https://github.com/upstream/widgets/issues/32"),
     )
     args = Namespace(
         mode="issue",
@@ -326,6 +431,7 @@ def test_issue_mode_script_release_passes_when_gate_issue_closed(monkeypatch, ca
         issue_kind="bug",
         slug="repo-release-workflow-failures",
         release_kind="script",
+        release_repo="upstream/widgets",
         project="WidgetX",
         script_gate_issue=["32"],
     )

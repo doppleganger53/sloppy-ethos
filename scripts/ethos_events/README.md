@@ -11,16 +11,22 @@ System-tool wrapper around the upstream Ethos event helper from:
 - `scripts/ethos_events/example.lua`: upstream example script.
 - `scripts/ethos_events/UPSTREAM_README.md`: adapted usage notes for this repo's self-contained folder layout.
 
-## Build and deploy
+## Try the tool
 
-From repository root:
+From the repository folder, open an isolated simulator:
 
 ```powershell
-python tools/build.py --project ethos_events --dist
-python tools/build.py --project ethos_events --deploy
+$preview = Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString())
+python tools/sim/harness/run.py gui --project ethos_events --radio X20RS-FCC --ethos-version 1.6.6 --persist-dir "$preview"
 ```
 
-The deployed tool appears in Ethos system tools as `Ethos Events`.
+Open **Ethos Events** in the simulator's system tools. Tap the
+`throttleSame` row and check that its status changes.
+
+To build an install ZIP, run `python tools/build.py --project ethos_events --dist`.
+When a task calls for updating a live Suite installation, verify the
+configured path and name the radio, for example
+`python tools/build.py --project ethos_events --deploy --sim-radio X20RS`.
 
 ## Runtime behavior
 
