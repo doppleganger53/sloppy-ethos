@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Repository-level operating policy for Codex sessions in `sloppy-ethos`.
+Repository-level operating policy for coding assistants working in `sloppy-ethos`.
 
 ## Repository Goals And Policy Maintenance
 
@@ -13,9 +13,13 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 ## Priority And Scope
 
 - These rules are repository-wide and apply to every task in this checkout.
-- If a session starts from the parent `EthosLua` workspace, first read the
-  workspace `AGENTS.MD`, then enter `sloppy-ethos/` before applying this
-  repository policy.
+- A standalone checkout needs only this repository's policy. If starting in
+  the optional `EthosLua` workspace, read its `AGENTS.md` for routing, then
+  enter this checkout.
+- For a pilot's idea, the pilot describes the behavior and decides whether it
+  is useful. The assistant discovers available tools and version-matched APIs,
+  implements it and provides something to try. If a capability is missing,
+  hand off the smallest next step and tell the pilot what result to bring back.
 - Keep changes scoped to the user request. Do not perform unrelated cleanup or broad refactors.
 - Preserve existing behavior unless the task explicitly requests behavior changes.
 
@@ -63,12 +67,11 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 ## Validation Policy
 
 - Validation is mandatory for any change.
-- Debugging-session work on simulator-visible Lua behavior should use the automated WebSimulator harness when it supports the target, then deploy the touched script to the configured Ethos simulator before session closeout when live Ethos Suite state also needs to be updated.
-- Treat a session as a debugging session when the goal is to reproduce, inspect, or verify runtime behavior in the simulator rather than only editing docs or static tooling.
-- Minimum automated SensorList WebSimulator smoke command:
-  - `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`
-- Minimum debug deploy command for SensorList:
-  - `python tools/build.py --project SensorList --deploy`
+- Use static or fixture checks for local logic and a supported
+  [isolated WebSimulator](tools/sim/harness/README.md) for simulator behavior.
+  Write to a live Suite installation only when the task calls for updating
+  that named target. Claim real-radio behavior only from an observation on the
+  named hardware and firmware.
 - Run the minimum test/check commands based on the files touched:
 
 ### Validation Matrix
@@ -169,7 +172,7 @@ Repository-level operating policy for Codex sessions in `sloppy-ethos`.
 ## Definition Of Done (Before Commit/Push)
 
 - Required validation commands for touched files completed in this session.
-- If the session was a simulator debugging session for a Lua script, the updated script was deployed to the simulator in this session.
+- Say what was observed, on which target, and what the pilot still needs to try.
 - Parent workspace, repository status, and `.gitignore` reviewed for
   environment-specific files, sibling-reference changes, and sensitive data
   risks.

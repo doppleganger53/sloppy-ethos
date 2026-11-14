@@ -47,14 +47,10 @@ confirm that it is still pinned to the tracked `26.1` branch.
   `X20RS` primary, `X20S` secondary.
 - Local simulator paths stay private in `tools/deploy.config.json`; only the
   radio keys belong in committed docs.
-- Debugging sessions with Lua behavior changes must deploy the touched script to
-  the simulator before closeout, using
-  `python tools/build.py --project {ProjectName} --deploy` and `--sim-radio X20S`
-  when reproducing `X20S`-specific behavior.
-- Automated WebSimulator smoke tests now provide the repeatable first simulator
-  layer when a matching WebSimulator package exists. For SensorList on the
-  current `26.1` line, use
-  `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`.
+- Use the [isolated WebSimulator smoke](../tools/sim/harness/README.md) with
+  the [SensorList X20RS-FCC suite](../tools/sim/harness/suites/SensorList-X20RS-FCC.json)
+  or another supported target. A Suite deployment is a separate
+  change to a named installation; see [validation policy](../AGENTS.md#validation-policy).
 - Treat simulator results as the default reproducible baseline, but require
   physical-radio confirmation for issues that depend on touch events, icon
   loading, or source-handle behavior that may diverge from the simulator.

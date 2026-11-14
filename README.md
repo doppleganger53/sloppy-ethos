@@ -16,6 +16,8 @@ If you want to play around with finding repeatable, low-maintenance ways to effi
 
 `</human>`
 
+**[Make your first widget](docs/FIRST_WIDGET.md)** · **[Download an existing script](#download-latest-script-releases)**
+
 Ethos Lua script workspace. Current active script directories include
 `SensorList`, `BoundryMap`, `SmartMapper`, and `ethos_events`.
 
@@ -61,23 +63,17 @@ or GIF walkthrough will be added in a follow-up docs update.
 
 ## Quick Start
 
-- Build or deploy from repo root:
+- Build an install ZIP from the repository folder:
 
 ```powershell
 python tools/build.py --project SensorList --dist
 python tools/build.py --project BoundryMap --dist
 python tools/build.py --project SensorList --project ethos_events --dist
-python tools/build.py --project SensorList --deploy
-python tools/build.py --project ethos_events --deploy
-python tools/build.py --project SensorList --clean --sim-radio X20RS
 python tools/build.py --help
 ```
 
-- Running --clean now clears dist/ (or the configured --out-dir) outputs along with removing the simulator scripts.
-- Install the dist ZIP inside Ethos Suite for radio deployment.
-- Configure `tools/deploy.config.json` with `ETHOS_SIM_PATHS` entries before running `--deploy`/`--clean`.
-- Mark exactly one `ETHOS_SIM_PATHS` entry as `"default": true` for deploy/clean without `--sim-radio`.
-- During simulator debugging sessions, deploy the touched script before closing out the session so runtime verification uses the current build.
+- Packaging leaves Suite and the radio alone. To deliberately update a named
+  Suite installation later, see [Development](docs/DEVELOPMENT.md#configuring-simulator-path).
 - Single-script package version is read from `scripts/{ProjectName}/VERSION`; ZIP name format is `dist/{ProjectName}-{version}.zip`.
 - Multi-script dist bundles are an explicit naming exception and use the unversioned ZIP name: `dist/sloppy-ethos_scripts.zip`.
 - Projects can optionally declare extra installable files or generic asset groups in a project-local build manifest; those files are packaged into the ZIP root and are also deployed/cleaned alongside `scripts/{ProjectName}`.
@@ -88,12 +84,12 @@ python tools/build.py --help
 
 ```powershell
 python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1
-python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1
-python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json
-python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1
+$scratch = Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString())
+python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json --persist-dir "$scratch"
 ```
 
-- The harness stages projects with the same install contract as `tools/build.py`, writes them into the Ethos Suite persist directory for the selected radio/runtime, caches downloaded runtimes under `tools/sim/radios/`, serves GUI runtimes from that cache, and stores per-run logs under `tools/sim/runs/`.
+- The [WebSimulator harness](tools/sim/harness/README.md) also opens an isolated GUI.
+  Read `persistDir` in its result to see where the scripts were staged.
 - Use headless harness runs as the repeatable simulator layer between script-local Lua/pytest tests and manual Ethos Suite or physical-radio checks.
 
 ### 30-Second First Run
@@ -134,10 +130,10 @@ To build a single install ZIP with multiple scripts:
 
 - Recommended development environment: [Visual Studio Code](https://code.visualstudio.com/).
 - Recommended coding agent: [OpenAI Codex](https://openai.com/codex/).
-- If your Codex session starts in the parent `EthosLua` workspace, treat
-  `sloppy-ethos/` as the implementation repo and enter it before running repo
-  commands. The parent `AGENTS.MD` only defines workspace boundaries; this
-  repository's `AGENTS.md` remains the source of truth once inside the repo.
+- Any coding assistant can start from a standalone copy using the
+  [first-widget starter](docs/FIRST_WIDGET.md). If starting from an
+  `EthosLua` workspace, its `AGENTS.md` guides repository selection;
+  enter this repository before running its commands.
 - Keep sibling reference checkouts such as `ETHOS-Feedback-Community/` and
   `Ethos-GPS-AccuMapv1/` separate from this repo. Pull them with scoped
   commands such as `git -C ../ETHOS-Feedback-Community pull --ff-only`, and

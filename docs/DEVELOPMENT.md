@@ -16,7 +16,7 @@ this document describes tooling and release procedures.
 
 - `sloppy-ethos/` is the primary implementation repository inside the parent
   `EthosLua` workspace.
-- If a session starts from the parent workspace, read the parent `AGENTS.MD`,
+- A standalone checkout needs no parent. If starting from the parent workspace, read its `AGENTS.md`,
   then enter `sloppy-ethos/` before running repository commands or applying
   this repo's policy.
 - Keep sibling reference checkouts outside this repo's Git scope. Use scoped
@@ -29,28 +29,21 @@ this document describes tooling and release procedures.
 
 - Syntax check:
   `luac -p scripts/SensorList/main.lua`
-- Package and deploy:
+- Package locally:
   `python tools/build.py --project SensorList --dist`
   `python tools/build.py --project BoundryMap --dist`
   `python tools/build.py --project SensorList --project ethos_events --dist`
-  `python tools/build.py --project SensorList --deploy`
-  `python tools/build.py --project ethos_events --deploy`
-  `python tools/build.py --project SensorList --clean --sim-radio X20RS`
   `python tools/build.py --help`
-- Automated WebSimulator harness:
-  `python tools/sim/harness/run.py download --radio X20RS-FCC --ethos-version latest-26.1`
-  `python tools/sim/harness/run.py headless --project SensorList --radio X20RS-FCC --ethos-version latest-26.1`
-  `python tools/sim/harness/run.py headless --suite tools/sim/harness/suites/SensorList-X20RS-FCC.json`
-  `python tools/sim/harness/run.py gui --project SensorList --project BoundryMap --radio X20RS-FCC --ethos-version latest-26.1`
-
-## Debugging Session Rule
-
-Follow the [validation policy](../AGENTS.md#validation-policy) for simulator
-smoke and live deploy requirements. The relevant commands are listed above;
-use `--dist` only when a fresh install ZIP is also needed.
+- For an isolated headless or GUI run, use the examples in the
+  [WebSimulator harness guide](../tools/sim/harness/README.md).
 
 ## Configuring Simulator Path
 
+- Only for a requested change to a named live Suite profile: verify its
+  configured path and select the radio, for example
+  `python tools/build.py --project SensorList --deploy --sim-radio X20RS`.
+  `--clean` removes installed files **and** build outputs. Neither command is
+  needed for the WebSimulator.
 - Copy `tools/deploy.config.example.json` to `tools/deploy.config.json` and populate `ETHOS_SIM_PATHS`.
 - `ETHOS_SIM_PATHS` must be an array of entries with `radio` and `path`.
 - Mark exactly one entry as `"default": true` for deploy/clean when `--sim-radio` is not provided.
@@ -83,7 +76,7 @@ use `--dist` only when a fresh install ZIP is also needed.
 - keeps the `download` command as the explicit path for refreshing a latest-alias release lookup.
 - downloads the requested radio WebSimulator package, such as `X20RS-FCC-WebSimulator.zip`, into `tools/sim/radios/{Radio}-{Region}/{EthosVersion}/{PackageName}/`.
 - validates the GitHub asset SHA-256 digest when release metadata provides one.
-- stages scripts into the Ethos Suite persist directory for the selected radio/runtime by calling the existing `tools/build.py` install-spec helpers.
+- stages scripts in a disposable persist directory using the existing `tools/build.py` install-spec helpers.
 - accepts repeated `--project` values so GUI and headless sessions can stage one project or a project set into the same simulator persist tree.
 - supports JSON smoke suites, starting with `tools/sim/harness/suites/SensorList-X20RS-FCC.json`.
 - runs headless smoke checks through Node.js and reports structured statuses for success, missing runtime, download failure, startup failure, script failure, and timeout.
