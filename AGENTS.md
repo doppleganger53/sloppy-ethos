@@ -79,16 +79,14 @@ Repository-level operating policy for coding assistants working in `sloppy-ethos
 - Documentation or guidance changes (`AGENTS.md`, `README.md`, `docs/`,
   `CONTRIBUTING.md`, PR/issue templates):
   - `python -m pytest tests/test_docs_commands.py tests/test_docs_contracts.py -q`
-- Lua widget behavior changes (`scripts/**/*.lua`):
-  - `luac -p scripts/SensorList/main.lua`
-  - `python -m pytest scripts/SensorList/tests -q`
-  - For another script, run that script's local test folder, for example
-    `python -m pytest scripts/BoundryMap/tests -q`
+- For a Lua runtime change, follow the affected script. Parse each changed Lua
+  file with `luac -p` and use StyLua in check mode on those files when checking
+  formatting. Run that script's local tests if present. For runtime behavior,
+  look in `tools/sim/harness/suites/` for the matching project,
+  radio and version. Record any missing coverage and what you actually observed.
 - Build/tooling changes (`tools/`, Python build/test harness):
   - `python -m pytest tests/test_build_py.py -q`
   - For simulator harness changes, also run `python -m pytest tests/test_sim_harness.py -q`
-- Formatting changes:
-  - `stylua --config-path tools/config/stylua.toml scripts`
 - Packaging changes: build the affected package using
   [Core Commands](docs/DEVELOPMENT.md#core-commands) and inspect its contents.
 - Broad or cross-cutting changes:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-import subprocess
+import shlex
 from pathlib import Path
 
 import pytest
@@ -44,9 +44,9 @@ def _extract_fenced_commands(text: str) -> list[str]:
     return commands
 
 
-def discover_commands() -> list[str]:
+def discover_commands(paths=DOC_FILES) -> list[str]:
     commands: list[str] = []
-    for path in DOC_FILES:
+    for path in paths:
         text = path.read_text(encoding="utf-8")
         commands.extend(_extract_backtick_commands(text))
         commands.extend(_extract_fenced_commands(text))
@@ -104,9 +104,13 @@ def test_documented_command_syntax_or_execution(command: str):
         return
 
     if command.startswith("stylua "):
+        args = shlex.split(command)
+        assert "--check" in args, f"Validation must not rewrite Lua: {command}"
+        if "{changed-file.lua}" in args:
+            pytest.skip("Scoped command template is exercised with a temporary Lua file.")
         if not command_exists("stylua"):
             pytest.skip("stylua not installed in this environment.")
-        result = run_command(command.split() + ["--check"])
+        result = run_command(args)
         assert result.returncode == 0, result.stderr
         return
 
@@ -138,17 +142,20 @@ def test_is_manual_command_identifies_environment_dependent_commands(command: st
     assert is_manual_command(command) is True
 
 
-def test_documented_command_stylua_runs_with_check(monkeypatch):
-    called: dict[str, object] = {}
-
-    def fake_run(command: list[str]):
-        called["command"] = command
-        return subprocess.CompletedProcess(command, 0, "", "")
-
-    monkeypatch.setattr("tests.test_docs_commands.command_exists", lambda _name: True)
-    monkeypatch.setattr("tests.test_docs_commands.run_command", fake_run)
-    test_documented_command_syntax_or_execution("stylua --config-path tools/config/stylua.toml scripts")
-    assert called["command"] == ["stylua", "--config-path", "tools/config/stylua.toml", "scripts", "--check"]
+@pytest.mark.skipif(not command_exists("stylua"), reason="StyLua is optional.")
+def test_documented_stylua_checks_only_the_selected_file(tmp_path):
+    example, = [cmd for cmd in discover_commands() if cmd.startswith("stylua ") and "{changed-file.lua}" in cmd]
+    target = tmp_path / "changed file.lua"
+    other = tmp_path / "other.lua"
+    args = [str(target) if arg == "{changed-file.lua}" else arg for arg in shlex.split(example)]
+    unformatted = b"local x=1\r\n"
+    other.write_bytes(unformatted)
+    for source, expected in [(b"local x = 1\r\n", 0), (unformatted, 1)]:
+        target.write_bytes(source)
+        result = run_command(args)
+        assert result.returncode == expected, result.stdout + result.stderr
+        assert target.read_bytes() == source
+        assert other.read_bytes() == unformatted
 
 
 @pytest.mark.parametrize(

@@ -140,7 +140,9 @@ To build a single install ZIP with multiple scripts:
   treat them as read-only evidence unless you are explicitly updating them.
 - Before copying reference code, docs, or assets into this repo, verify the
   upstream license and record attribution.
-- Format Lua: VS Code task `Format Lua (stylua)` or run `stylua --config-path tools/config/stylua.toml scripts`
+- Check Lua formatting: open the affected Lua file and run the VS Code task
+  `Check active Lua file (StyLua)`, or substitute its path in
+  `stylua --check --config-path tools/config/stylua.toml {changed-file.lua}`.
 - Build package: VS Code task `Build Ethos Install ZIP`
 - Lua parse check:
 

@@ -2,13 +2,14 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Format Lua (stylua)",
-      "type": "shell",
+      "label": "Check active Lua file (StyLua)",
+      "type": "process",
       "command": "stylua",
       "args": [
+        "--check",
         "--config-path",
         "tools/config/stylua.toml",
-        "scripts"
+        "${file}"
       ],
       "group": {
         "kind": "build",
