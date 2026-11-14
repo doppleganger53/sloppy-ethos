@@ -2130,8 +2130,9 @@ local function event(widget, category, value, x, y)
   if type(widget) ~= "table" then
     return false
   end
+  local phase
   local ok, result = pcall(function()
-    local phase = resolveTouchPhase(category, value)
+    phase = resolveTouchPhase(category, value)
     if not phase then
       return false
     end
@@ -2143,6 +2144,11 @@ local function event(widget, category, value, x, y)
     end
     return handleMapTouch(widget, phase, contentX, contentY)
   end)
+  -- Keep the drag flag during dispatch to guard Save, then end the gesture
+  -- even when a control consumed the release or a handler failed.
+  if phase == "end" then
+    widget.mapTouchActive = false
+  end
   if not ok then
     setWidgetError(widget, "event", result)
     return false

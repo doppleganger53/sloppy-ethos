@@ -90,3 +90,17 @@
   The Lua regression harness is skipped because Lua is unavailable; luac is
   also unavailable. `git diff --check` passed. No simulator check was performed.
 - Follow-up: execute the Lua harness and verify touch behavior on Ethos.
+
+## PR #109 touch-release review remediation — 2026-11-14
+
+- Confirmed `discussion_r4574480419`: releasing a map drag over Delete
+  consumed the release without clearing mapTouchActive, blocking later Save.
+- Clear mapTouchActive after every resolved touch-end dispatch, including
+  control-consumed releases and handler errors. The flag remains available
+  during dispatch so releasing a drag over Save still does not persist it.
+- Added regression coverage for draw -> release over Delete -> end-only Save;
+  retained the existing drag-over-Save protection assertions.
+- Validation: focused BoundryMap pytest run via uv completed with 2 passed,
+  1 skipped; git diff --check passed. Lua and luac remain unavailable, so
+  the Lua regression and syntax checks could not run. No simulator check.
+- Follow-up: run Lua regression coverage and confirm on Ethos before merge.

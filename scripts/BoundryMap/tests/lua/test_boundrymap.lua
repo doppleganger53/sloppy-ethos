@@ -829,6 +829,22 @@ assert_equal(widget.boundaries[1].y2, overlapSaveY, "map release over save uses 
 assert_true(not widget.mapTouchActive, "map release over save clears active map touch")
 assert_true(ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] == nil, "map release over save does not save sidecar")
 
+-- A control-consumed release must not block the next independent Save tap.
+do
+  local deleteRect = test.controlRects(widget).delete
+  assert_true(test.event(widget, _G.EVT_TOUCH, 16640, 40, rawTouchY(30)), "draw before Delete start consumed")
+  assert_true(widget.mapTouchActive, "drawing gesture is active")
+  assert_true(test.event(widget, _G.EVT_TOUCH, 16642, 120, rawTouchY(48)), "draw before Delete move consumed")
+  assert_true(test.event(widget, _G.EVT_TOUCH, 16641, deleteRect.left + 3, rawTouchY(deleteRect.top + 3)), "release over Delete consumed")
+  assert_true(widget.deleteMode and not widget.drawMode, "release switches to Delete")
+  assert_true(not widget.mapTouchActive, "Delete release ends drawing gesture")
+  assert_true(ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] == nil, "Delete release does not save")
+  ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = 0
+  assert_true(test.event(widget, _G.EVT_TOUCH, 16641, overlapSaveX, rawTouchY(overlapSaveY)), "subsequent end-only Save consumed")
+  assert_equal(ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"], 1, "Save persists after release over Delete")
+  assert_true(not widget.boundaryDirty, "Save clears dirty state after Delete release")
+end
+
 widget = test.create()
 widget.boundryWarningMode = 1
 widget.warningType = 0
