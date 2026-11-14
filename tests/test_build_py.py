@@ -660,6 +660,35 @@ def test_ensure_packaged_readme_writes_default_when_missing(tmp_path: Path):
     assert "scripts/WidgetX" in content
 
 
+def test_stage_project_files_removes_stale_compiled_lua_shadow(tmp_path: Path):
+    project_dir = tmp_path / "project"
+    destination_root = tmp_path / "sim"
+    project_dir.mkdir()
+    (project_dir / "main.lua").write_text("print('current')\n", encoding="utf-8")
+    script_destination = destination_root / "scripts" / "WidgetX"
+    script_destination.mkdir(parents=True)
+    (script_destination / "main.luac").write_bytes(b"stale bytecode")
+    install_spec = build.ProjectInstallSpec(project_dir, "WidgetX", tuple())
+
+    build.stage_project_files(install_spec, destination_root, dirs_exist_ok=True)
+
+    assert (script_destination / "main.lua").read_text(encoding="utf-8") == "print('current')\n"
+    assert not (script_destination / "main.luac").exists()
+
+
+def test_stage_project_files_preserves_packaged_compiled_lua(tmp_path: Path):
+    project_dir = tmp_path / "project"
+    destination_root = tmp_path / "sim"
+    project_dir.mkdir()
+    (project_dir / "main.lua").write_text("print('current')\n", encoding="utf-8")
+    (project_dir / "main.luac").write_bytes(b"packaged bytecode")
+    install_spec = build.ProjectInstallSpec(project_dir, "WidgetX", tuple())
+
+    build.stage_project_files(install_spec, destination_root)
+
+    assert (destination_root / "scripts" / "WidgetX" / "main.luac").read_bytes() == b"packaged bytecode"
+
+
 def test_format_deploy_error_permission():
     target = Path("C:/sim/scripts/SensorList")
     message = build.format_deploy_error(target, PermissionError("denied"))
