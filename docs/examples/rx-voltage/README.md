@@ -28,11 +28,19 @@ $preview = Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString())
 python tools/sim/harness/run.py gui --project RxVoltage --radio X20RS-FCC --ethos-version 1.6.6 --persist-dir "$preview"
 ```
 
-In the simulated radio, add **RX Voltage** to a screen's widget area. With no
-active RxBatt source, look for a dash. If a model has an active receiver
-voltage sensor with that name, compare the displayed number to its telemetry
-reading. A simulated startup does not check either visible result. If the GUI
-or sensor is unavailable, report the fixture result and the observation still
+On a fresh **1.6.6** preview:
+
+1. Choose a language, acknowledge the fresh-profile notices, and use the
+   top-left back arrow to leave the model wizard.
+2. On the home screen, tap the **overlapping screens** icon at the bottom.
+   Under **Screen1**, tap **Configure** in the large left widget area.
+3. Open the **Widget** list, scroll down, and choose **RX Voltage**. Tap
+   **Back**, then the **Home** icon. With no active RxBatt source, look for
+   a dash under **RX Voltage**. If the model has an active sensor with that
+   name, compare the displayed number to the telemetry reading.
+
+A simulator startup does not check either visible result. If the GUI or
+sensor is unavailable, report the fixture result and the observation still
 needed. Ctrl+C stops the GUI server.
 
 For “one size larger,” change the working widget's `FONT_XL` to `FONT_XXL`.
