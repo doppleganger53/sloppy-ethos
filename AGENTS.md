@@ -148,8 +148,10 @@ Repository-level operating policy for coding assistants working in `sloppy-ethos
 - Issue-linked work is any session tied to a GitHub issue number/URL or any
   session using `deslopification/prompts/issues/*.md`.
 - Issue-linked work must not mutate repository files while on `main`.
-- If issue preflight fails on `main`, create/switch to the recommended
-  short-lived branch before editing.
+- For a named issue or release target, verify the actual repository, open
+  issue, related PRs and branch before editing. Use the
+  [branch and worktree gate](deslopification/prompts/templates/ISSUE_RESOLUTION_TEMPLATE.md#branch-and-worktree-gate-required-before-editing)
+  to check the exact target and preserve unrelated local work.
 - Non-issue work may be performed on `main`, but agents must ask the user for
   confirmation before mutating files on `main`.
 

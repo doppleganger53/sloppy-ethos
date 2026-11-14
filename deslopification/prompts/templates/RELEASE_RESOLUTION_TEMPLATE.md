@@ -30,11 +30,9 @@ scope clarity, explicit gate handling, and auditable validation output.
 
 1. Follow [AGENTS.md](../../../AGENTS.md). Consult relevant project notes only
    when prior release decisions or unresolved gates affect this release.
-2. Check branch/worktree state:
-   - `git branch --show-current`
-   - `git status --short --branch`
+2. Select the release worktree as described in the branch/worktree gate below.
 3. Run issue preflight with release scope:
-   - `python tools/session_preflight.py --mode issue --issue-number {ISSUE_NUMBER} --issue-kind {ISSUE_KIND} --slug {ISSUE_SLUG} --release-kind {RELEASE_KIND}`
+   - `python tools/session_preflight.py --mode issue --issue-number {ISSUE_NUMBER} --issue-kind {ISSUE_KIND} --slug {ISSUE_SLUG} --release-kind {RELEASE_KIND} --target-branch {RELEASE_BRANCH}`
    - For `script` releases also provide:
      - `--project {PROJECT_NAME}`
      - one or more `--script-gate-issue {N}` flags for scope-specific manual gates
@@ -47,15 +45,12 @@ scope clarity, explicit gate handling, and auditable validation output.
 
 ## Branch/Worktree Gate (Required Before Release Actions)
 
-1. Ensure current branch is `{RELEASE_BRANCH}` (repo: `release/v{REPO_VERSION}`; script: `release/{PROJECT_NAME}-v{SCRIPT_VERSION}`).
-2. If worktree is dirty, stop and confirm commit/stash strategy with the user.
-3. Sync refs before release:
-   - `git fetch origin`
-4. Confirm release branch is based on latest `main`:
-   - `git rev-list --left-right --count origin/main...{RELEASE_BRANCH}`
-5. If `{RELEASE_BRANCH}` already exists on origin, sync and confirm no ahead/behind drift:
-   - `git pull --ff-only origin {RELEASE_BRANCH}`
-   - `git rev-list --left-right --count origin/{RELEASE_BRANCH}...{RELEASE_BRANCH}`
+1. Follow the [issue branch and worktree gate](ISSUE_RESOLUTION_TEMPLATE.md#branch-and-worktree-gate-required-before-editing)
+   using the named release branch and the release-scoped preflight above.
+2. Verify and fetch the project's remote and check that the release branch
+   contains its current `main`: `git merge-base --is-ancestor {REMOTE}/main HEAD`.
+3. For a release branch with a verified upstream, confirm both counts from
+   `git rev-list --left-right --count "@{upstream}...HEAD"` are zero after syncing.
 
 ## Release Scope Gate (Required)
 

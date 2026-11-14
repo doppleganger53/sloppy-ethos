@@ -84,6 +84,7 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     parser.add_argument("--issue-number")
     parser.add_argument("--issue-kind", choices=sorted(ISSUE_KIND_TO_PREFIX))
     parser.add_argument("--slug")
+    parser.add_argument("--target-branch", help="Require this exact issue or release branch in a clean worktree.")
     parser.add_argument("--release-kind", choices=RELEASE_KINDS)
     parser.add_argument("--project")
     parser.add_argument("--script-gate-issue", action="append", default=[])
@@ -124,7 +125,7 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
             if args.project or args.script_gate_issue:
                 parser.error("--project and --script-gate-issue require --release-kind.")
     else:
-        if args.issue_number or args.issue_kind or args.slug:
+        if args.issue_number or args.issue_kind or args.slug or args.target_branch is not None:
             parser.error("--mode non-issue does not accept issue-specific arguments.")
         if args.release_kind or args.project or args.script_gate_issue:
             parser.error("--mode non-issue does not accept release-specific arguments.")
@@ -145,6 +146,9 @@ def run_preflight(args: argparse.Namespace) -> int:
         return 1
 
     if args.mode == "issue":
+        if not branch:
+            print("Result: BLOCKED\nDetached HEAD. Select a named worktree for this task before editing.")
+            return 2
         recommended = build_recommended_branch(args.issue_kind, args.issue_number, args.slug)
         print("Mode: issue")
         print(f"Current branch: {branch}")
@@ -159,9 +163,28 @@ def run_preflight(args: argparse.Namespace) -> int:
         if branch == "main":
             print("Result: BLOCKED")
             print("Issue-linked work cannot mutate on 'main'.")
-            print(f"Create/switch branch: git checkout -b {recommended}")
-            print(f"If branch exists: git checkout {recommended}")
+            print("Prepare the issue worktree from a verified base or its existing branch.")
             return 2
+
+        target = getattr(args, "target_branch", None)
+        if target is not None:
+            if branch != target:
+                print(f"Result: BLOCKED\nExpected branch: {target}. Select its worktree before editing.")
+                return 2
+            if dirty:
+                print("Result: BLOCKED\nThe target worktree contains changes. Identify their owner before editing.")
+                return 2
+            try:
+                upstream = run_git(["for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}"])
+                if upstream:
+                    run_git(["rev-parse", "--verify", f"{upstream}^{{commit}}"])
+            except RuntimeError as exc:
+                print(f"Result: BLOCKED\nCould not verify the tracking ref: {exc}")
+                return 2
+            if upstream:
+                print(f"Local tracking ref: {upstream}. Verify its remote and live branch before syncing.")
+            else:
+                print("No upstream configured. Skip pull.")
 
         if release_kind == "script":
             try:
@@ -176,7 +199,7 @@ def run_preflight(args: argparse.Namespace) -> int:
                     print(f"- #{issue_number}: {title} ({url})")
                 return 2
 
-        if branch != recommended:
+        if branch != recommended and target is None:
             print("Result: PASS_WITH_WARNING")
             print(f"Current branch differs from recommended branch '{recommended}'.")
             return 0

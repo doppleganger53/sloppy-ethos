@@ -179,22 +179,18 @@ branches after PR merge.
 
 ### Shared Steps (All Release Kinds)
 
-1. Sync `main` and create release-prep branch:
-   - `git checkout main`
-   - `git pull --ff-only origin main`
-   - repo release: `git checkout -b release/v{VERSION}`
-   - script release: `git checkout -b release/{ProjectName}-v{VERSION}`
+1. Use the [release branch and worktree gate](../deslopification/prompts/templates/RELEASE_RESOLUTION_TEMPLATE.md#branchworktree-gate-required-before-release-actions)
+   to select a clean worktree for `release/v{VERSION}` (repo) or
+   `release/{ProjectName}-v{VERSION}` (script).
 2. Run issue preflight with scope:
    - run `tools/session_preflight.py` with:
-     - `--mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {slug} --release-kind {repo|script}`
+     - `--mode issue --issue-number {N} --issue-kind {enhancement|bug|docs|chore} --slug {slug} --release-kind {repo|script} --target-branch {RELEASE_BRANCH}`
    - For `script` releases also include:
      - `--project {ProjectName}`
      - one or more `--script-gate-issue {N}` flags
-3. Sync release branch and confirm drift:
-   - `git fetch origin`
-   - `git push -u origin {RELEASE_BRANCH}`
-   - `git pull --ff-only origin {RELEASE_BRANCH}`
-   - `git rev-list --left-right --count origin/{RELEASE_BRANCH}...{RELEASE_BRANCH}`
+3. Sync an existing branch only with its verified upstream. For a new branch,
+   prepare locally from the verified base. Set the upstream on the first push
+   when sharing the release-prep PR.
 4. Validate according to the [validation matrix](../AGENTS.md#validation-matrix).
 5. Generate the standalone release body from the matching `CHANGELOG.md` entry with `tools/write_release_notes.py` (use `--version`, plus `--project` for script releases, and write to a temporary `--output` file), then reuse that file with `gh release create --notes-file`.
 6. Open and merge a release-prep PR from `{RELEASE_BRANCH}` into `main`.

@@ -29,18 +29,42 @@ The task-specific context and acceptance criteria below supplement that policy.
 
 ## Branch And Worktree Gate (Required Before Editing)
 
-1. Run issue preflight before editing:
-   - `python tools/session_preflight.py --mode issue --issue-number {ISSUE_NUMBER} --issue-kind {ISSUE_KIND} --slug {SHORT_SLUG}`
-2. Confirm target branch from prompt: `{TARGET_BRANCH}`.
-3. Run:
-   - `git branch --show-current`
-   - `git status --porcelain`
-4. If preflight blocks due to `main`, create/switch to the recommended issue branch before editing.
-5. If branch differs from target, stop and confirm how to handle local changes before switching.
-6. If worktree is dirty, stop and confirm whether to stash, commit, or continue as-is.
-7. After any branch switch, sync and re-check:
-   - `git pull --ff-only origin {TARGET_BRANCH}`
-   - `git status --short --branch`
+1. Identify the checkout with `git rev-parse --show-toplevel`, `git remote -v`,
+   `git status --short --branch`, and `git worktree list`. Match the issue
+   URL's owner/repo to the project or upstream of the contributor's fork.
+2. Open the live issue and confirm it is open. Check linked PRs, their head
+   repositories/branches, and existing branches. With the CLI, use
+   `gh issue view {ISSUE_NUMBER} -R {OWNER/REPO} --json state,title,url,closedByPullRequestsReferences`,
+   `gh pr view {PR_NUMBER} -R {OWNER/REPO} --json state,headRepositoryOwner,headRefName,baseRefName`,
+   `git branch -avv`, and `git ls-remote --heads {REMOTE}` as needed.
+   Reconcile the requested target with that evidence. If multiple branches
+   could represent the intended work or a named target conflicts with the
+   issue/PR, resolve the discrepancy with the user before choosing one.
+3. Prepare the selected worktree:
+   - **Existing branch:** use its own clean worktree, or add one with
+     `git worktree add {NEW_PATH} {LOCAL_BRANCH}` if the branch is free.
+     If it exists only on a remote, fetch that verified remote and use
+     `git worktree add --track -b {TARGET_BRANCH} {NEW_PATH} {REMOTE}/{TARGET_BRANCH}`.
+   - **New, unpublished branch:** verify the intended base repository and
+     commit (normally its current `main`), then use
+     `git worktree add --no-track -b {TARGET_BRANCH} {NEW_PATH} {BASE_COMMIT}`.
+     A branch without an upstream has nothing to pull.
+   - **Unrelated, dirty, or detached checkout:** leave it in place and use the
+     selected branch's worktree. If that branch is already in use with local
+     edits, establish who owns them before continuing. Avoid stashing or
+     moving another task's work.
+4. In the selected clean worktree run
+   `python tools/session_preflight.py --mode issue --issue-number {ISSUE_NUMBER} --issue-kind {ISSUE_KIND} --slug {SHORT_SLUG} --target-branch {TARGET_BRANCH}`.
+   Supply an explicitly approved custom or release branch as the target when
+   applicable. The exact-target check enforces the chosen branch. A warning
+   from preflight without this option does not verify a named target.
+5. For a tracking branch, compare the configured remote and merge ref
+   (`git config --get branch.{TARGET_BRANCH}.remote` and
+   `git config --get branch.{TARGET_BRANCH}.merge`) with the verified PR head
+   or intended branch. Confirm it exists with
+   `git ls-remote --exit-code --heads {REMOTE} {FULL_REMOTE_BRANCH_REF}`.
+   Only on a match run `git pull --ff-only` with no ref override. Stop on a
+   missing, unexpected or divergent upstream. Recheck `git status --short --branch`.
 
 ## Repo Context To Load
 
