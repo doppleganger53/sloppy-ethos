@@ -39,7 +39,7 @@ jobs:
           if [[ "$BASE_SHA" =~ ^0+$ ]]; then
             BASE_SHA=$(git hash-object -w -t tree /dev/null)
           fi
-          git diff --name-only -z --diff-filter=ACMRT "$BASE_SHA" HEAD -- ':(glob)scripts/**/*.lua' |
+          git diff --name-only -z --diff-filter=ACMRT "$BASE_SHA" HEAD -- '*.lua' |
             xargs -0 -r -n 1 luac -p
 
       - name: Run docs tests

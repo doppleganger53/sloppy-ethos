@@ -144,7 +144,7 @@ To build a single install ZIP with multiple scripts:
   `Check active Lua file (StyLua)`, or substitute its path in
   `stylua --check --config-path tools/config/stylua.toml {changed-file.lua}`.
 - Build package: VS Code task `Build Ethos Install ZIP`
-- Lua parse check:
+- Parse each changed Lua file. This example checks the SensorList entry point.
 
 ```powershell
 luac -p scripts/SensorList/main.lua

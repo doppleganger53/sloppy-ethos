@@ -27,7 +27,7 @@ this document describes tooling and release procedures.
 
 ## Core Commands
 
-- Syntax check:
+- Parse each changed Lua file. For example, to check the SensorList entry point, run
   `luac -p scripts/SensorList/main.lua`
 - Package locally:
   `python tools/build.py --project SensorList --dist`
