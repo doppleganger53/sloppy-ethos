@@ -25,9 +25,12 @@ telemetry source.
    python tools/build.py --project BoundryMap --dist
    ```
 
-4. Import the generated ZIP with Ethos Suite.
-5. Add the `BoundryMap` widget to a screen.
-6. Open the widget settings, choose your map and GPS source, then enable the
+4. When updating an existing radio install, delete
+   `/scripts/BoundryMap/main.luac` from the radio first. Ethos prefers that
+   cached bytecode over the updated `scripts/BoundryMap/main.lua` in the ZIP.
+5. Import the generated ZIP with Ethos Suite.
+6. Add the `BoundryMap` widget to a screen.
+7. Open the widget settings, choose your map and GPS source, then enable the
    options you want.
 
 ## Map Files
