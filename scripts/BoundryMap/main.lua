@@ -56,13 +56,11 @@ local OVERLAY_TEXT_CHAR_WIDTH = 6
 local OVERLAY_TEXT_HEIGHT = 10
 local OVERLAY_TEXT_CONTROL_GAP = 2
 
-local gpsLatQuery = { name = "", options = nil }
-local gpsLonQuery = { name = "", options = nil }
-local gpsQueriesReady = false
-local gpsQuerySourceName = nil
-local gpsSensorQuery = { name = "" }
-local altSensorQuery = { name = "" }
-local speedSensorQuery = { name = "" }
+local latOption = { options = OPTION_LATITUDE }
+local lonOption = { options = OPTION_LONGITUDE }
+local GPS_SLACK_M = 25
+local GPS_MAX_SPEED_MPS = 150
+local REACQUIRE_SECONDS = 3
 local saveBoundaries
 local saveCurrentBoundaries
 local setColor
@@ -119,6 +117,15 @@ local function clamp(value, low, high)
   return value
 end
 
+local function finite(value)
+  return type(value) == "number" and value > -math.huge and value < math.huge
+end
+
+local function validCoordinates(lat, lon)
+  -- Mercator has no finite projection at either pole.
+  return finite(lat) and finite(lon) and abs(lat) < 90 and abs(lon) <= 180
+end
+
 local function haversine(lat1, lon1, lat2, lon2)
   local dLat = (lat2 - lat1) * DEG_TO_RAD
   local dLon = (lon2 - lon1) * DEG_TO_RAD
@@ -127,7 +134,7 @@ local function haversine(lat1, lon1, lat2, lon2)
   local sdLat = sin(dLat * 0.5)
   local sdLon = sin(dLon * 0.5)
   local a = sdLat * sdLat + cos(r1) * cos(r2) * sdLon * sdLon
-  return EARTH_R * 2 * asin(sqrt(a))
+  return EARTH_R * 2 * asin(sqrt(clamp(a, 0, 1)))
 end
 
 local function mercatorY(lat)
@@ -210,14 +217,14 @@ local function loadMapMetadata(bitmapFile)
   local bottomLat = extractNumber(content, "bottomLat")
   local leftLon = extractNumber(content, "leftLon")
   local rightLon = extractNumber(content, "rightLon")
-  if not topLat or not bottomLat or not leftLon or not rightLon or rightLon == leftLon then
+  if not validCoordinates(topLat, leftLon) or not validCoordinates(bottomLat, rightLon) or rightLon == leftLon then
     return nil, "metadata invalid"
   end
 
   local topMercY = mercatorY(topLat)
   local bottomMercY = mercatorY(bottomLat)
   local mercYRange = topMercY - bottomMercY
-  if mercYRange == 0 then
+  if not finite(mercYRange) or mercYRange == 0 then
     return nil, "metadata mercator range invalid"
   end
 
@@ -236,7 +243,7 @@ local function latLonToBitmapLocal(widget, lat, lon)
   if type(widget) ~= "table" or type(widget.mapMeta) ~= "table" then
     return nil, nil
   end
-  if type(lat) ~= "number" or type(lon) ~= "number" or widget.bmpW <= 0 or widget.bmpH <= 0 then
+  if not validCoordinates(lat, lon) or widget.bmpW <= 0 or widget.bmpH <= 0 then
     return nil, nil
   end
   local x = ((lon - widget.mapMeta.leftLon) / widget.mapMeta.lonRange) * widget.bmpW
@@ -502,9 +509,17 @@ end
 
 local function loadBitmapForWidget(widget)
   local bmpFile = widget.bitmapFile or ""
-  if bmpFile == "" then
+  local changed = widget.loadedFile ~= bmpFile
+  if not changed and (bmpFile == "" or widget.loadedBitmap or os.clock() < (widget.nextBitmapRetry or 0)) then
+    return
+  end
+  if widget.loadedBitmap then
     widget.loadedBitmap = nil
-    widget.loadedFile = ""
+    safeCall(collectgarbage, "collect")
+  end
+  widget.loadedFile = bmpFile
+  widget.needsInvalidate = true
+  if bmpFile == "" then
     widget.bmpW = 0
     widget.bmpH = 0
     widget.mapMeta = nil
@@ -515,25 +530,23 @@ local function loadBitmapForWidget(widget)
     return
   end
 
-  if widget.loadedFile == bmpFile and widget.loadedBitmap ~= nil then
-    return
-  end
-
   local bitmap = safeCall(lcd.loadBitmap, bitmapsPath .. "/" .. bmpFile)
   widget.loadedBitmap = bitmap
-  widget.loadedFile = bmpFile
   if bitmap then
     widget.bmpW = safeCall(bitmap.width, bitmap) or 0
     widget.bmpH = safeCall(bitmap.height, bitmap) or 0
   else
-    widget.bmpW = 0
-    widget.bmpH = 0
+    widget.bmpW, widget.bmpH = 0, 0
+    widget.nextBitmapRetry = os.clock() + 2
   end
 
   local meta, metaErr = loadMapMetadata(bmpFile)
   widget.mapMeta = meta
   widget.mapMetaError = metaErr
-  widget.boundaryLoadPending = true
+  if widget.homeLat then
+    widget.homeX, widget.homeY = latLonToBitmapLocal(widget, widget.homeLat, widget.homeLon)
+  end
+  widget.boundaryLoadPending = widget.boundaryLoadPending or changed
 end
 
 local function updateMapRect(widget)
@@ -544,8 +557,18 @@ local function updateMapRect(widget)
       w, h = ww, hh
     end
   end
+  if
+    widget.windowW == w
+    and widget.windowH == h
+    and widget.layoutBmpW == widget.bmpW
+    and widget.layoutBmpH == widget.bmpH
+  then
+    return
+  end
+  widget.layoutBmpW, widget.layoutBmpH = widget.bmpW, widget.bmpH
   widget.windowW = w
   widget.windowH = h
+  widget.needsInvalidate = true
   widget.offX = floor((w - (widget.bmpW or 0)) / 2)
   widget.offY = floor((h - (widget.bmpH or 0)) / 2)
   if (widget.bmpW or 0) > 0 and (widget.bmpH or 0) > 0 then
@@ -806,7 +829,7 @@ local function drawBitmapSafe(x, y, bitmap)
 end
 
 local function bitmapDimension(bitmap, methodName, fallback)
-  if type(bitmap) ~= "table" then
+  if not bitmap then
     return fallback
   end
   local method = bitmap[methodName]
@@ -892,57 +915,38 @@ local function initializeColors(widget)
   widget.colorsInitialized = true
 end
 
-local function getSourceValue(source)
-  if not source then
-    return nil
+-- ETHOS Source objects may have method-backed fields, including handles that
+-- became invalid after a sensor was removed. Protect lookup and invocation.
+local function readSourceMember(source, key, ...)
+  local member = source[key]
+  if type(member) == "function" then
+    return member(source, ...)
   end
-  local valueMember = source.value
-  if type(valueMember) == "function" then
-    return safeCall(valueMember, source)
+  return member
+end
+
+local function getSourceValue(source, ...)
+  if source then
+    return safeCall(readSourceMember, source, "value", ...)
   end
-  if type(valueMember) ~= "nil" then
-    return valueMember
-  end
-  return nil
 end
 
 local function getSourceAge(source)
-  if not source then
-    return nil
+  if source and safeCall(readSourceMember, source, "state") ~= false then
+    return safeCall(readSourceMember, source, "age")
   end
-  local ageMember = source.age
-  if type(ageMember) == "function" then
-    return safeCall(ageMember, source)
-  end
-  return nil
 end
 
 local function getSourceUnit(source)
-  if not source then
-    return nil
+  if source then
+    return safeCall(readSourceMember, source, "unit")
   end
-  local unitMember = source.unit
-  if type(unitMember) == "function" then
-    return safeCall(unitMember, source)
-  end
-  if type(unitMember) ~= "nil" then
-    return unitMember
-  end
-  return nil
 end
 
 local function getSourceStringUnit(source)
-  if not source then
-    return nil
+  if source then
+    return safeCall(readSourceMember, source, "stringUnit")
   end
-  local unitMember = source.stringUnit
-  if type(unitMember) == "function" then
-    return safeCall(unitMember, source)
-  end
-  if type(unitMember) ~= "nil" then
-    return unitMember
-  end
-  return nil
 end
 
 local function unitEquals(unit, globalName)
@@ -1018,49 +1022,43 @@ local function speedMetersPerSecond(source)
   return value * scale
 end
 
-local function ensureGpsQueries()
-  if gpsQueriesReady then
-    return true
-  end
-  if not OPTION_LATITUDE or not OPTION_LONGITUDE then
-    return false
-  end
-  gpsLatQuery.options = OPTION_LATITUDE
-  gpsLonQuery.options = OPTION_LONGITUDE
-  gpsQueriesReady = true
-  return true
+local function validAge(age, staleMs)
+  return finite(age) and age >= 0 and age <= staleMs
 end
 
-local function syncGpsQueryName(widget)
-  local sourceName = type(widget) == "table" and widget.gpsSensorName or ""
-  if type(sourceName) ~= "string" then
-    sourceName = ""
+local function altitudeScale(source)
+  local unit = getSourceUnit(source)
+  if unitEquals(unit, "UNIT_METER") then
+    return 1
+  elseif unitEquals(unit, "UNIT_FOOT") then
+    return 0.3048
   end
-  if sourceName ~= gpsQuerySourceName then
-    gpsLatQuery.name = sourceName
-    gpsLonQuery.name = sourceName
-    gpsQuerySourceName = sourceName
+  local label = getSourceStringUnit(source)
+  if label == "m" then
+    return 1
+  elseif label == "ft" then
+    return 0.3048
   end
-  if type(widget) == "table" and widget.telemetrySourceName ~= sourceName then
-    widget.telemetrySourceName = sourceName
-    widget.prevHeadingLat = nil
-    widget.prevHeadingLon = nil
-    widget.headingValid = false
-  end
-  return sourceName ~= ""
 end
 
-local function refreshTelemetry(widget)
-  if not ensureGpsQueries() or not syncGpsQueryName(widget)
-    or type(system) ~= "table" or type(system.getSource) ~= "function" then
-    return nil, nil
+local function altitudeMeters(widget)
+  local source = widget.altSrc
+  local scale = altitudeScale(source)
+  if widget.homeAltitudeM and (source ~= widget.homeAltitudeSource or scale ~= widget.homeAltitudeScale) then
+    widget.homeAltitudeM = nil
   end
-  local srcLat = safeCall(system.getSource, gpsLatQuery)
-  local srcLon = safeCall(system.getSource, gpsLonQuery)
-  local lat = getSourceValue(srcLat)
-  local lon = getSourceValue(srcLon)
-  local age = getSourceAge(srcLat)
-  return { srcLat = srcLat, srcLon = srcLon, age = age }, lat, lon
+  if scale and validAge(getSourceAge(source), widget.staleMs) then
+    local value = getSourceValue(source)
+    if finite(value) then
+      return value * scale, scale
+    end
+  end
+end
+
+local function resolveSource(name)
+  if name and name ~= "" and system and system.getSource then
+    return safeCall(system.getSource, { name = name })
+  end
 end
 
 local function refreshMapState(widget)
@@ -1073,21 +1071,23 @@ end
 
 local function updateAircraftPosition(widget, lat, lon)
   local x, y = latLonToBitmapLocal(widget, lat, lon)
-  if not x or not y then
-    return false
+  local sx, sy
+  if x and y then
+    sx, sy = bitmapLocalToScreen(widget, x, y)
   end
-  widget.prevLat = lat
-  widget.prevLon = lon
-  widget.aircraftX = x
-  widget.aircraftY = y
-  widget.lastCoordsText = sformat("%.5f, %.5f", lat, lon)
-  local sx, sy = bitmapLocalToScreen(widget, x, y)
-  widget.aircraftScreenX = sx
-  widget.aircraftScreenY = sy
-  return true
+  local changed = widget.aircraftScreenX ~= sx or widget.aircraftScreenY ~= sy
+  if lat ~= widget.prevLat or lon ~= widget.prevLon then
+    widget.prevLat, widget.prevLon = lat, lon
+    widget.lastCoordsText = sformat("%.5f, %.5f", lat, lon)
+    changed = true
+  end
+  widget.aircraftX, widget.aircraftY = x, y
+  widget.aircraftScreenX, widget.aircraftScreenY = sx, sy
+  return changed
 end
 
 local function resetHome(widget)
+  widget.homeAltitudeM, widget.homeAltitudeSource, widget.homeAltitudeScale = nil, nil, nil
   widget.homeLat = nil
   widget.homeLon = nil
   widget.homeStableLat = nil
@@ -1107,8 +1107,102 @@ local function resetHome(widget)
   widget.warningImminent = false
 end
 
+local function resetGps(widget, name)
+  resetHome(widget)
+  widget.telemetrySourceName = name
+  widget.gpsSensor = nil
+  widget.nextGpsLookup = nil
+  widget.lastFixAt, widget.jump = nil, nil
+  widget.prevLat, widget.prevLon, widget.lastCoordsText = nil, nil, nil
+  widget.aircraftX, widget.aircraftY = nil, nil
+  widget.aircraftScreenX, widget.aircraftScreenY = nil, nil
+  widget.prevHeadingLat, widget.prevHeadingLon = nil, nil
+  widget.lastHeading, widget.headingValid = 0, false
+  widget.needsInvalidate = true
+end
+
+local function refreshTelemetry(widget, now)
+  now = now or os.clock()
+  local name = widget.gpsSensorName
+  if widget.telemetrySourceName ~= name then
+    resetGps(widget, name)
+  end
+  if not name or name == "" or not latOption.options or not lonOption.options then
+    return nil
+  end
+  if not widget.gpsSensor and now >= (widget.nextGpsLookup or 0) then
+    widget.gpsSensor = resolveSource(name)
+    widget.nextGpsLookup = now + 1
+  end
+  local source = widget.gpsSensor
+  if not source then
+    return nil
+  end
+  local handleName = safeCall(readSourceMember, source, "name")
+  if handleName and handleName ~= name then
+    widget.gpsSensor = nil
+    return nil
+  end
+  local lat = getSourceValue(source, latOption)
+  local lon = getSourceValue(source, lonOption)
+  local age = getSourceAge(source)
+  if
+    (not validCoordinates(lat, lon) or not validAge(age, widget.staleMs) or (lat == 0 and lon == 0))
+    and now >= (widget.nextGpsLookup or 0)
+  then
+    -- A deleted/recreated sensor can leave an unusable handle behind.
+    widget.gpsSensor = nil
+  end
+  return age, lat, lon, source
+end
+
+local function plausible(lat, lon, otherLat, otherLon, elapsed)
+  local allowance = GPS_SLACK_M + GPS_MAX_SPEED_MPS * clamp(elapsed, 0, 2)
+  return haversine(lat, lon, otherLat, otherLon) <= allowance
+end
+
+local function acceptFix(widget, now, age, lat, lon)
+  if not validAge(age, widget.staleMs) or not validCoordinates(lat, lon) or (lat == 0 and lon == 0) then
+    widget.jump = nil
+    return false
+  end
+  local sampleAt = now - age / 1000
+  local jump = widget.jump
+  if
+    not widget.lastFixAt
+    or (
+      plausible(lat, lon, widget.prevLat, widget.prevLon, sampleAt - widget.lastFixAt)
+      and (not jump or lat ~= jump.lat or lon ~= jump.lon)
+    )
+  then
+    widget.jump = nil
+    widget.lastFixAt = sampleAt
+    return true
+  end
+  if
+    not jump
+    or sampleAt - jump.sampleAt > widget.staleMs / 1000
+    or not plausible(lat, lon, jump.lat, jump.lon, sampleAt - jump.sampleAt)
+  then
+    widget.jump = { lat = lat, lon = lon, age = age, firstAt = sampleAt, sampleAt = sampleAt, count = 1 }
+    return false
+  end
+  -- A coordinate change or a younger reading proves the receiver refreshed.
+  local newSample = lat ~= jump.lat or lon ~= jump.lon or age < jump.age
+  jump.age = age
+  if newSample then
+    jump.count = jump.count + 1
+    jump.lat, jump.lon, jump.sampleAt = lat, lon, sampleAt
+    if jump.count >= 3 and sampleAt - jump.firstAt >= REACQUIRE_SECONDS then
+      widget.jump, widget.lastFixAt = nil, sampleAt
+      return true
+    end
+  end
+  return false
+end
+
 local function updateHomeIfStable(widget, lat, lon)
-  if widget.homeLat or not lat or not lon or lat == 0 or lon == 0 then
+  if widget.homeLat then
     return false
   end
   if not widget.homeStableLat then
@@ -1128,6 +1222,8 @@ local function updateHomeIfStable(widget, lat, lon)
     widget.homeLat = lat
     widget.homeLon = lon
     widget.homeX, widget.homeY = latLonToBitmapLocal(widget, lat, lon)
+    widget.homeAltitudeM, widget.homeAltitudeScale = altitudeMeters(widget)
+    widget.homeAltitudeSource = widget.homeAltitudeM and widget.altSrc or nil
     return true
   end
   return false
@@ -1166,6 +1262,7 @@ local function updateDistanceTexts(widget, lat, lon)
     widget.lastGroundDistText = nil
     return false
   end
+  local previousDistance, previousText = widget.distFromHome, widget.distText
   local groundDist = haversine(widget.homeLat, widget.homeLon, lat or widget.prevLat, lon or widget.prevLon)
   if groundDist < DIST_JITTER_M then
     groundDist = 0
@@ -1179,10 +1276,11 @@ local function updateDistanceTexts(widget, lat, lon)
     end
   end
 
+  local altitude = altitudeMeters(widget)
   if widget.distEnabled then
-    local alt = widget.altSrc and getSourceValue(widget.altSrc) or nil
-    if type(alt) == "number" then
-      widget.distFromHome = sqrt((groundDist * groundDist) + (alt * alt))
+    if altitude and widget.homeAltitudeM then
+      local height = altitude - widget.homeAltitudeM
+      widget.distFromHome = sqrt(groundDist * groundDist + height * height)
     else
       widget.distFromHome = groundDist
     end
@@ -1190,16 +1288,16 @@ local function updateDistanceTexts(widget, lat, lon)
     widget.distFromHome = nil
   end
 
-  if widget.distFromHome then
+  if widget.distFromHome and previousDistance ~= widget.distFromHome then
     if widget.distFromHome >= 1000 then
       widget.distText = sformat("Distance: %.1f km", widget.distFromHome / 1000)
     else
       widget.distText = sformat("Distance: %.0f m", widget.distFromHome)
     end
-  else
+  elseif not widget.distFromHome then
     widget.distText = nil
   end
-  return true
+  return previousText ~= widget.distText
 end
 
 local function isExceeded(widget, aircraftX, aircraftY)
@@ -1218,9 +1316,12 @@ local function isExceeded(widget, aircraftX, aircraftY)
 end
 
 local function projectLatLon(lat, lon, bearingDegrees, distanceMeters)
-  if type(lat) ~= "number" or type(lon) ~= "number"
-    or type(bearingDegrees) ~= "number" or type(distanceMeters) ~= "number"
-    or distanceMeters < 0 then
+  if
+    not validCoordinates(lat, lon)
+    or not finite(bearingDegrees)
+    or not finite(distanceMeters)
+    or distanceMeters < 0
+  then
     return nil, nil
   end
 
@@ -1252,7 +1353,7 @@ local function predictionCrossesBoundary(widget, lat, lon)
   end
 
   local speedAge = getSourceAge(widget.speedSrc)
-  if type(speedAge) ~= "number" or speedAge < 0 or speedAge > (tonumber(widget.staleMs) or 2000) then
+  if not validAge(speedAge, widget.staleMs) then
     return false
   end
   local speed = speedMetersPerSecond(widget.speedSrc)
@@ -1368,8 +1469,14 @@ local function drawIndicator(widget, isStale)
   local y = clamp(widget.aircraftScreenY, 6, (widget.windowH or 272) - 6)
   if widget.indicatorType == 1 then
     local icon = isStale and widget.arrowRedIcon or widget.arrowIcon
-    if type(icon) == "table" and type(icon.rotate) == "function" then
-      local rotated = safeCall(icon.rotate, icon, widget.lastHeading or 0)
+    if icon and type(icon.rotate) == "function" then
+      local heading = widget.lastHeading or 0
+      if widget.rotatedIconSource ~= icon or widget.rotatedIconHeading ~= heading then
+        widget.rotatedIcon = nil
+        widget.rotatedIcon = safeCall(icon.rotate, icon, heading)
+        widget.rotatedIconSource, widget.rotatedIconHeading = icon, heading
+      end
+      local rotated = widget.rotatedIcon
       if rotated then
         local rw = bitmapDimension(rotated, "width", 16)
         local rh = bitmapDimension(rotated, "height", 16)
@@ -1579,43 +1686,20 @@ local function fileStatusDetail(status, path, detail)
   return status .. " (" .. displayFileName(path) .. ": " .. tostring(detail or "unknown") .. ")"
 end
 
-local function callSourceValue(source)
-  return getSourceValue(source)
-end
-
 local function gpsDiagnostics(widget)
-  local sensorName = widget.gpsSensorName or ""
-  if sensorName == "" and widget.gpsSensor then
-    local name = safeCall(widget.gpsSensor.name, widget.gpsSensor)
-    sensorName = (type(name) == "string" and name ~= "---") and name or ""
-  end
-  if sensorName == "" then
+  local name = widget.gpsSensorName or ""
+  if name == "" then
     return "Not configured", "-"
   end
-  if type(system) ~= "table" or type(system.getSource) ~= "function" then
-    return "Configured, source API unavailable (" .. sensorName .. ")", "-"
+  local age, lat, lon, source = refreshTelemetry(widget)
+  if not source then
+    return "Not found (" .. name .. ")", "-"
   end
-
-  local latQuery = { name = sensorName }
-  local lonQuery = { name = sensorName }
-  if OPTION_LATITUDE then
-    latQuery.options = OPTION_LATITUDE
+  if validCoordinates(lat, lon) and (lat ~= 0 or lon ~= 0) then
+    local status = validAge(age, widget.signalTimeout * 1000) and "Found" or "Stale"
+    return status .. " (" .. name .. ")", sformat("%.5f, %.5f", lat, lon)
   end
-  if OPTION_LONGITUDE then
-    lonQuery.options = OPTION_LONGITUDE
-  end
-  local srcLat = safeCall(system.getSource, latQuery)
-  local srcLon = safeCall(system.getSource, lonQuery)
-  if not srcLat and not srcLon then
-    return "Not found (" .. sensorName .. ")", "-"
-  end
-
-  local lat = callSourceValue(srcLat)
-  local lon = callSourceValue(srcLon)
-  if lat and lon then
-    return "Found (" .. sensorName .. ")", sformat("%.5f, %.5f", lat, lon)
-  end
-  return "Found, no fix (" .. sensorName .. ")", "-"
+  return "Found, no fix (" .. name .. ")", "-"
 end
 
 local function bitmapDiagnostics(widget)
@@ -1731,7 +1815,7 @@ buildMainForm = function(widget)
       return widget.bitmapFile
     end, function(value)
       widget.bitmapFile = value
-      widget.loadedFile = ""
+      widget.loadedFile = nil
       widget.boundaryLoadPending = true
       widget.needsInvalidate = true
     end)
@@ -1749,7 +1833,8 @@ buildMainForm = function(widget)
       else
         widget.gpsSensorName = ""
       end
-      widget.telemetrySourceName = nil
+      resetGps(widget, widget.gpsSensorName)
+      widget.gpsSensor = value
     end)
   end
 
@@ -1759,6 +1844,7 @@ buildMainForm = function(widget)
       return widget.indicatorType
     end, function(value)
       widget.indicatorType = value
+      widget.needsInvalidate = true
     end)
   end
 
@@ -1777,6 +1863,7 @@ buildMainForm = function(widget)
       return widget.coordsEnabled
     end, function(value)
       widget.coordsEnabled = normalizeBoolean(value, false)
+      widget.needsInvalidate = true
     end)
   end
 
@@ -1786,6 +1873,7 @@ buildMainForm = function(widget)
       return widget.distEnabled
     end, function(value)
       widget.distEnabled = normalizeBoolean(value, false)
+      widget.needsInvalidate = true
     end)
   end
 
@@ -1794,6 +1882,7 @@ buildMainForm = function(widget)
     form.addSensorField(line3a, nil, function()
       return widget.altSrc
     end, function(value)
+      widget.homeAltitudeM, widget.homeAltitudeSource, widget.homeAltitudeScale = nil, nil, nil
       widget.altSrc = value
       if value then
         local name = safeCall(value.name, value)
@@ -2062,54 +2151,42 @@ local function wakeup(widget)
     clearWidgetError(widget)
     local now = os.clock()
 
-    if not widget.altSrc and widget.altSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
-      altSensorQuery.name = widget.altSensorName
-      widget.altSrc = safeCall(system.getSource, altSensorQuery)
-    end
-    if not widget.gpsSensor and widget.gpsSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
-      gpsSensorQuery.name = widget.gpsSensorName
-      widget.gpsSensor = safeCall(system.getSource, gpsSensorQuery)
-    end
-    if not widget.speedSrc and widget.speedSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
-      speedSensorQuery.name = widget.speedSensorName
-      widget.speedSrc = safeCall(system.getSource, speedSensorQuery)
-    end
-
-    local telemetry, lat, lon = refreshTelemetry(widget)
-    if telemetry then
-      local staleMs = (tonumber(widget.signalTimeout) or 2) * 1000
-      widget.staleMs = staleMs
-      local wasStale = widget.gpsStale
-      widget.gpsStale = telemetry.age and telemetry.age > staleMs or false
-      if wasStale ~= widget.gpsStale then
-        widget.needsInvalidate = true
-      end
-    end
-
-    if lat and lon and widget.mapMeta then
+    widget.altSrc = widget.altSrc or resolveSource(widget.altSensorName)
+    widget.speedSrc = widget.speedSrc or resolveSource(widget.speedSensorName)
+    widget.staleMs = widget.signalTimeout * 1000
+    local wasStale, wasWarning, wasImminent = widget.gpsStale, widget.warningActive, widget.warningImminent
+    local age, lat, lon = refreshTelemetry(widget, now)
+    local accepted = acceptFix(widget, now, age, lat, lon)
+    widget.gpsStale = widget.gpsSensorName ~= "" and not accepted
+    if accepted then
       if updateAircraftPosition(widget, lat, lon) then
         widget.needsInvalidate = true
       end
-      if updateHeading(widget, lat, lon) then
+      local headingChanged = updateHeading(widget, lat, lon)
+      if updateHomeIfStable(widget, lat, lon) or headingChanged then
         widget.needsInvalidate = true
       end
-      if updateHomeIfStable(widget, lat, lon) then
+      if updateDistanceTexts(widget, lat, lon) then
         widget.needsInvalidate = true
       end
-      updateDistanceTexts(widget, lat, lon)
       updateWarnings(widget, now, lat, lon)
     else
-      widget.warningActive = false
-      widget.warningImminent = false
-      widget.wasExceeded = false
-      widget.wasWarningCondition = false
-      widget.lastWarningAt = nil
+      if widget.prevLat and updateAircraftPosition(widget, widget.prevLat, widget.prevLon) then
+        widget.needsInvalidate = true
+      end
+      widget.prevHeadingLat, widget.prevHeadingLon, widget.headingValid = nil, nil, false
+      widget.homeStableLat, widget.homeStableLon, widget.homeStableFrames = nil, nil, 0
+      updateWarnings(widget, now, nil, nil)
+    end
+    if wasStale ~= widget.gpsStale or wasWarning ~= widget.warningActive or wasImminent ~= widget.warningImminent then
+      widget.needsInvalidate = true
     end
 
     if widget.pendingDraftPoint and widget.draftBoundary and (now - (widget.lastDraftPreviewAt or 0)) >= DRAW_PREVIEW_INTERVAL then
       widget.lastDraftPreviewAt = now
       widget.draftBoundary.x2 = widget.pendingDraftPoint.x
       widget.draftBoundary.y2 = widget.pendingDraftPoint.y
+      widget.pendingDraftPoint = nil
       widget.needsInvalidate = true
     end
 
@@ -2180,8 +2257,7 @@ local function read(widget)
   widget.coordsEnabled = parts[9] == "1"
   widget.speedSensorName = parts[10] or ""
   widget.predictionSeconds = floor(clamp(tonumber(parts[11]) or 0, 0, MAX_PREDICTION_SECONDS))
-  widget.telemetrySourceName = nil
-  widget.gpsSensor = nil
+  resetGps(widget, widget.gpsSensorName)
   widget.altSrc = nil
   widget.speedSrc = nil
 
@@ -2194,7 +2270,7 @@ local function read(widget)
   if widget.speedSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
     widget.speedSrc = safeCall(system.getSource, { name = widget.speedSensorName })
   end
-  widget.loadedFile = ""
+  widget.loadedFile = nil
   widget.boundaryLoadPending = true
   widget.needsInvalidate = true
 end
