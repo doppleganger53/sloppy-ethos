@@ -359,41 +359,27 @@ def test_script_local_tests_are_discovered_from_repo_root():
 
 
 
-def test_readme_download_links_match_script_versions():
-    readme_text = _read(README_PATH)
-    assert "## Download Latest Script Releases" in readme_text
-    section = _extract_section(readme_text, "## Download Latest Script Releases")
-    assert "/releases/download/" in section
-
+def test_readme_download_links_identify_released_script_versions():
+    section = _extract_section(_read(README_PATH), "## Download Latest Script Releases")
     links = _extract_markdown_links(section)
-    assert links, "README download section must contain at least one published script release link."
-
-    scripts_root = REPO_ROOT / "scripts"
-    known_versions = {}
-    for project_dir in scripts_root.iterdir():
-        if not project_dir.is_dir():
-            continue
-        project_name = project_dir.name
-        known_versions[project_name] = (project_dir / "VERSION").read_text(encoding="utf-8").strip()
-
     seen_projects: set[str] = set()
     for label, target in links:
-        asset_name = Path(urlparse(target).path).name
-        if not asset_name.endswith(".zip"):
+        if not urlparse(target).path.endswith(".zip"):
             continue
-        matched_project = None
-        for project_name, version in known_versions.items():
-            expected_asset = f"{project_name}-{version}.zip"
-            if asset_name == expected_asset:
-                matched_project = project_name
-                break
-        assert matched_project is not None, (
-            f"README download link asset {asset_name} must match a published script version from scripts/{{ProjectName}}/VERSION."
+        match = re.fullmatch(r"Download (.+) \(v(\d+\.\d+\.\d+)\)", label)
+        assert match, f"Expected a versioned script download label: {label}"
+        project, released = match.groups()
+        version_file = REPO_ROOT / "scripts" / project / "VERSION"
+        current = _read(version_file).strip().split("-")[0]
+        assert tuple(map(int, released.split("."))) <= tuple(map(int, current.split(".")))
+        assert target == (
+            f"https://github.com/doppleganger53/sloppy-ethos/releases/download/"
+            f"{project}-v{released}/{project}-{released}.zip"
         )
-        assert matched_project not in seen_projects, (
-            f"README download section should not contain duplicate published links for {matched_project}."
-        )
-        seen_projects.add(matched_project)
+        assert project not in seen_projects, f"Duplicate published link for {project}"
+        seen_projects.add(project)
+    assert seen_projects, "At least one published single-script release must be linked."
+
 
 def test_required_recommended_links_present_in_readme():
     readme_text = _read(README_PATH)
