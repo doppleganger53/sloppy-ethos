@@ -465,7 +465,8 @@ _G.system.getSource = function(query)
     return nil
   end
   return {
-    value = function()
+    value = function(_, request)
+      local options = request.options
       if options == _G.OPTION_LATITUDE then
         return values.lat
       end
@@ -490,14 +491,14 @@ gpsWidget1.gpsSensorName = "GPS1"
 local telemetry1, gps1Lat, gps1Lon = test.refreshTelemetry(gpsWidget1)
 assert_equal(gps1Lat, telemetryValues.GPS1.lat, "gps query uses first widget latitude name")
 assert_equal(gps1Lon, telemetryValues.GPS1.lon, "gps query uses first widget longitude name")
-assert_equal(telemetry1.age, telemetryValues.GPS1.age, "gps query preserves first widget source age")
+assert_equal(telemetry1, telemetryValues.GPS1.age, "gps query preserves first widget source age")
 
 local gpsWidget2 = test.create()
 gpsWidget2.gpsSensorName = "GPS2"
 local telemetry2, gps2Lat, gps2Lon = test.refreshTelemetry(gpsWidget2)
 assert_equal(gps2Lat, telemetryValues.GPS2.lat, "gps query refreshes second widget latitude name")
 assert_equal(gps2Lon, telemetryValues.GPS2.lon, "gps query refreshes second widget longitude name")
-assert_equal(telemetry2.age, telemetryValues.GPS2.age, "gps query preserves second widget source age")
+assert_equal(telemetry2, telemetryValues.GPS2.age, "gps query preserves second widget source age")
 gpsWidget2.signalTimeout = 2
 registeredWidget.wakeup(gpsWidget2)
 assert_true(gpsWidget2.gpsStale, "gps age above configured timeout is stale")
@@ -521,10 +522,43 @@ test.read(restoredGpsWidget)
 local restoredTelemetry, restoredLat, restoredLon = test.refreshTelemetry(restoredGpsWidget)
 assert_equal(restoredLat, telemetryValues.RestoredGPS.lat, "read config refreshes gps latitude query name")
 assert_equal(restoredLon, telemetryValues.RestoredGPS.lon, "read config refreshes gps longitude query name")
-assert_equal(restoredTelemetry.age, telemetryValues.RestoredGPS.age, "read config keeps restored gps age")
+assert_equal(restoredTelemetry, telemetryValues.RestoredGPS.age, "read config keeps restored gps age")
 _G.system.getSource = originalTelemetryGetSource
 
 widget = test.create()
+do
+  local ordinarySensorField = form.addSensorField
+  local calls = 0
+  form.addSensorField = function(...)
+    calls = calls + 1
+    ordinarySensorField(...)
+    if select("#", ...) < 5 then
+      error("bad argument 5 to 'addSensorField' (function expected, got SensorChoice)")
+    end
+    assert_equal(select(5, ...), nil, "sensor selector accepts all candidates")
+  end
+  for _, native in ipairs({ false, true }) do
+    form.addBooleanField = native and function(row, _, getter, setter)
+      formRows[row].type = "boolean"
+      formRows[row].getter = getter
+      formRows[row].setter = setter
+    end or nil
+    registeredWidget.configure(widget)
+    for _, label in ipairs({ "Coordinates", "Distance" }) do
+      local _, field = findFormRow(label)
+      assert_equal(field.type, native and "boolean" or "choice", "toggle type")
+      field.setter(native or 1)
+      assert_equal(field.getter(), native or 1, "enabled value")
+      field.setter(0)
+      assert_true(field.getter() == false or field.getter() == 0, "disabled value")
+    end
+    assert_true(findFormRow("Diagnostics") ~= nil, "remaining settings still available")
+  end
+  assert_equal(calls, 6, "exactly three sensor fields per form")
+  form.addSensorField = ordinarySensorField
+  form.addBooleanField = nil
+end
+
 widget.bitmapFile = "UnsavedMap.bmp"
 registeredWidget.configure(widget)
 assert_equal(rowLabel(1), "Map", "main form keeps map first")
@@ -581,11 +615,14 @@ local originalGetSource = _G.system.getSource
 _G.system.getSource = function(query)
   if query.name == "GPS1" then
     return {
-      value = function()
-        if query.options == _G.OPTION_LATITUDE then
+      age = function()
+        return 0
+      end,
+      value = function(_, request)
+        if request.options == _G.OPTION_LATITUDE then
           return 39.123456
         end
-        if query.options == _G.OPTION_LONGITUDE then
+        if request.options == _G.OPTION_LONGITUDE then
           return -75.654321
         end
         return nil
@@ -1028,9 +1065,16 @@ assert_true(widget.distFromHome ~= nil and widget.distFromHome > 100, "ground di
 local groundDistanceText = widget.lastGroundDistText
 widget.altSrc = {
   value = function()
-    return 120
+    return 420
+  end,
+  age = function()
+    return 10
+  end,
+  stringUnit = function()
+    return "m"
   end,
 }
+widget.homeAltitudeM, widget.homeAltitudeSource, widget.homeAltitudeScale = 300, widget.altSrc, 1
 test.updateDistanceTexts(widget, 39.001, -75.0)
 assert_true(widget.distText ~= groundDistanceText, "active distance uses 3d text when altitude is configured")
 assert_equal(widget.lastGroundDistText, groundDistanceText, "cached stale distance remains 2d ground text")
@@ -1202,6 +1246,7 @@ assert_true(widget.boundaryDirty, "uat boundary dirty after draw")
 
 local homeLat, homeLon = test.bitmapLocalToLatLon(widget, 120, 136)
 local aircraftLat, aircraftLon = test.bitmapLocalToLatLon(widget, 360, 136)
+widget.telemetrySourceName = "GPS"
 widget.homeLat = homeLat
 widget.homeLon = homeLon
 widget.homeX = 120
@@ -1225,20 +1270,10 @@ _G.system.playHaptic = function(_)
   return true
 end
 _G.system.getSource = function(query)
-  if query and query.name == "GPS" and query.options == _G.OPTION_LATITUDE then
+  if query and query.name == "GPS" then
     return {
-      value = function()
-        return currentLat
-      end,
-      age = function()
-        return 0
-      end,
-    }
-  end
-  if query and query.name == "GPS" and query.options == _G.OPTION_LONGITUDE then
-    return {
-      value = function()
-        return currentLon
+      value = function(_, request)
+        return request.options == _G.OPTION_LATITUDE and currentLat or currentLon
       end,
       age = function()
         return 0
@@ -1376,6 +1411,252 @@ do
   assert_true(restoredDisplay.flight.showAlt and restoredDisplay.flight.showExtra, "overlay settings restored")
   assert_equal(restoredDisplay.flight.stats.alt, nil, "stats are ephemeral")
   os.clock = clock
+end
+
+-- Exercise the registered widget callbacks, including invalidation and source replacement.
+do
+  local originalClock, originalInvalidate = os.clock, lcd.invalidate
+  local originalGetSource, originalTone = system.getSource, system.playTone
+  local now, lookups, redraws, tones = 10, 0, 0, 0
+  os.clock = function()
+    return now
+  end
+  lcd.invalidate = function()
+    redraws = redraws + 1
+  end
+  system.playTone = function()
+    tones = tones + 1
+  end
+  local lat, lon, age, active = 39, -75, 0, true
+  local gps = {
+    name = function()
+      return "GPS"
+    end,
+    state = function()
+      return active
+    end,
+    age = function()
+      return age
+    end,
+    value = function(_, options)
+      if options.options == OPTION_LATITUDE then
+        return lat
+      end
+      if options.options == OPTION_LONGITUDE then
+        return lon
+      end
+    end,
+  }
+  local currentSource = gps
+  system.getSource = function(query)
+    assert_equal(query.options, nil, "coordinate selectors belong on the source value request")
+    assert_equal(query.name, "GPS", "resolve the selected name")
+    lookups = lookups + 1
+    return currentSource
+  end
+  local w = test.create()
+  w.gpsSensorName, w.bitmapFile = "GPS", "Acceptance.bmp"
+  ioReads["/scripts/BoundryMap/assets/maps/Acceptance.json"] =
+    '{"topLat":39.001,"bottomLat":38.999,"leftLon":-75.001,"rightLon":-74.999}'
+  local function tick(seconds)
+    now = now + (seconds or 0.1)
+    registeredWidget.wakeup(w)
+    assert_equal(w.lastError, nil, "telemetry wakeup")
+  end
+  local altitude, unit, altAge = 300, "m", 0
+  w.altSrc = {
+    value = function()
+      return altitude
+    end,
+    stringUnit = function()
+      return unit
+    end,
+    age = function()
+      return altAge
+    end,
+  }
+
+  tick()
+  local firstDraws = redraws
+  for _ = 1, 10 do
+    tick()
+  end
+  assert_equal(lookups, 1, "identical fresh GPS reuses one sensor")
+  assert_equal(redraws, firstDraws, "stationary GPS avoids redundant redraws")
+  age = 5000
+  for _ = 1, 105 do
+    tick()
+  end
+  assert_true(w.gpsStale and not w.homeLat and w.homeStableFrames == 0, "stale samples cannot establish home")
+  age = 0
+  for _ = 1, 101 do
+    tick()
+  end
+  assert_equal(w.homeLat, 39, "home acquired after fresh stabilization")
+  assert_equal(w.homeAltitudeM, 300, "baseline captured while distance is hidden")
+  w.distEnabled = true
+  tick()
+  assert_equal(w.distText, "Distance: 0 m", "absolute 300 m altitude at home")
+  local altitudeGround = w.lastGroundDistText
+  local heading, retainedCoords = w.lastHeading, w.lastCoordsText
+  local hx, hy = w.homeX, w.homeY
+  w.boundaries = { { x1 = hx + 3, y1 = hy - 1000, x2 = hx + 3, y2 = hy + 1000 } }
+  w.boundryWarningMode, w.warningType = 1, 1
+  lat, lon = 40, -74
+  for _ = 1, 50 do
+    tick()
+  end
+  assert_equal(w.prevLat, 39, "polling a single jump never confirms it")
+  assert_equal(w.lastHeading, heading, "rejected jump cannot change heading")
+  assert_equal(w.lastCoordsText, retainedCoords, "retain accepted coordinates")
+  assert_equal(w.lastGroundDistText, altitudeGround, "retain last accepted ground distance")
+  assert_true(
+    w.gpsStale and not w.warningActive and not w.warningImminent and tones == 0,
+    "no warning from rejected fix"
+  )
+  for _, point in ipairs({ { 0, 0 }, { 90, 0 }, { -90, 0 }, { 91, 1 }, { 1, 181 }, { "39", 0 }, { 0 / 0, 0 }, {
+    0,
+    math.huge,
+  } }) do
+    lat, lon = point[1], point[2]
+    tick()
+    assert_true(w.gpsStale and w.prevLat == 39, "invalid fix retained last position")
+  end
+  lat, lon, active = 39, -75, false
+  tick()
+  assert_true(w.gpsStale, "inactive receiver cannot supply a fresh fix")
+  active = true
+  for _ = 1, 15 do
+    tick()
+  end
+  assert_true(not w.gpsStale, "fresh samples near last position recover")
+  -- 100 m horizontally and vertically. After a one-second interval this is ordinary movement.
+  lat = 39 + 100 / 6371000 * 180 / math.pi
+  altitude = 400
+  tick(1)
+  assert_near(w.distFromHome, math.sqrt(20000), 0.01, "home-relative 3D distance")
+  assert_equal(w.lastGroundDistText, "Distance: 100 m", "separate 2D recovery cache")
+  altAge = 5000
+  tick()
+  assert_near(w.distFromHome, 100, 0.01, "stale altitude falls back to 2D")
+  altitude, altAge = math.huge, 0
+  tick()
+  assert_near(w.distFromHome, 100, 0.01, "non-finite altitude falls back to 2D")
+  altitude, unit = 400, "ft"
+  tick()
+  assert_true(w.homeAltitudeM == nil, "changing unit clears baseline")
+  assert_near(w.distFromHome, 100, 0.01, "unit change never learns an in-flight reference")
+  test.resetHome(w)
+  for _ = 1, 100 do
+    tick()
+  end
+  altitude = 500
+  tick()
+  assert_near(w.distFromHome, 30.48, 0.01, "100 ft climb is 30.48 m")
+  unit = "V"
+  tick()
+  assert_equal(w.distFromHome, 0, "unknown altitude unit falls back to ground")
+  -- Re-zeroing the transmitter altimeter has no Lua notification. The pilot
+  -- resets home after calibration so the new offset is captured on the ground.
+  altitude, unit, altAge = 0, "m", 0
+  test.resetHome(w)
+  for _ = 1, 100 do
+    tick()
+  end
+  altitude = 12
+  tick()
+  assert_equal(w.distText, "Distance: 12 m", "reset after altitude calibration uses new reference")
+  test.resetHome(w)
+  altAge = 5000
+  for _ = 1, 100 do
+    tick()
+  end
+  assert_true(not w.homeAltitudeM, "expired altitude at home never becomes a baseline")
+  altAge, altitude = 0, 150
+  tick()
+  assert_equal(w.distFromHome, 0, "restored altitude in flight leaves the distance in 2D")
+  registeredWidget.configure(w)
+  formRows[findFormRow("  Altitude Source")].setter(nil)
+  assert_true(not w.homeAltitudeM and not w.altSrc, "clearing the altitude source clears its baseline")
+  -- Recover across a discontinuity only after independent, mutually plausible refreshed samples.
+  lat, lon = 0, -74
+  for _ = 1, 5 do
+    lat = lat + 0.00001
+    tick(0.8)
+  end
+  assert_true(not w.gpsStale and w.prevLat == lat, "sustained fresh movement confirms reacquisition")
+  local changes = { { 0, -75 }, { 39, 0 } }
+  for _, coords in ipairs(changes) do
+    lat, lon = coords[1], coords[2]
+    formRows[findFormRow("GPS Source")].setter(gps)
+    for _ = 1, 100 do
+      tick()
+    end
+    assert_equal(w.homeLat, lat, "equator can establish home")
+    assert_equal(w.homeLon, lon, "prime meridian can establish home")
+  end
+  formRows[findFormRow("GPS Source")].setter(nil)
+  tick()
+  assert_true(not w.prevLat and not w.homeLat and not w.headingValid, "clearing GPS resets navigation")
+  -- A live source may be replaced under the same saved name.
+  formRows[findFormRow("GPS Source")].setter(gps)
+  tick()
+  local previousLookups = lookups
+  gps.value = function()
+    error("deleted sensor")
+  end
+  currentSource = {
+    value = function(_, request)
+      return request.options == OPTION_LATITUDE and 39 or 0.00001
+    end,
+    age = function()
+      return 0
+    end,
+  }
+  for _ = 1, 15 do
+    tick()
+  end
+  assert_true(lookups > previousLookups and w.gpsSensor == currentSource and not w.gpsStale, "replace a dead handle")
+  os.clock, lcd.invalidate = originalClock, originalInvalidate
+  system.getSource, system.playTone = originalGetSource, originalTone
+end
+
+do
+  local w = test.create()
+  w.bitmapFile = "Acceptance.bmp"
+  w.indicatorType = 1
+  w.aircraftScreenX, w.aircraftScreenY = 30, 30
+  registeredWidget.paint(w)
+  local rotations = 0
+  local function rotate(icon)
+    rotations = rotations + 1
+    return icon
+  end
+  w.arrowIcon.rotate, w.arrowRedIcon.rotate = rotate, rotate
+  w.lastHeading = 90
+  for _ = 1, 3 do
+    registeredWidget.paint(w)
+  end
+  assert_equal(rotations, 1, "stationary arrow reuses rotated bitmap")
+  w.gpsStale = true
+  registeredWidget.paint(w)
+  assert_equal(rotations, 2, "stale style uses its own rotation")
+  w.lastHeading = 180
+  registeredWidget.paint(w)
+  assert_equal(rotations, 3, "new heading rotates once")
+  local load = lcd.loadBitmap
+  local calls = 0
+  lcd.loadBitmap = function(path)
+    calls = calls + 1
+    assert_true(w.loadedBitmap == nil, "old map released before replacement")
+    return load(path)
+  end
+  w.bitmapFile = "Another.bmp"
+  for _ = 1, 3 do
+    registeredWidget.paint(w)
+  end
+  assert_equal(calls, 1, "unchanged map never reloaded by paint")
+  lcd.loadBitmap = load
 end
 
 print("boundrymap lua tests passed")

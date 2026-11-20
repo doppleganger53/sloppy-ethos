@@ -74,7 +74,7 @@ behaves.
 | `Signal Timeout (s)` | Mark GPS data stale after this many seconds without a fresh fix. |
 | `Coordinates` | Show or hide the current GPS coordinates on the map. |
 | `Distance` | Show or hide distance readouts. Without altitude, this is 2D ground distance. |
-| `Altitude Source` | Optional altitude telemetry source for 3D distance. |
+| `Altitude Source` | Select a source in metres or feet before home is acquired to include height above home in distance. |
 | `Reset Home` | Clear the learned home point so the widget can learn it again. |
 | `Boundry Warning` | Choose `None`, `Audio`, `Haptic`, or `Both`. |
 | `Warning Type` | Choose one-time `Momentary` feedback or repeating `Constant` feedback. |
@@ -82,6 +82,8 @@ behaves.
 | `Pre-warning Time` | Keep prediction `Off`, or warn when the projected path reaches a boundary in 1 to 10 seconds. |
 | `Diagnostics` | Open a status page for GPS, map, metadata, sidecar, and last error. |
 
+On firmware without a Boolean control, **Coordinates** and **Distance** use an
+Off/On selector. Both controls read and save the same settings.
 ## Telemetry overlays and flight statistics
 
 Open **Telemetry overlays → Set up** to show altitude or speed, select up to
@@ -134,14 +136,34 @@ show coordinates and distance when those settings are enabled. The top-left
 status shows how many boundary lines are on the map out of the six-line limit,
 or `Unsaved *` when changes need to be saved.
 
-Home is learned from stable GPS telemetry. If the home point is wrong, use
-`Reset Home` in the settings page, wait for a stable GPS fix, and verify the
-home icon appears where expected.
+Home is learned after 100 consecutive widget updates with a fresh, stable GPS
+position. Changing or clearing the GPS source clears the previous home and
+position. Use **Reset Home** on the ground to learn a new reference.
 
-If GPS telemetry becomes stale for longer than `Signal Timeout (s)`, the
-aircraft indicator switches to the stale style and the widget keeps the last
-known 2D ground distance visible. The normal live distance can still use the
-optional altitude source to show 3D slant distance.
+**Lost or implausible GPS.** The widget keeps the last accepted coordinates and
+ground distance, shows the aircraft in red, and suspends warnings. It rejects
+inactive or expired telemetry, invalid coordinates, the receiver's `0,0`
+no-fix pair, and the two poles where the map projection is undefined. Flying
+on the equator or prime meridian is supported.
+
+Between fixes, the permitted displacement is 25 m plus 150 m/s of elapsed
+sample time, capped at two seconds of travel. A larger jump requires at least
+three mutually consistent samples spanning three seconds. A change in
+coordinates or a drop in source age identifies a refreshed sample. Polling a
+single unchanged fix cannot confirm a jump.
+
+**Distance from home.** The ground-distance display suppresses horizontal
+jitter under 5 m. Home acquisition also captures a fresh altitude in metres or
+feet, even with `Distance` turned off. Live distance then includes the
+difference from that altitude. At home, a 300 m sea-level reading therefore
+shows 0 m. A 100 m climb and 100 m of horizontal travel show about 141 m.
+
+Missing or expired altitude uses ground distance. If altitude was unavailable
+at home, or you change the altitude source or unit, the widget keeps using
+ground distance until you reset home on the ground. After changing a sensor's
+offset or zeroing the altimeter, also use **Reset Home**. ETHOS does not expose
+that calibration change to this widget. The stale-GPS readout always retains
+the last accepted 2D distance, including with `Distance` turned off.
 
 ## Drawing Boundaries
 
