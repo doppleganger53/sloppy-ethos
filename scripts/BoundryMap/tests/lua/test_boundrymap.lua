@@ -22,7 +22,6 @@ _G.TOUCH_START = 16640
 _G.TOUCH_MOVE = 16642
 _G.TOUCH_END = 16641
 
-local TOUCH_CONTENT_Y_OFFSET = 18
 local storageValues = {}
 local ioReads = {}
 local ioWrites = {}
@@ -701,11 +700,8 @@ widget.bmpW = 480
 widget.bmpH = 272
 widget.mapMeta = meta
 local rects = test.controlRects(widget)
-local function rawTouchY(contentY)
-  return contentY + TOUCH_CONTENT_Y_OFFSET
-end
 
--- Check every vertical pixel: raw Delete coordinates overlap the Save button.
+-- Exercise every control pixel with the widget-local coordinates delivered by ETHOS.
 do
   for _, control in ipairs({ "draw", "delete", "save" }) do
     for _, endOnly in ipairs({ true, false }) do
@@ -719,11 +715,11 @@ do
         ioWriteCounts[path] = 0
         local x = rects[control].left + 2
         if not endOnly then
-          assert_true(test.event(candidate, _G.EVT_TOUCH, 16640, x, rawTouchY(contentY)), "control start consumed")
+          assert_true(test.event(candidate, _G.EVT_TOUCH, 16640, x, contentY), "control start consumed")
         end
-        assert_true(test.event(candidate, _G.EVT_TOUCH, 16641, x, rawTouchY(contentY)), "control end consumed")
-        assert_equal(candidate.drawMode, control == "draw", "normalized tap selects Draw only")
-        assert_equal(candidate.deleteMode, control == "delete", "normalized tap selects Delete only")
+        assert_true(test.event(candidate, _G.EVT_TOUCH, 16641, x, contentY), "control end consumed")
+        assert_equal(candidate.drawMode, control == "draw", "widget-local tap selects Draw only")
+        assert_equal(candidate.deleteMode, control == "delete", "widget-local tap selects Delete only")
         assert_equal(ioWriteCounts[path], control == "save" and 1 or 0, "only Save writes sidecar")
       end
     end
@@ -734,16 +730,16 @@ assert_equal(rects.draw.right - rects.draw.left, 72, "draw button width expanded
 assert_equal(rects.draw.bottom - rects.draw.top, 24, "draw button height expanded")
 local drawX = rects.draw.left + 2
 local drawY = rects.draw.top + 2
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, rawTouchY(drawY)), "draw button end-only tap consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, drawY), "draw button end-only tap consumed")
 assert_true(widget.drawMode, "draw mode toggled on by end-only tap")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, rawTouchY(drawY)), "draw button duplicate end-only tap consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, drawY), "draw button duplicate end-only tap consumed")
 assert_true(widget.drawMode, "draw mode stays on after duplicate end-only tap")
 widget.lastEndOnlyAt = os.clock() - 1
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, rawTouchY(drawY)), "draw button later end-only tap consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, drawY), "draw button later end-only tap consumed")
 assert_true(not widget.drawMode, "draw mode toggled off by later end-only tap")
 local deleteX = rects.delete.left + 2
 local deleteY = rects.delete.top + 2
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, deleteX, rawTouchY(deleteY)), "delete button end-only tap consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, deleteX, deleteY), "delete button end-only tap consumed")
 assert_true(widget.deleteMode, "delete mode toggled on by end-only tap")
 widget.deleteMode = false
 widget.bitmapFile = "TestMap.bmp"
@@ -751,22 +747,22 @@ widget.boundaryDirty = true
 local unarmedSaveX = rects.save.left + 2
 local unarmedSaveY = rects.save.top + 2
 ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = 0
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, unarmedSaveX, rawTouchY(unarmedSaveY)), "save button end-only tap consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, unarmedSaveX, unarmedSaveY), "save button end-only tap consumed")
 assert_true(not widget.boundaryDirty, "save button end-only tap clears dirty state")
 assert_equal(ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"], 1, "save button end-only tap writes")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, unarmedSaveX, rawTouchY(unarmedSaveY)), "save button duplicate end-only tap consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, unarmedSaveX, unarmedSaveY), "save button duplicate end-only tap consumed")
 assert_equal(ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"], 1, "save button duplicate end-only tap does not write twice")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16640, drawX, rawTouchY(drawY)), "draw button start consumed")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, rawTouchY(drawY)), "draw button end consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, drawX, drawY), "draw button start consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, drawX, drawY), "draw button end consumed")
 assert_true(widget.drawMode, "draw mode toggled on")
 
 local startX = 20
 local startY = 20
 local endX = 120
 local endY = 40
-assert_true(test.event(widget, _G.EVT_TOUCH, 16640, startX, rawTouchY(startY)), "map draw start consumed")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16642, 80, rawTouchY(30)), "map draw move consumed")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, endX, rawTouchY(endY)), "map draw end consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, startX, startY), "map draw start consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16642, 80, 30), "map draw move consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, endX, endY), "map draw end consumed")
 assert_equal(#widget.boundaries, 1, "event draw flow adds boundary")
 
 widget.bitmapFile = "TestMap.bmp"
@@ -776,10 +772,10 @@ local saveStartY = rects.save.top + 2
 local saveDriftX = rects.save.right + 5
 local saveDriftY = rects.save.bottom + 5
 ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = 0
-assert_true(test.event(widget, _G.EVT_TOUCH, 16640, saveStartX, rawTouchY(saveStartY)), "save button start consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, saveStartX, saveStartY), "save button start consumed")
 assert_true(not widget.boundaryDirty, "save button clears dirty state on start")
 assert_equal(ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"], 1, "save button writes on start")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, saveDriftX, rawTouchY(saveDriftY)), "save button tolerates small release drift")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, saveDriftX, saveDriftY), "save button tolerates small release drift")
 assert_true(not widget.boundaryDirty, "save button remains clean after drift")
 assert_equal(ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"], 1, "save button does not double-write on release")
 
@@ -789,7 +785,7 @@ widget.draftBoundary = nil
 widget.pendingDraftPoint = nil
 local nearSaveX = rects.save.left - 5
 local nearSaveY = rects.save.top + 2
-assert_true(test.event(widget, _G.EVT_TOUCH, 16640, nearSaveX, rawTouchY(nearSaveY)), "map touch near save start consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, nearSaveX, nearSaveY), "map touch near save start consumed")
 assert_true(widget.draftBoundary ~= nil, "map touch just outside save starts drawing")
 assert_equal(widget.draftBoundary.x1, nearSaveX, "near-save map touch preserves x")
 assert_equal(widget.draftBoundary.y1, nearSaveY, "near-save map touch preserves y")
@@ -798,7 +794,7 @@ widget.deleteMode = true
 widget.drawMode = false
 widget.draftBoundary = nil
 widget.pendingDraftPoint = nil
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, 22, rawTouchY(22)), "delete touch consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, 22, 22), "delete touch consumed")
 assert_equal(#widget.boundaries, 0, "event delete flow removes boundary")
 
 widget = test.create()
@@ -829,7 +825,7 @@ assert_equal(saveRects.save.bottom - saveRects.save.top, 24, "save button height
 local saveX = saveRects.save.left + 4
 local saveY = saveRects.save.top + 4
 ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = nil
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, saveX, rawTouchY(saveY)), "end-only save with active draft consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, saveX, saveY), "end-only save with active draft consumed")
 assert_equal(#widget.boundaries, 1, "end-only save commits active draft")
 assert_true(widget.draftBoundary == nil, "end-only save clears active draft")
 local savedAfterEndOnly = ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"]
@@ -855,9 +851,9 @@ ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = nil
 local overlapRects = test.controlRects(widget)
 local overlapSaveX = overlapRects.save.left + 3
 local overlapSaveY = overlapRects.save.top + 3
-assert_true(test.event(widget, _G.EVT_TOUCH, 16640, 40, rawTouchY(30)), "map draw over save start consumed")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16642, overlapSaveX - 10, rawTouchY(overlapSaveY)), "map draw over save move consumed")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, overlapSaveX, rawTouchY(overlapSaveY)), "map draw over save end consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, 40, 30), "map draw over save start consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16642, overlapSaveX - 10, overlapSaveY), "map draw over save move consumed")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, overlapSaveX, overlapSaveY), "map draw over save end consumed")
 assert_equal(#widget.boundaries, 1, "map release over save adds boundary")
 assert_equal(widget.boundaries[1].x1, 40, "map release over save keeps start x")
 assert_equal(widget.boundaries[1].y1, 30, "map release over save keeps start y")
@@ -869,15 +865,15 @@ assert_true(ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] =
 -- A control-consumed release must not block the next independent Save tap.
 do
   local deleteRect = test.controlRects(widget).delete
-  assert_true(test.event(widget, _G.EVT_TOUCH, 16640, 40, rawTouchY(30)), "draw before Delete start consumed")
+  assert_true(test.event(widget, _G.EVT_TOUCH, 16640, 40, 30), "draw before Delete start consumed")
   assert_true(widget.mapTouchActive, "drawing gesture is active")
-  assert_true(test.event(widget, _G.EVT_TOUCH, 16642, 120, rawTouchY(48)), "draw before Delete move consumed")
-  assert_true(test.event(widget, _G.EVT_TOUCH, 16641, deleteRect.left + 3, rawTouchY(deleteRect.top + 3)), "release over Delete consumed")
+  assert_true(test.event(widget, _G.EVT_TOUCH, 16642, 120, 48), "draw before Delete move consumed")
+  assert_true(test.event(widget, _G.EVT_TOUCH, 16641, deleteRect.left + 3, deleteRect.top + 3), "release over Delete consumed")
   assert_true(widget.deleteMode and not widget.drawMode, "release switches to Delete")
   assert_true(not widget.mapTouchActive, "Delete release ends drawing gesture")
   assert_true(ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] == nil, "Delete release does not save")
   ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] = 0
-  assert_true(test.event(widget, _G.EVT_TOUCH, 16641, overlapSaveX, rawTouchY(overlapSaveY)), "subsequent end-only Save consumed")
+  assert_true(test.event(widget, _G.EVT_TOUCH, 16641, overlapSaveX, overlapSaveY), "subsequent end-only Save consumed")
   assert_equal(ioWriteCounts["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"], 1, "Save persists after release over Delete")
   assert_true(not widget.boundaryDirty, "Save clears dirty state after Delete release")
 end
@@ -1241,12 +1237,12 @@ assert_true(widget.loadedBitmap ~= nil, "uat loads selected bitmap")
 assert_true(type(widget.mapMeta) == "table", "uat loads selected metadata")
 assert_true(type(widget.mapRect) == "table", "uat computes map rect")
 local uatRects = test.controlRects(widget)
-assert_true(test.event(widget, _G.EVT_TOUCH, 16640, uatRects.draw.left + 4, rawTouchY(uatRects.draw.top + 4)), "uat draw control start")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, uatRects.draw.left + 4, rawTouchY(uatRects.draw.top + 4)), "uat draw control end")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, uatRects.draw.left + 4, uatRects.draw.top + 4), "uat draw control start")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, uatRects.draw.left + 4, uatRects.draw.top + 4), "uat draw control end")
 assert_true(widget.drawMode, "uat draw mode enabled")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16640, 240, rawTouchY(70)), "uat boundary start")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16642, 240, rawTouchY(136)), "uat boundary move")
-assert_true(test.event(widget, _G.EVT_TOUCH, 16641, 240, rawTouchY(210)), "uat boundary end")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, 240, 70), "uat boundary start")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16642, 240, 136), "uat boundary move")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16641, 240, 210), "uat boundary end")
 assert_equal(#widget.boundaries, 1, "uat boundary drawn")
 assert_true(widget.boundaryDirty, "uat boundary dirty after draw")
 
@@ -1304,7 +1300,7 @@ assert_shadowed_text("Boundary exceeded", 4, 18, "uat warning overlay")
 
 local uatSaveRects = test.controlRects(widget)
 ioWriteCounts["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"] = 0
-assert_true(test.event(widget, _G.EVT_TOUCH, 16640, uatSaveRects.save.left + 3, rawTouchY(uatSaveRects.save.top + 3)), "uat save control start")
+assert_true(test.event(widget, _G.EVT_TOUCH, 16640, uatSaveRects.save.left + 3, uatSaveRects.save.top + 3), "uat save control start")
 assert_equal(ioWriteCounts["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"], 1, "uat save writes sidecar")
 assert_true(not widget.boundaryDirty, "uat save clears dirty state")
 local uatPayload = ioWrites["/scripts/BoundryMap/assets/maps/UATMap.boundries.json"]
@@ -1719,7 +1715,7 @@ do
   local x1, y1 = test.bitmapLocalToScreen(field, 130, 43)
   local x2, y2 = test.bitmapLocalToScreen(field, 150, 67)
   local function touch(phase, x, y)
-    return test.event(field, EVT_TOUCH, phase, x, rawTouchY(y))
+    return test.event(field, EVT_TOUCH, phase, x, y)
   end
   assert_true(not touch(TOUCH_START, field.mapRect.left, field.mapRect.top), "blank corner ignores map touch")
   assert_true(touch(TOUCH_START, x1, y1), "start rotated draft")
