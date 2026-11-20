@@ -47,7 +47,6 @@ local CONTROL_BUTTON_GAP = 4
 local CONTROL_MARGIN = 6
 local CONTROL_RELEASE_SLOP = 8
 local END_ONLY_CONTROL_DEBOUNCE = 0.2
-local TOUCH_CONTENT_Y_OFFSET = 18
 local ICON_PATH = "assets/icons"
 local COORDS_TEXT_X = 4
 local COORDS_TEXT_BOTTOM = 40
@@ -399,13 +398,6 @@ local function resolveTouchPhase(category, value)
     return "end"
   end
   return nil
-end
-
-local function normalizeTouchPoint(x, y)
-  if type(y) ~= "number" then
-    return x, y
-  end
-  return x, y - TOUCH_CONTENT_Y_OFFSET
 end
 
 local function controlRects(widget)
@@ -2208,13 +2200,11 @@ local function event(widget, category, value, x, y)
     if not phase then
       return false
     end
-    -- Controls and map geometry share content coordinates. Raw hits can select
-    -- the next button down before the content offset has been removed.
-    local contentX, contentY = normalizeTouchPoint(x, y)
-    if handleControlTouch(widget, phase, contentX, contentY) then
+    -- ETHOS reports points relative to the widget, including in compact zones.
+    if handleControlTouch(widget, phase, x, y) then
       return true
     end
-    return handleMapTouch(widget, phase, contentX, contentY)
+    return handleMapTouch(widget, phase, x, y)
   end)
   -- Keep the drag flag during dispatch to guard Save, then end the gesture
   -- even when a control consumed the release or a handler failed.

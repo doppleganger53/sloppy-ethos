@@ -21,6 +21,21 @@ and the source coexist during conversion; the widget retains the display
 buffer afterward. Display-only changes leave sidecar coordinates untouched.
 The inverse transform rejects the blank corners around an oblique image.
 
+### Native pointer gestures
+
+In the compact layout, a canvas tap at (290,300) reached the Lua callback as
+(250,205). The widget began at (40,95). The fullscreen callback received the
+canvas coordinates directly. Subtracting an additional 18 pixels missed Draw
+and could activate Delete from a Save tap. Both modes now use widget-local
+coordinates throughout control dispatch and inverse map rotation.
+
+On both firmware versions and both layouts, the WebSimulator pointer drew
+between the two colored landmarks at 37°, saved one line, deleted it by its
+midpoint, and saved an empty sidecar. The saved line ran from (79.932,30.091)
+to (159.932,29.909), within 0.1 pixel per coordinate of the map landmarks.
+The Lua tests also cover end-only and repeated Save events and a map drag
+released over Save.
+
 ## Firmware constraint and removal condition
 
 Use the equivalent bearing plus 360° at nonzero cardinal angles to request
