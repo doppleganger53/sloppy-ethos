@@ -1716,6 +1716,24 @@ buildDiagForm = function(widget)
   end
 end
 
+-- Use the stored Boolean on either form control.
+local function addToggle(widget, label, key)
+  local line = form.addLine(label)
+  local function setValue(value)
+    widget[key] = normalizeBoolean(value, false)
+    widget.needsInvalidate = true
+  end
+  if type(form.addBooleanField) == "function" then
+    form.addBooleanField(line, nil, function()
+      return widget[key]
+    end, setValue)
+  elseif type(form.addChoiceField) == "function" then
+    form.addChoiceField(line, nil, { { "Off", 0 }, { "On", 1 } }, function()
+      return widget[key] and 1 or 0
+    end, setValue)
+  end
+end
+
 buildMainForm = function(widget)
   if type(widget) ~= "table" or type(form) ~= "table" or type(form.addLine) ~= "function" then
     return
@@ -1750,7 +1768,7 @@ buildMainForm = function(widget)
         widget.gpsSensorName = ""
       end
       widget.telemetrySourceName = nil
-    end)
+    end, nil)
   end
 
   local line2a = form.addLine("Heading Indicator")
@@ -1771,23 +1789,8 @@ buildMainForm = function(widget)
     end)
   end
 
-  local line2c = form.addLine("Coordinates")
-  if type(form.addBooleanField) == "function" then
-    form.addBooleanField(line2c, nil, function()
-      return widget.coordsEnabled
-    end, function(value)
-      widget.coordsEnabled = normalizeBoolean(value, false)
-    end)
-  end
-
-  local line3 = form.addLine("Distance")
-  if type(form.addBooleanField) == "function" then
-    form.addBooleanField(line3, nil, function()
-      return widget.distEnabled
-    end, function(value)
-      widget.distEnabled = normalizeBoolean(value, false)
-    end)
-  end
+  addToggle(widget, "Coordinates", "coordsEnabled")
+  addToggle(widget, "Distance", "distEnabled")
 
   local line3a = form.addLine("  Altitude Source")
   if type(form.addSensorField) == "function" then
@@ -1801,7 +1804,7 @@ buildMainForm = function(widget)
       else
         widget.altSensorName = ""
       end
-    end)
+    end, nil)
   end
 
   local line4 = form.addLine("Reset Home")
@@ -1850,7 +1853,7 @@ buildMainForm = function(widget)
       else
         widget.speedSensorName = ""
       end
-    end)
+    end, nil)
   end
 
   local line6b = form.addLine("Pre-warning Time")
