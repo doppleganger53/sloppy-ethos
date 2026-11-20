@@ -261,7 +261,12 @@ local function bitmapLocalToScreen(widget, x, y)
   if type(widget) ~= "table" then
     return nil, nil
   end
-  return (widget.offX or 0) + x, (widget.offY or 0) + y
+  if (widget.displayAngle or 0) == 0 then
+    return (widget.offX or 0) + x, (widget.offY or 0) + y
+  end
+  local dx, dy = x - widget.bmpW / 2, y - widget.bmpH / 2
+  return widget.centerX + dx * widget.angleCos - dy * widget.angleSin,
+    widget.centerY + dx * widget.angleSin + dy * widget.angleCos
 end
 
 local function screenToBitmapLocal(widget, x, y)
@@ -273,6 +278,16 @@ local function screenToBitmapLocal(widget, x, y)
   end
   local clampedX = clamp(x, widget.mapRect.left, widget.mapRect.right)
   local clampedY = clamp(y, widget.mapRect.top, widget.mapRect.bottom)
+  if (widget.displayAngle or 0) ~= 0 then
+    local dx, dy = clampedX - widget.centerX, clampedY - widget.centerY
+    local bx = widget.bmpW / 2 + dx * widget.angleCos + dy * widget.angleSin
+    local by = widget.bmpH / 2 - dx * widget.angleSin + dy * widget.angleCos
+    -- The corners of an oblique rotation can be outside the source image.
+    if bx < -0.0001 or by < -0.0001 or bx > widget.bmpW + 0.0001 or by > widget.bmpH + 0.0001 then
+      return nil, nil
+    end
+    return clamp(bx, 0, widget.bmpW), clamp(by, 0, widget.bmpH)
+  end
   local localX = clamp(clampedX - (widget.offX or 0), 0, widget.bmpW)
   local localY = clamp(clampedY - (widget.offY or 0), 0, widget.bmpH)
   return localX, localY
@@ -502,38 +517,59 @@ end
 
 local function loadBitmapForWidget(widget)
   local bmpFile = widget.bitmapFile or ""
-  if bmpFile == "" then
+  local angle = widget.mapAngle or 0
+  local mapChanged = widget.loadedFile ~= bmpFile
+  if not mapChanged and widget.loadedAngle == angle then
+    return
+  end
+
+  -- A north-up display already holds the source. An angle change from a
+  -- rotated display needs the original, never a rotation of a rotation.
+  local bitmap = not mapChanged and widget.displayAngle == 0 and widget.loadedBitmap or nil
+  if widget.loadedBitmap and not bitmap then
     widget.loadedBitmap = nil
-    widget.loadedFile = ""
-    widget.bmpW = 0
-    widget.bmpH = 0
-    widget.mapMeta = nil
-    widget.boundaries = {}
-    widget.savedBoundarySignature = ""
-    widget.boundaryDirty = false
-    widget.mapRect = nil
-    return
+    safeCall(collectgarbage, "collect")
   end
-
-  if widget.loadedFile == bmpFile and widget.loadedBitmap ~= nil then
-    return
-  end
-
-  local bitmap = safeCall(lcd.loadBitmap, bitmapsPath .. "/" .. bmpFile)
-  widget.loadedBitmap = bitmap
   widget.loadedFile = bmpFile
-  if bitmap then
-    widget.bmpW = safeCall(bitmap.width, bitmap) or 0
-    widget.bmpH = safeCall(bitmap.height, bitmap) or 0
-  else
-    widget.bmpW = 0
-    widget.bmpH = 0
+  widget.loadedAngle = angle
+  widget.displayAngle = 0
+  widget.needsInvalidate = true
+  if mapChanged then
+    widget.mapMeta, widget.mapMetaError = loadMapMetadata(bmpFile)
+    widget.boundaryLoadPending = true
   end
-
-  local meta, metaErr = loadMapMetadata(bmpFile)
-  widget.mapMeta = meta
-  widget.mapMetaError = metaErr
-  widget.boundaryLoadPending = true
+  if not bitmap and bmpFile ~= "" then
+    bitmap = safeCall(lcd.loadBitmap, bitmapsPath .. "/" .. bmpFile)
+  end
+  widget.bmpW = bitmap and safeCall(bitmap.width, bitmap) or 0
+  widget.bmpH = bitmap and safeCall(bitmap.height, bitmap) or 0
+  widget.drawW, widget.drawH = widget.bmpW, widget.bmpH
+  if widget.bmpW <= 0 or widget.bmpH <= 0 then
+    -- An undecodable file can return a zero-size native Bitmap.
+    widget.loadedBitmap = nil
+    return
+  end
+  if angle ~= 0 then
+    -- One equivalent full turn selects the centered rotation path on both
+    -- target runtimes. The 1.6.8 quarter-turn path can fail on large maps.
+    local nativeAngle = angle % 90 == 0 and angle + 360 or angle
+    local memory = safeCall(system and system.getMemoryUsage)
+    local available = type(memory) == "table" and memory.luaBitmapsRamAvailable
+    local rotated
+    if type(available) ~= "number" or available >= 2 * widget.bmpW * widget.bmpH then
+      rotated = safeCall(bitmap.rotate, bitmap, nativeAngle)
+    end
+    local rw = rotated and safeCall(rotated.width, rotated) or 0
+    local rh = rotated and safeCall(rotated.height, rotated) or 0
+    if rw > 0 and rh > 0 then
+      bitmap = rotated
+      widget.displayAngle = angle
+      widget.drawW, widget.drawH = rw, rh
+    end
+  end
+  widget.loadedBitmap = bitmap
+  widget.angleCos = cos(widget.displayAngle * DEG_TO_RAD)
+  widget.angleSin = sin(widget.displayAngle * DEG_TO_RAD)
 end
 
 local function updateMapRect(widget)
@@ -544,16 +580,21 @@ local function updateMapRect(widget)
       w, h = ww, hh
     end
   end
-  widget.windowW = w
-  widget.windowH = h
-  widget.offX = floor((w - (widget.bmpW or 0)) / 2)
-  widget.offY = floor((h - (widget.bmpH or 0)) / 2)
-  if (widget.bmpW or 0) > 0 and (widget.bmpH or 0) > 0 then
+  local dw, dh = widget.drawW or 0, widget.drawH or 0
+  if widget.rectW == dw and widget.rectH == dh and widget.windowW == w and widget.windowH == h then
+    return
+  end
+  widget.windowW, widget.windowH = w, h
+  widget.rectW, widget.rectH = dw, dh
+  widget.offX, widget.offY = floor((w - dw) / 2), floor((h - dh) / 2)
+  widget.centerX, widget.centerY = widget.offX + dw / 2, widget.offY + dh / 2
+  widget.needsInvalidate = true
+  if dw > 0 and dh > 0 then
     widget.mapRect = {
       left = max(0, widget.offX),
       top = max(0, widget.offY),
-      right = min(w, widget.offX + widget.bmpW),
-      bottom = min(h, widget.offY + widget.bmpH),
+      right = min(w, widget.offX + dw),
+      bottom = min(h, widget.offY + dh),
     }
   else
     widget.mapRect = nil
@@ -711,8 +752,9 @@ local function commitDraftBoundary(widget, x, y)
   local draft = widget.draftBoundary
   if type(x) == "number" and type(y) == "number" then
     local localX, localY = screenToBitmapLocal(widget, x, y)
-    draft.x2 = localX
-    draft.y2 = localY
+    if localX then
+      draft.x2, draft.y2 = localX, localY
+    end
   elseif type(widget.pendingDraftPoint) == "table" then
     if type(widget.pendingDraftPoint.x) == "number" then
       draft.x2 = widget.pendingDraftPoint.x
@@ -794,7 +836,7 @@ end
 
 local function drawLineSafe(x1, y1, x2, y2)
   if type(lcd) == "table" and type(lcd.drawLine) == "function" then
-    lcd.drawLine(x1, y1, x2, y2)
+    lcd.drawLine(floor(x1 + 0.5), floor(y1 + 0.5), floor(x2 + 0.5), floor(y2 + 0.5))
   end
 end
 
@@ -806,7 +848,7 @@ local function drawBitmapSafe(x, y, bitmap)
 end
 
 local function bitmapDimension(bitmap, methodName, fallback)
-  if type(bitmap) ~= "table" then
+  if not bitmap then
     return fallback
   end
   local method = bitmap[methodName]
@@ -1081,9 +1123,6 @@ local function updateAircraftPosition(widget, lat, lon)
   widget.aircraftX = x
   widget.aircraftY = y
   widget.lastCoordsText = sformat("%.5f, %.5f", lat, lon)
-  local sx, sy = bitmapLocalToScreen(widget, x, y)
-  widget.aircraftScreenX = sx
-  widget.aircraftScreenY = sy
   return true
 end
 
@@ -1361,15 +1400,20 @@ local function drawControlButton(widget, rect, label, active)
 end
 
 local function drawIndicator(widget, isStale)
-  if type(widget.aircraftScreenX) ~= "number" or type(widget.aircraftScreenY) ~= "number" then
+  if type(widget.aircraftX) ~= "number" or type(widget.aircraftY) ~= "number" then
     return
   end
-  local x = clamp(widget.aircraftScreenX, 6, (widget.windowW or 480) - 6)
-  local y = clamp(widget.aircraftScreenY, 6, (widget.windowH or 272) - 6)
+  local x, y = bitmapLocalToScreen(widget, widget.aircraftX, widget.aircraftY)
+  if widget.displayAngle ~= 0 and not hitRect(x, y, widget.mapRect) then
+    return
+  end
+  x = clamp(floor(x + 0.5), 6, (widget.windowW or 480) - 6)
+  y = clamp(floor(y + 0.5), 6, (widget.windowH or 272) - 6)
+  local heading = ((widget.lastHeading or 0) + (widget.displayAngle or 0)) % 360
   if widget.indicatorType == 1 then
     local icon = isStale and widget.arrowRedIcon or widget.arrowIcon
-    if type(icon) == "table" and type(icon.rotate) == "function" then
-      local rotated = safeCall(icon.rotate, icon, widget.lastHeading or 0)
+    if icon and type(icon.rotate) == "function" then
+      local rotated = safeCall(icon.rotate, icon, heading)
       if rotated then
         local rw = bitmapDimension(rotated, "width", 16)
         local rh = bitmapDimension(rotated, "height", 16)
@@ -1381,9 +1425,9 @@ local function drawIndicator(widget, isStale)
   end
   if widget.indicatorType == 1 and type(lcd) == "table" and type(lcd.drawLine) == "function" then
     local length = 10
-    local angle = (widget.lastHeading or 0) * DEG_TO_RAD
-    local tipX = x + (cos(angle) * length)
-    local tipY = y + (sin(angle) * length)
+    local angle = heading * DEG_TO_RAD
+    local tipX = x + (sin(angle) * length)
+    local tipY = y - (cos(angle) * length)
     setColor(widget, isStale and "red" or "orange")
     drawLineSafe(x, y, tipX, tipY)
     drawLineSafe(x - 2, y - 2, x + 2, y + 2)
@@ -1403,6 +1447,7 @@ local function drawHome(widget)
   if not sx or not sy then
     return
   end
+  sx, sy = floor(sx + 0.5), floor(sy + 0.5)
   if widget.homeIcon then
     local iw = bitmapDimension(widget.homeIcon, "width", 16)
     local ih = bitmapDimension(widget.homeIcon, "height", 20)
@@ -1474,6 +1519,7 @@ end
 local function create()
   return {
     bitmapFile = "",
+    mapAngle = 0,
     gpsSensor = nil,
     gpsSensorName = "",
     distEnabled = false,
@@ -1544,8 +1590,6 @@ local function create()
     lastEndOnlyAt = nil,
     aircraftX = nil,
     aircraftY = nil,
-    aircraftScreenX = nil,
-    aircraftScreenY = nil,
     lastError = nil,
     colors = {},
     colorsInitialized = false,
@@ -1730,9 +1774,22 @@ buildMainForm = function(widget)
     form.addBitmapField(line1, nil, bitmapsPath, function()
       return widget.bitmapFile
     end, function(value)
-      widget.bitmapFile = value
-      widget.loadedFile = ""
+      if widget.bitmapFile == value and widget.loadedBitmap then
+        return
+      end
+      widget.bitmapFile = value or ""
+      widget.loadedFile = nil
       widget.boundaryLoadPending = true
+      widget.needsInvalidate = true
+    end)
+  end
+
+  if type(form.addNumberField) == "function" then
+    local line = form.addLine("Map rotation (degrees CW)")
+    form.addNumberField(line, nil, 0, 359, function()
+      return widget.mapAngle
+    end, function(value)
+      widget.mapAngle = floor(clamp(tonumber(value) or 0, 0, 359))
       widget.needsInvalidate = true
     end)
   end
@@ -1907,7 +1964,7 @@ local function paint(widget)
       if type(lcd) == "table" and type(lcd.font) == "function" then
         lcd.font(FONT_STD_BOLD or FONT_STD)
       end
-      drawTextSafe(8, 8, "No map selected")
+      drawTextSafe(8, 8, widget.bitmapFile ~= "" and "Map bitmap unavailable" or "No map selected")
       return
     end
 
@@ -1917,10 +1974,24 @@ local function paint(widget)
       return
     end
 
+    local clip = widget.displayAngle ~= 0 and widget.mapRect and lcd.setClipping
+    if clip then
+      local r = widget.mapRect
+      clip(r.left, r.top, r.right - r.left, r.bottom - r.top)
+    end
     drawBoundaries(widget)
     drawHome(widget)
     drawIndicator(widget, widget.gpsStale)
+    if clip then
+      clip()
+    end
     drawOverlay(widget)
+    if widget.mapAngle ~= 0 then
+      local label = widget.displayAngle == 0 and "N up!" or sformat("N %d°", widget.displayAngle)
+      local rect = controlRects(widget).draw
+      local right = rect.top < 24 and rect.left - 4 or widget.windowW - 4
+      drawShadowText(widget, right, 2, label, "white", RIGHT)
+    end
 
     if type(lcd) == "table" and type(lcd.font) == "function" then
       lcd.font(FONT_XS or FONT_STD)
@@ -2008,7 +2079,11 @@ local function handleControlTouch(widget, phase, x, y)
 end
 
 local function handleMapTouch(widget, phase, x, y)
-  if type(widget.mapRect) ~= "table" or not hitRect(x, y, widget.mapRect) then
+  local localX, localY
+  if hitRect(x, y, widget.mapRect) then
+    localX, localY = screenToBitmapLocal(widget, x, y)
+  end
+  if not localX then
     if phase == "end" then
       widget.mapTouchActive = false
       widget.draftBoundary = nil
@@ -2020,7 +2095,6 @@ local function handleMapTouch(widget, phase, x, y)
   if widget.drawMode then
     if phase == "start" then
       widget.mapTouchActive = true
-      local localX, localY = screenToBitmapLocal(widget, x, y)
       widget.pendingDraftPoint = { x = localX, y = localY }
       widget.draftBoundary = {
         x1 = localX, y1 = localY, x2 = localX, y2 = localY,
@@ -2030,13 +2104,11 @@ local function handleMapTouch(widget, phase, x, y)
       return true
     end
     if phase == "move" and widget.draftBoundary then
-      local localX, localY = screenToBitmapLocal(widget, x, y)
       widget.pendingDraftPoint = { x = localX, y = localY }
       return true
     end
     if phase == "end" and widget.draftBoundary then
       widget.mapTouchActive = false
-      local localX, localY = screenToBitmapLocal(widget, x, y)
       local startX = widget.draftBoundary.x1
       local startY = widget.draftBoundary.y1
       widget.draftBoundary = nil
@@ -2180,6 +2252,7 @@ local function read(widget)
   widget.coordsEnabled = parts[9] == "1"
   widget.speedSensorName = parts[10] or ""
   widget.predictionSeconds = floor(clamp(tonumber(parts[11]) or 0, 0, MAX_PREDICTION_SECONDS))
+  widget.mapAngle = floor(clamp(tonumber(parts[12]) or 0, 0, 359))
   widget.telemetrySourceName = nil
   widget.gpsSensor = nil
   widget.altSrc = nil
@@ -2194,7 +2267,7 @@ local function read(widget)
   if widget.speedSensorName ~= "" and type(system) == "table" and type(system.getSource) == "function" then
     widget.speedSrc = safeCall(system.getSource, { name = widget.speedSensorName })
   end
-  widget.loadedFile = ""
+  widget.loadedFile = nil
   widget.boundaryLoadPending = true
   widget.needsInvalidate = true
 end
@@ -2224,6 +2297,8 @@ local function write(widget)
     .. (widget.speedSensorName or "")
     .. CFG_SEP
     .. tostring(floor(clamp(tonumber(widget.predictionSeconds) or 0, 0, MAX_PREDICTION_SECONDS)))
+    .. CFG_SEP
+    .. tostring(widget.mapAngle or 0)
   safeInvoke(storage.write, "cfg", payload)
 end
 
@@ -2249,6 +2324,7 @@ local function testExports()
     latLonToBitmapLocal = latLonToBitmapLocal,
     bitmapLocalToLatLon = bitmapLocalToLatLon,
     screenToBitmapLocal = screenToBitmapLocal,
+    bitmapLocalToScreen = bitmapLocalToScreen,
     segmentsIntersect = segmentsIntersect,
     boundarySignature = boundarySignature,
     parseBoundaryObjects = parseBoundaryObjects,
