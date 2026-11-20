@@ -966,8 +966,13 @@ predictionWidget.staleMs = 2000
 predictionWidget.gpsStale = false
 local projectedLat, projectedLon = test.projectLatLon(predictionLat, predictionLon, 90, 150)
 assert_true(type(projectedLat) == "number" and type(projectedLon) == "number", "prediction projects coordinates")
-assert_true(test.predictionCrossesBoundary(predictionWidget, predictionLat, predictionLon),
-  "outbound projected path crosses boundary")
+for _, angle in ipairs({0, 37, 90, 180, 270}) do
+  predictionWidget.mapAngle, predictionWidget.displayAngle = angle, angle
+  assert_true(test.predictionCrossesBoundary(predictionWidget, predictionLat, predictionLon),
+    "display angle preserves outbound prediction")
+  assert_true(test.isExceeded(predictionWidget, 260, 136), "display angle preserves actual boundary crossing")
+  assert_true(not test.isExceeded(predictionWidget, 200, 136), "display angle preserves safe side")
+end
 
 predictionWidget.lastHeading = 270
 predictionWidget.boundaries[1].x1 = 180
@@ -1121,12 +1126,13 @@ widget = test.create()
 widget.bitmapFile = "TestMap.bmp"
 widget.coordsEnabled = true
 widget.distEnabled = true
+registeredWidget.paint(widget) -- load the new map before supplying bitmap-local test points
 widget.distText = "123 m"
 widget.lastCoordsText = "39.12345, -75.54321"
 widget.homeX = 50
 widget.homeY = 60
-widget.aircraftScreenX = 200
-widget.aircraftScreenY = 100
+widget.aircraftX = 200
+widget.aircraftY = 100
 widget.indicatorType = 1
 widget.lastHeading = 45
 resetDrawCalls()
@@ -1400,11 +1406,13 @@ do
   assert_equal(field("Altitude").value, "-- ft", "reset clears aggregates")
   button("Back")()
   assert_true(s.boundaryDirty and s.draftBoundary.x1 == 1 and s.homeLat == 22, "stats preserve unsaved edits and home")
+  s.mapAngle = 37
   s.flight.names.field2 = "%7C|Aux"
   registeredWidget.write(s)
   local restoredDisplay = test.create()
   registeredWidget.read(restoredDisplay)
   assert_equal(restoredDisplay.flight.names.field1, "Voltage", "extra source persisted")
+  assert_equal(restoredDisplay.mapAngle, 37, "angle restored alongside overlays")
   assert_equal(restoredDisplay.flight.names.field2, "%7C|Aux", "escaped separator restored")
   assert_equal(restoredDisplay.flight.liveColor, 2, "live text color persisted")
   assert_equal(restoredDisplay.flight.staleColor, 3, "stale text color persisted")
@@ -1625,8 +1633,8 @@ do
   local w = test.create()
   w.bitmapFile = "Acceptance.bmp"
   w.indicatorType = 1
-  w.aircraftScreenX, w.aircraftScreenY = 30, 30
   registeredWidget.paint(w)
+  w.aircraftX, w.aircraftY = 30, 30
   local rotations = 0
   local function rotate(icon)
     rotations = rotations + 1
@@ -1657,6 +1665,117 @@ do
   end
   assert_equal(calls, 1, "unchanged map never reloaded by paint")
   lcd.loadBitmap = load
+end
+
+-- Use the centered rotation path on both X20RS runtimes with an asymmetric map.
+do
+  local originalBitmap = lcd.loadBitmap
+  local originalSize = lcd.getWindowSize
+  local reads, rotations = 0, 0
+  local canRotate, validBitmap = true, true
+  local w, h = 480, 272
+  lcd.getWindowSize = function() return w, h end
+  lcd.loadBitmap = function(path)
+    if not path:find("/maps/", 1, true) then return originalBitmap(path) end
+    reads = reads + 1
+    return {
+      name = path,
+      width = function() return validBitmap and 240 or 0 end,
+      height = function() return validBitmap and 120 or 0 end,
+      rotate = function(_, angle)
+        rotations = rotations + 1
+        if not canRotate then return nil end
+        assert_true(angle % 90 ~= 0 or angle > 360, "cardinal angle uses centered rotation")
+        return { name = "rotated map", width = function() return 240 end, height = function() return 120 end }
+      end,
+    }
+  end
+  local function close(a, b) return math.abs(a - b) < 0.0001 end
+  local field = test.create()
+  field.bitmapFile = "TestMap.bmp"
+  registeredWidget.configure(field)
+  local _, angleField = findFormRow("Map rotation (degrees CW)")
+  assert_equal(angleField.getter(), 0, "existing configuration is north-up")
+  registeredWidget.paint(field)
+  for _, angle in ipairs({90, 180, 270, 37, 0}) do
+    angleField.setter(angle)
+    registeredWidget.paint(field)
+    local sx, sy = test.bitmapLocalToScreen(field, 135, 40)
+    local rad = math.rad(angle)
+    assert_true(close(sx, w / 2 + 15 * math.cos(rad) + 20 * math.sin(rad)), "clockwise map x")
+    assert_true(close(sy, h / 2 + 15 * math.sin(rad) - 20 * math.cos(rad)), "clockwise map y")
+    local bx, by = test.screenToBitmapLocal(field, sx, sy)
+    assert_true(close(bx, 135) and close(by, 40), "inverse recovers original map pixel")
+    local priorReads, priorRotations = reads, rotations
+    registeredWidget.paint(field)
+    registeredWidget.wakeup(field)
+    assert_equal(reads, priorReads, "unchanged map is not reloaded")
+    assert_equal(rotations, priorRotations, "unchanged angle is not reallocated")
+  end
+  angleField.setter(37)
+  registeredWidget.paint(field)
+  field.boundaries = {}
+  field.drawMode = true
+  local x1, y1 = test.bitmapLocalToScreen(field, 130, 43)
+  local x2, y2 = test.bitmapLocalToScreen(field, 150, 67)
+  local function touch(phase, x, y)
+    return test.event(field, EVT_TOUCH, phase, x, rawTouchY(y))
+  end
+  assert_true(not touch(TOUCH_START, field.mapRect.left, field.mapRect.top), "blank corner ignores map touch")
+  assert_true(touch(TOUCH_START, x1, y1), "start rotated draft")
+  assert_true(touch(TOUCH_MOVE, x2, y2), "move rotated draft")
+  assert_true(touch(TOUCH_END, x2, y2), "end rotated draft")
+  local line = field.boundaries[1]
+  assert_true(close(line.x1, 130) and close(line.y1, 43) and close(line.x2, 150) and close(line.y2, 67),
+    "editing stores original map pixels")
+  local lat, lon = test.bitmapLocalToLatLon(field, 130, 43)
+  assert_true(close(line.lat1,lat) and close(line.lon1,lon), "editing preserves geographic coordinates")
+  local signature = test.boundarySignature(field.boundaries)
+  local draft = { x1 = 112, y1 = 45, x2 = 117, y2 = 59 }
+  field.draftBoundary = draft
+  angleField.setter(90)
+  registeredWidget.paint(field)
+  assert_true(field.draftBoundary == draft and field.boundaryDirty, "angle changes preserve unsaved edits")
+  local oldReads, oldRotations = reads, rotations
+  w,h = 240,150
+  registeredWidget.paint(field)
+  assert_true(reads == oldReads and rotations == oldRotations, "resizing only recalculates layout")
+  assert_true(field.draftBoundary == draft and test.boundarySignature(field.boundaries) == signature,
+    "resize preserves saved and draft geometry")
+  field.draftBoundary = nil
+  assert_true(test.saveBoundaries(field), "rotated edits save")
+  test.write(field)
+  local restored = test.create()
+  test.read(restored)
+  assert_equal(restored.mapAngle, 90, "angle round trips")
+  ioReads["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"] =
+    ioWrites["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"]
+  restored.mapAngle = 0
+  registeredWidget.paint(restored)
+  assert_true(close(restored.boundaries[1].x2, 150) and close(restored.boundaries[1].y1, 43), "reopen north-up")
+  field.drawMode, field.deleteMode = false, true
+  local mx, my = test.bitmapLocalToScreen(field, 140, 55)
+  assert_true(touch(TOUCH_END, mx, my) and #field.boundaries == 0, "delete hit follows the rotated line")
+  canRotate = false
+  angleField.setter(42)
+  registeredWidget.paint(field)
+  assert_equal(field.displayAngle, 0, "failed rotation consistently falls back to north-up")
+  oldRotations = rotations
+  registeredWidget.paint(field)
+  assert_equal(rotations, oldRotations, "failed rotation is not retried every frame")
+  local originalMemory = system.getMemoryUsage
+  system.getMemoryUsage = function() return {luaBitmapsRamAvailable = 100} end
+  angleField.setter(90)
+  registeredWidget.paint(field)
+  assert_equal(field.displayAngle, 0, "low bitmap memory retains usable north-up map")
+  assert_equal(rotations, oldRotations, "low bitmap memory avoids rotation allocation")
+  system.getMemoryUsage = originalMemory
+  validBitmap = false
+  field.bitmapFile = "Broken.bmp"
+  registeredWidget.paint(field)
+  assert_true(not field.loadedBitmap and not field.mapRect, "invalid bitmap has no active map")
+  assert_equal(rotations, oldRotations, "zero-size bitmap never enters native rotation")
+  lcd.loadBitmap, lcd.getWindowSize = originalBitmap, originalSize
 end
 
 print("boundrymap lua tests passed")
