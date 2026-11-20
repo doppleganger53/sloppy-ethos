@@ -518,7 +518,8 @@ local function loadBitmapForWidget(widget)
   local bmpFile = widget.bitmapFile or ""
   local angle = widget.mapAngle or 0
   local mapChanged = widget.loadedFile ~= bmpFile
-  local retryDue = not widget.loadedBitmap and bmpFile ~= "" and os.clock() >= (widget.nextBitmapRetry or 0)
+  local retryDue = widget.retryMapFiles or
+    (not widget.loadedBitmap and bmpFile ~= "" and os.clock() >= (widget.nextBitmapRetry or 0))
   if not mapChanged and widget.loadedAngle == angle and not retryDue then
     return
   end
@@ -531,11 +532,14 @@ local function loadBitmapForWidget(widget)
     safeCall(collectgarbage, "collect")
   end
   widget.loadedFile = bmpFile
+  widget.retryMapFiles = false
   widget.loadedAngle = angle
   widget.displayAngle = 0
   widget.needsInvalidate = true
-  if mapChanged then
+  if mapChanged or (retryDue and not widget.mapMeta) then
     widget.mapMeta, widget.mapMetaError = loadMapMetadata(bmpFile)
+  end
+  if mapChanged then
     widget.boundaryLoadPending = true
   end
   if not bitmap and bmpFile ~= "" then
@@ -551,6 +555,9 @@ local function loadBitmapForWidget(widget)
     widget.aircraftX, widget.aircraftY = nil, nil
     widget.homeX, widget.homeY = nil, nil
     return
+  end
+  if retryDue and not widget.boundaryDirty and not widget.draftBoundary and not widget.mapTouchActive then
+    widget.boundaryLoadPending = true
   end
   if mapChanged or retryDue then
     widget.homeX, widget.homeY = latLonToBitmapLocal(widget, widget.homeLat, widget.homeLon)
@@ -2132,12 +2139,12 @@ buildMainForm = function(widget)
     form.addBitmapField(line1, nil, bitmapsPath, function()
       return widget.bitmapFile
     end, function(value)
-      if widget.bitmapFile == value and widget.loadedBitmap then
-        return
+      value = value or ""
+      if widget.bitmapFile == value then
+        widget.retryMapFiles = not (widget.loadedBitmap and widget.mapMeta)
+      else
+        widget.bitmapFile = value
       end
-      widget.bitmapFile = value or ""
-      widget.loadedFile = nil
-      widget.boundaryLoadPending = true
       widget.needsInvalidate = true
     end)
   end

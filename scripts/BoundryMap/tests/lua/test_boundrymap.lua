@@ -1771,6 +1771,23 @@ do
   registeredWidget.paint(field)
   assert_true(not field.loadedBitmap and not field.mapRect, "invalid bitmap has no active map")
   assert_equal(rotations, oldRotations, "zero-size bitmap never enters native rotation")
+  local originalClock = os.clock
+  local now = os.clock()
+  os.clock = function() return now end
+  ioReads["/scripts/BoundryMap/assets/maps/Broken.json"] = ioReads["/scripts/BoundryMap/assets/maps/TestMap.json"]
+  ioReads["/scripts/BoundryMap/assets/maps/Broken.boundries.json"] =
+    ioReads["/scripts/BoundryMap/assets/maps/TestMap.boundries.json"]
+  validBitmap, now = true, now + 3
+  registeredWidget.paint(field)
+  assert_true(field.loadedBitmap and field.mapMeta and #field.boundaries == 1, "retry restores related files")
+  field.mapMeta = nil
+  field.draftBoundary = { x1 = 11, y1 = 20, x2 = 30, y2 = 40 }
+  registeredWidget.configure(field)
+  local _, mapField = findFormRow("Map")
+  mapField.setter("Broken.bmp")
+  registeredWidget.paint(field)
+  assert_true(field.mapMeta and field.draftBoundary.x1 == 11, "same-map repair preserves pending edits")
+  os.clock = originalClock
   lcd.loadBitmap, lcd.getWindowSize = originalBitmap, originalSize
 end
 
