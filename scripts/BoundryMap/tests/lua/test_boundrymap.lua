@@ -525,6 +525,39 @@ assert_equal(restoredTelemetry.age, telemetryValues.RestoredGPS.age, "read confi
 _G.system.getSource = originalTelemetryGetSource
 
 widget = test.create()
+do
+  local ordinarySensorField = form.addSensorField
+  local calls = 0
+  form.addSensorField = function(...)
+    calls = calls + 1
+    ordinarySensorField(...)
+    if select("#", ...) < 5 then
+      error("bad argument 5 to 'addSensorField' (function expected, got SensorChoice)")
+    end
+    assert_equal(select(5, ...), nil, "sensor selector accepts all candidates")
+  end
+  for _, native in ipairs({ false, true }) do
+    form.addBooleanField = native and function(row, _, getter, setter)
+      formRows[row].type = "boolean"
+      formRows[row].getter = getter
+      formRows[row].setter = setter
+    end or nil
+    registeredWidget.configure(widget)
+    for _, label in ipairs({ "Coordinates", "Distance" }) do
+      local _, field = findFormRow(label)
+      assert_equal(field.type, native and "boolean" or "choice", "toggle type")
+      field.setter(native or 1)
+      assert_equal(field.getter(), native or 1, "enabled value")
+      field.setter(0)
+      assert_true(field.getter() == false or field.getter() == 0, "disabled value")
+    end
+    assert_true(findFormRow("Diagnostics") ~= nil, "remaining settings still available")
+  end
+  assert_equal(calls, 6, "exactly three sensor fields per form")
+  form.addSensorField = ordinarySensorField
+  form.addBooleanField = nil
+end
+
 widget.bitmapFile = "UnsavedMap.bmp"
 registeredWidget.configure(widget)
 assert_equal(rowLabel(1), "Map", "main form keeps map first")

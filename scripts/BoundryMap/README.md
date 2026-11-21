@@ -82,6 +82,9 @@ behaves.
 | `Pre-warning Time` | Keep prediction `Off`, or warn when the projected path reaches a boundary in 1 to 10 seconds. |
 | `Diagnostics` | Open a status page for GPS, map, metadata, sidecar, and last error. |
 
+On firmware without a Boolean control, **Coordinates** and **Distance** use an
+Off/On selector. Both controls read and save the same settings.
+
 ## Diagnostics
 
 ![BoundryMap diagnostics screen](docs/images/boundrymap-diagnostics.png)
