@@ -50,6 +50,21 @@ The 26.2.0 simulator reproduces the settings failure. The original report
 names 26.2.0 RC5/RC6. No runnable X20RS packages for those candidates were
 available from the verified FrSky release feeds during validation.
 
+## Navigation and repaint measurements
+
+With GPS and altitude supplied by simulated S.Port frames on 26.1.2 and
+26.2.0, home displayed 0 m and a 100 m climb with about 100 m of horizontal
+travel displayed 141 m. A zero pair, distant jump and stopped feed retained the
+last accepted position and suppressed live alerts.
+
+On X20RS-FCC 26.2.0, 300 stationary wakeups after home lock produced 600 GPS
+lookups, 110 invalidate requests and 110 paints with the original widget
+(`8c9395f`). The same interval and simulated feed with telemetry changes
+(`3a91b3e`) produced zero of each. Counters observed call sites in scratch
+copies. These measurements cover simulator callbacks. The radio's Lua Source
+API does not expose sensor calibration edits. Use Reset Home after changing
+an altitude offset.
+
 ## Follow-up
 
 Real receiver data and physical-radio interaction remain pilot checks.
