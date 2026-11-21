@@ -15,11 +15,11 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 147
-- Total size: 277,563 bytes
-- Total lines: 7,100
+- Files: 148
+- Total size: 280,504 bytes
+- Total lines: 7,159
 - Distribution by artifact:
-  - session notes: 140
+  - session notes: 141
   - handoff/restart notes: 3
   - reference notes: 3
   - summary notes: 1
@@ -29,14 +29,14 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 17 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
   - 17 -- memory ( Memory organization references and preserved state snapshots. / Memory system structure and retrieval policy )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
+  - 4 -- boundrymap ( BoundryMap-specific behavior, release history, and operating notes )
   - 4 -- ethos-events ( ethos_events-specific behavior, release history, and operating notes )
-  - 3 -- boundrymap ( BoundryMap-specific behavior, release history, and operating notes )
   - 3 -- handoff ( Session continuity and restart handoffs )
 
 - Distribution by concern:
   - 35 -- implementation
   - 30 -- workflow
-  - 20 -- testing
+  - 21 -- testing
   - 17 -- build
   - 16 -- docs
   - 16 -- release
@@ -47,13 +47,13 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent High-Signal Notes (Auto-generated)
 
 - Selection: newest session notes where `Concern` is one of `build`, `docs`, `metadata`, `release`, `testing`, or `workflow`; keep up to 3 per concern, then keep newest 12 overall.
+- 2026-11-20 | testing | boundrymap | [notes/session/boundrymap/SESSION_NOTES_2026-11-20_ISSUE_114_MAP_ROTATION.md](notes/session/boundrymap/SESSION_NOTES_2026-11-20_ISSUE_114_MAP_ROTATION.md) | # Session Notes 2026-11-20 - BoundryMap rotation on X20RS
 - 2026-11-20 | testing | boundrymap | [notes/session/boundrymap/SESSION_NOTES_2026-11-20_BOUNDRYMAP_FIRMWARE.md](notes/session/boundrymap/SESSION_NOTES_2026-11-20_BOUNDRYMAP_FIRMWARE.md) | # BoundryMap firmware and asset checks, November 20, 2026
 - 2026-09-20 | workflow | memory | [notes/session/memory/SESSION_NOTES_2026-09-20_GUIDANCE_CONSOLIDATION.md](notes/session/memory/SESSION_NOTES_2026-09-20_GUIDANCE_CONSOLIDATION.md) | # Session Notes 2026-09-20 — Guidance consolidation
 - 2026-07-17 | release | boundrymap | [notes/session/boundrymap/SESSION_NOTES_2026-07-17_BOUNDRYMAP_V020_RELEASE.md](notes/session/boundrymap/SESSION_NOTES_2026-07-17_BOUNDRYMAP_V020_RELEASE.md) | # Session Notes 2026-07-17 - BoundryMap-v0.2.0 Release
 - 2026-07-01 | testing | repo | [notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md](notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_REAL_WEBSIM_SCREENSHOTS.md) | # Session Notes 2026-07-01 - Issue #102 BoundryMap Real WebSimulator Screenshots
 - 2026-07-01 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_FULLSCREEN_SCREENSHOTS.md](notes/session/repo/SESSION_NOTES_2026-07-01_ISSUE_102_BOUNDRYMAP_FULLSCREEN_SCREENSHOTS.md) | # Session Notes 2026-07-01 - Issue #102 BoundryMap Fullscreen Screenshots
 - 2026-06-30 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-06-30_ISSUE_102_BOUNDRYMAP_README_GUIDE.md](notes/session/repo/SESSION_NOTES_2026-06-30_ISSUE_102_BOUNDRYMAP_README_GUIDE.md) | # Session Notes 2026-06-30 - Issue #102 BoundryMap README Guide
-- 2026-06-27 | testing | ethos-platform | [notes/session/ethos-platform/SESSION_NOTES_2026-06-27_WEBSIM_1_6_6_OPTIONAL_RELOAD.md](notes/session/ethos-platform/SESSION_NOTES_2026-06-27_WEBSIM_1_6_6_OPTIONAL_RELOAD.md) | # Session Notes 2026-06-27 - WebSimulator 1.6.6 Optional Reload
 - 2026-05-30 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md](notes/session/repo/SESSION_NOTES_2026-05-30_PR94_CONFLICT_RESOLUTION.md) | # Session Notes 2026-05-30 - PR #94 conflict resolution
 - 2026-05-30 | workflow | repo | [notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md](notes/session/repo/SESSION_NOTES_2026-05-30_ISSUE_95_WORKSPACE_AGENTS_TRANSITION.md) | # Session Notes 2026-05-30 - Issue #95 workspace AGENTS transition
 - 2026-05-05 | docs | repo | [notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md](notes/session/repo/SESSION_NOTES_2026-05-05_ISSUE_76_ETHOS_26_1_BASELINE.md) | # Session Notes 2026-05-05 - Issue #76 Ethos 26.1 Baseline
@@ -221,3 +221,4 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-08-01 | session | boundrymap | implementation | [notes/session/boundrymap/SESSION_NOTES_2026-08-01_ISSUE_108_BOUNDRYMAP_SAVE_DRAFT.md](notes/session/boundrymap/SESSION_NOTES_2026-08-01_ISSUE_108_BOUNDRYMAP_SAVE_DRAFT.md) | # Session Notes 2026-08-01 - Issue #108 BoundryMap Save Draft |
 | 2026-09-20 | session | memory | workflow | [notes/session/memory/SESSION_NOTES_2026-09-20_GUIDANCE_CONSOLIDATION.md](notes/session/memory/SESSION_NOTES_2026-09-20_GUIDANCE_CONSOLIDATION.md) | # Session Notes 2026-09-20 — Guidance consolidation |
 | 2026-11-20 | session | boundrymap | testing | [notes/session/boundrymap/SESSION_NOTES_2026-11-20_BOUNDRYMAP_FIRMWARE.md](notes/session/boundrymap/SESSION_NOTES_2026-11-20_BOUNDRYMAP_FIRMWARE.md) | # BoundryMap firmware and asset checks, November 20, 2026 |
+| 2026-11-20 | session | boundrymap | testing | [notes/session/boundrymap/SESSION_NOTES_2026-11-20_ISSUE_114_MAP_ROTATION.md](notes/session/boundrymap/SESSION_NOTES_2026-11-20_ISSUE_114_MAP_ROTATION.md) | # Session Notes 2026-11-20 - BoundryMap rotation on X20RS |

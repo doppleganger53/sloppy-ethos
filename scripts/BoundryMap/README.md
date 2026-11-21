@@ -69,6 +69,7 @@ behaves.
 | Setting | Use |
 | --- | --- |
 | `Map` | Select the packaged bitmap map file. |
+| `Map rotation (degrees CW)` | Turn the map clockwise by 0–359 degrees. Zero keeps north up. |
 | `GPS Source` | Select the GPS telemetry source used for latitude and longitude. |
 | `Heading Indicator` | Choose `Dot` or `Arrow` for the aircraft marker. |
 | `Signal Timeout (s)` | Mark GPS data stale after this many seconds without a fresh fix. |
@@ -84,6 +85,7 @@ behaves.
 
 On firmware without a Boolean control, **Coordinates** and **Distance** use an
 Off/On selector. Both controls read and save the same settings.
+
 ## Telemetry overlays and flight statistics
 
 Open **Telemetry overlays → Set up** to show altitude or speed, select up to
@@ -110,6 +112,22 @@ The statistics page shows a snapshot. **Refresh** updates it, **Reset** clears
 the session statistics, and **Back** returns to settings. Resetting statistics
 preserves home and pending boundary edits. Restarting the widget starts a new
 session. Only overlay settings and selected source names are saved.
+
+## Map rotation
+
+Set the angle to match your view from the flight line. For example, at 90°
+north points toward the right edge. The top-right `N` readout shows the
+clockwise direction of north. The widget centers the bitmap at its original
+pixel scale. The window clips a map larger than its widget. Turning the map
+also clips its corners at the edges of the centered bitmap. Touches in blank
+corners leave the boundary unchanged.
+
+You can draw, delete, and save with the map rotated. Changing the angle keeps
+drafts and saved lines in their original map coordinates. The requested angle
+is saved with this widget. If the bitmap cannot be rotated, `N up!` indicates
+that the map and controls are using north-up coordinates. A smaller map can
+reduce the memory needed while switching angles. Use a 32-bit BMP or PNG if
+the simulator reports `Map bitmap unavailable`.
 
 ## Diagnostics
 
