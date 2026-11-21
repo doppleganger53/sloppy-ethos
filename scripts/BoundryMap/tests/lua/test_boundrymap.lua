@@ -1187,7 +1187,7 @@ local compactRects = test.controlRects(widget)
 local compactStatus = assert_shadowed_text("Unsaved *", 4, 4, "compact status")
 local compactWarning = assert_shadowed_text("Boundary exceeded", 4, 18, "compact warning")
 local compactCoords = assert_shadowed_text("39.12345, -75.54321", 4, 62, "compact coordinates")
-local compactDistance = assert_shadowed_text("Distance: 12345.6 km", 4, 50, "compact stale distance")
+local compactDistance = assert_shadowed_text("12345.6 km", 4, 136, "compact stale distance")
 assert_text_avoids_controls(compactStatus, compactRects, "compact status")
 assert_text_avoids_controls(compactWarning, compactRects, "compact warning")
 assert_text_avoids_controls(compactCoords, compactRects, "compact coordinates")
@@ -1200,7 +1200,7 @@ resetDrawCalls()
 registeredWidget.paint(widget)
 compactRects = test.controlRects(widget)
 compactCoords = assert_shadowed_text("39.12345, -75.54321", 4, 62, "compact coordinates without RIGHT")
-compactDistance = assert_shadowed_text("Distance: 12345.6 km", 4, 50, "compact stale distance without RIGHT")
+compactDistance = assert_shadowed_text("12345.6 km", 4, 136, "compact stale distance without RIGHT")
 assert_text_avoids_controls(compactCoords, compactRects, "compact coordinates without RIGHT")
 assert_text_avoids_controls(compactDistance, compactRects, "compact stale distance without RIGHT")
 _G.RIGHT = originalRight
@@ -1212,7 +1212,7 @@ widget.distText = nil
 resetDrawCalls()
 registeredWidget.paint(widget)
 assert_shadowed_text("Boundary ahead", 4, 18, "prediction warning overlay")
-assert_shadowed_text("Distance: 12345.6 km", 4, 50, "stale distance remains visible when disabled")
+assert_shadowed_text("12345.6 km", 4, 136, "stale distance remains visible when disabled")
 _G.lcd.getWindowSize = originalGetWindowSize
 
 ioReads["/scripts/BoundryMap/assets/maps/UATMap.json"] = '{"topLat":39.78045886,"bottomLat":39.77254308,"leftLon":-75.21268129,"rightLon":-75.19585848}'
@@ -1318,6 +1318,100 @@ assert_equal(uatConfigRestored.bitmapFile, "UATMap.bmp", "uat reads widget confi
 assert_equal(uatConfigRestored.gpsSensorName, "GPS", "uat reads widget config gps")
 assert_true(uatConfigRestored.coordsEnabled, "uat reads widget config coordinates")
 assert_true(uatConfigRestored.distEnabled, "uat reads widget config distance")
+
+do
+  local function field(label)
+    local _, row = findFormRow(label)
+    assert_true(row ~= nil, "missing form row " .. label)
+    return row
+  end
+  local s = test.create()
+  local time, speed, altitude, extra, age = 100, 36, 100, 8, 0
+  local clock = os.clock
+  os.clock = function() return time end
+  local function source(name, unit, readValue, readAge)
+    return {
+      name = function() return name end, stringUnit = function() return unit end,
+      value = readValue, age = readAge,
+    }
+  end
+  s.altSensorName = "Alt"
+  s.speedSensorName = "GSpd"
+  s.speedSrc = source("GSpd", "km/h", function() return speed end, function() return 0 end)
+  s.altSrc = source("Alt", "ft", function() return altitude end, function() return age end)
+  local aux = source("Voltage", "V", function() return extra end, function() return age end)
+  registeredWidget.configure(s)
+  field("Telemetry overlays").callback()
+  assert_equal(field("Show altitude").getter(), 0, "legacy altitude overlay hidden")
+  assert_equal(field("Show speed").getter(), 0, "legacy speed overlay hidden")
+  field("Field 1").setter(aux)
+  field("Show extra fields").setter(0)
+  field("Live text").setter(2)
+  field("Stale text").setter(3)
+  registeredWidget.wakeup(s)
+  assert_equal(s.flight.stats.alt.count, 1, "hidden altitude still sampled")
+  assert_equal(s.flight.stats.field1.low, 8, "hidden selectable field sampled")
+  registeredWidget.wakeup(s)
+  assert_equal(s.flight.stats.alt.count, 1, "duplicate callback within second excluded")
+  time, altitude, extra = 101, 120, 10
+  registeredWidget.wakeup(s)
+  assert_equal(s.flight.seconds, 1, "one moving second")
+  assert_equal(s.flight.stats.alt.mean, 110, "sample mean in sensor units")
+  assert_equal(s.flight.stats.field1.high, 10, "extra field maximum")
+  time, age = 102, 3000
+  registeredWidget.wakeup(s)
+  assert_equal(s.flight.readings.alt.value, nil, "stale sensor cleared")
+  assert_equal(s.flight.stats.alt.count, 2, "stale sensor excluded from stats")
+  time, age, altitude = 103, 0, 0/0
+  registeredWidget.wakeup(s)
+  assert_equal(s.flight.stats.alt.count, 2, "NaN excluded")
+  time, speed, altitude = 104, 9, 70
+  registeredWidget.wakeup(s)
+  assert_equal(s.flight.seconds, 3, "9 km/h below 3 m/s threshold")
+  time, speed = 120, 36
+  registeredWidget.wakeup(s)
+  assert_equal(s.flight.seconds, 3, "gap and stopped time excluded")
+  local other = test.create()
+  assert_equal(other.flight.seconds, 0, "separate widget clock")
+  assert_equal(other.flight.names.field1, nil, "separate widget selections")
+  s.bitmapFile, s.loadedFile, s.loadedBitmap = "TestMap.bmp", "TestMap.bmp", true
+  s.mapMeta, s.boundaryLoadPending = meta, false
+  field("Show altitude").setter(1)
+  field("Show extra fields").setter(1)
+  local function button(text)
+    for _, row in ipairs(formRows) do
+      if row.text == text then return row.callback end
+    end
+    error("missing button " .. text)
+  end
+  button("Back")()
+  resetDrawCalls()
+  registeredWidget.paint(s)
+  assert_true(hasDrawText("Altitude 70 ft"), "enabled overlay includes source units")
+  assert_true(hasDrawText("Voltage --"), "missing source shows placeholder")
+  s.boundaryDirty = true
+  s.draftBoundary = { x1 = 1, y1 = 2 }
+  s.homeLat = 22
+  field("Flight statistics").callback()
+  assert_equal(field("Moving time").value, "0:03", "stats duration")
+  assert_true(field("Altitude").value:find("ft", 1, true) ~= nil, "stats include units")
+  field("Reset statistics").callback()
+  assert_equal(field("Moving time").value, "0:00", "explicit reset")
+  assert_equal(field("Altitude").value, "-- ft", "reset clears aggregates")
+  button("Back")()
+  assert_true(s.boundaryDirty and s.draftBoundary.x1 == 1 and s.homeLat == 22, "stats preserve unsaved edits and home")
+  s.flight.names.field2 = "%7C|Aux"
+  registeredWidget.write(s)
+  local restoredDisplay = test.create()
+  registeredWidget.read(restoredDisplay)
+  assert_equal(restoredDisplay.flight.names.field1, "Voltage", "extra source persisted")
+  assert_equal(restoredDisplay.flight.names.field2, "%7C|Aux", "escaped separator restored")
+  assert_equal(restoredDisplay.flight.liveColor, 2, "live text color persisted")
+  assert_equal(restoredDisplay.flight.staleColor, 3, "stale text color persisted")
+  assert_true(restoredDisplay.flight.showAlt and restoredDisplay.flight.showExtra, "overlay settings restored")
+  assert_equal(restoredDisplay.flight.stats.alt, nil, "stats are ephemeral")
+  os.clock = clock
+end
 
 -- Exercise the registered widget callbacks, including invalidation and source replacement.
 do

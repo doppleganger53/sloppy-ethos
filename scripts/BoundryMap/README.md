@@ -84,6 +84,32 @@ behaves.
 
 On firmware without a Boolean control, **Coordinates** and **Distance** use an
 Off/On selector. Both controls read and save the same settings.
+## Telemetry overlays and flight statistics
+
+Open **Telemetry overlays → Set up** to show altitude or speed, select up to
+three extra sensors, or choose live and stale text colors. Values use the
+sensor's displayed unit. Missing, stale, or nonnumeric values show `--`.
+Coordinates and distance keep their existing colors with the default settings.
+Boundary warnings always retain their red and yellow colors.
+
+Compact layouts shorten labels (for example, `Spd` and `F1`) and reserve room
+for boundary controls, warnings, coordinates, and distance. When fewer telemetry
+rows fit than are enabled, the rows cycle every three seconds.
+
+Open **Flight statistics → View** for moving time, maximum horizontal distance
+from home, and minimum, arithmetic mean, and maximum for each selected sensor.
+The widget samples at most once per second. A sample counts as moving when the
+selected speed is fresh and at least **3 m/s** (10.8 km/h or about 6.7 mph).
+Time accumulates between consecutive moving samples at most two seconds apart.
+Gaps and stationary periods contribute no time. Max distance needs a current
+GPS fix. Each sensor's mean gives equal weight to each valid moving sample.
+Changing a sensor or its units starts that sensor's values over. Hiding an
+overlay leaves its collection active.
+
+The statistics page shows a snapshot. **Refresh** updates it, **Reset** clears
+the session statistics, and **Back** returns to settings. Resetting statistics
+preserves home and pending boundary edits. Restarting the widget starts a new
+session. Only overlay settings and selected source names are saved.
 
 ## Diagnostics
 

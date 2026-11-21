@@ -860,41 +860,14 @@ setColor = function(widget, key)
   end
 end
 
-local function isRightAligned(flags)
-  if flags == nil then
-    return false
+local function measureText(text)
+  if type(lcd.getTextSize) == "function" then
+    local width, height = lcd.getTextSize(text)
+    if type(width) == "number" and type(height) == "number" then
+      return width, height
+    end
   end
-  if type(RIGHT) == "number" and flags == RIGHT then
-    return true
-  end
-  return type(TEXT_RIGHT) == "number" and flags == TEXT_RIGHT
-end
-
-local function estimateTextBounds(x, y, text, flags)
-  local width = #tostring(text or "") * OVERLAY_TEXT_CHAR_WIDTH
-  local left = x
-  if isRightAligned(flags) then
-    left = x - width
-  end
-  return {
-    left = left,
-    top = y,
-    right = left + width,
-    bottom = y + OVERLAY_TEXT_HEIGHT,
-  }
-end
-
-local function rectsOverlap(a, b)
-  return a.left < b.right and a.right > b.left and a.top < b.bottom and a.bottom > b.top
-end
-
-local function placeOverlayText(widget, x, y, text, flags)
-  local rects = controlRects(widget)
-  local bounds = estimateTextBounds(x, y, text, flags)
-  if rectsOverlap(bounds, rects.draw) or rectsOverlap(bounds, rects.delete) or rectsOverlap(bounds, rects.save) then
-    y = max(0, rects.draw.top - OVERLAY_TEXT_HEIGHT - OVERLAY_TEXT_CONTROL_GAP)
-  end
-  return x, y
+  return #text * OVERLAY_TEXT_CHAR_WIDTH, OVERLAY_TEXT_HEIGHT
 end
 
 local function initializeColors(widget)
@@ -1024,6 +997,159 @@ end
 
 local function validAge(age, staleMs)
   return finite(age) and age >= 0 and age <= staleMs
+end
+
+-- Runtime samples and settings belong to a single widget instance.
+local flight = {}
+local flightMetrics = {
+  { key = "alt", label = "Altitude", short = "Alt", name = "altSensorName", source = "altSrc" },
+  { key = "speed", label = "Speed", short = "Spd", name = "speedSensorName", source = "speedSrc" },
+  { key = "field1", label = "Field 1" },
+  { key = "field2", label = "Field 2" },
+  { key = "field3", label = "Field 3" },
+}
+local textColors = { "white", "cyan", "green", "yellow", "red" }
+
+function flight.create()
+  return {
+    showAlt = false, showSpeed = false, showExtra = true, liveColor = 1, staleColor = 0,
+    names = {}, sources = {}, readings = {}, stats = {}, seconds = 0,
+  }
+end
+
+function flight.reset(data)
+  data.stats = {}
+  data.seconds = 0
+  data.maxDistance = nil
+  data.lastMoving = nil
+end
+
+local function readMetric(widget, metric)
+  local data = widget.flight
+  local key = metric.key
+  local name = metric.name and widget[metric.name] or data.names[key]
+  if not name or name == "" then
+    return
+  end
+  local source = metric.source and widget[metric.source] or data.sources[key]
+  if not source and not metric.source and system and system.getSource then
+    source = safeCall(system.getSource, { name = name })
+    data.sources[key] = source
+  end
+  local age = getSourceAge(source)
+  if not validAge(age, widget.staleMs) then
+    data.sources[key] = nil
+    return name
+  end
+  local value = getSourceValue(source)
+  if not finite(value) then
+    data.sources[key] = nil
+    return name
+  end
+  local unit = getSourceStringUnit(source)
+  return name, value, type(unit) == "string" and unit or ""
+end
+
+function flight.visible(data, key)
+  if key == "alt" then
+    return data.showAlt
+  elseif key == "speed" then
+    return data.showSpeed
+  end
+  return data.showExtra and data.names[key] ~= nil and data.names[key] ~= ""
+end
+
+function flight.collect(widget, now)
+  local data = widget.flight
+  if data.lastSample and now >= data.lastSample and now - data.lastSample < 1 then
+    return
+  end
+  local elapsed = data.lastSample and now - data.lastSample or 0
+  if (data.pages or 1) > 1 and floor(now / 3) ~= floor((data.lastSample or 0) / 3) then
+    widget.needsInvalidate = true
+  end
+  data.lastSample = now
+  local moving = false
+  for _, metric in ipairs(flightMetrics) do
+    local key = metric.key
+    local name, value, unit = readMetric(widget, metric)
+    local reading = data.readings[key]
+    if not reading then
+      reading = {}
+      data.readings[key] = reading
+    end
+    if reading.name ~= name or (unit and reading.unit ~= unit) then
+      data.stats[key] = nil
+    end
+    if (reading.name ~= name or reading.value ~= value or (unit and reading.unit ~= unit))
+      and flight.visible(data, key) then
+      widget.needsInvalidate = true
+    end
+    if reading.name ~= name then
+      reading.unit = nil
+    end
+    reading.name = name
+    reading.value = value
+    reading.unit = unit or reading.unit
+    if key == "speed" and value then
+      local scale = speedUnitScale(widget.speedSrc)
+      moving = scale ~= nil and value * scale >= 3
+    end
+  end
+  if moving then
+    if data.lastMoving and elapsed >= 0 and elapsed <= 2 then
+      data.seconds = data.seconds + elapsed
+    end
+    if not widget.gpsStale and finite(widget.prevGroundDistance) then
+      data.maxDistance = max(data.maxDistance or 0, widget.prevGroundDistance)
+    end
+    for key, reading in pairs(data.readings) do
+      local value = reading.value
+      if value then
+        local totals = data.stats[key]
+        if not totals then
+          totals = { low = value, high = value, mean = 0, count = 0 }
+          data.stats[key] = totals
+        end
+        totals.low = min(totals.low, value)
+        totals.high = max(totals.high, value)
+        totals.count = totals.count + 1
+        totals.mean = totals.mean + (value - totals.mean) / totals.count
+      end
+    end
+  end
+  data.lastMoving = moving
+end
+
+-- Slot 12 is reserved for the map angle. Escape new sensor names so they
+-- can contain a literal separator or percent sign without shifting fields.
+function flight.read(data, parts)
+  data.showAlt = parts[13] == "1"
+  data.showSpeed = parts[14] == "1"
+  data.showExtra = parts[15] ~= "0"
+  local live, stale = tonumber(parts[16]), tonumber(parts[17])
+  data.liveColor = textColors[live] and live or 1
+  data.staleColor = textColors[stale] and stale or 0
+  for i = 1, 3 do
+    local key = "field" .. i
+    local name = (parts[17 + i] or ""):gsub("%%7[Cc]", "|"):gsub("%%25", "%%")
+    if data.names[key] ~= name then
+      data.names[key] = name
+      data.sources[key], data.readings[key], data.stats[key] = nil, nil, nil
+    end
+  end
+end
+
+function flight.encode(data)
+  local fields = {
+    data.showAlt and "1" or "0", data.showSpeed and "1" or "0", data.showExtra and "1" or "0",
+    tostring(data.liveColor), tostring(data.staleColor),
+  }
+  for i = 1, 3 do
+    local name = data.names["field" .. i] or ""
+    fields[#fields + 1] = name:gsub("%%", "%%25"):gsub("|", "%%7C")
+  end
+  return tconcat(fields, CFG_SEP)
 end
 
 local function altitudeScale(source)
@@ -1546,19 +1672,77 @@ local function drawOverlay(widget)
   drawControlButton(widget, rects.draw, "Draw", widget.drawMode)
   drawControlButton(widget, rects.delete, "Delete", widget.deleteMode)
   drawControlButton(widget, rects.save, "Save", false)
-  setColor(widget, "white")
-  if type(lcd) == "table" and type(lcd.font) == "function" then
-    lcd.font(FONT_XS or FONT_STD)
+  local compact = widget.windowW < 400 or widget.windowH < 200
+  if type(lcd.font) == "function" then
+    lcd.font((widget.windowW >= 600 and FONT_S) or FONT_XS or FONT_STD)
   end
+  local _, height = measureText("Ag")
+  local step = max(14, height + 2)
+  local data = widget.flight
+  local live = textColors[data.liveColor] or "white"
+  local stale = textColors[data.staleColor] or "red"
   local status = widget.boundaryDirty and "Unsaved *" or sformat("%d/%d lines", #widget.boundaries, MAX_BOUNDARIES)
-  local statusX, statusY = placeOverlayText(widget, 4, 4, status)
-  drawShadowText(widget, statusX, statusY, status, "white")
-  if widget.warningActive then
-    local warningX, warningY = placeOverlayText(widget, 4, 18, "Boundary exceeded")
-    drawShadowText(widget, warningX, warningY, "Boundary exceeded", "red")
-  elseif widget.warningImminent then
-    local warningX, warningY = placeOverlayText(widget, 4, 18, "Boundary ahead")
-    drawShadowText(widget, warningX, warningY, "Boundary ahead", "yellow")
+  drawShadowText(widget, 4, 4, status, "white")
+  local nextY = 4 + step
+  if widget.warningActive or widget.warningImminent then
+    local warning = widget.warningActive and "Boundary exceeded" or "Boundary ahead"
+    drawShadowText(widget, 4, nextY, warning, widget.warningActive and "red" or "yellow")
+    nextY = nextY + step
+  end
+
+  local leftWidth = rects.draw.left - 8
+  local function bottomRow(text, requestedY, color)
+    local y = requestedY
+    if y + height >= rects.draw.top and measureText(text) > leftWidth then
+      y = min(y, rects.draw.top - height - OVERLAY_TEXT_CONTROL_GAP)
+    end
+    drawShadowText(widget, COORDS_TEXT_X, y, text, color)
+    return y
+  end
+  local bottom = widget.windowH - 2
+  local distance
+  if widget.gpsStale then
+    distance = widget.lastGroundDistText
+  elseif widget.distEnabled then
+    distance = widget.distText
+  end
+  if distance then
+    if compact then
+      distance = distance:gsub("^Distance: ", "")
+    end
+    bottom = bottomRow(distance, widget.windowH - max(DIST_TEXT_BOTTOM, height + 2), widget.gpsStale and stale or live)
+  end
+  if widget.coordsEnabled and widget.lastCoordsText then
+    local color = widget.gpsStale and (textColors[data.staleColor] or "white") or live
+    bottom = bottomRow(widget.lastCoordsText, min(widget.windowH - COORDS_TEXT_BOTTOM, bottom - step), color)
+  end
+
+  local visible = {}
+  for _, metric in ipairs(flightMetrics) do
+    if flight.visible(data, metric.key) then
+      visible[#visible + 1] = metric
+    end
+  end
+  local slots = min(#visible, max(0, floor((bottom - nextY) / step)))
+  local pages = slots > 0 and math.ceil(#visible / slots) or 1
+  data.pages = pages
+  local first = (floor((data.lastSample or 0) / 3) % pages) * slots + 1
+  for index = first, min(#visible, first + slots - 1) do
+    local metric = visible[index]
+    local reading = data.readings[metric.key] or {}
+    local value = reading.value
+    local unit = reading.unit or ""
+    local suffix = value and (sformat("%.1f", value):gsub("%.0$", "") .. (unit ~= "" and " " .. unit or "")) or "--"
+    local label = metric.short and (compact and metric.short or metric.label) or data.names[metric.key]
+    local width = nextY + height < rects.draw.top and widget.windowW - 8 or leftWidth
+    local line = (label or metric.label) .. " " .. suffix
+    if measureText(line) > width then
+      line = (metric.short or ("F" .. metric.key:sub(-1))) .. " " .. suffix
+    end
+    if measureText(line) <= width then
+      drawShadowText(widget, 4, nextY, line, value and live or stale)
+    end
+    nextY = nextY + step
   end
 end
 
@@ -1588,6 +1772,7 @@ local function create()
     altSrc = nil,
     speedSensorName = "",
     speedSrc = nil,
+    flight = flight.create(),
     predictionSeconds = 0,
     indicatorType = 0,
     signalTimeout = 2,
@@ -1800,6 +1985,85 @@ buildDiagForm = function(widget)
   end
 end
 
+local function pageButton(label, text, callback)
+  form.addTextButton(form.addLine(label), nil, text, callback)
+end
+
+local function showStats(widget)
+  local data = widget.flight
+  form.clear()
+  addStaticLine("Moving time", sformat("%d:%02d", floor(data.seconds / 60), floor(data.seconds % 60)))
+  addStaticLine("Max ground distance", data.maxDistance and sformat("%.0f m", data.maxDistance) or "--")
+  addStaticLine("Samples", "Min / Mean / Max")
+  for _, metric in ipairs(flightMetrics) do
+    local reading = data.readings[metric.key] or {}
+    local label = metric.short and metric.label or data.names[metric.key]
+    if label and label ~= "" then
+      local totals = data.stats[metric.key]
+      local unit = reading.unit or ""
+      local values = totals and sformat("%.1f / %.1f / %.1f", totals.low, totals.mean, totals.high) or "--"
+      addStaticLine(label, values .. (unit ~= "" and " " .. unit or ""))
+    end
+  end
+  pageButton("", "Refresh", function() showStats(widget) end)
+  pageButton("Reset statistics", "Reset", function()
+    flight.reset(data)
+    showStats(widget)
+  end)
+  pageButton("", "Back", function() buildMainForm(widget) end)
+end
+
+local function showDisplaySettings(widget)
+  local data = widget.flight
+  form.clear()
+  local function choice(label, key, items, toggle)
+    form.addChoiceField(form.addLine(label), nil, items, function()
+      if toggle then
+        return data[key] and 1 or 0
+      end
+      return data[key]
+    end, function(value)
+      if toggle then
+        data[key] = value == 1
+      else
+        data[key] = value
+      end
+      widget.needsInvalidate = true
+    end)
+  end
+  local onOff = { { "Off", 0 }, { "On", 1 } }
+  choice("Show altitude", "showAlt", onOff, true)
+  choice("Show speed", "showSpeed", onOff, true)
+  choice("Show extra fields", "showExtra", onOff, true)
+  for _, metric in ipairs(flightMetrics) do
+    if not metric.source then
+      local key = metric.key
+      form.addSensorField(form.addLine(metric.label), nil, function()
+        if not data.sources[key] and data.names[key] and data.names[key] ~= "" then
+          data.sources[key] = safeCall(system.getSource, { name = data.names[key] })
+        end
+        return data.sources[key]
+      end, function(value)
+        local name = value and safeCall(value.name, value)
+        data.names[key] = name ~= "---" and name or ""
+        data.sources[key] = value
+        data.readings[key] = nil
+        data.stats[key] = nil
+        data.lastSample = nil
+        widget.needsInvalidate = true
+      end, nil)
+    end
+  end
+  local colors = { { "White", 1 }, { "Cyan", 2 }, { "Green", 3 }, { "Yellow", 4 }, { "Red", 5 } }
+  choice("Live text", "liveColor", colors)
+  local staleColors = { { "Default", 0 } }
+  for _, item in ipairs(colors) do
+    staleColors[#staleColors + 1] = item
+  end
+  choice("Stale text", "staleColor", staleColors)
+  pageButton("", "Back", function() buildMainForm(widget) end)
+end
+
 -- Use the stored Boolean on either form control.
 local function addToggle(widget, label, key)
   local line = form.addLine(label)
@@ -1964,6 +2228,9 @@ buildMainForm = function(widget)
     end)
   end
 
+  pageButton("Telemetry overlays", "Set up", function() showDisplaySettings(widget) end)
+  pageButton("Flight statistics", "View", function() showStats(widget) end)
+
   local line7 = form.addLine("Diagnostics")
   if type(form.addTextButton) == "function" then
     form.addTextButton(line7, nil, "Run", function()
@@ -2012,32 +2279,6 @@ local function paint(widget)
     drawIndicator(widget, widget.gpsStale)
     drawOverlay(widget)
 
-    if type(lcd) == "table" and type(lcd.font) == "function" then
-      lcd.font(FONT_XS or FONT_STD)
-    end
-    setColor(widget, "white")
-    local bottomTextY = (widget.windowH or 272) - DIST_TEXT_BOTTOM
-    local previousBottomOverlayY = nil
-    if widget.coordsEnabled and widget.lastCoordsText then
-      local coordsX, coordsY = placeOverlayText(widget, COORDS_TEXT_X, (widget.windowH or 272) - COORDS_TEXT_BOTTOM, widget.lastCoordsText)
-      drawShadowText(widget, coordsX, coordsY, widget.lastCoordsText, "white")
-      previousBottomOverlayY = coordsY
-    end
-    if widget.gpsStale then
-      if widget.lastGroundDistText then
-        local staleX, staleY = placeOverlayText(widget, 4, bottomTextY, widget.lastGroundDistText)
-        if previousBottomOverlayY and abs(staleY - previousBottomOverlayY) < OVERLAY_TEXT_HEIGHT then
-          staleY = max(0, previousBottomOverlayY - OVERLAY_TEXT_HEIGHT - OVERLAY_TEXT_CONTROL_GAP)
-        end
-        drawShadowText(widget, staleX, staleY, widget.lastGroundDistText, "red")
-      end
-    elseif widget.distEnabled and widget.distText then
-      local distX, distY = placeOverlayText(widget, 4, bottomTextY, widget.distText)
-      if previousBottomOverlayY and abs(distY - previousBottomOverlayY) < OVERLAY_TEXT_HEIGHT then
-        distY = max(0, previousBottomOverlayY - OVERLAY_TEXT_HEIGHT - OVERLAY_TEXT_CONTROL_GAP)
-      end
-      drawShadowText(widget, distX, distY, widget.distText, "white")
-    end
   end)
   if not ok then
     setWidgetError(widget, "paint", err)
@@ -2183,6 +2424,8 @@ local function wakeup(widget)
       widget.needsInvalidate = true
     end
 
+    flight.collect(widget, now)
+
     if widget.pendingDraftPoint and widget.draftBoundary and (now - (widget.lastDraftPreviewAt or 0)) >= DRAW_PREVIEW_INTERVAL then
       widget.lastDraftPreviewAt = now
       widget.draftBoundary.x2 = widget.pendingDraftPoint.x
@@ -2246,6 +2489,7 @@ local function read(widget)
   for part in (raw .. CFG_SEP):gmatch("(.-)" .. "%|") do
     parts[#parts + 1] = part
   end
+  flight.read(widget.flight, parts)
   widget.bitmapFile = parts[1] or ""
   widget.gpsSensorName = parts[2] or ""
   widget.distEnabled = parts[3] == "1"
@@ -2301,7 +2545,7 @@ local function write(widget)
     .. (widget.speedSensorName or "")
     .. CFG_SEP
     .. tostring(floor(clamp(tonumber(widget.predictionSeconds) or 0, 0, MAX_PREDICTION_SECONDS)))
-  safeInvoke(storage.write, "cfg", payload)
+  safeInvoke(storage.write, "cfg", payload .. CFG_SEP .. CFG_SEP .. flight.encode(widget.flight))
 end
 
 local function init()
