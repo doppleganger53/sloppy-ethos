@@ -1,0 +1,2397 @@
+{
+  "board": "X20 Pro AW FCC",
+  "release": "1.6.8",
+  "revision": "a6b30b5e",
+  "source": "https://github.com/FrSkyRC/ETHOS-Feedback-Community/releases/download/1.6.8/X20PROAW-FCC-WebSimulator.zip",
+  "archiveSha256": "efe70e0e2c529951772108d8fe4535059273464276e740640963ba8d6cd0ab12",
+  "jsSha256": "cbcc6a04ea0fbab56c7d19f8637d7f3fb95b0a99d25e9a2ffe5228ae9060e77d",
+  "wasmSha256": "a81ceb4de5c282a60da708986d6dd4c2afcf4871d848e75ac4f3eaa2562826ea",
+  "inputFormat": "0.1.37",
+  "outputFormat": "0.1.37",
+  "normalized": "Final four model runTime bytes zeroed and payload CRC recomputed after matching-firmware save.",
+  "fixtures": [
+    {
+      "file": "default.bin",
+      "requested": "Generate an empty model and resave after an ordinary startup and shutdown.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "3a7b0f8eb2aa150a1989743e73d5ee237f1c0abca3f867f853b7904dc0ef9e9b",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ]
+    },
+    {
+      "file": "name-short.bin",
+      "requested": "Set the model label to A.",
+      "accepted": [
+        [
+          "A"
+        ]
+      ],
+      "bytes": 451,
+      "sha256": "567bb23b9f63d45c6e05ddbea9f059e7c76be191b33f5e8cd187be78738c3de2",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          18,
+          19
+        ],
+        "afterPayloadSpan": [
+          18,
+          20
+        ]
+      }
+    },
+    {
+      "file": "name-long.bin",
+      "requested": "Set the 15-byte model label Model Test 1234.",
+      "accepted": [
+        [
+          "Model Test 1234"
+        ]
+      ],
+      "bytes": 465,
+      "sha256": "7ae6f04fb41f8c169e5dea35d92849446a07c9caddf45f2d1aa9274b0c7defe4",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "name-short.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          18,
+          20
+        ],
+        "afterPayloadSpan": [
+          18,
+          34
+        ]
+      }
+    },
+    {
+      "file": "throttle-before.bin",
+      "requested": "Create four named S.Port throttle slots at 03/6803.",
+      "accepted": [
+        [
+          "Throttle amps",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle volts",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle temp",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle pos",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26627"
+        ]
+      ],
+      "bytes": 611,
+      "sha256": "566ff2b7cfc0face36a8bd0216e76d297c7355b2b16be7a416b7a914339824d2",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          18,
+          355
+        ],
+        "afterPayloadSpan": [
+          18,
+          516
+        ]
+      }
+    },
+    {
+      "file": "throttle-after.bin",
+      "requested": "Independently create the same slots at 03/6802.",
+      "accepted": [
+        [
+          "Throttle amps",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle volts",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle temp",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle pos",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26626"
+        ]
+      ],
+      "bytes": 611,
+      "sha256": "7d01cfb167bf20ab8b14cda2aab3bbc2e4bc46195ce634ad09604d063a2d0be5",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "throttle-before.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 366,
+            "end": 367
+          },
+          {
+            "start": 402,
+            "end": 403
+          },
+          {
+            "start": 447,
+            "end": 448
+          },
+          {
+            "start": 487,
+            "end": 488
+          }
+        ]
+      }
+    },
+    {
+      "file": "throttle-reordered.bin",
+      "requested": "Swap the first two slots, remove temperature and add speed.",
+      "accepted": [
+        [
+          "Throttle volts",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle amps",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle pos",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle speed",
+          "0",
+          "1",
+          "5",
+          "3",
+          "26627"
+        ]
+      ],
+      "bytes": 608,
+      "sha256": "b5261a43fb4542b95acf90a1ca223940d804c9b8f0dc72afa3f43b96b4e62641",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "throttle-before.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          364,
+          512
+        ],
+        "afterPayloadSpan": [
+          364,
+          509
+        ]
+      }
+    },
+    {
+      "file": "id-conflict.bin",
+      "requested": "Create duplicate labels on the same route, sub-ID and Physical ID with distinct Application IDs.",
+      "accepted": [
+        [
+          "Twin",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26626"
+        ],
+        [
+          "Twin",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26627"
+        ]
+      ],
+      "bytes": 520,
+      "sha256": "532988cbc9043b7c9b3df1f55f56520eaf55b4ba094956b4ed4dfb6fdbe6a212",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          353,
+          355
+        ],
+        "afterPayloadSpan": [
+          353,
+          425
+        ]
+      }
+    },
+    {
+      "file": "layout-references.bin",
+      "requested": "Create two duplicate labels on different modules/bands and point timer 0 start at telemetry slot 1.",
+      "accepted": [
+        [
+          "Repeated",
+          "1",
+          "1",
+          "2",
+          "3",
+          "26627"
+        ],
+        [
+          "Repeated",
+          "0",
+          "0",
+          "1",
+          "4",
+          "26626"
+        ],
+        [
+          "Ref timer",
+          "Repeated",
+          "22",
+          "1"
+        ]
+      ],
+      "bytes": 550,
+      "sha256": "8315add22ef33c3649c5035c323b252a86b47c0beacf76492ac4d9966ae59696",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          18,
+          355
+        ],
+        "afterPayloadSpan": [
+          18,
+          455
+        ]
+      }
+    },
+    {
+      "file": "sensor-variants.bin",
+      "requested": "Create S.Port keys with varying field widths and identify the firmware-accepted keys.",
+      "accepted": [
+        [
+          "QF10800",
+          "0",
+          "1",
+          "0",
+          "3",
+          "61704"
+        ],
+        [
+          "QF10801",
+          "0",
+          "1",
+          "1",
+          "3",
+          "61704"
+        ],
+        [
+          "QF10802",
+          "0",
+          "1",
+          "2",
+          "3",
+          "61704"
+        ],
+        [
+          "QF01100",
+          "0",
+          "1",
+          "0",
+          "3",
+          "61457"
+        ],
+        [
+          "QF01000",
+          "0",
+          "1",
+          "0",
+          "3",
+          "61456"
+        ],
+        [
+          "QF10700",
+          "0",
+          "1",
+          "0",
+          "3",
+          "61703"
+        ],
+        [
+          "QF10100",
+          "0",
+          "1",
+          "0",
+          "3",
+          "61697"
+        ],
+        [
+          "QF10101",
+          "0",
+          "1",
+          "1",
+          "3",
+          "61697"
+        ],
+        [
+          "Q0E2000",
+          "0",
+          "1",
+          "0",
+          "3",
+          "3616"
+        ],
+        [
+          "Q0D9001",
+          "0",
+          "1",
+          "1",
+          "3",
+          "3472"
+        ],
+        [
+          "Q0DC000",
+          "0",
+          "1",
+          "0",
+          "3",
+          "3520"
+        ],
+        [
+          "Q0DD001",
+          "0",
+          "1",
+          "1",
+          "3",
+          "3536"
+        ],
+        [
+          "Q0DF000",
+          "0",
+          "1",
+          "0",
+          "3",
+          "3568"
+        ],
+        [
+          "Q0D8000",
+          "0",
+          "1",
+          "0",
+          "3",
+          "3456"
+        ],
+        [
+          "Q0D8001",
+          "0",
+          "1",
+          "1",
+          "3",
+          "3456"
+        ],
+        [
+          "Q0DA000",
+          "0",
+          "1",
+          "0",
+          "3",
+          "3488"
+        ],
+        [
+          "Q0DA001",
+          "0",
+          "1",
+          "1",
+          "3",
+          "3488"
+        ],
+        [
+          "Q0DE000",
+          "0",
+          "1",
+          "0",
+          "3",
+          "3552"
+        ],
+        [
+          "Q0DE001",
+          "0",
+          "1",
+          "1",
+          "3",
+          "3552"
+        ],
+        [
+          "Q0DB000",
+          "0",
+          "1",
+          "0",
+          "3",
+          "3504"
+        ],
+        [
+          "Q0DB001",
+          "0",
+          "1",
+          "1",
+          "3",
+          "3504"
+        ],
+        [
+          "QF10300",
+          "0",
+          "1",
+          "0",
+          "3",
+          "61699"
+        ],
+        [
+          "Q680000",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26624"
+        ],
+        [
+          "Q680001",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26624"
+        ],
+        [
+          "Q680002",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26624"
+        ],
+        [
+          "Q680004",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26624"
+        ],
+        [
+          "Q680005",
+          "0",
+          "1",
+          "5",
+          "3",
+          "26624"
+        ],
+        [
+          "Q680006",
+          "0",
+          "1",
+          "6",
+          "3",
+          "26624"
+        ],
+        [
+          "Q680100",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26625"
+        ],
+        [
+          "Q680101",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26625"
+        ],
+        [
+          "Q680102",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26625"
+        ],
+        [
+          "Q680104",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26625"
+        ],
+        [
+          "Q680105",
+          "0",
+          "1",
+          "5",
+          "3",
+          "26625"
+        ],
+        [
+          "Q680106",
+          "0",
+          "1",
+          "6",
+          "3",
+          "26625"
+        ],
+        [
+          "Q680200",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26626"
+        ],
+        [
+          "Q680201",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26626"
+        ],
+        [
+          "Q680202",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26626"
+        ],
+        [
+          "Q680204",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26626"
+        ],
+        [
+          "Q680205",
+          "0",
+          "1",
+          "5",
+          "3",
+          "26626"
+        ],
+        [
+          "Q680206",
+          "0",
+          "1",
+          "6",
+          "3",
+          "26626"
+        ],
+        [
+          "Q680300",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26627"
+        ],
+        [
+          "Q680301",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26627"
+        ],
+        [
+          "Q680302",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26627"
+        ],
+        [
+          "Q680304",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26627"
+        ],
+        [
+          "Q680305",
+          "0",
+          "1",
+          "5",
+          "3",
+          "26627"
+        ],
+        [
+          "Q680306",
+          "0",
+          "1",
+          "6",
+          "3",
+          "26627"
+        ],
+        [
+          "Q010000",
+          "0",
+          "1",
+          "0",
+          "3",
+          "256"
+        ]
+      ],
+      "bytes": 1975,
+      "sha256": "069acf0afe02c735b0ebfaa7c5aa0f7e9fb441137d363ca65807bdec5a06babf",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          353,
+          355
+        ],
+        "afterPayloadSpan": [
+          353,
+          1880
+        ]
+      }
+    },
+    {
+      "file": "timer.bin",
+      "requested": "Name timer 1, set down direction, start 173 and alarm 37 seconds.",
+      "accepted": [
+        [
+          "Flight timer",
+          "-1",
+          "173",
+          "37"
+        ]
+      ],
+      "bytes": 462,
+      "sha256": "14a5465fd7ddcd13a28110b24375611af880d6cb1d2137db88dbcf5ed7a89c93",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          316,
+          323
+        ],
+        "afterPayloadSpan": [
+          316,
+          335
+        ]
+      }
+    },
+    {
+      "file": "channel.bin",
+      "requested": "Set output 1 to Flap left, center 3, limits -72 and +83, and reverse its direction.",
+      "accepted": [
+        [
+          "Flap left",
+          "3.0",
+          "-72.0",
+          "83.0",
+          "-1"
+        ]
+      ],
+      "bytes": 478,
+      "sha256": "7ab47f486abab4bea342b9daa6a623d3ae2d1c29222505a868dc6ac240a52324",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          102,
+          103
+        ],
+        "afterPayloadSpan": [
+          102,
+          131
+        ]
+      }
+    },
+    {
+      "file": "curve.bin",
+      "requested": "Insert a curve and name it Bench rate.",
+      "accepted": [
+        [
+          "Bench rate",
+          "0"
+        ]
+      ],
+      "bytes": 463,
+      "sha256": "f34e6fc363e97fc342a7c8bee563a3265a538e3f3d599c7d58b6b8fce7ba72a4",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          284,
+          285
+        ],
+        "afterPayloadSpan": [
+          284,
+          298
+        ]
+      }
+    },
+    {
+      "file": "diy.bin",
+      "requested": "Create a DIY sensor with physical 03, application 0100.",
+      "accepted": [
+        [
+          "Bench DIY",
+          "3",
+          "256",
+          "0",
+          "0"
+        ]
+      ],
+      "bytes": 492,
+      "sha256": "43520b8c9f2d67d15a90e3070f7ed373307f0634d14683bfd7db348775f29e45",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          353,
+          353
+        ],
+        "afterPayloadSpan": [
+          353,
+          395
+        ]
+      }
+    },
+    {
+      "file": "calculated-consumption.bin",
+      "requested": "Use Model > Telemetry > Create calculated sensor, default Consumption.",
+      "accepted": [],
+      "bytes": 484,
+      "sha256": "ae8322f45a7c683336b750c9e302ae5f86d12eddb501edfbc1e3d4bdfdfd6a2b",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          353,
+          353
+        ],
+        "afterPayloadSpan": [
+          353,
+          387
+        ]
+      }
+    },
+    {
+      "file": "calculated-custom.bin",
+      "requested": "Switch the calculated sensor formula from Consumption to Custom.",
+      "accepted": [],
+      "bytes": 480,
+      "sha256": "2643a29428b174b96814d6104760f58ebd67ff0139b0b40a699fa728f3a39d3b",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "calculated-consumption.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          356,
+          384
+        ],
+        "afterPayloadSpan": [
+          356,
+          380
+        ]
+      }
+    },
+    {
+      "file": "calculated-operation.bin",
+      "requested": "Add one default Add operation to a Custom sensor.",
+      "accepted": [],
+      "bytes": 482,
+      "sha256": "8cbf9ea492078e5ccd4ff6546e08acc898bcd68c516358ce8587d45c967429c5",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "calculated-custom.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          383,
+          383
+        ],
+        "afterPayloadSpan": [
+          383,
+          385
+        ]
+      }
+    },
+    {
+      "file": "flight-mode.bin",
+      "requested": "Add a flight mode after the default mode.",
+      "accepted": [],
+      "bytes": 456,
+      "sha256": "b598788e34142b686368cc35269076d475ffa6ccb73dd95b8124d7863cf0be46",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "flightModes.length": 2,
+        "flightModes.1.activeCondition": null,
+        "flightModes.1.fadeIn": 0
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          274,
+          276
+        ],
+        "afterPayloadSpan": [
+          274,
+          282
+        ]
+      }
+    },
+    {
+      "file": "free-mix.bin",
+      "requested": "Add Free mix with its default weight action.",
+      "accepted": [],
+      "bytes": 488,
+      "sha256": "da8c252e15abf04d09efd11515aa25677408e384c3b7c7dc8bdcdceadf76f839",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "mixes.0.key": "free",
+        "mixes.0.name": "Free mix",
+        "mixes.0.actions.0.weight.defaultValue": 100
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          282,
+          282
+        ],
+        "afterPayloadSpan": [
+          282,
+          320
+        ]
+      }
+    },
+    {
+      "file": "logic-switch.bin",
+      "requested": "Create the default A approximately equal to X logic switch.",
+      "accepted": [],
+      "bytes": 476,
+      "sha256": "93b8821b86a254d4f1aee511da626102806948c97969a4b42a2d3b8d7234d096",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "logicSwitches.0.key": "around",
+        "logicSwitches.0.values.0.category": "analog",
+        "logicSwitches.0.values.1": 0
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          286,
+          286
+        ],
+        "afterPayloadSpan": [
+          286,
+          312
+        ]
+      }
+    },
+    {
+      "file": "special-function.bin",
+      "requested": "Create the initially disabled Reset special function.",
+      "accepted": [],
+      "bytes": 458,
+      "sha256": "2f380d4524c4823df0f44ab405e27b1ae8ad5831f0c179deeae164f47acd8403",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "functions.0.key": "reset",
+        "functions.0.enable": false,
+        "functions.0.activeCondition.category": "always_on"
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          290,
+          290
+        ],
+        "afterPayloadSpan": [
+          290,
+          298
+        ]
+      }
+    },
+    {
+      "file": "variable.bin",
+      "requested": "Create one default variable.",
+      "accepted": [],
+      "bytes": 464,
+      "sha256": "a532e7b79e8880a6dce042e2560cad0f35c092789ea9c800af4f4d2dd8bb7c7c",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "vars.0.min": -1000,
+        "vars.0.max": 1000,
+        "vars.0.values.defaultValue": 0
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          288,
+          288
+        ],
+        "afterPayloadSpan": [
+          288,
+          302
+        ]
+      }
+    },
+    {
+      "file": "trim.bin",
+      "requested": "Set the rudder trim step to Medium.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "235c480f8f56d206b6c597b114dce1b5653079b40b08a26121fccef11bfc0028",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trims.0.step": 3,
+        "trims.0.range": 25
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 49,
+            "end": 50
+          }
+        ]
+      }
+    },
+    {
+      "file": "rf.bin",
+      "requested": "Enable the internal module in the isolated radio.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "86b2806a36f295a7aed79b46bebdaf1effa1e8581f3010661a55e2458742e2e7",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.0": 11,
+        "rf.modules.0.enable": true,
+        "rf.modules.0.channelsCount": 16
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 35,
+            "end": 36
+          },
+          {
+            "start": 166,
+            "end": 167
+          }
+        ]
+      }
+    },
+    {
+      "file": "checklist.bin",
+      "requested": "Change switch SA preflight position from Up to Middle.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "9b044a1f4378a05ee7f41f91a90bd116a7cba8c17906fe56ce129696043bd873",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "preflightChecks.switches": 1431655766
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 420,
+            "end": 421
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer.bin",
+      "requested": "Select trainer Master mode.",
+      "accepted": [],
+      "bytes": 575,
+      "sha256": "9d7a517d24f082e39d0f5448e28e2e5653aa9eed424ccd04c1377a295abcbd1a",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trainerCable.settingsType": "trainer_in",
+        "trainerCable.trainer_in.channels.0.destination.category": "analog"
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          292,
+          292
+        ],
+        "afterPayloadSpan": [
+          292,
+          417
+        ]
+      }
+    },
+    {
+      "file": "screen.bin",
+      "requested": "Add a second screen with a 2x2 layout and four empty widget slots.",
+      "accepted": [],
+      "bytes": 492,
+      "sha256": "312686e52bc6bb60fb5503664923af8de3b0afef9fa801091588300f19d15a15",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.length": 2,
+        "screens.1.key": "2x2",
+        "screens.1.widgets.length": 4,
+        "screens.1.widgets.0.key": "none"
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          358,
+          419
+        ],
+        "afterPayloadSpan": [
+          358,
+          461
+        ]
+      }
+    },
+    {
+      "file": "lua-references.bin",
+      "requested": "Enable the synthetic FxTask and FxSrc Lua registrations.",
+      "accepted": [],
+      "bytes": 470,
+      "sha256": "7b8ad77932c10295a80317e6b045a3bdc164d214a483e4393a679759d46b54f0",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "luaSources.0.key": 427119835206,
+        "luaTasks.0.key": 118143298336838
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          442,
+          442
+        ],
+        "afterPayloadSpan": [
+          442,
+          462
+        ]
+      }
+    },
+    {
+      "file": "widget-reference.bin",
+      "requested": "Assign the synthetic FxView widget to screen 2 slot 0.",
+      "accepted": [],
+      "bytes": 495,
+      "sha256": "d5afdc6074c7808c2363eabb3556c2836453a53c2396621d7e2f7fdc95af08ac",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.key": "2x2",
+        "screens.1.widgets.0.key": "FxView"
+      },
+      "compareWith": "screen.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          429,
+          435
+        ],
+        "afterPayloadSpan": [
+          429,
+          438
+        ]
+      }
+    },
+    {
+      "file": "timer-limits.bin",
+      "requested": "Set timer 1 start and alarm to the two signed 32-bit extrema.",
+      "accepted": [
+        [
+          "-2147483648",
+          "2147483647"
+        ]
+      ],
+      "bytes": 450,
+      "sha256": "fa61ed3fdfe07ffe7e260f3ddcfb71078ecc95e7b6dad4fccf231fdef188e2d7",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "timers.1.startValue": -2147483648,
+        "timers.1.alarmValue": 2147483647
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 321,
+            "end": 326
+          }
+        ]
+      }
+    },
+    {
+      "file": "timer-audio-one.bin",
+      "requested": "Add one haptic countdown value at 10 seconds, interval 30.",
+      "accepted": [
+        [
+          "0",
+          "10",
+          "30",
+          "",
+          "1"
+        ]
+      ],
+      "bytes": 456,
+      "sha256": "22bcb6877fcc5ee0ad71f02f79b0ecb6ebccf10d95db257e078ea2a632408125",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "timers.0.audioActions.length": 1,
+        "timers.0.audioActions.0.haptic": true
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          311,
+          313
+        ],
+        "afterPayloadSpan": [
+          311,
+          319
+        ]
+      }
+    },
+    {
+      "file": "timer-audio-three.bin",
+      "requested": "Append a countdown beep and a haptic sound-file action.",
+      "accepted": [
+        [
+          "0",
+          "10",
+          "30",
+          "",
+          "1"
+        ],
+        [
+          "1",
+          "11",
+          "31",
+          "",
+          "0"
+        ],
+        [
+          "2",
+          "12",
+          "32",
+          "bench",
+          "1"
+        ]
+      ],
+      "bytes": 474,
+      "sha256": "5ddef10c2a0fe8880680caa5fd6082c7136db7c7c8ddefbcd05e6778c4af8f1e",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "timers.0.audioActions.length": 3,
+        "timers.0.audioActions.1.type": "countdown_beep",
+        "timers.0.audioActions.2.filename": "bench",
+        "timers.0.audioActions.2.step": 32
+      },
+      "compareWith": "timer-audio-one.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          311,
+          318
+        ],
+        "afterPayloadSpan": [
+          311,
+          336
+        ]
+      }
+    },
+    {
+      "file": "widget-title.bin",
+      "requested": "Turn off the title of the first Timer Value widget.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "f3e7ac2ed8618e1e65a3cf1bcf1fc9716d38a819797456bc608131434934380d",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.0.widgets.1.title": false
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 392,
+            "end": 393
+          }
+        ]
+      }
+    },
+    {
+      "file": "widget-timer-source.bin",
+      "requested": "Change the first Value widget from Timer1 to Timer2.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "31d286efa36d95d21ae15e16182561a69e8d522380470be46af1fe58353c3db5",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.0.widgets.1.source.category": "timer",
+        "screens.0.widgets.1.source.member": 1
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 390,
+            "end": 391
+          }
+        ]
+      }
+    },
+    {
+      "file": "gps-widget.bin",
+      "requested": "Place a GPS Map widget on the second screen.",
+      "accepted": [],
+      "bytes": 510,
+      "sha256": "5ca985a427c5de4863a969c30275cdd7db5b8a5b43c0563fb7ba630db2d24120",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.key": "gps_map",
+        "screens.1.widgets.0.maxLongitude": 1800000000
+      },
+      "compareWith": "screen.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          429,
+          436
+        ],
+        "afterPayloadSpan": [
+          429,
+          454
+        ]
+      }
+    },
+    {
+      "file": "lipo-widget.bin",
+      "requested": "Place a LiPo widget on the second screen.",
+      "accepted": [],
+      "bytes": 496,
+      "sha256": "9c2f690530f6ff7b419fb923c836253bc3d7c7a7d3bb2793d7b58b9ba5309462",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.key": "lipo",
+        "screens.1.widgets.0.voltageWarning": 300
+      },
+      "compareWith": "screen.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          429,
+          437
+        ],
+        "afterPayloadSpan": [
+          429,
+          441
+        ]
+      }
+    },
+    {
+      "file": "channels-widget.bin",
+      "requested": "Place a Channels widget on the second screen.",
+      "accepted": [],
+      "bytes": 502,
+      "sha256": "4a00bdf410064e634642a2127f7ab81c7abafbb67cbcd73ef6766a4d4d86bef2",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.key": "channels",
+        "screens.1.widgets.0.channels": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "compareWith": "screen.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          429,
+          433
+        ],
+        "afterPayloadSpan": [
+          429,
+          443
+        ]
+      }
+    },
+    {
+      "file": "text-widget.bin",
+      "requested": "Place a Text widget on the second screen.",
+      "accepted": [],
+      "bytes": 493,
+      "sha256": "ecccd05ba48857e313b0fe6964548aa79567e7955b41a57f4a708d9b3ada9df3",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.key": "text",
+        "screens.1.widgets.0.filePath": ""
+      },
+      "compareWith": "screen.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          429,
+          429
+        ],
+        "afterPayloadSpan": [
+          429,
+          430
+        ]
+      }
+    },
+    {
+      "file": "timer-widget.bin",
+      "requested": "Place a Timer logs widget on the second screen.",
+      "accepted": [],
+      "bytes": 498,
+      "sha256": "266e300267405a6a2dc9e6bd5cda49bf4c77df10f4ea047e7e39e2b993a49c31",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.key": "timer_logs",
+        "screens.1.widgets.0.reversedOrder": false
+      },
+      "compareWith": "screen.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          429,
+          436
+        ],
+        "afterPayloadSpan": [
+          429,
+          442
+        ]
+      }
+    },
+    {
+      "file": "chart-widget.bin",
+      "requested": "Place a Line chart widget on the second screen.",
+      "accepted": [],
+      "bytes": 505,
+      "sha256": "38ac44a3a28ef6504952a8119e925a75aece2d8927ad939abf0cceebb0eb8d22",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.key": "line_chart",
+        "screens.1.widgets.0.interval": 10,
+        "screens.1.widgets.0.minValue": -1024
+      },
+      "compareWith": "screen.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          429,
+          437
+        ],
+        "afterPayloadSpan": [
+          429,
+          450
+        ]
+      }
+    },
+    {
+      "file": "telemetry-competition.bin",
+      "requested": "Enable Competition on an empty synthetic model.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "50f04186f59585e3d53077189a7d63f953d4d4f5813bd9ff160bcbb84eab20d3",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "telemetry.competition": true
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 355,
+            "end": 356
+          }
+        ]
+      }
+    },
+    {
+      "file": "telemetry-bluetooth.bin",
+      "requested": "Enable the Bluetooth telemetry mode on an empty synthetic model.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "fb13c604cea5d0bf3cac28ef86a34c82f5834430bf4ee6af45ed118be0a60c85",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "bluetooth.mode": "telemetry"
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 356,
+            "end": 357
+          }
+        ]
+      }
+    },
+    {
+      "file": "checklist-sa-down.bin",
+      "requested": "Set the simulated SA checklist position to Down.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "dfeaa7afe29b1bc6e6f416a0b0705b9bb776025625c302ed8dcbbff5f24eb6a9",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "preflightChecks.switches": 1431655767
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 420,
+            "end": 421
+          }
+        ]
+      }
+    },
+    {
+      "file": "checklist-sa-none.bin",
+      "requested": "Set the simulated SA checklist position to No check.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "27d5872853436aa68d817d41c7f4e50129316725af851db441f0dd436e7e033d",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "preflightChecks.switches": 1431655764
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 420,
+            "end": 421
+          }
+        ]
+      }
+    },
+    {
+      "file": "checklist-failsafe.bin",
+      "requested": "Capture the second state of the failsafe reminder on the empty synthetic model.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "f9531ac9128578a815f3eeaf8a7f2d6d9b05f7f0509e4da4ce264e834c9f5d24",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "preflightChecks.failsafeCheck": 0
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 424,
+            "end": 425
+          }
+        ]
+      }
+    },
+    {
+      "file": "servo-addresses.bin",
+      "requested": "Create 19 additional servo address/sub-ID combinations in the native firmware.",
+      "accepted": [
+        [
+          "S680400",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26628"
+        ],
+        [
+          "S680401",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26628"
+        ],
+        [
+          "S680402",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26628"
+        ],
+        [
+          "S680404",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26628"
+        ],
+        [
+          "S680500",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26629"
+        ],
+        [
+          "S680501",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26629"
+        ],
+        [
+          "S680502",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26629"
+        ],
+        [
+          "S680504",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26629"
+        ],
+        [
+          "S680700",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26631"
+        ],
+        [
+          "S680701",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26631"
+        ],
+        [
+          "S680702",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26631"
+        ],
+        [
+          "S680800",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26632"
+        ],
+        [
+          "S680801",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26632"
+        ],
+        [
+          "S680802",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26632"
+        ],
+        [
+          "S680804",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26632"
+        ],
+        [
+          "S680900",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26633"
+        ],
+        [
+          "S680901",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26633"
+        ],
+        [
+          "S680902",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26633"
+        ],
+        [
+          "S680904",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26633"
+        ]
+      ],
+      "bytes": 1080,
+      "sha256": "f286829e84d0fb127da109c0d2bdb76f2eec9db7737030327b66fd4535eccf13",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          353,
+          355
+        ],
+        "afterPayloadSpan": [
+          353,
+          985
+        ]
+      }
+    },
+    {
+      "file": "output-limits.bin",
+      "requested": "Set output 1 to the full signed limits and a negative fractional center.",
+      "accepted": [
+        [
+          "-7.5",
+          "-150.0",
+          "150.0",
+          "-1"
+        ]
+      ],
+      "bytes": 469,
+      "sha256": "c318434e372ab09463832a300d131177458b84ad3909f7d905c57d3239fb8c76",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "channels.1.center": -7.5,
+        "channels.1.limitMin": -150,
+        "channels.1.limitMax": 150,
+        "channels.1.invert": true
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          102,
+          103
+        ],
+        "afterPayloadSpan": [
+          102,
+          122
+        ]
+      }
+    }
+  ]
+}

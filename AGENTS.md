@@ -89,6 +89,10 @@ Repository-level operating policy for coding assistants working in `sloppy-ethos
   - For simulator harness changes, also run `python -m pytest tests/test_sim_harness.py -q`
 - Packaging changes: build the affected package using
   [Core Commands](docs/DEVELOPMENT.md#core-commands) and inspect its contents.
+- For the Rust desktop editor (`model-editor/`), run `cargo fmt --all -- --check`
+  and `cargo test --locked --workspace --all-targets` from that workspace.
+  For Windows UI or desktop packaging changes, build the separate desktop ZIP
+  and run its native smoke check as described in the [desktop guide](model-editor/README.md).
 - Broad or cross-cutting changes:
   - `python -m pytest -q`
 

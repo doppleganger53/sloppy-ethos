@@ -21,6 +21,10 @@ If you want to play around with finding repeatable, low-maintenance ways to effi
 Ethos Lua script workspace. Current active script directories include
 `SensorList`, `BoundryMap`, `SmartMapper`, and `ethos_events`.
 
+The Windows desktop editor opens ETHOS model backups, compares settings, and
+exports selected changes to a separate model file. Start with the bundled
+sample pair in the [ETHOS Model Editor guide](model-editor/README.md).
+
 ## Script Inventory and 26.1 Compatibility Status
 
 - `SensorList` (released): active and tracked in the published release list.

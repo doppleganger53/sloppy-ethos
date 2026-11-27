@@ -1,0 +1,13 @@
+[package]
+name = "ethos-model-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Native Windows desktop editor for ETHOS model backups"
+
+[dependencies]
+ethos-model = { path = "../ethos-model" }
+
+[target.'cfg(windows)'.dependencies]
+ethos-model-validation = { path = "../ethos-model-validation" }
+native-windows-gui = { version = "1.0.13", default-features = false, features = ["file-dialog", "high-dpi", "image-list", "list-view", "notice", "tree-view"] }

@@ -1,0 +1,11 @@
+[package]
+name = "ethos-model"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Offline ETHOS model inspection, comparison and same-format repairs"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true

@@ -1,0 +1,134 @@
+name: ETHOS model editor
+
+on:
+  pull_request:
+    paths:
+      - 'model-editor/**'
+      - '.github/workflows/ethos-model-editor.yml'
+  push:
+    branches: [main]
+    tags: ['ethos-model-editor-v*']
+    paths:
+      - 'model-editor/**'
+      - '.github/workflows/ethos-model-editor.yml'
+  workflow_dispatch:
+    inputs:
+      firmware:
+        description: Validate fixtures with the pinned FrSky WebSimulators
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: model-editor
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify Rust formatting
+        run: cargo fmt --all -- --check
+      - name: Build and test with public fixtures
+        run: cargo test --locked --workspace --all-targets
+      - name: Check fixture provenance and offline simulator diagnostics
+        run: node --test simulator/runtime.test.cjs
+      - name: Build desktop package
+        run: ./packaging/build.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ethos-model-editor-windows-x64
+          path: model-editor/target/package/*.zip
+          if-no-files-found: error
+
+  packaged-windows:
+    needs: windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            model-editor/fixtures
+            model-editor/packaging
+      - uses: actions/download-artifact@v4
+        with:
+          name: ethos-model-editor-windows-x64
+          path: download
+      - name: Open and repair using the unpacked executables
+        shell: pwsh
+        run: |
+          Expand-Archive -LiteralPath (Get-ChildItem download/*.zip).FullName -DestinationPath 'Portable Editor'
+          python -m pip install pywinauto==0.6.9
+          python model-editor/packaging/smoke.py 'Portable Editor' 'Portable Editor/examples'
+
+  firmware:
+    if: github.event_name == 'workflow_dispatch' && inputs.firmware
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run same-format and conversion read-backs
+        working-directory: model-editor
+        env:
+          ETHOS_EDITOR_SIM_168: ${{ runner.temp }}/x20-1.6.8
+          ETHOS_EDITOR_SIM_2612: ${{ runner.temp }}/x20-26.1.2
+          ETHOS_EDITOR_SIM_2620: ${{ runner.temp }}/x20-26.2.0
+        run: |
+          url='https://github.com/FrSkyRC/ETHOS-Feedback-Community/releases/download'
+          for version in 1.6.8 26.1.2 26.2.0; do
+            curl --fail --location --retry 2 --output "$RUNNER_TEMP/$version.zip" "$url/$version/X20PROAW-FCC-WebSimulator.zip"
+          done
+          echo "efe70e0e2c529951772108d8fe4535059273464276e740640963ba8d6cd0ab12  $RUNNER_TEMP/1.6.8.zip" | sha256sum -c -
+          echo "4e4c3588fce7a5ff8407a34cd41471cdf2016ea3ca7e48faca7353399f2fa82d  $RUNNER_TEMP/26.1.2.zip" | sha256sum -c -
+          echo "5df9c74f9267bccb121a7c145109d59ed89ae977a2deca5645c3be0a5528cbf9  $RUNNER_TEMP/26.2.0.zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/1.6.8.zip" -d "$ETHOS_EDITOR_SIM_168"
+          unzip -q "$RUNNER_TEMP/26.1.2.zip" -d "$ETHOS_EDITOR_SIM_2612"
+          unzip -q "$RUNNER_TEMP/26.2.0.zip" -d "$ETHOS_EDITOR_SIM_2620"
+          node --test simulator/runtime.test.cjs
+          node fixtures/generate.cjs "$ETHOS_EDITOR_SIM_168" "$RUNNER_TEMP/fixture-replay" "$ETHOS_EDITOR_SIM_2612" "$ETHOS_EDITOR_SIM_2620"
+          for fixture in fixtures/*.bin; do
+            cmp "$fixture" "$RUNNER_TEMP/fixture-replay/${fixture##*/}"
+          done
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/ethos-model-editor-v')
+    needs: [packaged-windows, portable-codec]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ethos-model-editor-windows-x64
+          path: download
+      - name: Prepare desktop release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --verify-tag --draft --title "ETHOS Model Editor ${TAG#ethos-model-editor-v}" --generate-notes
+          fi
+          gh release upload "$TAG" download/*.zip --clobber
+
+  portable-codec:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: model-editor
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exercise portable codec and CLI
+        run: cargo test --locked -p ethos-model -p ethos-model-cli -p ethos-model-validation

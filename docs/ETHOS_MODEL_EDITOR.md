@@ -10,6 +10,11 @@ Keep the codec in a reusable Rust library. The CLI and desktop app should use
 the same parser, diff, validation, and writer. A future Rust SloppyLogExplorer
 can reuse that library or launch the editor with two file paths.
 
+The [desktop editor and CLI](../model-editor/README.md) share the current
+Rust implementation. The [format evidence](../model-editor/FORMAT.md)
+records firmware-generated fixtures, verified byte layouts and outstanding
+coverage for the first target.
+
 ## First release scope
 
 - **Radio target** is X20 Pro AW with the FCC simulator and model format

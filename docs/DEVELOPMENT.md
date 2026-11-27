@@ -37,6 +37,14 @@ this document describes tooling and release procedures.
 - For an isolated headless or GUI run, use the examples in the
   [WebSimulator harness guide](../tools/sim/harness/README.md).
 
+## Desktop model editor development
+
+The Rust workspace in `model-editor/` provides the codec, CLI and
+Windows desktop application. From that directory, use `cargo run -p ethos-model-desktop`
+to launch the browser on Windows. The [desktop build guide](../model-editor/README.md)
+lists the fixture tests, native UI smoke and independent Windows packaging command.
+The desktop release tag is `ethos-model-editor-v<VERSION>`.
+
 ## Configuring Simulator Path
 
 - Only for a requested change to a named live Suite profile: verify its
