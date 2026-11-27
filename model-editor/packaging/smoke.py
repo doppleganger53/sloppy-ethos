@@ -12,6 +12,7 @@ from time import monotonic, sleep
 from pywinauto import Application
 from pywinauto import win32defines
 from pywinauto.findwindows import ElementNotFoundError
+from pywinauto.timings import TimeoutError as ControlTimeout
 
 
 def wait_for(read, accept, message, seconds=20):
@@ -44,8 +45,39 @@ def choose_file(app, window, button, dialog_title, filename):
     window.child_window(title=button, class_name="Button").wrapper_object().post_message(0x00F5)  # BM_CLICK
     dialog = app.window(title=dialog_title, class_name="#32770")
     dialog.wait("visible", timeout=15)
-    dialog.child_window(class_name="Edit", found_index=0).set_edit_text(str(filename))
-    dialog.child_window(control_id=1, class_name="Button").click()
+    try:
+        # Windows exposes the filename in either the classic cmb13 host or the
+        # DirectUI filename combo. Address/search edits are separate shell controls.
+        def filename_edits():
+            controls = []
+            for edit in dialog.descendants(class_name="Edit"):
+                parent = edit.parent()
+                if edit.control_id() == 1152 and parent.handle == dialog.handle and edit.is_visible():
+                    controls.append(edit)  # edt1 in the folder picker
+                    continue
+                host = parent.parent()
+                classic = (edit.control_id(),host.class_name(),host.control_id()) == (1148,"ComboBoxEx32",1148)
+                modern = (edit.control_id(),host.class_name()) == (1001,"FloatNotifySink")
+                if edit.is_visible() and parent.class_name()=="ComboBox" and (classic or modern):
+                    controls.append(edit)
+            return controls
+        edit = wait_for(filename_edits,lambda matches: len(matches)==1,"filename control")[0]
+        edit.set_edit_text(str(filename))
+        wait_for(edit.window_text, lambda text: text == str(filename), "filename control")
+        dialog.child_window(control_id=1,class_name="Button").wrapper_object().post_message(0x00F5)
+        dialog.wait_not("visible",timeout=15)
+    except (ControlTimeout, ElementNotFoundError, AssertionError) as exc:
+        raise AssertionError(f"{dialog_title} could not select {filename}. {window_state(app)}") from exc
+
+
+def window_state(app):
+    details = []
+    for window in app.windows(visible_only=True):
+        controls = [(c.class_name(), c.control_id(), c.window_text()[:240])
+                    for c in window.descendants()
+                    if c.is_visible() and c.class_name() in {"Static", "Edit", "Button"}]
+        details.append((window.window_text(), controls))
+    return f"Visible windows and controls: {details!r}"
 
 
 def run_smoke(package, fixtures, runtime=None):
@@ -81,12 +113,20 @@ def run_smoke(package, fixtures, runtime=None):
             return app, app.window(title="ETHOS Model Editor", class_name_re="(?!#32770).*")
 
         try:
+            # Check the same two unpacked files through the shared codec before UI
+            # automation so a bad copy or runtime dependency fails at its source.
+            for source in (before, after):
+                subprocess.run([str(cli), "inspect", str(source)], check=True, cwd=scratch,
+                               env=env, stdout=subprocess.DEVNULL)
             app, window = launch()
             window.wait("visible", timeout=25)
             table = window.child_window(class_name="SysListView32").wrapper_object()
             tree = window.child_window(class_name="SysTreeView32").wrapper_object()
             choose_file(app, window, "Open current…", "Choose the current model", after)
-            wait_for(lambda: rows(table), bool, "current model browser")
+            try:
+                wait_for(lambda: rows(table), bool, "current model browser")
+            except AssertionError as exc:
+                raise AssertionError(f"{exc}. {window_state(app)}") from exc
             groups = [item.text() for item in tree.get_item(["Model settings"]).children()]
             radio_groups = ["Edit model", "Flight modes", "Mixes", "Channels", "Timers", "Trims", "RF system", "Telemetry"]
             assert groups[:len(radio_groups)] == radio_groups, groups
