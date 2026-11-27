@@ -55,6 +55,7 @@ This document explains the purpose of the top-level folders and key root files i
 - Primary guide: `docs/DEVELOPMENT.md`.
 - Ethos `26.1` baseline:
   [docs/ETHOS_26_1_COMPATIBILITY.md](ETHOS_26_1_COMPATIBILITY.md).
+- Standalone [ETHOS model editor implementation reference](ETHOS_MODEL_EDITOR.md).
 - SensorList architecture reference: `docs/SensorList/SENSORLIST_ARCHITECTURE.md`.
 - This file (`docs/REPOSITORY_LAYOUT.md`) documents repository structure and root artifacts.
 

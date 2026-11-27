@@ -10,6 +10,7 @@ drift against source, current versions, and runtime evidence.
 | Build, deploy, or release procedures | [Development notes](../../docs/DEVELOPMENT.md) |
 | Ethos 26.1 compatibility and follow-up gates | [Compatibility baseline](../../docs/ETHOS_26_1_COMPATIBILITY.md) |
 | Runtime/API/simulator behavior | [Ethos platform reference](notes/reference/ethos-platform/EthosPlatform.md) |
+| Standalone ETHOS model editor architecture and binary format evidence | [Model editor reference](../../docs/ETHOS_MODEL_EDITOR.md) |
 | SensorList behavior | [SensorList reference](notes/reference/sensorlist/SensorList.md) |
 | Script-specific behavior or version | The affected script's README and VERSION in scripts/ |
 | Prior decisions or unresolved handoff | Search [CATALOG.md](CATALOG.md) by Scope, Concern, and topic |
