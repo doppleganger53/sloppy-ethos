@@ -37,6 +37,8 @@ jobs:
         run: cargo test --locked --workspace --all-targets
       - name: Check fixture provenance and offline simulator diagnostics
         run: node --test simulator/runtime.test.cjs
+      - name: Verify release rerun behavior
+        run: python -m unittest discover -s packaging -p test_prepare_release.py
       - name: Build desktop package
         run: ./packaging/build.ps1
       - uses: actions/upload-artifact@v4
@@ -103,9 +105,16 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/ethos-model-editor-v')
     needs: [packaged-windows, portable-codec]
     runs-on: ubuntu-latest
+    concurrency:
+      group: desktop-release-${{ github.ref }}
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: model-editor/packaging
       - uses: actions/download-artifact@v4
         with:
           name: ethos-model-editor-windows-x64
@@ -116,10 +125,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
         run: |
-          if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" --verify-tag --draft --title "ETHOS Model Editor ${TAG#ethos-model-editor-v}" --generate-notes
-          fi
-          gh release upload "$TAG" download/*.zip --clobber
+          python3 model-editor/packaging/prepare_release.py "$GH_REPO" "$TAG" download/*.zip
 
   portable-codec:
     runs-on: ubuntu-latest

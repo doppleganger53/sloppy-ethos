@@ -31,6 +31,20 @@ struct Patch {
     change: Change,
 }
 
+impl Patch {
+    fn new(field: &super::Field, bytes: Vec<u8>, after: String) -> Self {
+        Self {
+            range: field.range.clone(),
+            bytes,
+            change: Change {
+                path: field.path.clone(),
+                before: field.value.clone(),
+                after,
+            },
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct AudioAction {
@@ -151,9 +165,28 @@ fn percent(value: &str, path: &str, min: i16, max: i16) -> Result<(Vec<u8>, Stri
     let raw = rounded as i32;
     Ok((packed_integer(raw), format!("{}%", f64::from(raw) / 10.0)))
 }
-fn encode_field(kind: super::EditFormat, path: &str, value: &str) -> Result<(Vec<u8>, String)> {
+fn encode_field(
+    model: &Model,
+    kind: super::EditFormat,
+    path: &str,
+    value: &str,
+) -> Result<(Vec<u8>, String)> {
     use super::EditFormat;
     match kind {
+        EditFormat::LogicInputs => super::logic::encode_inputs(path, value),
+        EditFormat::VariableRates => super::variables::encode_rates(path, value),
+        EditFormat::TrimTarget => super::variables::trim_target(model, path, value),
+        EditFormat::VariableActions => super::variables::encode_actions(model, path, value),
+        EditFormat::VariableFunction => super::variables::operator(path, value),
+        EditFormat::LogicComparison => super::logic::encode_op(path, value, false),
+        EditFormat::LogicCombinator => super::logic::encode_op(path, value, true),
+        EditFormat::LogicInput => super::logic::encode_input(path, value),
+        EditFormat::TimerInterval => super::logic::seconds(path, value, 1, 1750),
+        EditFormat::CurveSelector => {
+            super::curves::encode_selector(model.curve_ranges.len(), value, path)
+        }
+        EditFormat::CurvePoints => super::curves::encode_points(path, value),
+        EditFormat::CurveFunction => super::curves::function(value, path),
         EditFormat::Operand { minimum, maximum } => {
             let v = value
                 .parse::<i32>()
@@ -278,10 +311,15 @@ impl Model {
         if let Some(expanded) = self.expand_channels(fields)? {
             return expanded.prepare(edits, fields);
         }
-        if let Some(order) = fields.iter().find(|f| f.path == super::order::ORDER) {
+        if let Some(order) = fields.iter().find(|f| {
+            matches!(
+                f.path.as_str(),
+                super::order::ORDER | super::order::CURVE_ORDER
+            )
+        }) {
             let scalar: Vec<_> = fields
                 .iter()
-                .filter(|f| f.path != super::order::ORDER)
+                .filter(|f| f.path != order.path)
                 .cloned()
                 .collect();
             if scalar.len() + 1 != fields.len() {
@@ -291,7 +329,12 @@ impl Model {
                 )));
             }
             let (bytes, mut changes) = self.prepare(edits, &scalar)?;
-            let (next, mut order_changes) = Self::parse(&bytes)?.reorder(&order.value, &changes)?;
+            let staged = Self::parse(&bytes)?;
+            let (next, mut order_changes) = if order.path == super::order::CURVE_ORDER {
+                staged.reorder_curves(&order.value, &changes)?
+            } else {
+                staged.reorder(&order.value, &changes)?
+            };
             changes.append(&mut order_changes);
             return Ok((next, changes));
         }
@@ -354,8 +397,8 @@ impl Model {
                     "{path}: this field has no verified same-format edit for this layout"
                 )));
             }
-            let (bytes, display) = if let Some(kind) = field.encoding {
-                encode_field(kind, path, &proposal.value)?
+            let (mut bytes, display) = if let Some(kind) = field.encoding {
+                encode_field(self, kind, path, &proposal.value)?
             } else if let Some(proposed) = super::sections_after::encode(
                 self,
                 field,
@@ -392,6 +435,37 @@ impl Model {
             } else {
                 return Err(Error::Invalid(format!("{path}: unsupported edit")));
             };
+            if field.encoding == Some(super::EditFormat::CurvePoints) {
+                let root = field
+                    .path
+                    .strip_suffix(".points")
+                    .expect("point table path");
+                let number = bytes[0];
+                let easy = bytes[1];
+                let count_field = self
+                    .fields
+                    .iter()
+                    .find(|f| f.path == format!("{root}.points.count"))
+                    .expect("parsed curve count");
+                let grid_field = self
+                    .fields
+                    .iter()
+                    .find(|f| f.path == format!("{root}.easy_mode"))
+                    .expect("parsed curve grid mode");
+                for (target, v, after) in [
+                    (count_field, number, number.to_string()),
+                    (
+                        grid_field,
+                        easy,
+                        if easy == 1 { "On" } else { "Off" }.into(),
+                    ),
+                ] {
+                    if self.bytes[target.range.clone()] != [v] {
+                        patches.push(Patch::new(target, vec![v], after));
+                    }
+                }
+                bytes.drain(..2);
+            }
             if field.encoding == Some(super::EditFormat::InternalRf)
                 && self.bytes[field.range.clone()] != bytes
             {
@@ -401,26 +475,13 @@ impl Model {
                     .find(|f| f.path == "rf.module_types[0]")
                     .expect("module type checked during decode");
                 let stored = if bytes[0] == 1 { 11u8 } else { 255 };
-                patches.push(Patch {
-                    range: header.range.clone(),
-                    bytes: vec![stored],
-                    change: Change {
-                        path: header.path.clone(),
-                        before: header.value.clone(),
-                        after: stored.to_string(),
-                    },
-                });
+                patches.push(Patch::new(header, vec![stored], stored.to_string()));
             }
-            if self.bytes[field.range.clone()] != bytes {
-                patches.push(Patch {
-                    range: field.range.clone(),
-                    bytes,
-                    change: Change {
-                        path: path.clone(),
-                        before: field.value.clone(),
-                        after: display,
-                    },
-                });
+            if self.bytes[field.range.clone()] != bytes
+                || (field.encoding == Some(super::EditFormat::CurvePoints)
+                    && field.value != display)
+            {
+                patches.push(Patch::new(field, bytes, display));
             }
         }
         check_keys(&self.sensors, &final_sensors)?;
@@ -449,8 +510,27 @@ impl Model {
             reopened = compacted;
             result = reopened.to_bytes();
         }
-        if self.warnings != reopened.warnings
-            || reopened.sensors.len() != final_sensors.len()
+        match (&self.unverified, &reopened.unverified) {
+            (None, None) => {}
+            (Some(old), Some(new))
+                if old.path == new.path
+                    && old.reason == new.reason
+                    && old.offset as i64 - old.bytes.start as i64
+                        == new.offset as i64 - new.bytes.start as i64
+                    && self.bytes[old.bytes.clone()] == reopened.bytes[new.bytes.clone()] => {}
+            (old, new) => {
+                let path = old
+                    .as_ref()
+                    .or(new.as_ref())
+                    .expect("at least one unknown region")
+                    .path
+                    .as_str();
+                return Err(Error::Invalid(format!(
+                    "{path}: editing would change the unverified structure or its contents"
+                )));
+            }
+        }
+        if reopened.sensors.len() != final_sensors.len()
             || reopened.sensors.iter().zip(&final_sensors).any(|(a, b)| {
                 a.slot != b.slot
                     || a.name != b.name

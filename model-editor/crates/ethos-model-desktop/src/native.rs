@@ -1,3 +1,4 @@
+use crate::point_editor::{encode_rows, PointEditor};
 use crate::session::{section_label, Row, Session, Target, View};
 use native_windows_gui as nwg;
 use std::cell::{Cell, RefCell};
@@ -171,6 +172,9 @@ impl Controls {
 
 pub struct App {
     c: Controls,
+    points: PointEditor,
+    point_path: RefCell<Option<String>>,
+    point_handler: RefCell<Option<nwg::EventHandler>>,
     session: RefCell<Session>,
     view: RefCell<View>,
     nav_views: RefCell<Vec<(nwg::TreeItem, View)>>,
@@ -182,6 +186,9 @@ pub struct App {
 
 impl Drop for App {
     fn drop(&mut self) {
+        if let Some(handler) = self.point_handler.get_mut().take() {
+            nwg::unbind_event_handler(&handler);
+        }
         if let Some(handler) = self.handler.get_mut().take() {
             nwg::unbind_event_handler(&handler);
         }
@@ -190,8 +197,13 @@ impl Drop for App {
 
 impl App {
     fn build() -> Result<Rc<Self>, nwg::NwgError> {
+        let c = Controls::build()?;
+        let points = PointEditor::build(&c.window)?;
         let app = Rc::new(Self {
-            c: Controls::build()?,
+            c,
+            points,
+            point_path: Default::default(),
+            point_handler: Default::default(),
             session: Default::default(),
             view: RefCell::new(View::Settings(None)),
             rows: Default::default(),
@@ -208,9 +220,48 @@ impl App {
                 }
             });
         app.handler.replace(Some(handler));
+        let weak = Rc::downgrade(&app);
+        let handler =
+            nwg::full_bind_event_handler(&app.points.window.handle, move |event, data, source| {
+                if let Some(app) = weak.upgrade() {
+                    app.point_event(event, data, source);
+                }
+            });
+        app.point_handler.replace(Some(handler));
         app.c.layout(&app.view.borrow());
         app.navigation(View::Settings(None));
         Ok(app)
+    }
+
+    fn point_event(&self, event: nwg::Event, data: nwg::EventData, source: nwg::ControlHandle) {
+        let d = &self.points;
+        let close = match event {
+            nwg::Event::OnWindowClose if source == d.window.handle => {
+                if let nwg::EventData::OnWindowClose(action) = data {
+                    action.close(false);
+                }
+                true
+            }
+            nwg::Event::OnButtonClick if source == d.cancel.handle => true,
+            nwg::Event::OnButtonClick if source == d.stage.handle => {
+                let Some(path) = self.point_path.borrow().clone() else {
+                    return;
+                };
+                let result = encode_rows(&d.input.text())
+                    .and_then(|v| self.session.borrow_mut().stage_points(&path, v));
+                if let Err(error) = result {
+                    d.feedback.set_text(&error);
+                    return;
+                }
+                self.refresh_staging();
+                true
+            }
+            _ => false,
+        };
+        if close {
+            self.point_path.take();
+            d.hide(&self.c.window);
+        }
     }
 
     fn event(&self, evt: nwg::Event, data: nwg::EventData, source: nwg::ControlHandle) {
@@ -436,7 +487,18 @@ impl App {
         let s = self.session.borrow();
         let target = self.target();
         let is_field = matches!(target, Some(Target::Field(_)));
-        c.first_label.set_text(if is_field {
+        let point_field = match &target {
+            Some(Target::Field(path)) => s.point_field(path),
+            _ => None,
+        };
+        c.stage.set_text(if point_field.is_some() {
+            "Edit points…"
+        } else {
+            "Stage change"
+        });
+        c.first_label.set_text(if point_field.is_some() {
+            "Curve points"
+        } else if is_field {
             "Proposed value"
         } else {
             "Physical ID (hex)"
@@ -444,38 +506,49 @@ impl App {
         c.second_label.set_visible(!is_field);
         c.second.set_visible(!is_field);
         let (first_editable, second_editable) = match &target {
-            Some(Target::Sensor(slot)) => s
-                .ids(*slot)
-                .map(|(physical, app)| {
+            Some(Target::Sensor(slot)) => {
+                if let Some((physical, app)) = s.ids(*slot) {
                     c.first.set_text(&format!("{physical:02X}"));
                     c.second.set_text(&format!("{app:04X}"));
                     let permissions = s.id_permissions(*slot);
-                    if !permissions.1 && permissions.0 {
-                        c.status.set_text("Physical ID is editable. Application ID is read only because its sensor definition has no verified ID substitution.");
-                    } else if !permissions.0 && permissions.1 {
-                        c.status.set_text("Application ID is editable. The codec marks this Physical ID as read only.");
-                    } else if permissions.0 && permissions.1 {
-                        c.status.set_text("Edit the sensor IDs in hexadecimal, then choose Stage change.");
-                    }
+                    let help = match permissions {
+                        (true, false) => concat!("Physical ID is editable. ",
+                            "No replacement Application ID has been verified for this sensor family."),
+                        (false, true) => "Application ID is editable. Physical ID is read only.",
+                        (true, true) => "Edit the sensor IDs in hexadecimal, then choose Stage change.",
+                        (false, false) => "Both sensor IDs are read only.",
+                    };
+                    c.status.set_text(help);
                     permissions
-                })
-                .unwrap_or((false,false)),
+                } else {
+                    (false, false)
+                }
+            }
+            Some(Target::Field(_)) if point_field.is_some() => {
+                c.first.set_text("Ordered point list");
+                c.status
+                    .set_text("Choose Edit points to change coordinates or the point count.");
+                (false, false)
+            }
             Some(Target::Field(path)) => {
                 c.first.set_text(&s.field_value(path).unwrap_or_default());
                 if let Some(field) = s.field(path) {
                     c.status.set_text(&Session::field_help(field));
-                    (field.editable,false)
-                } else {(false,false)}
+                    (field.editable, false)
+                } else {
+                    (false, false)
+                }
             }
             None => {
                 c.first.set_text("");
                 c.second.set_text("");
-                (false,false)
+                (false, false)
             }
         };
         c.first.set_enabled(first_editable);
         c.second.set_enabled(second_editable);
-        c.stage.set_enabled(first_editable || second_editable);
+        c.stage
+            .set_enabled(first_editable || second_editable || point_field.is_some());
         c.inspect.set_enabled(is_field);
         c.undo
             .set_enabled(target.as_ref().is_some_and(|t| s.has_edit(t)));
@@ -548,6 +621,20 @@ impl App {
         }
     }
     fn stage_selected(&self) {
+        if let Some(Target::Field(path)) = self.target() {
+            let s = self.session.borrow();
+            if let Some(field) = s.point_field(&path) {
+                if let Err(error) = self.points.show(
+                    &self.c.window,
+                    &s.field_value(&field.path).unwrap_or_default(),
+                ) {
+                    self.error(&error);
+                } else {
+                    self.point_path.replace(Some(field.path.clone()));
+                }
+                return;
+            }
+        }
         let result = match self.target() {
             Some(Target::Sensor(slot)) => {
                 self.session
@@ -564,6 +651,9 @@ impl App {
             self.error(&e);
             return;
         }
+        self.refresh_staging();
+    }
+    fn refresh_staging(&self) {
         let view = self.view.borrow().clone();
         let query = self.c.search.text();
         self.navigation(view);

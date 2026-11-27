@@ -258,4 +258,32 @@ print("FX",ch:center(),ch:min(),ch:max(),ch:direction())`),
     'channels.1.limitMax': 150, 'channels.1.invert': true },
 };
 
-module.exports = { cases: [...cases, ...structureCases, ...extraCases, extraServo, outputLimits], variantKeys };
+function mixedTelemetry(id, swapped) {
+  const names = swapped ? ['Bench current', 'Bench DIY'] : ['Bench DIY', 'Bench current'];
+  const precision = swapped ? 2 : 1;
+  const diy = swapped ? 1 : 0;
+  return {
+    id, compare: swapped ? 'mixed-telemetry-before' : 'default',
+    description: swapped ? 'Create the same two sensors in reverse order and set the DIY display to 2 decimals.'
+      : 'Create a DIY sensor with 1 decimal followed by a named S.Port sensor.',
+    fixture:tool(`for _,name in ipairs({"${names[0]}","${names[1]}"}) do
+  local sensor
+  if name=="Bench DIY" then
+    sensor=assert(model.createSensor({type=SENSOR_TYPE_DIY,appId=0x0100,physId=2}))
+    sensor:decimals(${precision})
+  else
+    sensor=assert(model.createSensor({type=SENSOR_TYPE_SPORT,appId=0x6803,subId=0,physId=3,band=1}))
+  end
+  sensor:name(name)
+  print("FX",sensor:name(),sensor:member(),sensor:decimals())
+end`),
+    readback:{'telemetry.sensors.length':2, 'telemetry.sensors.0.name':names[0],
+      'telemetry.sensors.1.name':names[1], [`telemetry.sensors.${diy}.displayDecimals`]:precision,
+      [`telemetry.sensors.${1-diy}.key.appId`]:0x6803},
+  };
+}
+
+module.exports = { cases: [...cases, ...structureCases, ...extraCases, extraServo, outputLimits,
+  ...require('./curves.cjs').curveCases(tool), ...require('./logic.cjs').logicCases,
+  mixedTelemetry('mixed-telemetry-before', false), mixedTelemetry('mixed-telemetry-after', true),
+  ...require('./variables.cjs').variableCases], variantKeys };

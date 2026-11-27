@@ -66,10 +66,27 @@ try {
             Add-PackageFile (Join-Path $project $doc) $doc
         }
         Add-PackageFile (Join-Path $project '../LICENSE') 'LICENSE.txt'
+        $corpus = Join-Path $project 'fixtures'
+        $manifestPath = Join-Path $corpus 'manifest.json'
+        $manifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
+        Add-PackageFile $manifestPath 'fixtures/manifest.json'
+        foreach ($fixture in $manifest.fixtures) {
+            if ($fixture.file -cnotmatch '^[a-z0-9][a-z0-9-]*\.bin$') {
+                throw "Invalid public fixture filename in manifest: $($fixture.file)"
+            }
+            $file = Join-Path $corpus $fixture.file
+            if ((Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ne $fixture.sha256) {
+                throw "Public fixture differs from its recorded digest: $($fixture.file)"
+            }
+            Add-PackageFile $file ("fixtures/" + $fixture.file)
+        }
+        foreach ($module in 'generate.cjs', 'cases.cjs', 'curves.cjs', 'logic.cjs', 'variables.cjs') {
+            Add-PackageFile (Join-Path $corpus $module) "fixtures/$module"
+        }
         foreach ($example in 'throttle-before.bin', 'throttle-after.bin', 'sensor-variants.bin') {
             Add-PackageFile (Join-Path $project "fixtures/$example") "examples/$example"
         }
-        foreach ($adapter in 'runtime.cjs', 'worker.cjs', 'validate.cjs') {
+        foreach ($adapter in 'runtime.cjs', 'runtime.test.cjs', 'worker.cjs', 'validate.cjs') {
             Add-PackageFile (Join-Path $project "simulator/$adapter") "simulator/$adapter"
         }
         foreach ($package in $metadata.packages | Where-Object source) {

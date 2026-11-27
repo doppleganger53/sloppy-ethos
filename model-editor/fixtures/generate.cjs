@@ -26,21 +26,23 @@ function changes(before, after) {
     beforePayloadSpan: [prefix, before.length - suffix], afterPayloadSpan: [prefix, after.length - suffix] };
 }
 
-function selectedCases(id) {
-  if (!id) return cases;
+function selectedCases(ids) {
+  if (!ids.length) return cases;
   const selected = new Set();
-  let current = id;
-  while (current) {
+  const pending = [...ids];
+  while (pending.length) {
+    const current = pending.pop();
+    if (!current || selected.has(current)) continue;
     const item = cases.find(candidate => candidate.id === current);
     if (!item) throw new Error(`Unknown fixture ${current}.`);
     selected.add(current);
-    current = item.compare;
+    pending.push(item.compare, item.seed);
   }
   return cases.filter(item => selected.has(item.id));
 }
 
-async function generate(runtimeDir, outputDir, oracleDir, settingsOracleDir, caseId) {
-  const experiments = selectedCases(caseId);
+async function generate(runtimeDir, outputDir, oracleDir, settingsOracleDir, caseIds) {
+  const experiments = selectedCases(caseIds);
   const runtime = resolveRuntime(runtimeDir);
   if (runtime.release !== '1.6.8') throw new Error('The legacy fixture generator requires the pinned ETHOS 1.6.8 runtime.');
   const oracle = oracleDir && resolveRuntime(oracleDir);
@@ -57,7 +59,9 @@ async function generate(runtimeDir, outputDir, oracleDir, settingsOracleDir, cas
     fixtures: [],
   };
   for (const item of experiments) {
-    const run = await runFirmware(runtime, { fixture: item.fixture });
+    const seed = item.seed && outputs.get(item.seed);
+    if (item.seed && !seed) throw new Error(`${item.id}: required seed ${item.seed} has not been generated.`);
+    const run = await runFirmware(runtime, { input: seed, fixture: item.fixture });
     const bytes = canonicalFixture(run.saved);
     if (item.id === 'default' && !bytes.equals(run.original)) {
       throw new Error('A default model save changed bytes outside the independently identified runtime field.');
@@ -137,6 +141,10 @@ async function generate(runtimeDir, outputDir, oracleDir, settingsOracleDir, cas
       entry.compareWith = item.compare + '.bin';
       entry.changes = changes(outputs.get(item.compare), bytes);
     }
+    if (seed) {
+      entry.seed = item.seed + '.bin';
+      entry.seedSha256 = digest(seed);
+    }
     fs.writeFileSync(path.join(outputDir, entry.file), bytes, { flag: 'wx' });
     manifest.fixtures.push(entry);
     outputs.set(item.id, bytes);
@@ -147,13 +155,14 @@ async function generate(runtimeDir, outputDir, oracleDir, settingsOracleDir, cas
 
 if (require.main === module) {
   const args = process.argv.slice(2);
-  const caseId = args.at(-2) === '--case' ? args.splice(-2)[1] : undefined;
+  const caseIds = [];
+  while (args.at(-2) === '--case') caseIds.push(args.splice(-2)[1]);
   const [runtimeDir, outputDir, oracleDir, settingsOracleDir, extra] = args;
   if (!runtimeDir || !outputDir || extra) {
     console.error('Usage: node generate.cjs LEGACY_RUNTIME NEW_OUTPUT_DIR [26.1.2_RUNTIME] [26.2.0_RUNTIME] [--case ID]');
     process.exitCode = 1;
   } else {
-    generate(runtimeDir, outputDir, oracleDir, settingsOracleDir, caseId).catch(error => { console.error(error.message); process.exitCode = 1; });
+    generate(runtimeDir, outputDir, oracleDir, settingsOracleDir, caseIds).catch(error => { console.error(error.message); process.exitCode = 1; });
   }
 }
 

@@ -10,4 +10,5 @@ ethos-model = { path = "../ethos-model" }
 
 [target.'cfg(windows)'.dependencies]
 ethos-model-validation = { path = "../ethos-model-validation" }
-native-windows-gui = { version = "1.0.13", default-features = false, features = ["file-dialog", "high-dpi", "image-list", "list-view", "notice", "tree-view"] }
+serde_json.workspace = true
+native-windows-gui = { version = "1.0.13", default-features = false, features = ["file-dialog", "high-dpi", "image-list", "list-view", "notice", "textbox", "tree-view"] }

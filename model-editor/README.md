@@ -13,6 +13,12 @@ To try it with synthetic data, open `examples/throttle-after.bin` as the current
 
 Settings and differences follow the [FrSky Model Setup menu order](https://ethos-doc.frsky-rc.com/model-setup/overview/). File metadata and opaque regions appear after the radio's settings.
 
+To edit a custom response curve, select its point list or a coordinate under **Curves**, then choose **Edit points…**. Enter one `X, Y` pair per line, or enter one Y per line to space X evenly. **Stage points** checks the coordinates. **Preview edits** shows the revised list before you save a copy.
+
+For ordered fields, the proposed value starts with the current list. For example, setting `curves.order` to `[1,0]` swaps the first two curves in a two-curve model. The preview shows the resulting reference changes. A timer audio action list can contain an entry such as `[{"type":"countdown_value","start":10,"step":30,"haptic":true}]`. The `fixtures/` folder in the ZIP contains the public source models and their firmware-verified values.
+
+In **Variables**, a conditional rate can be entered as `[{"condition":"SA Up","value":3}]` and an action as `[{"condition":"FS1","function":"Add","source":3}]`. The tested radio displays these literal values as 0.3. Keep the rows in the order in which the radio should evaluate them.
+
 The ID shown by the backup is a comparison value. Choose repair values from your actual sensor configuration.
 
 ## Support
@@ -20,7 +26,7 @@ The ID shown by the backup is a comparison value. Choose repair values from your
 | Target | Supported workflow |
 | --- | --- |
 | Windows x64 | Native desktop browser, diff, staging and copy export |
-| FrSky X20 Pro AW FCC, model format `0.1.37` | Offline operations on structures verified in the [format and fixture matrix](FORMAT.md) |
+| FrSky X20 Pro AW FCC plane models, format `0.1.37` | Offline operations on structures verified in the [format and fixture matrix](FORMAT.md) |
 | Existing S.Port telemetry | Physical IDs `00–1B`. Verified servo sensors accept same-family Application IDs `6800–6803`. The editor displays each field's edit capability. |
 | Optional simulator read-back | ETHOS 1.6.8 preserves `0.1.37`. ETHOS 26.1.2 converts to `0.2.22` and 26.2.0 converts to `0.2.29` in disposable storage. |
 | Other model boards or formats | The editor reports the unsupported target when opening it |
@@ -30,7 +36,7 @@ Opaque sections are available in the byte inspector. The available edit controls
 
 The bundled `examples/sensor-variants.bin` illustrates sensors with editable Physical IDs and read-only Application IDs.
 
-The unpacked x64 build was exercised on Windows build 26300, with Windows system directories as the applications' only PATH entries. The native Open, Compare and Save dialogs produced the same bytes as the CLI for a servo ID repair, a Physical-only repair and a variable-length model rename. The optional Validate in ETHOS action reopened an exported copy in the 1.6.8 FCC simulator. A separate hosted Windows job repeats the portable test for each proposed release.
+The unpacked x64 build was exercised on Windows build 26300, with Windows system directories as the applications' only PATH entries. The native Open, Compare and Save dialogs produced the same bytes as the CLI for a servo ID repair, a Physical-only repair and a variable-length model rename. The optional Validate in ETHOS action reopened an exported copy in the 1.6.8 FCC simulator. The telemetry and model-name workflow also passed on a fresh hosted Windows runner at commit `9e30bab`. [Hosted Windows package test](https://github.com/doppleganger53/sloppy-ethos/actions/runs/46083504678/job/140788083638)
 
 ## Optional firmware read-back
 
@@ -66,4 +72,4 @@ python packaging/smoke.py C:\scratch\editor fixtures
 
 The smoke test also checks unsupported-format reporting. Supply `--runtime C:\sim\X20PROAW-FCC-1.6.8` to test the optional validation button using a separately installed Node.js.
 
-Desktop builds run in the dedicated **ETHOS model editor** workflow. A tag of the form `ethos-model-editor-v<VERSION>` prepares a draft desktop release after the package, portable codec and Windows package smoke jobs pass.
+Desktop builds run in the dedicated **ETHOS model editor** workflow. A tag of the form `ethos-model-editor-v<VERSION>` prepares a draft desktop release after the package, portable codec and Windows package smoke jobs pass. A rerun can refresh an existing draft. If the release has already been published, its assets are preserved.

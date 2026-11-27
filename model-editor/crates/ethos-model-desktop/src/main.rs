@@ -3,6 +3,8 @@
 #[cfg(windows)]
 mod native;
 #[cfg(windows)]
+mod point_editor;
+#[cfg(windows)]
 mod session;
 
 #[cfg(windows)]

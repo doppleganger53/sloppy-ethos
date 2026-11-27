@@ -4,7 +4,7 @@ The public fixtures were created from a fresh **X20 Pro AW FCC, ETHOS 1.6.8** ra
 
 ## Reproduce the corpus
 
-The reproduction commands and fixture links in this section use the source checkout. The Windows ZIP includes the two throttle examples under `examples/`.
+The reproduction commands and fixture links work from the source `model-editor` directory or the extracted Windows ZIP. The two throttle examples are also available under `examples/` in the ZIP.
 
 Download and extract FrSky's [1.6.8 X20 Pro AW FCC WebSimulator](https://github.com/FrSkyRC/ETHOS-Feedback-Community/releases/download/1.6.8/X20PROAW-FCC-WebSimulator.zip). The [26.1.2 WebSimulator](https://github.com/FrSkyRC/ETHOS-Feedback-Community/releases/download/26.1.2/X20PROAW-FCC-WebSimulator.zip) checks the saved telemetry through JSON. The [26.2.0 WebSimulator](https://github.com/FrSkyRC/ETHOS-Feedback-Community/releases/download/26.2.0/X20PROAW-FCC-WebSimulator.zip) also exposes mixes, functions, screens, and Lua registrations. With Node.js 20 or newer, run the generator from `model-editor` and supply a new output directory.
 
@@ -13,7 +13,7 @@ node fixtures/generate.cjs C:\sim\X20PROAW-FCC-1.6.8 C:\temp\ethos-fixtures C:\s
 node --test simulator/runtime.test.cjs
 ```
 
-Append `--case servo-addresses` to the generator command to reproduce a single case and its comparison baseline.
+Append `--case servo-addresses` to reproduce one case. Repeat `--case` to select several. The generator includes their comparison baselines and seed models automatically.
 
 The optional third and fourth arguments enable the independent read-back checks. The checked-in binaries and manifest can be regenerated with the legacy runtime alone. [Experiment definitions](fixtures/cases.cjs) use the matching firmware's published Lua API and native menus. The Lua registration step runs before the simulator reads the model. The generator opens the experiment tool after preflight. Every experiment starts with a new in-memory filesystem and waits for a model write on shutdown. The [runtime adapter](simulator/runtime.cjs) verifies the extracted JavaScript and WASM separately.
 
@@ -82,16 +82,26 @@ The following suffix sizes start after the reset source and include the two-byte
 
 ## Delivery and support by milestone
 
+### Curves, logical switches and variables
+
+| Native experiment | On-disk observation and read-back |
+| --- | --- |
+| Custom curves | After the packed offset and point count, the first byte is Easy mode and the next is Smooth. Easy mode stores Y only. Explicit X uses whole percentages and Y uses tenths. The native UI supports 2–21 points and endpoint X values of −100 and +100. Equal neighbouring X values make a step. ETHOS clamped requested Y values of ±125.5% to ±100%. [Curve experiments](fixtures/curves.cjs), [FrSky curve controls](https://ethos-doc.frsky-rc.com/model-setup/curves/) |
+| Curve selectors and dependencies | A free mix used its default curve and an FS1 conditional curve. Native movement from slot 0 to slots 1 and 4 changed both stored selectors from 2 to 3 and 6. Removing the referenced curve cleared both selectors to zero while keeping the condition and the other curves. Inline Expo uses selector 1 followed by a packed operand. The existing curve also retained its mix reference when resized 3 → 5 → 2 points. |
+| Expo and function curves | Expo offset uses tenths, exponent and weight use whole units. The corpus exercises signed ±125 for exponent/weight and ±125.5% for offset. Seven function menu selections are recorded. Calling the 1.6.8 Lua Expo offset setter on another curve type changes it to Expo. |
+| Logical switches | Native controls verify equality, greater/less-than, Boolean AND/OR/XOR and timer generator. The Boolean functions use 2–9 source operands. SA, SB and FS1 have independent category/member references. The analog threshold menu gave −100% and +100%. The timer duration menu gave 0.1–175.0 seconds, stored in tenths. Inversion and the two delay fields have separate controlled captures. [Logical switch experiments](fixtures/logic.cjs) |
+| Variables | Each conditional rate stores its condition and value. The first eight action operators share the same framing. Repurpose adds an explicit trim source and step. The native step menu gave −1000 and +1000 raw units. Adding and removing the first of two rows preserved the remaining row. A variable can store up to 9 conditional rates and 10 actions on this firmware. [Variable experiments](fixtures/variables.cjs) |
+
 | Issue | Current evidence and scope |
 | --- | --- |
-| #124 · Fixtures | The generator and manifest cover 46 synthetic 1.6.8 model files. Tests check each file's digest, payload length, CRC and board. Independent runtime read-backs confirm the requested settings. |
+| #124 · Fixtures | The generator and manifest cover 101 synthetic 1.6.8 model files. Tests check each file's digest, payload length, CRC and board. Independent runtime read-backs confirm the requested settings. |
 | #125 · Codec and CLI | The offline reader opens X20 Pro AW format `0.1.37` plane models, walks supported structures and exposes typed paths, exact byte ranges and opaque data. A supported unchanged model serializes byte-for-byte. |
 | #126 · Comparison and repair | The four Application ID differences are reproducible in the public and local acceptance pairs. Selected repairs preserve independent bytes. The writer rejects new key conflicts and Application ID changes outside the demonstrated servo family `6800`–`6803`. |
 | #127 · Desktop | Windows x64 desktop and CLI share inspection, comparison, staging, validation and exclusive copy export. The package includes an example backup/current pair. |
-| #128 · Schema coverage | The structure table above lists the firmware-generated cases. Additional aircraft categories, extra trims, other RF protocols and trainer modes, more mix/curve/logic/function variants, conditional variable values/actions and further sensor variants need fixtures. The editor retains unverified bytes and identifies the affected structure. |
-| #129 · Same-format editing | Verified edits include names, channel center/limits/inversion, Fine/Medium trim step, compatible internal RF enable, free-mix weight, signed timer values, ordered timer audio actions, supported sensor IDs, checklist SA and failsafe fields, widget titles and Value-widget references. Eligible S.Port collections can be reordered or shortened with reference checks. Unresolved references or opaque dependency-bearing contents block collection edits. External Lua configuration payloads remain opaque. |
+| #128 · Schema coverage | The tables list verified plane-model variants. Extra trims, other RF protocols and trainer modes, further mix/logic/special-function and telemetry variants, and externally interpreted Lua data need additional evidence. Category-specific model prefixes require separate proof. |
+| #129 · Same-format editing | Editable fields include names, channel adjustments, compatible internal RF enable, free-mix settings, supported sensor IDs, timer values and ordered audio actions, eligible curve points and library order, supported logical-switch operations, variable rates/actions, checklist fields and widget references. The codec exposes write capability per field. Unknown source forms or opaque dependency-bearing data can block a particular edit. |
 | #130 · Optional validation | Real firmware loaded and resaved disposable copies in 1.6.8. Explicit tests of 26.1.2 and 26.2.0 detect conversions. Saved exports remain separate from disposable read-backs. |
-| #131 · Distribution | A separate Windows x64 ZIP and release workflow accompany the editor. Local native execution and hosted clean-Windows testing are different evidence. Hosted clean-runner results, public release publication and physical-radio trials are pending. |
+| #131 · Distribution | The packaged Windows workflow passed the hosted clean-runner smoke at commit `9e30bab`. The workflow exercises opening the examples, comparing, staging and exporting the repair through the GUI and packaged CLI. Public release publication and physical-radio trials are pending. [Hosted run](https://github.com/doppleganger53/sloppy-ethos/actions/runs/46083504678) |
 
 ## Optional firmware read-back
 

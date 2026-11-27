@@ -2,13 +2,13 @@
 use super::{legacy::Cursor, EditFormat, Field, Result, Value};
 type Fields = Vec<Field>;
 
-fn byte(c: &mut Cursor<'_>, f: &mut Fields, section: &str, path: &str) -> Result<u8> {
+pub(crate) fn byte(c: &mut Cursor<'_>, f: &mut Fields, section: &str, path: &str) -> Result<u8> {
     let p = c.pos;
     let n = c.byte()?;
     f.push(Field::number(section, path, p..c.pos, n));
     Ok(n)
 }
-fn label(
+pub(crate) fn label(
     c: &mut Cursor<'_>,
     f: &mut Fields,
     section: &str,
@@ -28,12 +28,18 @@ fn label(
     });
     Ok(())
 }
-fn source(c: &mut Cursor<'_>, f: &mut Fields, section: &str, path: &str) -> Result<()> {
+pub(crate) fn source(c: &mut Cursor<'_>, f: &mut Fields, section: &str, path: &str) -> Result<()> {
     let (r, v, s) = c.source()?;
     f.push(Field::new(section, path, r, v, s, false));
     Ok(())
 }
-fn count(c: &mut Cursor<'_>, f: &mut Fields, section: &str, path: &str, max: u16) -> Result<usize> {
+pub(crate) fn count(
+    c: &mut Cursor<'_>,
+    f: &mut Fields,
+    section: &str,
+    path: &str,
+    max: u16,
+) -> Result<usize> {
     c.path = path.into();
     let p = c.pos;
     let n = c.count(max)?;
@@ -45,13 +51,19 @@ fn count(c: &mut Cursor<'_>, f: &mut Fields, section: &str, path: &str, max: u16
     ));
     Ok(n)
 }
-fn fixed(c: &mut Cursor<'_>, f: &mut Fields, section: &str, path: &str, n: usize) -> Result<()> {
+pub(crate) fn fixed(
+    c: &mut Cursor<'_>,
+    f: &mut Fields,
+    section: &str,
+    path: &str,
+    n: usize,
+) -> Result<()> {
     let p = c.pos;
     c.bytes(n)?;
     f.push(Field::opaque(section, path, p..c.pos));
     Ok(())
 }
-fn expected(c: &mut Cursor<'_>, n: u8) -> Result<()> {
+pub(crate) fn expected(c: &mut Cursor<'_>, n: u8) -> Result<()> {
     let actual = c.byte()?;
     if actual != n {
         return Err(c.unsupported(&format!("expected record tag {n:02X}, found {actual:02X}")));
@@ -69,7 +81,11 @@ fn curve_reference(c: &mut Cursor<'_>) -> Result<()> {
     Ok(())
 }
 
-pub(super) fn decode(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
+pub(super) fn decode(
+    c: &mut Cursor<'_>,
+    f: &mut Fields,
+    curves: &mut Vec<std::ops::Range<usize>>,
+) -> Result<()> {
     c.path = "model".into();
     let kind = byte(c, f, "Model", "model.type")?;
     byte(c, f, "Model", "model.category_options")?;
@@ -189,9 +205,9 @@ pub(super) fn decode(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
     rf(c, f)?;
     flight_modes(c, f)?;
     mixes(c, f)?;
-    curves(c, f)?;
-    logic(c, f)?;
-    variables(c, f)?;
+    super::curves::decode(c, f, curves)?;
+    super::logic::switches(c, f)?;
+    super::variables::decode(c, f)?;
     functions(c, f)?;
     c.path = "trainer".into();
     let v = byte(c, f, "Trainer", "trainer.mode")?;
@@ -211,7 +227,7 @@ pub(super) fn decode(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
     timers(c, f)
 }
 
-fn enumeration(
+pub(crate) fn enumeration(
     section: &str,
     path: impl Into<String>,
     range: std::ops::Range<usize>,
@@ -231,7 +247,7 @@ fn enumeration(
         false,
     )
 }
-fn on_off(
+pub(crate) fn on_off(
     c: &mut Cursor<'_>,
     f: &mut Fields,
     section: &str,
@@ -258,9 +274,10 @@ fn on_off(
     });
     Ok(())
 }
-fn channel_percent(
+pub(crate) fn percent_source(
     c: &mut Cursor<'_>,
     f: &mut Fields,
+    section: &str,
     path: &str,
     minimum: i16,
     maximum: i16,
@@ -270,7 +287,7 @@ fn channel_percent(
         Value::Integer(raw) => {
             let value = format!("{}%", raw as f64 / 10.0);
             let f0 = Field::new(
-                "Outputs",
+                section,
                 path,
                 range,
                 Value::FixedPoint { raw, scale: 10 },
@@ -285,7 +302,7 @@ fn channel_percent(
                 },
             );
         }
-        _ => f.push(Field::new("Outputs", path, range, typed, display, false)),
+        _ => f.push(Field::new(section, path, range, typed, display, false)),
     }
     Ok(())
 }
@@ -321,9 +338,9 @@ fn channels(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
                 for name in ["offset_1", "offset_2"] {
                     source(c, f, "Outputs", &format!("{path}.{name}"))?;
                 }
-                channel_percent(c, f, &format!("{path}.limit_max"), 0, 1500)?;
-                channel_percent(c, f, &format!("{path}.limit_min"), -1500, 0)?;
-                channel_percent(c, f, &format!("{path}.center"), -1000, 1000)?;
+                percent_source(c, f, "Outputs", &format!("{path}.limit_max"), 0, 1500)?;
+                percent_source(c, f, "Outputs", &format!("{path}.limit_min"), -1500, 0)?;
+                percent_source(c, f, "Outputs", &format!("{path}.center"), -1000, 1000)?;
                 let p = c.pos;
                 c.bytes(3)?;
                 curve_reference(c)?;
@@ -485,14 +502,17 @@ fn free_mix(c: &mut Cursor<'_>, f: &mut Fields, path: &str) -> Result<()> {
         source(c, f, "Mixes", &format!("{action}.active_condition"))?;
         match variant {
             0 => {
-                let p = c.pos;
-                curve_reference(c)?;
-                operand_list(c)?;
-                f.push(Field::opaque(
-                    "Mixes",
-                    format!("{action}.curve_parameters"),
-                    p..c.pos,
-                ));
+                super::curves::reference(c, f, &format!("{action}.curve.default"))?;
+                let n = count(c, f, "Mixes", &format!("{action}.curve.rates"), 120)?;
+                for k in 0..n {
+                    super::curves::reference(c, f, &format!("{action}.curve.rates[{k}].curve"))?;
+                    source(
+                        c,
+                        f,
+                        "Mixes",
+                        &format!("{action}.curve.rates[{k}].condition"),
+                    )?;
+                }
             }
             1 => {
                 let (r, v, s) = c.source()?;
@@ -603,91 +623,12 @@ fn mixes(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
             }
             _ => return Err(c.unsupported(&format!("mix key {key}"))),
         }
-        f.push(Field::opaque(
-            "Mixes",
-            format!("{path}.parameters"),
-            p..c.pos,
-        ));
-    }
-    Ok(())
-}
-fn curves(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
-    for i in 0..count(c, f, "Curves", "curves", 50)? {
-        let path = format!("curves[{i}]");
-        c.path = path.clone();
-        expected(c, 0)?;
-        label(c, f, "Curves", &format!("{path}.name"), true)?;
-        let kind = byte(c, f, "Curves", &format!("{path}.type"))?;
-        if kind == 0 {
-            continue;
-        }
-        if kind != 3 {
-            return Err(c.unsupported("curve shape"));
-        }
-        source(c, f, "Curves", &format!("{path}.offset"))?;
-        let n = byte(c, f, "Curves", &format!("{path}.points.count"))?;
-        byte(c, f, "Curves", &format!("{path}.smooth"))?;
-        let custom = byte(c, f, "Curves", &format!("{path}.custom_x"))?;
-        if custom > 1 {
-            return Err(c.unsupported("curve coordinates"));
-        }
-        for j in 0..n {
-            if custom == 1 {
-                source(c, f, "Curves", &format!("{path}.points[{j}].x"))?;
-            }
-            source(c, f, "Curves", &format!("{path}.points[{j}].y"))?;
-        }
-    }
-    Ok(())
-}
-fn logic(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
-    for i in 0..count(c, f, "Logic switches", "logic_switches", 100)? {
-        let path = format!("logic_switches[{i}]");
-        c.path = path.clone();
-        let p = c.pos;
-        let k = c.byte()?;
-        f.push(enumeration(
-            "Logic switches",
-            format!("{path}.key"),
-            p..c.pos,
-            k.into(),
-            match k {
-                1 => Some("Around"),
-                9 => Some("Range"),
-                _ => None,
-            },
-        ));
-        if !matches!(k, 1 | 9) {
-            return Err(c.unsupported("logic switch key"));
-        }
-        expected(c, 1)?;
-        fixed(c, f, "Logic switches", &format!("{path}.timing"), 8)?;
-        let n = c.count(64)?;
-        for j in 0..n {
-            source(c, f, "Logic switches", &format!("{path}.values[{j}]"))?;
-        }
-        source(c, f, "Logic switches", &format!("{path}.active_condition"))?;
-        label(c, f, "Logic switches", &format!("{path}.name"), true)?;
-        fixed(c, f, "Logic switches", &format!("{path}.flags"), 3)?;
-        label(c, f, "Logic switches", &format!("{path}.comment"), false)?;
-    }
-    Ok(())
-}
-fn variables(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
-    for i in 0..count(c, f, "Variables", "variables", 64)? {
-        let path = format!("variables[{i}]");
-        c.path = path.clone();
-        expected(c, 0)?;
-        label(c, f, "Variables", &format!("{path}.name"), true)?;
-        label(c, f, "Variables", &format!("{path}.comment"), false)?;
-        source(c, f, "Variables", &format!("{path}.default"))?;
-        if c.word()? != 0 {
-            return Err(c.unsupported("variable conditional values"));
-        }
-        source(c, f, "Variables", &format!("{path}.minimum"))?;
-        source(c, f, "Variables", &format!("{path}.maximum"))?;
-        if c.word()? != 0 {
-            return Err(c.unsupported("variable actions"));
+        if key != 1 {
+            f.push(Field::opaque(
+                "Mixes",
+                format!("{path}.parameters"),
+                p..c.pos,
+            ));
         }
     }
     Ok(())

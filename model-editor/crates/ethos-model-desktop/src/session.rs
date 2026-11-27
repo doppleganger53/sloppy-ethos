@@ -493,10 +493,28 @@ impl Session {
                 Some(EditFormat::Boolean) => "Choose Up or Down".to_owned(),
                 Some(EditFormat::TimerSeconds) => "Whole seconds".to_owned(),
                 Some(EditFormat::TimerActions) => {
-                    "Enter an ordered JSON array of timer actions".to_owned()
+                    "Edit the ordered list of timer audio actions. An empty list [] clears the actions.".to_owned()
                 }
+                Some(EditFormat::LogicInputs) => "Enter 2–9 switch names as a JSON array, using null for an empty input".to_owned(),
+                Some(EditFormat::VariableRates) => r#"Use up to 9 rows, for example [{"condition":"SA Up","value":3}]. Stored value 3 is 0.3%."#.to_owned(),
+                Some(EditFormat::VariableActions) => r#"Use up to 10 rows, for example [{"condition":"FS1","function":"Add","source":3}]."#.to_owned(),
+                Some(EditFormat::TrimTarget) => "Enter Trim N using an existing trim slot, starting at 0".to_owned(),
+                Some(EditFormat::VariableFunction) => "Choose Assign, Add, Subtract, Multiply, Divide, Percent, Min, or Max".to_owned(),
+                Some(EditFormat::LogicComparison) => "Choose Equal, Greater or Less".to_owned(),
+                Some(EditFormat::LogicCombinator) => "Choose AND, OR or XOR".to_owned(),
+                Some(EditFormat::LogicInput) => "Choose a switch position such as SA Up, FS1, or None".to_owned(),
+                Some(EditFormat::TimerInterval) => "Enter 0.1 to 175.0 seconds in tenths".to_owned(),
+                Some(EditFormat::CurveSelector) => "Choose None, Expo N or Curve slot N".to_owned(),
+                Some(EditFormat::CurvePoints) => {
+                    "Choose Edit points to change the coordinates or the point count".to_owned()
+                }
+                Some(EditFormat::CurveFunction) => {
+                    "Choose None, x>0, x<0, |x|, f>0, f<0, or |f|".to_owned()
+                }
+                None if field.path == "curves.order" => concat!("Arrange zero-based curve slots, for example [1,0]. ",
+                    "Omitting a curve removes it and clears its references.").to_owned(),
                 None if field.path == "telemetry.sensors.order" => {
-                    "Enter a JSON array of existing sensor slots in the desired order".to_owned()
+                    "Arrange zero-based sensor slots, for example [1,0]. Referenced sensors must stay in the list.".to_owned()
                 }
                 None if field.path.starts_with("screens[") && field.path.ends_with(".source") => {
                     "Choose None, Timer N, or Telemetry N using a zero-based slot".to_owned()
@@ -526,6 +544,34 @@ impl Session {
             .get(path)
             .map(|f| f.value.clone())
             .or_else(|| self.field(path).map(|f| f.value.clone()))
+    }
+    pub fn point_field(&self, selected: &str) -> Option<&Field> {
+        let field = if let Some((curve, _)) = selected.split_once(".points[") {
+            self.field(&format!("{curve}.points"))
+        } else {
+            self.field(selected)
+        }?;
+        (field.editable && field.encoding == Some(EditFormat::CurvePoints)).then_some(field)
+    }
+
+    pub fn stage_points(&mut self, path: &str, value: String) -> Result<(), String> {
+        let current = self.current.as_ref().ok_or("Open a model first.")?;
+        let edit = FieldEdit {
+            path: path.into(),
+            value,
+        };
+        let changes = current
+            .model
+            .preview_fields(&[], std::slice::from_ref(&edit))
+            .map_err(|e| e.to_string())?;
+        if changes.is_empty() {
+            self.fields.remove(path);
+            self.unsaved = self.has_edits();
+            return Ok(());
+        }
+        // A grid/count change can reuse the exact stored coordinate bytes.
+        // Stage the validated request even when the point payload has no diff.
+        self.stage_field(path, &edit.value)
     }
     pub fn stage_field(&mut self, path: &str, value: &str) -> Result<(), String> {
         let field = self
@@ -742,6 +788,32 @@ mod tests {
             fs::remove_file(path).unwrap();
         }
         fs::remove_dir(directory).unwrap();
+    }
+
+    #[test]
+    fn switching_point_grid_can_reuse_the_entire_coordinate_payload() {
+        let mut session = Session::default();
+        session
+            .open(&fixture("curve-referenced.bin"), None)
+            .unwrap();
+        let field = "curves[0].points";
+        let old: serde_json::Value =
+            serde_json::from_str(&session.field(field).unwrap().value).unwrap();
+        let ordinates: Vec<f64> = old
+            .as_array()
+            .unwrap()
+            .iter()
+            .flat_map(|p| [p["x"].as_f64().unwrap() / 10.0, p["y"].as_f64().unwrap()])
+            .collect();
+        session
+            .stage_points(field, serde_json::to_string(&ordinates).unwrap())
+            .unwrap();
+        assert!(session.has_edit(&Target::Field(field.into())));
+        let changes = session.preview().unwrap();
+        assert!(changes
+            .iter()
+            .any(|c| c.path == "curves[0].easy_mode" && c.after == "On"));
+        assert!(changes.iter().any(|c| c.path == "curves[0].points.count"));
     }
 
     #[test]

@@ -48,10 +48,11 @@ impl<'a> Cursor<'a> {
         Ok((p..self.pos, s.into()))
     }
     pub fn unsupported(&self, why: &str) -> Error {
-        Error::Unsupported(format!(
-            "unsupported {} at 0x{:X}: {why}",
-            self.path, self.pos
-        ))
+        Error::Unsupported {
+            path: self.path.clone(),
+            offset: self.pos,
+            reason: why.into(),
+        }
     }
     pub fn source(&mut self) -> Result<(Range<usize>, Value, String)> {
         let p = self.pos;
@@ -337,15 +338,15 @@ pub(crate) fn decode(model: &mut Model) -> Result<()> {
     };
     let mut fields = Vec::new();
     let mut sensors = Vec::new();
-    let result = super::prefix::decode(&mut cur, &mut fields)
+    let result = super::prefix::decode(&mut cur, &mut fields, &mut model.curve_ranges)
         .and_then(|()| read_telemetry(&mut cur, &mut fields, &mut sensors));
-    match result {
+    let incomplete = match result {
         Ok(()) => {
-            match super::sections_after::decode(&mut cur, &mut fields) {
-                Ok(()) => {}
-                Err(e @ Error::Unsupported(_)) => model.warnings.push(e.to_string()),
+            let issue = match super::sections_after::decode(&mut cur, &mut fields) {
+                Ok(()) => None,
+                Err(e @ Error::Unsupported { .. }) => Some(e),
                 Err(e) => return Err(e),
-            }
+            };
             let through = fields.iter().map(|f| f.range.end).max().unwrap_or(cur.pos);
             if through < end {
                 fields.push(Field::opaque(
@@ -355,10 +356,10 @@ pub(crate) fn decode(model: &mut Model) -> Result<()> {
                 ));
             }
             model.sensors = sensors;
+            issue.map(|e| (e, through..end))
         }
-        Err(e @ Error::Unsupported(_)) => {
+        Err(e @ Error::Unsupported { .. }) => {
             // Incomplete record coverage cannot certify any slot or cross-record key conflicts.
-            model.warnings.push(e.to_string());
             fields.retain(|f| f.section != "Telemetry");
             for f in &mut fields {
                 f.editable = false;
@@ -371,8 +372,25 @@ pub(crate) fn decode(model: &mut Model) -> Result<()> {
                     through..end,
                 ));
             }
+            Some((e, through..end))
         }
         Err(e) => return Err(e),
+    };
+    if let Some((issue, bytes)) = incomplete {
+        model.warnings.push(issue.to_string());
+        if let Error::Unsupported {
+            path,
+            offset,
+            reason,
+        } = issue
+        {
+            model.unverified = Some(super::UnverifiedRegion {
+                path,
+                reason,
+                offset,
+                bytes,
+            });
+        }
     }
     let runtime = u32::from_le_bytes(model.bytes[end..end + 4].try_into().unwrap());
     fields.push(Field::number(

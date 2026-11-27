@@ -447,6 +447,41 @@ fn unchanged_indistinguishable_rows_do_not_create_a_false_difference() {
 }
 
 #[test]
+fn longer_label_keeps_unknown_widget_bytes_and_moves_its_warning() {
+    let mut raw = fixture("throttle-after");
+    let valid = Model::parse(&raw).unwrap();
+    let widget = valid
+        .fields()
+        .into_iter()
+        .find(|f| f.path == "screens[0].widgets[1].key")
+        .unwrap();
+    raw[widget.range.start] = 0xfe;
+    let model = Model::parse(&damaged(raw)).unwrap();
+    let before = model
+        .fields()
+        .into_iter()
+        .find(|f| f.path == "model.after_telemetry")
+        .unwrap();
+    let data = model
+        .serialize_fields(&[], &[field("model.name", "Bench longer")])
+        .unwrap();
+    let updated = Model::parse(&data).unwrap();
+    let after = updated
+        .fields()
+        .into_iter()
+        .find(|f| f.path == "model.after_telemetry")
+        .unwrap();
+    assert!(after.range.start > before.range.start);
+    assert_eq!(updated.raw(after.range), model.raw(before.range));
+    assert_eq!(updated.warnings().len(), 1);
+    assert!(updated.warnings()[0].contains("screens[0].widgets[1].key"));
+    assert!(updated
+        .fields()
+        .iter()
+        .any(|f| f.path == "model.name" && f.value == "Bench longer"));
+}
+
+#[test]
 fn concurrent_publish_never_replaces_output() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("one.bin");

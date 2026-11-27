@@ -1,11 +1,14 @@
 //! Same-format editing is enabled only for fields with a verified structural location.
 mod channel_edit;
 mod compare;
+mod curves;
 mod edit;
 mod legacy;
+mod logic;
 mod order;
 mod prefix;
 mod sections_after;
+mod variables;
 
 pub use compare::{compare, DiffKind, Difference};
 pub use edit::{Change, Edit, FieldEdit};
@@ -17,16 +20,23 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
     Invalid(String),
-    Unsupported(String),
+    Unsupported {
+        path: String,
+        offset: usize,
+        reason: String,
+    },
     Io(String),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Invalid(message) | Self::Unsupported(message) | Self::Io(message) => {
-                f.write_str(message)
-            }
+            Self::Unsupported {
+                path,
+                offset,
+                reason,
+            } => write!(f, "unsupported {path} at 0x{offset:X}: {reason}"),
+            Self::Invalid(message) | Self::Io(message) => f.write_str(message),
         }
     }
 }
@@ -43,6 +53,7 @@ impl From<std::io::Error> for Error {
 #[serde(tag = "type", content = "stored", rename_all = "snake_case")]
 pub enum Value {
     Integer(i64),
+    Array(Vec<serde_json::Value>),
     FixedPoint {
         raw: i64,
         scale: u32,
@@ -56,6 +67,10 @@ pub enum Value {
         category: u8,
         options: u8,
         member: u16,
+    },
+    Reference {
+        collection: String,
+        slot: usize,
     },
     Absent,
     Opaque,
@@ -72,6 +87,8 @@ pub struct Field {
     pub defaulted: bool,
     #[serde(skip)]
     projected: bool,
+    #[serde(skip)]
+    pub(crate) summary: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub encoding: Option<EditFormat>,
 }
@@ -79,6 +96,18 @@ pub struct Field {
 #[derive(Clone, Copy, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum EditFormat {
+    TrimTarget,
+    LogicInputs,
+    VariableRates,
+    VariableActions,
+    VariableFunction,
+    LogicComparison,
+    LogicCombinator,
+    LogicInput,
+    TimerInterval,
+    CurveSelector,
+    CurveFunction,
+    CurvePoints,
     InternalRf,
     Operand { minimum: i32, maximum: i32 },
     Percent { minimum: i16, maximum: i16 },
@@ -108,6 +137,7 @@ impl Field {
             editable,
             defaulted: false,
             projected: false,
+            summary: false,
             encoding: None,
         }
     }
@@ -123,6 +153,10 @@ impl Field {
     }
     pub(crate) fn projected(mut self) -> Self {
         self.projected = true;
+        self
+    }
+    pub(crate) fn summary(mut self) -> Self {
+        self.summary = true;
         self
     }
     pub(crate) fn opaque(section: &str, path: impl Into<String>, range: Range<usize>) -> Self {
@@ -182,8 +216,18 @@ impl Sensor {
 pub struct Model {
     bytes: Vec<u8>,
     sensors: Vec<Sensor>,
+    curve_ranges: Vec<Range<usize>>,
     fields: Vec<Field>,
     warnings: Vec<String>,
+    unverified: Option<UnverifiedRegion>,
+}
+
+#[derive(Clone, Debug)]
+struct UnverifiedRegion {
+    path: String,
+    reason: String,
+    offset: usize,
+    bytes: Range<usize>,
 }
 
 pub fn crc16(payload: &[u8]) -> u16 {
@@ -273,7 +317,9 @@ impl Model {
         let mut model = Self {
             bytes,
             sensors: Vec::new(),
+            curve_ranges: Vec::new(),
             warnings: Vec::new(),
+            unverified: None,
             fields: vec![
                 Field::new(
                     "File",
@@ -317,6 +363,7 @@ impl Model {
         legacy::decode(&mut model)?;
         model.describe_gaps();
         model.list_order();
+        model.list_curve_order();
         Ok(model)
     }
 
@@ -347,6 +394,9 @@ impl Model {
         self.fields.sort_by_key(|f| (f.range.start, f.range.end));
     }
 
+    pub fn field(&self, path: &str) -> Option<&Field> {
+        self.fields.iter().find(|f| f.path == path)
+    }
     pub fn fields(&self) -> Vec<Field> {
         self.fields.clone()
     }
