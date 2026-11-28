@@ -80,12 +80,12 @@ def choose_file(app, window, button, dialog_title, filename):
 
 def window_state(app):
     details = []
-    for window in app.windows(visible_only=True):
-        controls = [(c.class_name(), c.control_id(), c.window_text()[:240])
+    for window in app.windows(visible_only=True, enabled_only=False):
+        controls = [(c.class_name(), c.control_id(), c.is_enabled(), c.window_text()[:240])
                     for c in window.descendants()
                     if c.is_visible() and c.class_name() in {"Static", "Edit", "Button"}]
         details.append((window.window_text(), controls))
-    return f"Visible windows and controls: {details!r}"
+    return f"Visible windows and controls (class, id, enabled, text): {details!r}"
 
 
 def verify_bundled_evidence(package):
@@ -107,28 +107,60 @@ def verify_bundled_evidence(package):
             assert imported.is_relative_to(package) and imported.is_file(), f"Missing module for {script.name}: {relative}"
 
 
+def press_button(window, title):
+    button = window.child_window(title=title, class_name="Button")
+    button.wait("ready", timeout=10)
+    # Execute the native push-button action on its UI thread. Separate posted
+    # mouse-down/up messages can lose capture even after the button is enabled.
+    button.wrapper_object().send_message_timeout(win32defines.BM_CLICK, timeout=10)
+
+
+def curve_window_state(app, table):
+    if not app.is_process_running():
+        return "The editor process exited."
+    try:
+        windows = [(w.window_text(), w.is_visible(), w.is_enabled())
+                   for w in app.windows(visible_only=False, enabled_only=False)]
+        count = table.item_count()
+        selected = table.send_message(win32defines.LVM_GETNEXTITEM, -1, win32defines.LVNI_SELECTED)
+        field = table.get_item(selected).text() if 0 <= selected < count else None
+        return (f"Rows={count}, selected field={field!r}; windows (title, visible, enabled)={windows!r}. "
+                f"{window_state(app)}")
+    except Exception as error:
+        return f"Window inspection failed: {error!r}"
+
+
 def exercise_curve(launch, cli, package, scratch, env):
     original = package / "fixtures" / "curve-referenced.bin"
     app, window = launch(original)
     window.wait("visible", timeout=20)
     table = window.child_window(class_name="SysListView32").wrapper_object()
     search = min((e for e in window.descendants(class_name="Edit") if e.is_visible()), key=lambda e: e.rectangle().top)
-    search.set_edit_text("curves[0].points[1].y")
-    wait_for(lambda: rows(table),lambda rs: len(rs)==1,"curve coordinate")
-    table.get_item(0).select()
-    window.child_window(title="Edit points…",class_name="Button").click()
-    dialog=app.window(title="Curve points")
-    dialog.wait("visible", timeout=10)
-    coordinates=dialog.child_window(class_name="Edit")
-    assert len(coordinates.window_text().splitlines()) >= 2
+    path = "curves[0].points[1].y"
+    dialog = app.window(title="Curve points", visible_only=False)
+    try:
+        search.set_edit_text(path)
+        wait_for(lambda: rows(table), lambda rs: len(rs) == 1 and rs[0][0] == path, "curve coordinate")
+        item = table.get_item(0)
+        item.select()
+        wait_for(item.is_selected, bool, "selected curve coordinate")
+        press_button(window, "Edit points…")
+        dialog.wait("visible enabled", timeout=10)
+        assert not window.is_enabled(), "The curve editor did not disable its owner."
+        coordinates = dialog.child_window(class_name="Edit")
+        point_rows = [tuple(float(v) for v in line.split(",")) for line in coordinates.window_text().splitlines()]
+        assert point_rows == [(-100, -100), (22, 32), (100, 100)], f"Unexpected initial curve: {point_rows!r}"
+    except Exception as error:
+        raise AssertionError(f"Could not open the point list for {path}: {error!r}. "
+                             f"{curve_window_state(app, table)}") from error
     coordinates.set_edit_text("-100, -90\r\n-20, 101\r\n100, 80")
-    dialog.child_window(title="Stage points",class_name="Button").click()
+    press_button(dialog, "Stage points")
     wait_for(lambda: [c.window_text() for c in dialog.descendants(class_name="Static")],
              lambda messages: any("curves[0].points[1].y" in m for m in messages),"invalid curve coordinate")
     coordinates.set_edit_text("-100, -90\r\n-20, 12.5\r\n100, 80")
-    dialog.child_window(title="Stage points",class_name="Button").click()
+    press_button(dialog, "Stage points")
     dialog.wait_not("visible",timeout=10)
-    window.child_window(title="Preview edits",class_name="Button").click()
+    press_button(window, "Preview edits")
     wait_for(lambda: rows(table),lambda rs: any(r[0]=="curves[0].points" and "12.5" in r[2] for r in rs),
              "curve preview")
     output=scratch/"curve-gui.bin"
