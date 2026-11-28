@@ -22,7 +22,7 @@ references as the decoder consumes operands, including those within partially
 labelled records. Compare the retained reference stream and collection counts
 on codec read-back after shifting slots. Clear dependent widget slots while
 preserving their screen geometry. Opaque Lua objects and fixed settings can
-block deletion.
+block deletion. The dependency dialog shows one direction per tree and skips links back to ancestors.
 
 The public `layout-references.bin` fixture contains two distinct telemetry
 keys with the same label, plus a timer that reads sensor slot 1 and a Value

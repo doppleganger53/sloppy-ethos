@@ -210,18 +210,33 @@ impl Direction {
     }
 }
 
+fn children<'a>(
+    edges: &'a BTreeMap<String, BTreeSet<String>>,
+    object: &str,
+    ancestors: &'a BTreeSet<String>,
+) -> impl Iterator<Item = &'a String> {
+    edges
+        .get(object)
+        .into_iter()
+        .flatten()
+        .filter(|child| !ancestors.contains(*child))
+}
+
 struct Branch {
     item: nwg::TreeItem,
     placeholder: nwg::TreeItem,
     object: String,
     ancestors: BTreeSet<String>,
-    direction: Direction,
 }
 
 pub struct DependencyDialog {
     pub window: nwg::Window,
     pub tree: nwg::TreeView,
+    pub references: nwg::RadioButton,
+    pub referenced_by: nwg::RadioButton,
+    pub coverage: nwg::Button,
     pub close: nwg::Button,
+    root: RefCell<String>,
     graph: RefCell<Dependencies>,
     branches: RefCell<Vec<Branch>>,
 }
@@ -229,57 +244,84 @@ pub struct DependencyDialog {
 impl DependencyDialog {
     pub fn build(owner: &nwg::Window) -> Result<Self, nwg::NwgError> {
         let window = window(owner, "Dependencies", (650, 475))?;
+        let mut references = nwg::RadioButton::default();
+        let mut referenced_by = nwg::RadioButton::default();
+        nwg::RadioButton::builder()
+            .parent(&window)
+            .text("References")
+            .position((14, 12))
+            .size((115, 26))
+            .flags(
+                nwg::RadioButtonFlags::GROUP
+                    | nwg::RadioButtonFlags::TAB_STOP
+                    | nwg::RadioButtonFlags::VISIBLE,
+            )
+            .build(&mut references)?;
+        nwg::RadioButton::builder()
+            .parent(&window)
+            .text("Referenced by")
+            .position((141, 12))
+            .size((145, 26))
+            .build(&mut referenced_by)?;
         let mut tree = nwg::TreeView::default();
         nwg::TreeView::builder()
             .parent(&window)
-            .position((14, 12))
-            .size((618, 405))
+            .position((14, 45))
+            .size((618, 372))
             .build(&mut tree)?;
         Ok(Self {
+            coverage: button(&window, "Coverage…", (14, 429))?,
             close: button(&window, "Close", (508, 429))?,
             window,
             tree,
+            references,
+            referenced_by,
+            root: RefCell::default(),
             graph: RefCell::default(),
             branches: RefCell::default(),
         })
     }
 
     pub fn open(&self, owner: &nwg::Window, root: String, graph: Dependencies) {
+        self.coverage.set_visible(!graph.notes.is_empty());
+        self.root.replace(root);
+        self.graph.replace(graph);
+        self.references
+            .set_check_state(nwg::RadioButtonState::Checked);
+        self.referenced_by
+            .set_check_state(nwg::RadioButtonState::Unchecked);
+        self.refresh();
+        show(owner, &self.window);
+        self.tree.set_focus();
+    }
+
+    pub fn show_coverage(&self) {
+        nwg::modal_info_message(
+            &self.window,
+            "Dependency coverage",
+            &self.graph.borrow().notes.join("\n"),
+        );
+    }
+
+    fn direction(&self) -> Direction {
+        if self.referenced_by.check_state() == nwg::RadioButtonState::Checked {
+            Direction::Incoming
+        } else {
+            Direction::Outgoing
+        }
+    }
+
+    pub fn refresh(&self) {
         self.tree.clear();
         self.branches.borrow_mut().clear();
+        let graph = self.graph.borrow();
+        let root = self.root.borrow();
         let item = self
             .tree
             .insert_item(&graph.label(&root), None, nwg::TreeInsert::Root);
-        for (title, direction) in [
-            ("References", Direction::Outgoing),
-            ("Referenced by", Direction::Incoming),
-        ] {
-            let group = self
-                .tree
-                .insert_item(title, Some(&item), nwg::TreeInsert::Last);
-            self.add_children(
-                &graph,
-                &group,
-                &root,
-                &BTreeSet::from([root.clone()]),
-                direction,
-            );
-            self.tree.set_expand_state(&group, nwg::ExpandState::Expand);
-        }
-        if !graph.notes.is_empty() {
-            let notes =
-                self.tree
-                    .insert_item("Dependency coverage", Some(&item), nwg::TreeInsert::Last);
-            for note in &graph.notes {
-                self.tree
-                    .insert_item(note, Some(&notes), nwg::TreeInsert::Last);
-            }
-        }
-        self.graph.replace(graph);
+        self.add_children(&graph, &item, &root, &BTreeSet::from([root.clone()]));
         self.tree.set_expand_state(&item, nwg::ExpandState::Expand);
         self.tree.select_item(&item);
-        show(owner, &self.window);
-        self.tree.set_focus();
     }
 
     fn add_children(
@@ -288,38 +330,24 @@ impl DependencyDialog {
         parent: &nwg::TreeItem,
         root: &str,
         ancestors: &BTreeSet<String>,
-        direction: Direction,
     ) {
-        let edges = direction.edges(graph);
-        let Some(children) = edges.get(root) else {
-            self.tree
-                .insert_item("None", Some(parent), nwg::TreeInsert::Last);
-            return;
-        };
-        for object in children {
-            let mut text = graph.label(object);
-            if ancestors.contains(object) {
-                text.push_str(" — cycle");
+        let edges = self.direction().edges(graph);
+        for object in children(edges, root, ancestors) {
+            let item =
                 self.tree
-                    .insert_item(&text, Some(parent), nwg::TreeInsert::Last);
-            } else {
-                let item = self
+                    .insert_item(&graph.label(object), Some(parent), nwg::TreeInsert::Last);
+            let mut ancestors = ancestors.clone();
+            ancestors.insert(object.clone());
+            if children(edges, object, &ancestors).next().is_some() {
+                let placeholder = self
                     .tree
-                    .insert_item(&text, Some(parent), nwg::TreeInsert::Last);
-                if edges.contains_key(object) {
-                    let placeholder =
-                        self.tree
-                            .insert_item("…", Some(&item), nwg::TreeInsert::Last);
-                    let mut ancestors = ancestors.clone();
-                    ancestors.insert(object.clone());
-                    self.branches.borrow_mut().push(Branch {
-                        item,
-                        placeholder,
-                        object: object.clone(),
-                        ancestors,
-                        direction,
-                    });
-                }
+                    .insert_item("…", Some(&item), nwg::TreeInsert::Last);
+                self.branches.borrow_mut().push(Branch {
+                    item,
+                    placeholder,
+                    object: object.clone(),
+                    ancestors,
+                });
             }
         }
     }
@@ -338,9 +366,26 @@ impl DependencyDialog {
                 item,
                 &branch.object,
                 &branch.ancestors,
-                branch.direction,
             );
             self.tree.remove_item(&branch.placeholder);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_branch_omits_its_ancestors_and_keeps_other_leaves() {
+        let edges = BTreeMap::from([(
+            "second".to_owned(),
+            BTreeSet::from(["root".to_owned(), "second".to_owned(), "third".to_owned()]),
+        )]);
+        let ancestors = BTreeSet::from(["root".to_owned(), "second".to_owned()]);
+        assert_eq!(
+            children(&edges, "second", &ancestors).collect::<Vec<_>>(),
+            ["third"]
+        );
     }
 }

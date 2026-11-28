@@ -324,7 +324,10 @@ def exercise_sensor_management(launch, cli, package, scratch, env, runtime):
     select_setting(table, search, "timers[0].start_condition")
     dialog = open_dependencies(app, window, table, 0)
     graph = dialog.child_window(class_name="SysTreeView32").wrapper_object()
-    assert graph.get_item(["Ref timer (timers[0])", "References", "Repeated (telemetry.sensors[1])"])
+    root = ["Ref timer (timers[0])"]
+    assert [node.text() for node in graph.get_item(root).children()] == ["Repeated (telemetry.sensors[1])"]
+    press_button(dialog, "Referenced by")
+    assert [node.text() for node in graph.get_item(root).children()] == ["screens[0].widgets[1]"]
     press_button(dialog, "Close")
 
     tree = window.child_window(class_name="SysTreeView32").wrapper_object()
@@ -333,7 +336,9 @@ def exercise_sensor_management(launch, cli, package, scratch, env, runtime):
     assert table.item_count() == 2
     dialog = open_dependencies(app, window, table, 1)
     graph = dialog.child_window(class_name="SysTreeView32").wrapper_object()
-    timer = graph.get_item(["Repeated (telemetry.sensors[1])", "Referenced by", "Ref timer (timers[0])"])
+    assert graph.get_item(["Repeated (telemetry.sensors[1])"]).children() == []
+    press_button(dialog, "Referenced by")
+    timer = graph.get_item(["Repeated (telemetry.sensors[1])", "Ref timer (timers[0])"])
     timer.expand()
     wait_for(lambda: [node.text() for node in timer.children()],
              lambda children: "screens[0].widgets[1]" in children, "indirect dependency")

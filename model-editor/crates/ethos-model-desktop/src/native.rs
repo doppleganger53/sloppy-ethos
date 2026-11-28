@@ -560,6 +560,16 @@ impl App {
                 self.refresh_staging();
                 &deletion.window
             }
+            E::OnButtonClick
+                if source == deps.references.handle || source == deps.referenced_by.handle =>
+            {
+                deps.refresh();
+                return;
+            }
+            E::OnButtonClick if source == deps.coverage.handle => {
+                deps.show_coverage();
+                return;
+            }
             E::OnTreeItemExpanded if source == deps.tree.handle => {
                 let (item, action) = data.on_tree_item_update();
                 if matches!(
