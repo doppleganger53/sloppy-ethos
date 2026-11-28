@@ -1,0 +1,19 @@
+[package]
+name = "ethos-model-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Inspect, compare and repair ETHOS model files"
+
+[[bin]]
+name = "ethos-model"
+path = "src/main.rs"
+
+[dependencies]
+ethos-model = { path = "../ethos-model" }
+ethos-model-validation = { path = "../ethos-model-validation" }
+clap = { version = "4", features = ["derive"] }
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

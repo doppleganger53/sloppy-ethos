@@ -1,0 +1,12 @@
+[package]
+name = "ethos-model-validation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Optional isolated firmware validation for ETHOS model copies"
+
+[dependencies]
+ethos-model = { path = "../ethos-model" }
+serde.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true

@@ -15,18 +15,18 @@ Pre-optimization baseline (before Issue #16 on 2026-02-26):
 
 Current snapshot (auto-generated, excludes `CATALOG.md`):
 
-- Files: 149
-- Total size: 281,686 bytes
-- Total lines: 7,195
+- Files: 151
+- Total size: 284,583 bytes
+- Total lines: 7,257
 - Distribution by artifact:
   - session notes: 141
   - handoff/restart notes: 3
-  - reference notes: 4
+  - reference notes: 6
   - summary notes: 1
 
 - Distribution by scope:
   - 86 -- repo ( Repository workflow, release, docs, testing, prompts, and metadata )
-  - 18 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
+  - 20 -- ethos-platform ( Reusable Ethos runtime, API, simulator, and environment knowledge )
   - 17 -- memory ( Memory organization references and preserved state snapshots. / Memory system structure and retrieval policy )
   - 17 -- sensorlist ( SensorList-specific behavior, release history, and operating notes )
   - 4 -- boundrymap ( BoundryMap-specific behavior, release history, and operating notes )
@@ -34,9 +34,9 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
   - 3 -- handoff ( Session continuity and restart handoffs )
 
 - Distribution by concern:
-  - 36 -- implementation
+  - 37 -- implementation
   - 30 -- workflow
-  - 21 -- testing
+  - 22 -- testing
   - 17 -- build
   - 16 -- docs
   - 16 -- release
@@ -63,12 +63,12 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 ## Recent Ethos Platform Notes
 
 - Selection: newest `session` and `reference` notes where `Scope` is `ethos-platform`; keep newest 6 overall.
+- 2026-11-27 | reference | testing | [notes/reference/ethos-platform/SESSION_NOTES_2026-11-27_X20PROAW_MODEL_FIXTURES.md](notes/reference/ethos-platform/SESSION_NOTES_2026-11-27_X20PROAW_MODEL_FIXTURES.md) | # Session Notes 2026-11-27 - Generate and validate X20 Pro AW legacy models
+- 2026-11-27 | reference | implementation | [notes/reference/ethos-platform/SESSION_NOTES_2026-11-27_SENSOR_DEPENDENCIES.md](notes/reference/ethos-platform/SESSION_NOTES_2026-11-27_SENSOR_DEPENDENCIES.md) | # Session Notes 2026-11-27 - ETHOS sensor dependencies and collection changes
 - 2026-11-27 | reference | implementation | [notes/reference/ethos-platform/SESSION_NOTES_2026-11-27_ETHOS_MODEL_EDITOR_REFERENCE.md](notes/reference/ethos-platform/SESSION_NOTES_2026-11-27_ETHOS_MODEL_EDITOR_REFERENCE.md) | # Session Notes 2026-11-27 - ETHOS model editor reference
 - 2026-06-27 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-06-27_WEBSIM_1_6_6_OPTIONAL_RELOAD.md](notes/session/ethos-platform/SESSION_NOTES_2026-06-27_WEBSIM_1_6_6_OPTIONAL_RELOAD.md) | # Session Notes 2026-06-27 - WebSimulator 1.6.6 Optional Reload
 - 2026-05-30 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_ZIP_TRAVERSAL_TEST.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_ZIP_TRAVERSAL_TEST.md) | # Session Notes 2026-05-30 - WebSimulator ZIP Traversal Test
 - 2026-05-30 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_TIMEOUT_LOGS.md) | # Session Notes 2026-05-30 - WebSimulator Timeout Logs
-- 2026-05-30 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_LATEST_ALIAS_CACHE.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-30_WEBSIM_LATEST_ALIAS_CACHE.md) | # Session Notes 2026-05-30 - WebSimulator Latest Alias Cache
-- 2026-05-18 | session | testing | [notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md](notes/session/ethos-platform/SESSION_NOTES_2026-05-18_WEBSIM_SHARED_PERSIST.md) | # Session Notes 2026-05-18 - WebSimulator Shared Persist
 
 ## Entries
 
@@ -223,3 +223,5 @@ Current snapshot (auto-generated, excludes `CATALOG.md`):
 | 2026-11-20 | session | boundrymap | testing | [notes/session/boundrymap/SESSION_NOTES_2026-11-20_BOUNDRYMAP_FIRMWARE.md](notes/session/boundrymap/SESSION_NOTES_2026-11-20_BOUNDRYMAP_FIRMWARE.md) | # BoundryMap firmware and asset checks, November 20, 2026 |
 | 2026-11-20 | session | boundrymap | testing | [notes/session/boundrymap/SESSION_NOTES_2026-11-20_ISSUE_114_MAP_ROTATION.md](notes/session/boundrymap/SESSION_NOTES_2026-11-20_ISSUE_114_MAP_ROTATION.md) | # Session Notes 2026-11-20 - BoundryMap rotation on X20RS |
 | 2026-11-27 | reference | ethos-platform | implementation | [notes/reference/ethos-platform/SESSION_NOTES_2026-11-27_ETHOS_MODEL_EDITOR_REFERENCE.md](notes/reference/ethos-platform/SESSION_NOTES_2026-11-27_ETHOS_MODEL_EDITOR_REFERENCE.md) | # Session Notes 2026-11-27 - ETHOS model editor reference |
+| 2026-11-27 | reference | ethos-platform | implementation | [notes/reference/ethos-platform/SESSION_NOTES_2026-11-27_SENSOR_DEPENDENCIES.md](notes/reference/ethos-platform/SESSION_NOTES_2026-11-27_SENSOR_DEPENDENCIES.md) | # Session Notes 2026-11-27 - ETHOS sensor dependencies and collection changes |
+| 2026-11-27 | reference | ethos-platform | testing | [notes/reference/ethos-platform/SESSION_NOTES_2026-11-27_X20PROAW_MODEL_FIXTURES.md](notes/reference/ethos-platform/SESSION_NOTES_2026-11-27_X20PROAW_MODEL_FIXTURES.md) | # Session Notes 2026-11-27 - Generate and validate X20 Pro AW legacy models |
