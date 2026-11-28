@@ -296,6 +296,130 @@ def exercise_multirotor(launch, cli, package, scratch, env):
     close_editor(window)
 
 
+def open_dependencies(app, window, table, index):
+    point = table.get_item(index).rectangle(area="text").mid_point()
+    coords = point.x | (point.y << 16)
+    table.post_message(win32defines.WM_RBUTTONDOWN, 2, coords)
+    table.post_message(win32defines.WM_RBUTTONUP, 0, coords)
+    wait_for(lambda: [w.class_name() for w in app.windows()],
+             lambda classes: "#32768" in classes, "Dependencies context menu")
+    window.wrapper_object().post_message(win32defines.WM_KEYDOWN, ord("D"), 0)
+    dialog = app.window(title="Dependencies", visible_only=False)
+    dialog.wait("visible", timeout=10)
+    return dialog
+
+
+def exercise_sensor_management(launch, cli, package, scratch, env, runtime):
+    source = package / "fixtures" / "layout-references.bin"
+    original = source.read_bytes()
+    app, window = launch(source)
+    window.wait("visible", timeout=20)
+    table = window.child_window(class_name="SysListView32").wrapper_object()
+    search, proposed = sorted((e for e in window.descendants(class_name="Edit") if e.is_visible()),
+                              key=lambda e: (e.rectangle().top, e.rectangle().left))[:2]
+    for slot, name in [(1, "Keep timer 1"), (2, "Keep timer 2")]:
+        select_setting(table, search, f"timers[{slot}].name")
+        proposed.set_edit_text(name)
+        press_button(window, "Stage change")
+    select_setting(table, search, "timers[0].start_condition")
+    dialog = open_dependencies(app, window, table, 0)
+    graph = dialog.child_window(class_name="SysTreeView32").wrapper_object()
+    assert graph.get_item(["Ref timer (timers[0])", "References", "Repeated (telemetry.sensors[1])"])
+    press_button(dialog, "Close")
+
+    tree = window.child_window(class_name="SysTreeView32").wrapper_object()
+    table = window.child_window(class_name="SysListView32").wrapper_object()
+    select_section(tree, "Telemetry IDs")
+    assert table.item_count() == 2
+    dialog = open_dependencies(app, window, table, 1)
+    graph = dialog.child_window(class_name="SysTreeView32").wrapper_object()
+    timer = graph.get_item(["Repeated (telemetry.sensors[1])", "Referenced by", "Ref timer (timers[0])"])
+    timer.expand()
+    wait_for(lambda: [node.text() for node in timer.children()],
+             lambda children: "screens[0].widgets[1]" in children, "indirect dependency")
+    press_button(dialog, "Close")
+
+    press_button(window, "Add sensor…")
+    form = app.window(title="Edit new S.Port sensor", visible_only=False)
+    form.wait("visible", timeout=10)
+    entries = sorted(form.descendants(class_name="Edit"), key=lambda entry: entry.rectangle().top)
+    assert len(entries) == 7 and all(not entry.window_text() for entry in entries)
+    for entry, value in zip(entries, ["Bench new", "0", "1", "0", "0", "05", "6803"]):
+        entry.set_edit_text(value)
+    press_button(form, "Stage sensor")
+    form.wait_not("visible", timeout=10)
+    assert table.item_count() == 3
+
+    table.get_item(2).select()
+    press_button(window, "Copy")
+    press_button(window, "Paste")
+    assert table.item_count() == 4
+    table.get_item(3).select()
+    editors = sorted((e for e in window.descendants(class_name="Edit") if e.is_visible()),
+                     key=lambda e: (e.rectangle().top, e.rectangle().left))
+    editors[1].set_edit_text("06")
+    press_button(window, "Stage change")
+    table.get_item(3).select()
+    press_button(window, "Edit sensor…")
+    rename = app.window(title="Rename sensor", visible_only=False)
+    rename.wait("visible", timeout=10)
+    next(e for e in rename.descendants(class_name="Edit") if e.is_visible()).set_edit_text("Bench pasted")
+    press_button(rename, "Stage sensor")
+    rename.wait_not("visible", timeout=10)
+    sensor_rows = [(row[0].removesuffix(" • staged"), row[1]) for row in rows(table)[2:]]
+    assert sensor_rows == [("Bench new [2]", "05"), ("Bench pasted [3]", "06")], sensor_rows
+
+    press_button(window, "Add sensor…")
+    form.wait("visible", timeout=10)
+    press_button(form, "Cancel")
+    press_button(window, "Preview edits")
+    assert any("Missing: Name" in row[2] and "Physical ID" in row[2] for row in rows(table))
+    select_section(tree, "Telemetry IDs")
+    for index in [1, 3, 4]:
+        table.get_item(index).select()
+    press_button(window, "Delete selected…")
+    deletion = app.window(title="Delete telemetry sensors", visible_only=False)
+    deletion.wait("visible", timeout=10)
+    preview = deletion.child_window(class_name="Edit")
+    apply = deletion.child_window(title="Stage deletion", class_name="Button")
+    assert "timers[0] references telemetry.sensors[1]" in preview.window_text()
+    assert not apply.is_enabled()
+    press_button(deletion, "Cascade delete")
+    wait_for(preview.window_text, lambda text: all(item in text for item in (
+        "Will remove 5 object(s)", "screens[0].widgets[1]", "timers[0]", "Bench pasted", "draft"
+    )), "cascade preview")
+    press_button(deletion, "Stage deletion")
+    deletion.wait_not("visible", timeout=10)
+    press_button(window, "Preview edits")
+    output = scratch / "sensor-management.bin"
+    choose_file(app, window, "Save copy…", "Save repaired model as a new file", output)
+    wait_for(output.exists, bool, "sensor management export")
+    reopened = json.loads(subprocess.check_output(
+        [str(cli), "inspect", str(output), "--json"], cwd=scratch, env=env))
+    assert [(s["name"], s["physical_id"]) for s in reopened["sensors"]] == [("Repeated", 3), ("Bench new", 5)]
+    by_path = {row["path"]: row["value"] for row in reopened["fields"]}
+    assert by_path["screens[0].widgets[1].key"] == "None"
+    assert by_path["screens[0].widgets[2].source"] == "Timer 0"
+    assert by_path["screens[0].widgets[3].source"] == "Timer 1"
+    assert by_path["timers.count"] == "2"
+    assert [by_path[f"timers[{slot}].name"] for slot in range(2)] == ["Keep timer 1", "Keep timer 2"]
+    assert source.read_bytes() == original
+    if runtime:
+        readback = scratch / "sensor-management-readback.bin"
+        report = json.loads(subprocess.check_output([
+            "node", str(package / "simulator/validate.cjs"), str(runtime), str(output),
+            "--readback", str(readback),
+        ]))
+        assert report["status"] == "ok" and report["resultFormat"] == "0.1.37", report
+        native = json.loads(subprocess.check_output([str(cli), "inspect", str(readback), "--json"], env=env))
+        assert native["sensors"] == reopened["sensors"], report
+        native_fields = {row["path"]: row["value"] for row in native["fields"]}
+        for field in ("timers.count", "timers[0].name", "timers[1].name", "screens[0].widgets[1].key",
+                      "screens[0].widgets[2].source", "screens[0].widgets[3].source"):
+            assert native_fields[field] == by_path[field], report
+    close_editor(window)
+
+
 def run_smoke(package, fixtures, runtime=None):
     verify_bundled_evidence(package)
     gui = package / "ethos-model-desktop.exe"
@@ -419,6 +543,7 @@ def run_smoke(package, fixtures, runtime=None):
             assert physical_copy.read_bytes() == physical_cli.read_bytes()
             close_editor(mixed_window)
 
+            exercise_sensor_management(launch, cli, package, scratch, env, runtime)
             exercise_curve(launch,cli,package,scratch,env)
             exercise_mixed_diff(launch, cli, package, env)
             exercise_multirotor(launch, cli, package, scratch, env)
@@ -489,7 +614,7 @@ def run_smoke(package, fixtures, runtime=None):
             error_text = " ".join(x.window_text() for x in error.descendants(class_name="Static")).lower()
             assert "format" in error_text or "version" in error_text, error_text
             print("Packaged Windows UI passed native dialogs, mixed diff, plane and multirotor ID repairs, "
-                  "bitmap and RF channel edits, curves, logic, variables, extra trims and trainer, "
+                  "sensor management and cascade deletion, bitmap and RF channel edits, curves, logic, variables, extra trims and trainer, "
                   "read-only controls, CLI/firmware byte agreement and unsupported-format reporting.")
         finally:
             for process in apps:

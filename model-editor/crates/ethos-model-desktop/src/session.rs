@@ -1,4 +1,7 @@
-use ethos_model::{compare, Change, Difference, Edit, EditFormat, Field, FieldEdit, Model, Value};
+use ethos_model::{
+    compare, Change, DeletePreview, Dependencies, Difference, Edit, EditFormat, Field, FieldEdit,
+    Model, SensorCopy, SensorDraft, Value,
+};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -113,6 +116,7 @@ impl View {
 pub enum Target {
     Field(String),
     Sensor(usize),
+    Draft(usize),
 }
 
 pub struct Row {
@@ -139,6 +143,11 @@ pub struct Session {
     differences: Vec<Difference>,
     pending: BTreeMap<usize, Edit>,
     fields: BTreeMap<String, FieldEdit>,
+    original: Option<Model>,
+    structural_changes: Vec<Change>,
+    drafts: BTreeMap<usize, SensorDraft>,
+    next_draft: usize,
+    clipboard: Option<SensorCopy>,
     pub unsaved: bool,
     pub last_export: Option<PathBuf>,
 }
@@ -179,7 +188,10 @@ impl Session {
     pub fn compare_backup(&mut self, path: &Path) -> Result<(), String> {
         let current = self.current.as_ref().ok_or("Open a current model first.")?;
         let backup = OpenModel::load(path)?;
-        self.differences = ordered_diff(&backup.model, &current.model);
+        self.differences = ordered_diff(
+            &backup.model,
+            self.original.as_ref().unwrap_or(&current.model),
+        );
         self.backup = Some(backup);
         Ok(())
     }
@@ -242,32 +254,68 @@ impl Session {
                     )
                 })
                 .collect(),
-            View::Telemetry => current
-                .model
-                .sensors()
-                .iter()
-                .map(|s| {
-                    let pending = self.pending.contains_key(&s.slot);
-                    Row::new(
-                        [
-                            format!(
-                                "{} [{}]{}",
-                                s.name,
-                                s.slot,
-                                if pending { " • staged" } else { "" }
-                            ),
-                            format!("{:02X}", s.physical_id),
-                            format!("{:04X}", s.application_id),
+            View::Telemetry => {
+                let mut rows = Vec::new();
+                for (slot, path) in current.model.telemetry_paths().iter().enumerate() {
+                    let name = self
+                        .field_value(&format!("{path}.name"))
+                        .unwrap_or_default();
+                    let ids = self.ids(slot);
+                    let route = current
+                        .model
+                        .sensors()
+                        .iter()
+                        .find(|sensor| sensor.slot == slot)
+                        .map(|sensor| {
                             format!(
                                 "module {}, band {}, route {:02X}, sub {}",
-                                s.module, s.band, s.routing, s.sub_id
+                                sensor.module, sensor.band, sensor.routing, sensor.sub_id
+                            )
+                        })
+                        .unwrap_or_else(|| {
+                            match self.field(&format!("{path}.variant")).map(|f| &f.typed) {
+                                Some(Value::Integer(1)) => "Calculated".into(),
+                                Some(Value::Integer(2)) => "DIY".into(),
+                                _ => String::new(),
+                            }
+                        });
+                    rows.push(Row::new(
+                        [
+                            format!(
+                                "{name} [{slot}]{}",
+                                if self.pending.contains_key(&slot) {
+                                    " • staged"
+                                } else {
+                                    ""
+                                }
                             ),
+                            ids.map(|(p, _)| format!("{p:02X}")).unwrap_or_default(),
+                            ids.map(|(_, a)| format!("{a:04X}")).unwrap_or_default(),
+                            route,
                         ],
-                        Some(Target::Sensor(s.slot)),
+                        Some(Target::Sensor(slot)),
+                        "",
+                    ));
+                }
+                rows.extend(self.drafts.iter().map(|(&id, draft)| {
+                    let [name, _, _, _, _, physical, application] = &draft.values;
+                    Row::new(
+                        [
+                            if name.is_empty() {
+                                "New sensor".into()
+                            } else {
+                                name.clone()
+                            },
+                            physical.clone(),
+                            application.clone(),
+                            "Incomplete • Edit sensor…".into(),
+                        ],
+                        Some(Target::Draft(id)),
                         "",
                     )
-                })
-                .collect(),
+                }));
+                rows
+            }
             View::Bytes(path) => {
                 let Some(field) = current.fields.iter().find(|f| &f.path == path) else {
                     return vec![];
@@ -334,14 +382,42 @@ impl Session {
                             }
                             Row::new(
                                 [name, change.before, change.after, slot_label],
-                                Some(Target::Field(change.path.clone())),
+                                self.field(&change.path)
+                                    .map(|_| Target::Field(change.path.clone())),
                                 &change.path,
                             )
                         })
                         .filter(|r| r.searchable.contains(&needle))
                         .collect();
                 }
-                let mut rows = vec![];
+                let mut rows: Vec<_> = self
+                    .structural_changes
+                    .iter()
+                    .map(|c| {
+                        Row::new(
+                            [
+                                c.path.clone(),
+                                c.before.clone(),
+                                c.after.clone(),
+                                String::new(),
+                            ],
+                            None,
+                            "",
+                        )
+                    })
+                    .collect();
+                rows.extend(self.drafts.iter().map(|(&id, draft)| {
+                    Row::new(
+                        [
+                            "New sensor".into(),
+                            String::new(),
+                            format!("Missing: {}", draft.missing().join(", ")),
+                            String::new(),
+                        ],
+                        Some(Target::Draft(id)),
+                        "",
+                    )
+                }));
                 for s in current.model.sensors() {
                     if let Some(e) = self.pending.get(&s.slot) {
                         if let Some(id) = e.physical_id {
@@ -620,6 +696,9 @@ impl Session {
     }
     pub fn remove(&mut self, target: &Target) {
         match target {
+            Target::Draft(id) => {
+                self.drafts.remove(id);
+            }
             Target::Sensor(slot) => {
                 self.pending.remove(slot);
             }
@@ -644,6 +723,7 @@ impl Session {
     }
     pub fn has_edit(&self, target: &Target) -> bool {
         match target {
+            Target::Draft(id) => self.drafts.contains_key(id),
             Target::Sensor(slot) => self.pending.contains_key(slot),
             Target::Field(path) => match sensor_id_path(path) {
                 Some((slot, physical)) => self.pending.get(&slot).is_some_and(|e| {
@@ -658,38 +738,269 @@ impl Session {
         }
     }
     pub fn has_edits(&self) -> bool {
-        !self.pending.is_empty() || !self.fields.is_empty()
+        !self.pending.is_empty()
+            || !self.fields.is_empty()
+            || !self.structural_changes.is_empty()
+            || !self.drafts.is_empty()
     }
     pub fn staged_count(&self) -> usize {
-        self.pending.len() + self.fields.len()
+        self.pending.len() + self.fields.len() + self.structural_changes.len() + self.drafts.len()
+    }
+
+    fn model(&self) -> Result<&Model, String> {
+        Ok(&self.current.as_ref().ok_or("Open a model first.")?.model)
+    }
+
+    fn pending_edits(&self) -> (Vec<Edit>, Vec<FieldEdit>) {
+        (
+            self.pending.values().copied().collect(),
+            self.fields.values().cloned().collect(),
+        )
+    }
+
+    fn edited_model(&self) -> Result<Model, String> {
+        let model = self.model()?;
+        if self.pending.is_empty() && self.fields.is_empty() {
+            return Ok(model.clone());
+        }
+        let (ids, fields) = self.pending_edits();
+        model
+            .serialize_fields(&ids, &fields)
+            .and_then(|bytes| Model::parse(&bytes))
+            .map_err(|e| e.to_string())
+    }
+
+    fn apply_structure(&mut self, model: Model, changes: Vec<Change>) -> Result<(), String> {
+        let (ids, fields) = self.pending_edits();
+        let pending = self
+            .model()?
+            .preview_fields(&ids, &fields)
+            .map_err(|e| e.to_string())?;
+        let current = self.current.as_mut().ok_or("Open a model first.")?;
+        let previous = std::mem::replace(&mut current.model, model);
+        if self.original.is_none() {
+            self.original = Some(previous);
+        }
+        current.fields = current.model.fields();
+        current.fields.sort_by_key(|f| menu_rank(&f.section));
+        self.structural_changes.extend(pending);
+        self.structural_changes.extend(changes);
+        self.pending.clear();
+        self.fields.clear();
+        self.unsaved = true;
+        Ok(())
+    }
+
+    pub fn add_draft(&mut self) -> usize {
+        let id = self.next_draft;
+        self.next_draft += 1;
+        self.drafts.insert(id, SensorDraft::default());
+        self.unsaved = true;
+        id
+    }
+
+    pub fn draft(&self, id: usize) -> Option<&SensorDraft> {
+        self.drafts.get(&id)
+    }
+
+    pub fn update_draft(&mut self, id: usize, draft: SensorDraft) -> Result<(), String> {
+        if !draft.missing().is_empty() {
+            self.drafts.insert(id, draft);
+            self.unsaved = true;
+            return Ok(());
+        }
+        let model = self
+            .edited_model()?
+            .append_sensor(&draft)
+            .map_err(|e| e.to_string())?;
+        let slot = model.telemetry_paths().len() - 1;
+        self.apply_structure(
+            model,
+            vec![Change {
+                path: format!("Added telemetry sensor [{slot}]"),
+                before: String::new(),
+                after: draft.values[0].clone(),
+            }],
+        )?;
+        self.drafts.remove(&id);
+        Ok(())
+    }
+
+    pub fn copy_sensor(&mut self, slot: usize) -> Result<(), String> {
+        self.clipboard = Some(
+            self.edited_model()?
+                .copy_sensor(slot)
+                .map_err(|e| e.to_string())?,
+        );
+        Ok(())
+    }
+
+    pub fn can_paste(&self) -> bool {
+        self.clipboard.is_some()
+    }
+
+    pub fn paste_sensor(&mut self) -> Result<(), String> {
+        let model = self
+            .edited_model()?
+            .paste_sensor(self.clipboard.as_ref().ok_or("Copy a sensor first.")?)
+            .map_err(|e| e.to_string())?;
+        let slot = model.telemetry_paths().len() - 1;
+        let name = model
+            .field(&format!("telemetry.sensors[{slot}].name"))
+            .map(|f| f.value.clone())
+            .unwrap_or_default();
+        self.apply_structure(
+            model,
+            vec![Change {
+                path: format!("Pasted telemetry sensor [{slot}]"),
+                before: String::new(),
+                after: name,
+            }],
+        )
+    }
+
+    fn selected_sensors(selection: &[Target]) -> Vec<usize> {
+        selection
+            .iter()
+            .filter_map(|target| match target {
+                Target::Sensor(slot) => Some(*slot),
+                _ => None,
+            })
+            .collect()
+    }
+
+    pub fn deletion_preview(
+        &self,
+        selection: &[Target],
+        cascade: bool,
+    ) -> Result<DeletePreview, String> {
+        let slots = Self::selected_sensors(selection);
+        let mut preview = if slots.is_empty() {
+            DeletePreview {
+                removed: Vec::new(),
+                blockers: Vec::new(),
+            }
+        } else {
+            let model = self.edited_model()?;
+            let mut preview = model
+                .preview_sensor_delete(&slots, cascade)
+                .map_err(|e| e.to_string())?;
+            let graph = model.dependencies();
+            for path in &mut preview.removed {
+                *path = graph.label(path);
+            }
+            preview
+        };
+        for target in selection {
+            if let Target::Draft(id) = target {
+                if let Some(draft) = self.drafts.get(id) {
+                    let name = &draft.values[0];
+                    preview.removed.push(if name.is_empty() {
+                        format!("New sensor draft {}", id + 1)
+                    } else {
+                        format!("{name} (draft {})", id + 1)
+                    });
+                }
+            }
+        }
+        Ok(preview)
+    }
+
+    pub fn delete_sensors(&mut self, selection: &[Target], cascade: bool) -> Result<(), String> {
+        let slots = Self::selected_sensors(selection);
+        if !slots.is_empty() {
+            let edited = self.edited_model()?;
+            let model = edited
+                .delete_sensors(&slots, cascade)
+                .map_err(|e| e.to_string())?;
+            let changes = self
+                .deletion_preview(selection, cascade)?
+                .removed
+                .into_iter()
+                .map(|path| Change {
+                    path,
+                    before: "Present".into(),
+                    after: "Deleted".into(),
+                })
+                .collect();
+            self.apply_structure(model, changes)?;
+        }
+        for target in selection {
+            if let Target::Draft(id) = target {
+                self.drafts.remove(id);
+            }
+        }
+        self.unsaved = self.has_edits();
+        Ok(())
+    }
+
+    pub fn dependencies(&self, target: &Target) -> Result<(String, Dependencies), String> {
+        let model = self.edited_model()?;
+        let mut graph = model.dependencies();
+        let root = match target {
+            Target::Sensor(slot) => format!("telemetry.sensors[{slot}]"),
+            Target::Field(path) => model.dependency_object(path),
+            Target::Draft(id) => {
+                let path = format!("New sensor draft {}", id + 1);
+                graph.names.insert(path.clone(), String::new());
+                path
+            }
+        };
+        Ok((root, graph))
+    }
+
+    fn check_drafts(&self) -> Result<(), String> {
+        if self.drafts.is_empty() {
+            return Ok(());
+        }
+        let missing: Vec<_> = self
+            .drafts
+            .iter()
+            .map(|(id, draft)| {
+                let caption = if draft.values[0].is_empty() {
+                    format!("New sensor draft {}", id + 1)
+                } else {
+                    draft.values[0].clone()
+                };
+                format!("{caption} — missing {}", draft.missing().join(", "))
+            })
+            .collect();
+        Err(missing.join("\n"))
     }
 
     pub fn preview(&self) -> Result<Vec<Change>, String> {
-        let model = &self.current.as_ref().ok_or("Open a model first.")?.model;
-        model
-            .preview_fields(
-                &self.pending.values().copied().collect::<Vec<_>>(),
-                &self.fields.values().cloned().collect::<Vec<_>>(),
-            )
-            .map_err(|e| e.to_string())
+        self.check_drafts()?;
+        if let Some(original) = &self.original {
+            self.edited_model()?
+                .verify_sensor_keys(original)
+                .map_err(|e| e.to_string())?;
+        }
+        let (ids, fields) = self.pending_edits();
+        let mut changes = self.structural_changes.clone();
+        changes.extend(
+            self.model()?
+                .preview_fields(&ids, &fields)
+                .map_err(|e| e.to_string())?,
+        );
+        Ok(changes)
     }
 
     pub fn save(&mut self, path: &Path) -> Result<(), String> {
         if !self.has_edits() {
             return Err("Stage a change before exporting.".into());
         }
+        self.check_drafts()?;
         let current = self.current.as_ref().ok_or("Open a model first.")?;
         if path == current.path || self.backup.as_ref().is_some_and(|m| path == m.path) {
             return Err("Choose a new filename to preserve the opened models.".into());
         }
-        current
-            .model
-            .save_fields_copy(
-                path,
-                &self.pending.values().copied().collect::<Vec<_>>(),
-                &self.fields.values().cloned().collect::<Vec<_>>(),
-            )
-            .map_err(|e| e.to_string())?;
+        if let Some(original) = &self.original {
+            self.edited_model()?.save_sensor_copy(path, original)
+        } else {
+            let (ids, fields) = self.pending_edits();
+            current.model.save_fields_copy(path, &ids, &fields)
+        }
+        .map_err(|e| e.to_string())?;
         self.last_export = Some(path.into());
         self.unsaved = false;
         Ok(())
@@ -716,6 +1027,35 @@ mod tests {
         Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures")
             .join(name)
+    }
+
+    #[test]
+    fn mixes_loaded_pasted_and_blank_selections_then_reopens_the_export() {
+        let mut session = Session::default();
+        let original = fixture("layout-references.bin");
+        session.open(&original, None).unwrap();
+        let blank = session.add_draft();
+        assert!(session.preview().unwrap_err().contains("Routing"));
+        session.copy_sensor(0).unwrap();
+        session.paste_sensor().unwrap();
+        assert!(session.preview().is_err());
+        let selection = [Target::Draft(blank), Target::Sensor(1), Target::Sensor(2)];
+        let preview = session.deletion_preview(&selection, true).unwrap();
+        assert_eq!(preview.removed.len(), 5);
+        assert!(preview.blockers.is_empty());
+        assert!(session.delete_sensors(&selection, false).is_err());
+        assert_eq!(session.rows(&View::Telemetry, "").len(), 4);
+        session.delete_sensors(&selection, true).unwrap();
+        let dir = std::env::temp_dir().join(format!("ethos-session-delete-{}", std::process::id()));
+        std::fs::create_dir(&dir).unwrap();
+        let path = dir.join("export.bin");
+        session.save(&path).unwrap();
+        let reopened = Model::open(&path).unwrap();
+        assert_eq!(reopened.sensors().len(), 1);
+        assert_eq!(reopened.field("timers.count").unwrap().value, "2");
+        assert_eq!(Model::open(&original).unwrap().sensors().len(), 2);
+        std::fs::remove_file(path).unwrap();
+        std::fs::remove_dir(dir).unwrap();
     }
 
     #[test]

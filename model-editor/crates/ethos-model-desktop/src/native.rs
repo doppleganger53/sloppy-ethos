@@ -1,4 +1,5 @@
 use crate::point_editor::{encode_rows, PointEditor};
+use crate::sensor_dialogs::{self, DeleteDialog, DependencyDialog, SensorForm};
 use crate::session::{section_label, OpenModel, Row, Session, Target, View};
 use native_windows_gui as nwg;
 use std::cell::{Cell, RefCell};
@@ -23,6 +24,11 @@ struct Controls {
     stage: nwg::Button,
     undo: nwg::Button,
     inspect: nwg::Button,
+    sensor_add: nwg::Button,
+    sensor_copy: nwg::Button,
+    sensor_paste: nwg::Button,
+    sensor_edit: nwg::Button,
+    sensor_delete: nwg::Button,
     warnings: nwg::Button,
     preview: nwg::Button,
     export: nwg::Button,
@@ -71,7 +77,6 @@ impl Controls {
             .flags(
                 nwg::ListViewFlags::VISIBLE
                     | nwg::ListViewFlags::TAB_STOP
-                    | nwg::ListViewFlags::SINGLE_SELECTION
                     | nwg::ListViewFlags::ALWAYS_SHOW_SELECTION,
             )
             .ex_flags(nwg::ListViewExFlags::FULL_ROW_SELECT)
@@ -100,6 +105,11 @@ impl Controls {
             stage: button(&window, "Stage change")?,
             undo: button(&window, "Undo staged")?,
             inspect: button(&window, "Inspect bytes")?,
+            sensor_add: button(&window, "Add sensor…")?,
+            sensor_copy: button(&window, "Copy")?,
+            sensor_paste: button(&window, "Paste")?,
+            sensor_edit: button(&window, "Edit sensor…")?,
+            sensor_delete: button(&window, "Delete selected…")?,
             warnings: button(&window, "Format notes…")?,
             preview: button(&window, "Preview edits")?,
             export: button(&window, "Save copy…")?,
@@ -153,6 +163,14 @@ impl Controls {
         place!(undo, x + 424, h - 107, 110_i32, 28_i32);
         place!(inspect, x, h - 69, 125_i32, 29_i32);
         place!(warnings, x + 136, h - 69, 140_i32, 29_i32);
+        place!(sensor_add, x, h - 69, 100_i32, 29_i32);
+        place!(sensor_copy, x + 106, h - 69, 60_i32, 29_i32);
+        place!(sensor_paste, x + 172, h - 69, 60_i32, 29_i32);
+        place!(sensor_edit, x + 238, h - 69, 100_i32, 29_i32);
+        place!(sensor_delete, x + 344, h - 69, 124_i32, 29_i32);
+        if *view == View::Telemetry {
+            place!(warnings, x + 474, h - 69, 105_i32, 29_i32);
+        }
         place!(status, 14, h - 32, w - 28, 27_i32);
         self.widths(view);
     }
@@ -174,6 +192,13 @@ pub struct App {
     c: Controls,
     points: PointEditor,
     point_path: RefCell<Option<String>>,
+    sensor_form: SensorForm,
+    delete_dialog: DeleteDialog,
+    dependency_dialog: DependencyDialog,
+    dependencies_item: nwg::MenuItem,
+    object_menu: nwg::Menu,
+    menu_target: RefCell<Option<Target>>,
+    dialog_handlers: RefCell<Vec<nwg::EventHandler>>,
     point_handler: RefCell<Option<nwg::EventHandler>>,
     session: RefCell<Session>,
     view: RefCell<View>,
@@ -186,6 +211,9 @@ pub struct App {
 
 impl Drop for App {
     fn drop(&mut self) {
+        for handler in self.dialog_handlers.get_mut().drain(..) {
+            nwg::unbind_event_handler(&handler);
+        }
         if let Some(handler) = self.point_handler.get_mut().take() {
             nwg::unbind_event_handler(&handler);
         }
@@ -199,7 +227,24 @@ impl App {
     fn build() -> Result<Rc<Self>, nwg::NwgError> {
         let c = Controls::build()?;
         let points = PointEditor::build(&c.window)?;
+        let mut object_menu = nwg::Menu::default();
+        nwg::Menu::builder()
+            .parent(&c.window)
+            .popup(true)
+            .build(&mut object_menu)?;
+        let mut dependencies_item = nwg::MenuItem::default();
+        nwg::MenuItem::builder()
+            .parent(&object_menu)
+            .text("&Dependencies")
+            .build(&mut dependencies_item)?;
         let app = Rc::new(Self {
+            sensor_form: SensorForm::build(&c.window)?,
+            delete_dialog: DeleteDialog::build(&c.window)?,
+            dependency_dialog: DependencyDialog::build(&c.window)?,
+            dependencies_item,
+            object_menu,
+            menu_target: Default::default(),
+            dialog_handlers: Default::default(),
             c,
             points,
             point_path: Default::default(),
@@ -228,6 +273,20 @@ impl App {
                 }
             });
         app.point_handler.replace(Some(handler));
+        for dialog in [
+            &app.sensor_form.window,
+            &app.delete_dialog.window,
+            &app.dependency_dialog.window,
+        ] {
+            let weak = Rc::downgrade(&app);
+            let handler =
+                nwg::full_bind_event_handler(&dialog.handle, move |event, data, source| {
+                    if let Some(app) = weak.upgrade() {
+                        app.sensor_dialog_event(event, data, source);
+                    }
+                });
+            app.dialog_handlers.borrow_mut().push(handler);
+        }
         app.c.layout(&app.view.borrow());
         app.navigation(View::Settings(None));
         Ok(app)
@@ -296,7 +355,42 @@ impl App {
             }
             E::OnTextInput if source == c.search.handle => self.render(),
             E::OnListViewItemChanged if source == c.table.handle => self.edit_controls(),
-            E::OnListViewDoubleClick if source == c.table.handle => self.inspect_selected(),
+            E::OnListViewDoubleClick if source == c.table.handle => {
+                if let Some(target @ Target::Draft(_)) = self.target() {
+                    self.open_sensor_form(target);
+                } else {
+                    self.inspect_selected();
+                }
+            }
+            E::OnListViewRightClick if source == c.table.handle => {
+                let (index, _) = data.on_list_view_item_index();
+                let target = self
+                    .rows
+                    .borrow()
+                    .get(index)
+                    .and_then(|row| row.target.clone());
+                if target.is_some() {
+                    self.menu_target.replace(target);
+                    let (x, y) = nwg::GlobalCursor::position();
+                    self.object_menu.popup(x, y);
+                }
+            }
+            E::OnMenuItemSelected if source == self.dependencies_item.handle => {
+                self.show_dependencies()
+            }
+            E::OnButtonClick if source == c.sensor_add.handle => {
+                let id = self.session.borrow_mut().add_draft();
+                self.refresh_staging();
+                self.open_sensor_form(Target::Draft(id));
+            }
+            E::OnButtonClick if source == c.sensor_edit.handle => {
+                if let Some(target) = self.target() {
+                    self.open_sensor_form(target);
+                }
+            }
+            E::OnButtonClick if source == c.sensor_copy.handle => self.copy_sensor(),
+            E::OnButtonClick if source == c.sensor_paste.handle => self.paste_sensor(),
+            E::OnButtonClick if source == c.sensor_delete.handle => self.preview_deletion(),
             E::OnNotice if source == c.notice.handle => self.validation_done(),
             E::OnButtonClick if source == c.open.handle => self.pick_open(false),
             E::OnButtonClick if source == c.compare.handle => self.pick_open(true),
@@ -315,6 +409,170 @@ impl App {
             E::OnButtonClick if source == c.validate.handle => self.validate_export(),
             _ => {}
         }
+    }
+
+    fn selected_sensors(&self) -> Vec<Target> {
+        let rows = self.rows.borrow();
+        self.c
+            .table
+            .selected_items()
+            .into_iter()
+            .filter_map(|index| rows.get(index)?.target.clone())
+            .filter(|target| matches!(target, Target::Sensor(_) | Target::Draft(_)))
+            .collect()
+    }
+
+    fn show_dependencies(&self) {
+        let Some(target) = self.menu_target.take() else {
+            return;
+        };
+        let result = self.session.borrow().dependencies(&target);
+        match result {
+            Ok((root, graph)) => self.dependency_dialog.open(&self.c.window, root, graph),
+            Err(error) => self.error(&error),
+        }
+    }
+
+    fn copy_sensor(&self) {
+        let Some(Target::Sensor(slot)) = self.target() else {
+            return;
+        };
+        let result = self.session.borrow_mut().copy_sensor(slot);
+        match result {
+            Ok(()) => {
+                self.c.sensor_paste.set_enabled(true);
+                self.c
+                    .status
+                    .set_text("Sensor copied. Choose Paste to create a separate entry.");
+            }
+            Err(error) => self.error(&error),
+        }
+    }
+
+    fn paste_sensor(&self) {
+        let result = self.session.borrow_mut().paste_sensor();
+        match result {
+            Ok(()) => {
+                self.refresh_staging();
+                self.c.status.set_text("Sensor pasted. Change its S.Port key before saving if it matches another entry.");
+            }
+            Err(error) => self.error(&error),
+        }
+    }
+
+    fn preview_deletion(&self) {
+        let selection = self.selected_sensors();
+        if !selection.is_empty() {
+            let dialog = &self.delete_dialog;
+            dialog.selection.replace(selection);
+            dialog
+                .cascade
+                .set_check_state(nwg::CheckBoxState::Unchecked);
+            self.refresh_delete_preview();
+            sensor_dialogs::show(&self.c.window, &dialog.window);
+        }
+    }
+
+    fn open_sensor_form(&self, target: Target) {
+        let s = self.session.borrow();
+        let values = match target {
+            Target::Draft(id) => s.draft(id).cloned().unwrap_or_default(),
+            Target::Sensor(slot) => {
+                let mut values = ethos_model::SensorDraft::default();
+                values.values[0] = s
+                    .field_value(&format!("telemetry.sensors[{slot}].name"))
+                    .unwrap_or_default();
+                values
+            }
+            Target::Field(_) => return,
+        };
+        self.sensor_form.open(&self.c.window, target, &values);
+    }
+
+    fn refresh_delete_preview(&self) {
+        let dialog = &self.delete_dialog;
+        dialog.preview(
+            self.session
+                .borrow()
+                .deletion_preview(&dialog.selection.borrow(), dialog.cascade_enabled()),
+        );
+    }
+
+    fn sensor_dialog_event(
+        &self,
+        event: nwg::Event,
+        data: nwg::EventData,
+        source: nwg::ControlHandle,
+    ) {
+        use nwg::Event as E;
+        let form = &self.sensor_form;
+        let deletion = &self.delete_dialog;
+        let deps = &self.dependency_dialog;
+        let close = match event {
+            E::OnWindowClose => {
+                if let nwg::EventData::OnWindowClose(action) = data {
+                    action.close(false);
+                }
+                if source == form.window.handle {
+                    &form.window
+                } else if source == deletion.window.handle {
+                    &deletion.window
+                } else if source == deps.window.handle {
+                    &deps.window
+                } else {
+                    return;
+                }
+            }
+            E::OnButtonClick if source == form.close.handle => &form.window,
+            E::OnButtonClick if source == deletion.close.handle => &deletion.window,
+            E::OnButtonClick if source == deps.close.handle => &deps.window,
+            E::OnButtonClick if source == form.apply.handle => {
+                let result = match form.target.borrow().as_ref() {
+                    Some(Target::Draft(id)) => {
+                        self.session.borrow_mut().update_draft(*id, form.values())
+                    }
+                    Some(Target::Sensor(slot)) => self.session.borrow_mut().stage_field(
+                        &format!("telemetry.sensors[{slot}].name"),
+                        &form.values().values[0],
+                    ),
+                    _ => return,
+                };
+                if let Err(error) = result {
+                    form.feedback.set_text(&error);
+                    return;
+                }
+                self.refresh_staging();
+                &form.window
+            }
+            E::OnButtonClick if source == deletion.cascade.handle => {
+                self.refresh_delete_preview();
+                return;
+            }
+            E::OnButtonClick if source == deletion.apply.handle => {
+                let result = self
+                    .session
+                    .borrow_mut()
+                    .delete_sensors(&deletion.selection.borrow(), deletion.cascade_enabled());
+                if let Err(error) = result {
+                    deletion.preview(Err(error));
+                    return;
+                }
+                self.refresh_staging();
+                &deletion.window
+            }
+            E::OnTreeItemExpanded if source == deps.tree.handle => {
+                let (item, action) = data.on_tree_item_update();
+                if matches!(
+                    action,
+                    nwg::TreeItemAction::Expand(nwg::ExpandState::Expand)
+                ) {
+                    deps.expand(item);
+                }
+                return;
+            }
+            _ => return,
+        };
+        sensor_dialogs::hide(&self.c.window, close);
     }
 
     fn navigation(&self, wanted: View) {
@@ -433,30 +691,38 @@ impl App {
         };
         c.files.set_text(&files);
         c.compare.set_enabled(s.current.is_some());
+        let telemetry = *view == View::Telemetry;
+        for button in [
+            &c.sensor_add,
+            &c.sensor_copy,
+            &c.sensor_paste,
+            &c.sensor_edit,
+            &c.sensor_delete,
+        ] {
+            button.set_visible(telemetry);
+        }
+        c.inspect.set_visible(!telemetry);
+        c.sensor_add.set_enabled(s.current.is_some());
+        c.sensor_paste.set_enabled(s.can_paste());
+        c.layout(&view);
         c.preview.set_enabled(s.has_edits());
         let warning_count = s.warnings().len();
         c.warnings.set_visible(warning_count > 0);
         c.warnings
             .set_text(&format!("Format notes ({warning_count})…"));
         let staged = *view == View::Staged && s.has_edits();
-        let valid = if staged {
+        if staged {
             match s.preview() {
                 Ok(changes) => {
                     c.status.set_text(&format!(
-                        "{} verified field change(s). Choose Save copy to export.",
+                        "{} verified change(s). Choose Save copy to export.",
                         changes.len()
                     ));
-                    true
                 }
-                Err(error) => {
-                    c.status.set_text(&error);
-                    false
-                }
+                Err(error) => c.status.set_text(&error.replace('\n', " • ")),
             }
-        } else {
-            false
-        };
-        c.export.set_enabled(valid);
+        }
+        c.export.set_enabled(staged);
         c.validate
             .set_enabled(s.last_export.is_some() && self.validation.borrow().is_none());
         if !staged {
@@ -484,19 +750,39 @@ impl App {
         self.edit_controls();
     }
     fn target(&self) -> Option<Target> {
-        let index = self.c.table.selected_item()?;
+        let selected = self.c.table.selected_items();
+        let [index] = selected.as_slice() else {
+            return None;
+        };
+        let index = *index;
         self.rows.borrow().get(index)?.target.clone()
     }
     fn edit_controls(&self) {
         let c = &self.c;
         let s = self.session.borrow();
         let target = self.target();
+        if *self.view.borrow() == View::Telemetry {
+            c.sensor_copy
+                .set_enabled(matches!(target, Some(Target::Sensor(_))));
+            c.sensor_edit.set_enabled(match &target {
+                Some(Target::Draft(_)) => true,
+                Some(Target::Sensor(slot)) => s
+                    .field(&format!("telemetry.sensors[{slot}].name"))
+                    .is_some_and(|field| field.editable),
+                _ => false,
+            });
+            c.sensor_delete
+                .set_enabled(!self.selected_sensors().is_empty());
+        }
+        let is_draft = matches!(target, Some(Target::Draft(_)));
         let is_field = matches!(target, Some(Target::Field(_)));
         let point_field = match &target {
             Some(Target::Field(path)) => s.point_field(path),
             _ => None,
         };
-        c.stage.set_text(if point_field.is_some() {
+        c.stage.set_text(if is_draft {
+            "Edit sensor…"
+        } else if point_field.is_some() {
             "Edit points…"
         } else {
             "Stage change"
@@ -544,7 +830,7 @@ impl App {
                     (false, false)
                 }
             }
-            None => {
+            Some(Target::Draft(_)) | None => {
                 c.first.set_text("");
                 c.second.set_text("");
                 (false, false)
@@ -553,7 +839,7 @@ impl App {
         c.first.set_enabled(first_editable);
         c.second.set_enabled(second_editable);
         c.stage
-            .set_enabled(first_editable || second_editable || point_field.is_some());
+            .set_enabled(first_editable || second_editable || point_field.is_some() || is_draft);
         c.inspect.set_enabled(is_field);
         c.undo
             .set_enabled(target.as_ref().is_some_and(|t| s.has_edit(t)));
@@ -641,6 +927,10 @@ impl App {
             }
         }
         let result = match self.target() {
+            Some(target @ Target::Draft(_)) => {
+                self.open_sensor_form(target);
+                return;
+            }
             Some(Target::Sensor(slot)) => {
                 self.session
                     .borrow_mut()
@@ -686,6 +976,7 @@ impl App {
     }
     fn pick_export(&self) {
         let result = (|| {
+            self.session.borrow().preview()?;
             let Some(mut path) = self.choose(
                 "Save repaired model as a new file",
                 nwg::FileDialogAction::Save,

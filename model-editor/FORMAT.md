@@ -102,6 +102,12 @@ The following suffix sizes start after the reset source and include the two-byte
 
 ## Delivery and support by milestone
 
+### Sensor collection changes
+
+The desktop app appends complete records to the counted telemetry collection. New S.Port entries use the display fields and protocol payload of a matching firmware-discovered Application ID and sub-ID from the public corpus. Paste copies the complete encoded record. Export checks S.Port keys against the original model and preserves the source file.
+
+The dependency graph uses stored source operands and curve selectors encountered by the sequential decoder. Stored categories `13`, `17`, `21`, `22`, `23` and `24` resolve to logic switches, variables, timers, sensors, sensor-alive status and flight modes respectively. Cascade can remove verified counted records and clear widget slots. A retained reference keeps its source category and options while its member follows the target's new slot. The writer checks the resulting counts and reference stream after reopening. Fixed settings, opaque Lua and incomplete formats can block deletion.
+
 ### Curves, logical switches and variables
 
 | Native experiment | On-disk observation and read-back |

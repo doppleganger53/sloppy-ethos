@@ -71,8 +71,10 @@ pub(crate) fn expected(c: &mut Cursor<'_>, n: u8) -> Result<()> {
     Ok(())
 }
 fn curve_reference(c: &mut Cursor<'_>) -> Result<()> {
+    let start = c.pos;
     match c.byte()? {
-        0 | 2..=51 => {}
+        0 => {}
+        selector @ 2..=51 => c.curve_reference(start, selector),
         1 => {
             c.source()?;
         }
@@ -320,12 +322,14 @@ fn flight_modes(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
     for i in 0..count(c, f, "Flight modes", "flight_modes", 20)? {
         let path = format!("flight_modes[{i}]");
         c.path = path.clone();
+        let start = c.pos;
         expected(c, 0)?;
         source(c, f, "Flight modes", &format!("{path}.active_condition"))?;
         label(c, f, "Flight modes", &format!("{path}.name"), true)?;
         label(c, f, "Flight modes", &format!("{path}.audio"), false)?;
         source(c, f, "Flight modes", &format!("{path}.fade_in"))?;
         source(c, f, "Flight modes", &format!("{path}.fade_out"))?;
+        c.record(path, start);
     }
     Ok(())
 }
@@ -421,6 +425,7 @@ fn mixes(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
     for i in 0..count(c, f, "Mixes", "mixes", 120)? {
         let path = format!("mixes[{i}]");
         c.path = path.clone();
+        let start = c.pos;
         let p = c.pos;
         let key = c.dword()?;
         let kind = match key {
@@ -545,6 +550,7 @@ fn mixes(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
                 p..c.pos,
             ));
         }
+        c.record(path, start);
     }
     Ok(())
 }
@@ -575,6 +581,7 @@ fn functions(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
         )?;
         if k == 0 {
             source(c, f, "Special functions", &format!("{path}.target"))?;
+            c.record(path, p);
             continue;
         }
         if k != 3 {
@@ -613,6 +620,7 @@ fn functions(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
             }
         }
         fixed(c, f, "Special functions", &format!("{path}.timing"), 8)?;
+        c.record(path, p);
     }
     Ok(())
 }
@@ -620,6 +628,7 @@ fn timers(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
     for i in 0..count(c, f, "Timers", "timers", 8)? {
         let path = format!("timers[{i}]");
         c.path = path.clone();
+        let start = c.pos;
         expected(c, 0)?;
         label(c, f, "Timers", &format!("{path}.name"), true)?;
         let p = c.pos;
@@ -682,6 +691,7 @@ fn timers(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
             source(c, f, "Timers", &format!("{path}.stop_condition"))?;
         }
         source(c, f, "Timers", &format!("{path}.counting_source"))?;
+        c.record(path, start);
     }
     Ok(())
 }

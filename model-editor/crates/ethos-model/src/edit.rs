@@ -328,13 +328,17 @@ impl Model {
         fields: &[FieldEdit],
     ) -> Result<()> {
         let (expected, _) = self.prepare(edits, fields)?;
+        Self::persist_copy(path, &expected)
+    }
+
+    pub(crate) fn persist_copy(path: &Path, expected: &[u8]) -> Result<()> {
         let directory = path
             .parent()
             .filter(|p| !p.as_os_str().is_empty())
             .unwrap_or(Path::new("."));
         let write = || -> Result<()> {
             let mut temp = NamedTempFile::new_in(directory)?;
-            temp.write_all(&expected)?;
+            temp.write_all(expected)?;
             temp.as_file().sync_all()?;
             let mut persisted = temp.reopen()?;
             persisted.seek(SeekFrom::Start(0))?;
@@ -481,6 +485,15 @@ impl Model {
             } else {
                 return Err(Error::Invalid(format!("{path}: unsupported edit")));
             };
+            if field.encoding == Some(super::EditFormat::Label15) {
+                if let Some(sensor) = final_sensors
+                    .iter_mut()
+                    .find(|sensor| field.range.start == sensor.range.start + 8)
+                {
+                    sensor.range.end = sensor.range.end - field.range.len() + bytes.len();
+                    sensor.name.clone_from(&display);
+                }
+            }
             if field.encoding == Some(super::EditFormat::CurvePoints) {
                 let root = field
                     .path

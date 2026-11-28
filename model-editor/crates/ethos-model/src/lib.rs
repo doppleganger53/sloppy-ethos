@@ -2,6 +2,7 @@
 mod channel_edit;
 mod compare;
 mod curves;
+mod dependencies;
 mod edit;
 mod legacy;
 mod logic;
@@ -9,12 +10,15 @@ mod order;
 mod prefix;
 mod radio;
 mod sections_after;
+mod sensor_edit;
 mod trainer;
 mod trims;
 mod variables;
 
 pub use compare::{compare, DiffKind, Difference};
+pub use dependencies::{DeletePreview, Dependencies};
 pub use edit::{Change, Edit, FieldEdit};
+pub use sensor_edit::{SensorCopy, SensorDraft, SENSOR_FIELDS};
 use serde::Serialize;
 use std::{fmt, fs, io::Read, ops::Range, path::Path};
 
@@ -228,6 +232,8 @@ pub struct Model {
     bytes: Vec<u8>,
     sensors: Vec<Sensor>,
     curve_ranges: Vec<Range<usize>>,
+    records: Vec<dependencies::Record>,
+    references: Vec<dependencies::Reference>,
     fields: Vec<Field>,
     warnings: Vec<String>,
     unverified: Option<UnverifiedRegion>,
@@ -329,6 +335,8 @@ impl Model {
             bytes,
             sensors: Vec::new(),
             curve_ranges: Vec::new(),
+            records: Vec::new(),
+            references: Vec::new(),
             warnings: Vec::new(),
             unverified: None,
             fields: vec![

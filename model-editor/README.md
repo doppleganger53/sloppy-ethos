@@ -29,6 +29,16 @@ Under **Checklist**, the throttle startup value is a whole percentage from −10
 
 The ID shown by the backup is a comparison value. Choose repair values from your actual sensor configuration.
 
+## Manage telemetry sensors
+
+- In **Telemetry IDs**, choose **Add sensor…** to start with blank S.Port fields. The editor uses firmware-captured defaults for the entered Application ID and Sub-ID. **Preview edits** lists the required fields for any incomplete row. For an example, use module `0`, band `1`, routing `0`, sub-ID `0`, Physical ID `05` and Application ID `6803` in `fixtures/layout-references.bin`.
+- Select a row, choose **Copy**, then **Paste**. The new entry retains the source settings. Change a pasted S.Port entry's key before exporting if it duplicates another key. In a Plane model, **Edit sensor…** can rename the entry.
+- Right-click a row in **Model settings** or **Telemetry IDs** and choose **Dependencies**. Expand **References** or **Referenced by** to trace stored references. Circular paths end at a row marked **cycle**.
+- Use Ctrl-click or Shift-click to select sensor rows and choose **Delete selected…**. With **Cascade delete** off, the dialog lists references that block deletion. Turn it on to preview direct and indirect dependents. **Stage deletion** applies the displayed list. The editor clears affected widget slots and keeps the screen layout.
+- **Save copy…** uses a new filename. Reopen the copy to review retained sensors and references. In the example fixture, deleting `telemetry.sensors[1]` cascades to `timers[0]` and its Value widget. The two other widgets continue to reference their original timers in the new slots.
+
+The dependency tree covers decoded model sources and curve selectors. If a cascade would require deleting a fixed model setting, or the file contains opaque Lua configuration or an unverified layout, the dialog reports the blocker. Blank entry creation covers S.Port identities with captured defaults. The editor can copy and delete decoded calculated and DIY entries.
+
 ## Support
 
 | Target | Supported workflow |

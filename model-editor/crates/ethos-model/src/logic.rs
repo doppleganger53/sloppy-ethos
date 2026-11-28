@@ -262,6 +262,7 @@ pub(crate) fn switches(c: &mut Cursor<'_>, f: &mut Vec<Field>) -> Result<()> {
         prefix::on_off(c, f, SWITCHES, &format!("{root}.negative"), true)?;
         prefix::fixed(c, f, SWITCHES, &format!("{root}.additional_flags"), 2)?;
         prefix::label(c, f, SWITCHES, &format!("{root}.comment"), false)?;
+        c.record(root, at);
     }
     Ok(())
 }

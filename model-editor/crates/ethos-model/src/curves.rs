@@ -40,6 +40,7 @@ pub(crate) fn reference(c: &mut Cursor<'_>, fields: &mut Vec<Field>, path: &str)
             )
         }
         2..=51 => {
+            c.curve_reference(start, selector);
             let slot = usize::from(selector - 2);
             (
                 Value::Reference {

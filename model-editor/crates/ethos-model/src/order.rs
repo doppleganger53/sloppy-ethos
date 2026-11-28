@@ -114,6 +114,21 @@ impl Model {
                 return Some(format!("{path}: reference coverage is incomplete"));
             }
         }
+        if collection == Collection::Sensors {
+            for reference in self
+                .references
+                .iter()
+                .filter(|r| r.collection == "telemetry.sensors")
+            {
+                let exposed = self.fields.iter().any(|field| {
+                    field.range.start == reference.offset
+                        && matches!(field.typed, Value::Source { category: 22, .. })
+                });
+                if !exposed {
+                    return Some("A telemetry reference requires the desktop dependency-aware deletion workflow".into());
+                }
+            }
+        }
         for f in &self.fields {
             if f.path.starts_with("channels[")
                 && f.path.ends_with(".default")

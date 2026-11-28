@@ -5,6 +5,8 @@ mod native;
 #[cfg(windows)]
 mod point_editor;
 #[cfg(windows)]
+mod sensor_dialogs;
+#[cfg(windows)]
 mod session;
 
 #[cfg(windows)]

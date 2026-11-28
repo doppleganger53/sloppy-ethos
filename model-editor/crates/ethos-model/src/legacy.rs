@@ -4,6 +4,8 @@ pub(crate) struct Cursor<'a> {
     pub data: &'a [u8],
     pub pos: usize,
     pub path: String,
+    pub records: Vec<super::dependencies::Record>,
+    pub references: Vec<super::dependencies::Reference>,
 }
 impl<'a> Cursor<'a> {
     pub fn bytes(&mut self, n: usize) -> Result<&'a [u8]> {
@@ -101,7 +103,25 @@ impl<'a> Cursor<'a> {
             }
             _ => return Err(self.unsupported(&format!("source encoding {cat:02X}"))),
         };
+        if let Value::Source {
+            category, member, ..
+        } = v
+        {
+            if let Some(reference) = super::dependencies::Reference::source(p, category, member) {
+                self.references.push(reference);
+            }
+        }
         Ok((p..self.pos, v, s))
+    }
+    pub fn record(&mut self, path: String, start: usize) {
+        self.records.push(super::dependencies::Record {
+            path,
+            range: start..self.pos,
+        });
+    }
+    pub fn curve_reference(&mut self, start: usize, selector: u8) {
+        self.references
+            .push(super::dependencies::Reference::curve(start, selector - 2));
     }
     pub fn count(&mut self, max: u16) -> Result<usize> {
         let n = self.word()?;
@@ -168,14 +188,17 @@ fn read_telemetry(
             start..start + 1,
             tag,
         ));
-        fields.push(Field::new(
-            "Telemetry",
-            format!("{root}.name"),
-            name_range,
-            Value::Text(name.clone()),
-            name.clone(),
-            false,
-        ));
+        fields.push(
+            Field::new(
+                "Telemetry",
+                format!("{root}.name"),
+                name_range,
+                Value::Text(name.clone()),
+                name.clone(),
+                false,
+            )
+            .writable(super::EditFormat::Label15),
+        );
         fields.push(Field::number(
             "Telemetry",
             format!("{root}.display_unit"),
@@ -295,8 +318,13 @@ fn read_telemetry(
                     false,
                 ));
                 let n = cur.word()?;
-                for _ in 0..n {
-                    cur.source()?;
+                for i in 0..n {
+                    super::prefix::source(
+                        cur,
+                        fields,
+                        "Telemetry",
+                        &format!("{root}.operations[{i}].source"),
+                    )?;
                     cur.byte()?;
                 }
             }
@@ -319,6 +347,7 @@ fn read_telemetry(
                 suffix_start..cur.pos,
             ));
         }
+        cur.record(root, start);
     }
     Ok(())
 }
@@ -335,6 +364,8 @@ pub(crate) fn decode(model: &mut Model) -> Result<()> {
         data: &model.bytes[..end],
         pos: 16,
         path: "model".into(),
+        records: Vec::new(),
+        references: Vec::new(),
     };
     let mut fields = Vec::new();
     let mut sensors = Vec::new();
@@ -361,6 +392,8 @@ pub(crate) fn decode(model: &mut Model) -> Result<()> {
         Err(e @ Error::Unsupported { .. }) => {
             // Incomplete record coverage cannot certify any slot or cross-record key conflicts.
             fields.retain(|f| f.section != "Telemetry");
+            cur.records
+                .retain(|record| !record.path.starts_with("telemetry.sensors["));
             for f in &mut fields {
                 f.editable = false;
             }
@@ -399,6 +432,8 @@ pub(crate) fn decode(model: &mut Model) -> Result<()> {
         end..end + 4,
         runtime,
     ));
+    model.references = cur.references;
+    model.records = cur.records;
     model.fields.extend(fields);
     Ok(())
 }

@@ -80,6 +80,7 @@ pub(crate) fn decode(c: &mut Cursor<'_>, f: &mut Vec<Field>) -> Result<()> {
     for i in 0..prefix::count(c, f, SECTION, "variables", 64)? {
         let root = format!("variables[{i}]");
         c.path = root.clone();
+        let record_start = c.pos;
         prefix::expected(c, 0)?;
         prefix::label(c, f, SECTION, &format!("{root}.name"), true)?;
         prefix::label(c, f, SECTION, &format!("{root}.comment"), false)?;
@@ -206,6 +207,7 @@ pub(crate) fn decode(c: &mut Cursor<'_>, f: &mut Vec<Field>) -> Result<()> {
             writable,
             EditFormat::VariableActions,
         );
+        c.record(root, record_start);
     }
     Ok(())
 }

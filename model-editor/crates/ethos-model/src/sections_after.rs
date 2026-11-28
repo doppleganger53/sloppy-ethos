@@ -435,7 +435,10 @@ fn screens(c: &mut Cursor<'_>, fields: &mut Vec<Field>) -> Result<()> {
         ));
         let widgets = format!("{path}.widgets");
         for slot in 0..collection_count(c, fields, "Screens", &widgets)? {
-            read_widget(c, fields, &format!("{widgets}[{slot}]"))?;
+            let widget = format!("{widgets}[{slot}]");
+            let start = c.pos;
+            read_widget(c, fields, &widget)?;
+            c.record(widget, start);
         }
     }
     Ok(())
