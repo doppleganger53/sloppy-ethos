@@ -56,6 +56,9 @@ async function execute({ runtime, input, fixture, collectJson }) {
   });
   const root = firmware.ccall('getCurrentModel', 'string').replace(/\/$/, '');
   const modelPath = root + '/models/model00.bin';
+  // A development fixture may create the second model through the native wizard.
+  const outputName = fixture?.createsModel ? 'model01.bin' : 'model00.bin';
+  const outputPath = root + '/models/' + outputName;
   firmware.FS.mkdirTree(root + '/models');
   firmware._writeDefaultSettingsAndModel();
   const original = Buffer.from(firmware.FS.readFile(modelPath));
@@ -84,6 +87,13 @@ async function execute({ runtime, input, fixture, collectJson }) {
     // The initial preflight dialog and the touch targets below finish rendering after the load message.
     await delay(335);
     for (const action of fixture.actions) await act(firmware, action);
+    if (fixture.createsModel) {
+      const created = () => firmware.FS.readdir(root + '/models').includes(outputName);
+      for (let page = 0; page < 12 && !created(); page++) {
+        await act(firmware, ['tap', 733, 450]);
+      }
+      if (!created()) throw failure('error', 'The firmware wizard did not create the requested model.');
+    }
     if (fixture.lua && !logs.includes('FIXTURE OK')) {
       const diagnostic = logs.find(line => /lua.*error|main\.lua:\d+:/i.test(line));
       throw failure('error', diagnostic || 'The firmware did not confirm the requested fixture action.');
@@ -100,10 +110,10 @@ async function execute({ runtime, input, fixture, collectJson }) {
   firmware._stop();
   await until(() => logs.slice(beforeStop).some(line => line.includes(`@ ${runtime.revision} stopped!`)),
     'ETHOS did not finish shutting down its disposable model.');
-  if (!logs.slice(beforeStop).some(line => line.includes("ModelData::write('USER:/models/model00.bin')"))) {
+  if (!logs.slice(beforeStop).some(line => line.includes(`ModelData::write('USER:/models/${outputName}')`))) {
     throw failure('error', 'No fresh firmware write of the selected model was observed.');
   }
-  const saved = Buffer.from(firmware.FS.readFile(modelPath));
+  const saved = Buffer.from(firmware.FS.readFile(outputPath));
   checkModel(saved, runtime.outputFormat);
   const diagnostics = logs.filter(line => /ModelData::(?:read|write)|will be converted|Ethos .* (started|stopped)!/.test(line))
     .map(line => line.replace(/^\d+ /, ''));

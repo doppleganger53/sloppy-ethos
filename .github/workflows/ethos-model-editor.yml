@@ -97,9 +97,7 @@ jobs:
           unzip -q "$RUNNER_TEMP/26.2.0.zip" -d "$ETHOS_EDITOR_SIM_2620"
           node --test simulator/runtime.test.cjs
           node fixtures/generate.cjs "$ETHOS_EDITOR_SIM_168" "$RUNNER_TEMP/fixture-replay" "$ETHOS_EDITOR_SIM_2612" "$ETHOS_EDITOR_SIM_2620"
-          for fixture in fixtures/*.bin; do
-            cmp "$fixture" "$RUNNER_TEMP/fixture-replay/${fixture##*/}"
-          done
+          node fixtures/verify-replay.cjs fixtures "$RUNNER_TEMP/fixture-replay"
 
   release:
     if: startsWith(github.ref, 'refs/tags/ethos-model-editor-v')

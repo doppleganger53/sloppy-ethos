@@ -1,7 +1,7 @@
 //! Structures following the 0.1.37 telemetry collection. Unknown widget payloads
 //! cannot be skipped unless the firmware supplied an explicit length.
 use crate::legacy::Cursor;
-use crate::{Error, Field, Model, Result, Value};
+use crate::{EditFormat, Error, Field, Model, Result, Value};
 use std::ops::Range;
 
 const SWITCH_POSITIONS: [&str; 4] = ["No check", "Up", "Middle", "Down"];
@@ -50,10 +50,88 @@ fn read_enum(
     Ok(raw)
 }
 
-fn read_source(c: &mut Cursor<'_>, fields: &mut Vec<Field>, path: &str) -> Result<()> {
+fn read_source(c: &mut Cursor<'_>, fields: &mut Vec<Field>, path: &str) -> Result<bool> {
     c.path = path.into();
     let (range, typed, display) = c.source()?;
+    let absent = typed == Value::Absent;
     fields.push(Field::new("Screens", path, range, typed, display, false));
+    Ok(absent)
+}
+
+fn bounded_byte(
+    section: &str,
+    path: &str,
+    range: Range<usize>,
+    value: i16,
+    low: i16,
+    high: i16,
+) -> Field {
+    let field = Field::number(section, path, range, value);
+    if (low..=high).contains(&value) {
+        field.writable(EditFormat::Byte {
+            minimum: low,
+            maximum: high,
+        })
+    } else {
+        field
+    }
+}
+
+fn line_chart(c: &mut Cursor<'_>, fields: &mut Vec<Field>, path: &str) -> Result<()> {
+    let no_source = read_source(c, fields, &format!("{path}.source"))?;
+    read_source(c, fields, &format!("{path}.pause_condition"))?;
+    let start = c.pos;
+    let interval = c.byte()?;
+    fields.push(bounded_byte(
+        "Screens",
+        &format!("{path}.interval"),
+        start..c.pos,
+        interval.into(),
+        5,
+        100,
+    ));
+    read_enum(
+        c,
+        fields,
+        "Screens",
+        &format!("{path}.inverted"),
+        &TOGGLE,
+        true,
+    )?;
+    c.path = format!("{path}.auto_range");
+    let start = c.pos;
+    let automatic = c.byte()?;
+    let bounds = match automatic {
+        0 => Some(c.bytes(8)?),
+        1 => None,
+        _ => return Err(c.unsupported("line chart range mode")),
+    };
+    // The flag owns the optional bounds for a mode change. Overlapping leaf edits are rejected.
+    fields.push(
+        enum_field(
+            "Screens",
+            &c.path,
+            start..c.pos,
+            automatic.into(),
+            Some(TOGGLE[usize::from(automatic)]),
+            no_source,
+        )
+        .projected(),
+    );
+    if let Some(bounds) = bounds {
+        for (index, leaf) in ["maximum", "minimum"].into_iter().enumerate() {
+            let value = i32::from_le_bytes(bounds[index * 4..index * 4 + 4].try_into().unwrap());
+            let offset = start + 1 + index * 4;
+            fields.push(Field::new(
+                "Screens",
+                format!("{path}.{leaf}"),
+                offset..offset + 4,
+                Value::Integer(value.into()),
+                value.to_string(),
+                no_source && (-1024..=1024).contains(&value),
+            ));
+        }
+    }
     Ok(())
 }
 
@@ -315,32 +393,7 @@ fn read_widget(c: &mut Cursor<'_>, fields: &mut Vec<Field>, path: &str) -> Resul
                 ));
             }
         }
-        7 => {
-            read_source(c, fields, &format!("{path}.source"))?;
-            read_source(c, fields, &format!("{path}.pause_condition"))?;
-            let start = c.pos;
-            let interval = c.byte()?;
-            fields.push(Field::number(
-                "Screens",
-                format!("{path}.interval"),
-                start..c.pos,
-                interval,
-            ));
-            // These two flags are independent bytes. The initial public case has both off.
-            let start = c.pos;
-            c.bytes(2)?;
-            fields.push(Field::opaque(
-                "Screens",
-                format!("{path}.chart_flags"),
-                start..c.pos,
-            ));
-            for leaf in ["maximum", "minimum"] {
-                c.path = format!("{path}.{leaf}");
-                let start = c.pos;
-                let value = i32::from_le_bytes(c.bytes(4)?.try_into().unwrap());
-                fields.push(Field::number("Screens", &c.path, start..c.pos, value));
-            }
-        }
+        7 => line_chart(c, fields, path)?,
         9 => {
             c.path = format!("{path}.file");
             let (range, name) = c.text()?;
@@ -434,11 +487,13 @@ fn checklist(c: &mut Cursor<'_>, fields: &mut Vec<Field>) -> Result<()> {
     }
     let start = c.pos;
     let throttle = c.byte()? as i8;
-    fields.push(Field::number(
+    fields.push(bounded_byte(
         "Checklist",
         "checklist.throttle_value",
         start..c.pos,
-        throttle,
+        throttle.into(),
+        -100,
+        100,
     ));
     let start = c.pos;
     let function_switches = c.word()?;
@@ -562,13 +617,27 @@ pub(crate) fn encode(
         let [lo, hi] = slot.to_le_bytes();
         return Ok(Some((vec![category, 0, lo, hi], format!("{name} {slot}"))));
     }
+    let screen = field.section == "Screens" && path.starts_with("screens[");
+    if screen && field.editable && (path.ends_with(".minimum") || path.ends_with(".maximum")) {
+        let value = input
+            .trim()
+            .parse::<i32>()
+            .ok()
+            .filter(|v| (-1024..=1024).contains(v))
+            .ok_or_else(|| {
+                Error::Invalid(format!("{path}: enter a whole value from -1024 to 1024"))
+            })?;
+        return Ok(Some((value.to_le_bytes().to_vec(), value.to_string())));
+    }
     let switch = path == "checklist.switches.sa";
+    let auto_range = screen && path.ends_with(".auto_range");
     let boolean = path == "checklist.failsafe"
-        || (field.section == "Screens" && path.starts_with("screens[") && path.ends_with(".title"));
+        || auto_range
+        || (screen && (path.ends_with(".title") || path.ends_with(".inverted")));
     if !switch && !boolean {
         return Ok(None);
     }
-    if !field.editable || original.len() != 1 {
+    if !field.editable || !(original.len() == 1 || (auto_range && original.len() == 9)) {
         return Err(Error::Invalid(format!(
             "{path}: the stored value is outside the verified edit range"
         )));
@@ -592,10 +661,52 @@ pub(crate) fn encode(
         });
     let choice =
         choice.ok_or_else(|| Error::Invalid(format!("{path}: choose {}", labels.join(", "))))?;
+    if auto_range {
+        let bytes = if choice as u8 == original[0] {
+            original.to_vec()
+        } else if choice == 1 {
+            vec![1]
+        } else {
+            let mut manual = vec![0];
+            manual.extend(1024_i32.to_le_bytes());
+            manual.extend((-1024_i32).to_le_bytes());
+            manual
+        };
+        return Ok(Some((bytes, labels[choice].to_owned())));
+    }
     let byte = if switch {
         (original[0] & !3) | choice as u8
     } else {
         choice as u8
     };
     Ok(Some((vec![byte], labels[choice].to_string())))
+}
+
+/// Native manual chart bounds permit equality and constrain the minimum to the final maximum.
+pub(crate) fn check_chart_bounds(model: &Model, path: &str) -> Result<()> {
+    let Some((parent, leaf)) = path.rsplit_once('.') else {
+        return Ok(());
+    };
+    if !parent.starts_with("screens[") || !matches!(leaf, "minimum" | "maximum") {
+        return Ok(());
+    }
+    let bound = |name: &str| {
+        let target = format!("{parent}.{name}");
+        model
+            .fields
+            .iter()
+            .find(|f| f.path == target)
+            .and_then(|f| match f.typed {
+                Value::Integer(value) => Some(value),
+                _ => None,
+            })
+    };
+    if let (Some(minimum), Some(maximum)) = (bound("minimum"), bound("maximum")) {
+        if minimum > maximum {
+            return Err(Error::Invalid(format!(
+                "{path}: chart minimum must be at most its maximum"
+            )));
+        }
+    }
+    Ok(())
 }

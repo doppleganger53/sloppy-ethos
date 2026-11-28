@@ -165,6 +165,23 @@ fn percent(value: &str, path: &str, min: i16, max: i16) -> Result<(Vec<u8>, Stri
     let raw = rounded as i32;
     Ok((packed_integer(raw), format!("{}%", f64::from(raw) / 10.0)))
 }
+fn bitmap_reference(model: &Model, path: &str, value: &str) -> Result<(Vec<u8>, String)> {
+    let name = value.as_bytes();
+    if name.len() > 15 || name.contains(&0) {
+        return Err(Error::Invalid(format!(
+            "{path}: the bitmap key may contain up to 15 UTF-8 bytes and no NUL"
+        )));
+    }
+    let field = model.field(path).expect("bitmap field was decoded");
+    let original = &model.bytes[field.range.clone()];
+    // ETHOS replaces the requested text and its NUL. Bytes beyond that NUL
+    // belong to the original storage and can contain a previous, longer key.
+    let mut bytes = original.to_vec();
+    bytes[..name.len()].copy_from_slice(name);
+    bytes[name.len()] = 0;
+    Ok((bytes, value.to_owned()))
+}
+
 fn encode_field(
     model: &Model,
     kind: super::EditFormat,
@@ -173,6 +190,28 @@ fn encode_field(
 ) -> Result<(Vec<u8>, String)> {
     use super::EditFormat;
     match kind {
+        EditFormat::TrainerActivation => super::trainer::encode_activation(path, value),
+        EditFormat::TrainerDestination => super::trainer::encode_destination(path, value),
+        EditFormat::TrainerControlMode => super::trainer::encode_mode(path, value),
+        EditFormat::Byte { minimum, maximum } => {
+            let n = value
+                .trim()
+                .parse::<i16>()
+                .ok()
+                .filter(|n| (minimum..=maximum).contains(n))
+                .ok_or_else(|| {
+                    Error::Invalid(format!(
+                        "{path}: enter a whole value from {minimum} through {maximum}"
+                    ))
+                })?;
+            Ok((vec![n as u8], n.to_string()))
+        }
+        EditFormat::TrainerLink => super::trainer::encode_link(path, value),
+        EditFormat::RadioChannelRange {
+            min_count,
+            max_count,
+        } => super::radio::encode_channel_range(path, value, min_count, max_count),
+        EditFormat::BitmapKey => bitmap_reference(model, path, value),
         EditFormat::LogicInputs => super::logic::encode_inputs(path, value),
         EditFormat::VariableRates => super::variables::encode_rates(path, value),
         EditFormat::TrimTarget => super::variables::trim_target(model, path, value),
@@ -181,7 +220,14 @@ fn encode_field(
         EditFormat::LogicComparison => super::logic::encode_op(path, value, false),
         EditFormat::LogicCombinator => super::logic::encode_op(path, value, true),
         EditFormat::LogicInput => super::logic::encode_input(path, value),
-        EditFormat::TimerInterval => super::logic::seconds(path, value, 1, 1750),
+        EditFormat::TimerInterval => {
+            let (raw, display) = super::logic::seconds(path, value, 1, 1750)?;
+            Ok((packed_integer(raw), display))
+        }
+        EditFormat::LogicDelay => {
+            let (raw, display) = super::logic::seconds(path, value, 0, 600)?;
+            Ok(((raw as u16).to_le_bytes().to_vec(), display))
+        }
         EditFormat::CurveSelector => {
             super::curves::encode_selector(model.curve_ranges.len(), value, path)
         }
@@ -541,6 +587,7 @@ impl Model {
             return Err(Error::Invalid("telemetry: reopening the edited copy changed the verified record layout or identities".into()));
         }
         for patch in &patches {
+            super::sections_after::check_chart_bounds(&reopened, &patch.change.path)?;
             if !reopened
                 .fields
                 .iter()

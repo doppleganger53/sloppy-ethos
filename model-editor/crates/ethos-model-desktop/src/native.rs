@@ -1,5 +1,5 @@
 use crate::point_editor::{encode_rows, PointEditor};
-use crate::session::{section_label, Row, Session, Target, View};
+use crate::session::{section_label, OpenModel, Row, Session, Target, View};
 use native_windows_gui as nwg;
 use std::cell::{Cell, RefCell};
 use std::path::{Path, PathBuf};
@@ -413,14 +413,19 @@ impl App {
         c.widths(&view);
         c.table.set_redraw(true);
         c.table.invalidate();
-        let name = |p: &Path| {
-            p.file_name()
-                .unwrap_or(p.as_os_str())
-                .to_string_lossy()
-                .into_owned()
+        let name = |opened: &OpenModel| {
+            let path = &opened.path;
+            let filename = path
+                .file_name()
+                .unwrap_or(path.as_os_str())
+                .to_string_lossy();
+            match opened.model.field("model.type") {
+                Some(category) => format!("{filename} ({})", category.value),
+                None => filename.into_owned(),
+            }
         };
-        let current = s.current.as_ref().map(|m| name(&m.path));
-        let backup = s.backup.as_ref().map(|m| name(&m.path));
+        let current = s.current.as_ref().map(name);
+        let backup = s.backup.as_ref().map(name);
         let files = match (current, backup) {
             (Some(current), Some(backup)) => format!("Current   {current}       Backup   {backup}"),
             (Some(current), None) => format!("Current   {current}"),

@@ -482,6 +482,60 @@ fn longer_label_keeps_unknown_widget_bytes_and_moves_its_warning() {
 }
 
 #[test]
+fn bitmap_reference_preserves_its_boundaries_without_touching_external_assets() {
+    let template = from("default");
+    let address = template.field("model.bitmap").unwrap().range.clone();
+    let plain = template.to_bytes();
+    for (id, label) in [
+        ("bitmap-path", "b/c image.png"),
+        ("bitmap-max", "12345678901.png"),
+    ] {
+        let result = template
+            .serialize_fields(&[], &[field("model.bitmap", label)])
+            .unwrap();
+        assert_eq!(result, fixture(id));
+        assert!(plain
+            .iter()
+            .zip(&result)
+            .enumerate()
+            .all(|(n, (a, b))| a == b || n == 14 || n == 15 || address.contains(&n)));
+        let reopened = Model::parse(&result).unwrap();
+        assert_eq!(reopened.field("model.bitmap").unwrap().value, label);
+        let cleared = reopened
+            .serialize_fields(&[], &[field("model.bitmap", "")])
+            .unwrap();
+        assert_eq!(
+            &cleared[address.start + 1..address.end],
+            &result[address.start + 1..address.end]
+        );
+        if id == "bitmap-max" {
+            assert_eq!(cleared, fixture("bitmap-clear"));
+        }
+    }
+    assert!(template
+        .preview_fields(&[], &[field("model.bitmap", "1234567890123456")])
+        .is_err());
+    assert!(template
+        .preview_fields(&[], &[field("model.bitmap", "a\0.png")])
+        .is_err());
+    let mut padded = template.to_bytes();
+    padded[address.end - 2] = 0xaa;
+    let padded = Model::parse(&damaged(padded)).unwrap();
+    let patched = padded
+        .serialize_fields(&[], &[field("model.bitmap", "bench.png")])
+        .unwrap();
+    assert_eq!(patched[address.end - 2], 0xaa);
+    let expanded = padded
+        .serialize_fields(&[], &[field("model.bitmap", "12345678901.png")])
+        .unwrap();
+    assert_eq!(&expanded[address.clone()], b"12345678901.png\0");
+    let mut no_terminator = template.to_bytes();
+    no_terminator[address.clone()].fill(b'x');
+    let no_terminator = Model::parse(&damaged(no_terminator)).unwrap();
+    assert!(!no_terminator.field("model.bitmap").unwrap().editable);
+}
+
+#[test]
 fn concurrent_publish_never_replaces_output() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("one.bin");

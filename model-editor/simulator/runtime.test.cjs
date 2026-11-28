@@ -7,6 +7,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { validate } = require('./validate.cjs');
 const { checkModel, changedRanges, crc16, digest } = require('./runtime.cjs');
+const { compareCapture, verifySeed } = require('../fixtures/verify-replay.cjs');
 
 const fixtures = path.join(__dirname, '..', 'fixtures');
 const input = path.join(fixtures, 'throttle-after.bin');
@@ -41,6 +42,31 @@ test('missing and incompatible runtimes return diagnostics without executing sel
   fs.writeFileSync(path.join(directory, 'X20PROAW_FCC.js'), 'throw new Error("unexpected execution")');
   fs.writeFileSync(path.join(directory, 'X20PROAW_FCC.wasm'), 'unrecognized');
   assert.equal((await validate([directory, input])).status, 'runtime-incompatible');
+});
+
+test('Multi wizard replay accepts only the documented high bits on the exact capture', () => {
+  const name = 'category-multi.bin';
+  const original = fs.readFileSync(path.join(fixtures, name));
+  function changed(bytes, offset, mask) {
+    const result = Buffer.from(bytes);
+    result[offset] ^= mask;
+    result.writeUInt16LE(crc16(result.subarray(16)), 14);
+    return result;
+  }
+  const alternate = changed(original, 517, 0x50);
+  assert.deepEqual(compareCapture(name, original, alternate),
+    { offset:517, before:original[517], after:alternate[517] });
+  assert.throws(() => compareCapture(name, original, changed(original, 517, 1)), /offset 517/);
+  assert.throws(() => compareCapture(name, original, changed(alternate, 518, 0x50)), /offset 518/);
+  assert.throws(() => compareCapture('category-glider.bin', original, alternate), /differs/);
+  const corrupt = Buffer.from(alternate);
+  corrupt[14] ^= 4;
+  assert.throws(() => compareCapture(name, original, corrupt), /CRC/);
+  const before = fs.readFileSync(path.join(fixtures, 'category-multi-before.bin'));
+  const pair = new Map([[name, original], ['category-multi-before.bin', changed(before, 528, 0x50)]]);
+  assert.throws(() => verifySeed(pair), /complete throttle-cut flag byte/);
+  pair.set(name, alternate);
+  assert.doesNotThrow(() => verifySeed(pair));
 });
 
 test('corrupt checksum or unsupported source format is rejected before firmware startup', async t => {

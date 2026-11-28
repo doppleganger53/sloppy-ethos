@@ -7,7 +7,10 @@ mod legacy;
 mod logic;
 mod order;
 mod prefix;
+mod radio;
 mod sections_after;
+mod trainer;
+mod trims;
 mod variables;
 
 pub use compare::{compare, DiffKind, Difference};
@@ -96,6 +99,14 @@ pub struct Field {
 #[derive(Clone, Copy, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum EditFormat {
+    TrainerActivation,
+    TrainerDestination,
+    Byte { minimum: i16, maximum: i16 },
+    TrainerControlMode,
+    TrainerLink,
+    RadioChannelRange { min_count: u8, max_count: u8 },
+    BitmapKey,
+    LogicDelay,
     TrimTarget,
     LogicInputs,
     VariableRates,
@@ -364,6 +375,18 @@ impl Model {
         model.describe_gaps();
         model.list_order();
         model.list_curve_order();
+        // The additional categories have native ID-only before/after controls.
+        // Broader edits remain gated on category-specific firmware read-back.
+        if model.bytes[16] != 0 {
+            for field in &mut model.fields {
+                let sensor_id = field.path.starts_with("telemetry.sensors[")
+                    && (field.path.ends_with("].physical_id")
+                        || field.path.ends_with("].application_id"));
+                if !sensor_id {
+                    field.editable = false;
+                }
+            }
+        }
         Ok(model)
     }
 

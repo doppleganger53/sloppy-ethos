@@ -101,6 +101,10 @@ def verify_bundled_evidence(package):
     expected = {item["file"]: item["sha256"] for item in manifest["fixtures"]}
     actual = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in evidence.glob("*.bin")}
     assert actual == expected, "The portable fixture corpus differs from its provenance manifest"
+    for script in [*evidence.glob("*.cjs"), *(package / "simulator").glob("*.cjs")]:
+        for relative in re.findall(r"""\brequire\(\s*["'](\.{1,2}/[^"']+)["']\s*\)""", script.read_text(encoding="utf-8")):
+            imported = (script.parent / relative).resolve()
+            assert imported.is_relative_to(package) and imported.is_file(), f"Missing module for {script.name}: {relative}"
 
 
 def exercise_curve(launch, cli, package, scratch, env):
@@ -164,7 +168,7 @@ def exercise_mixed_diff(launch, cli, package, env):
     close_editor(window)
 
 
-def exercise_field_edit(launch, package, scratch, source, expected, edits):
+def exercise_field_edit(launch, package, scratch, source, expected, edits, read_only=()):
     corpus = package / "fixtures"
     app, window = launch(corpus / f"{source}.bin")
     window.wait("visible", timeout=20)
@@ -172,11 +176,10 @@ def exercise_field_edit(launch, package, scratch, source, expected, edits):
     inputs = sorted((e for e in window.descendants(class_name="Edit") if e.is_visible()),
                     key=lambda e: (e.rectangle().top, e.rectangle().left))
     search, proposed = inputs[:2]
+    for path in read_only:
+        assert_read_only(window, table, search, proposed, path)
     for path, value, hint in edits:
-        search.set_edit_text(path)
-        matches = wait_for(lambda: rows(table), lambda rs: any(r[0] == path for r in rs), path)
-        index = next(i for i, row in enumerate(matches) if row[0] == path)
-        table.get_item(index).select()
+        select_setting(table, search, path)
         wait_for(lambda: [c.window_text() for c in window.descendants(class_name="Static")],
                  lambda messages: any(hint in m for m in messages), "field input hint")
         proposed.set_edit_text(value)
@@ -188,6 +191,76 @@ def exercise_field_edit(launch, package, scratch, source, expected, edits):
     assert output.read_bytes() == (corpus / f"{expected}.bin").read_bytes(), (
         f"Desktop output differs from independent firmware fixture {expected}"
     )
+    close_editor(window)
+
+
+def select_setting(table, search, path):
+    search.set_edit_text(path)
+    displayed = wait_for(lambda: rows(table), lambda rs: any(r[0] == path for r in rs), path)
+    index = next(i for i, row in enumerate(displayed) if row[0] == path)
+    table.get_item(index).select()
+    return displayed[index]
+
+
+def assert_read_only(window, table, search, proposed, path):
+    row = select_setting(table, search, path)
+    assert row[3] == "Read only", row
+    assert not proposed.is_enabled(), path
+    assert not window.child_window(title="Stage change", class_name="Button").is_enabled(), path
+    return row[1]
+
+
+def exercise_wireless_inspection(launch, package):
+    _, window = launch(package / "fixtures/rf-xjt-failsafe-hold.bin")
+    window.wait("visible", timeout=20)
+    table = window.child_window(class_name="SysListView32").wrapper_object()
+    editors = sorted((e for e in window.descendants(class_name="Edit") if e.is_visible()),
+                     key=lambda e: (e.rectangle().top, e.rectangle().left))
+    for path in ("rf.modules[1].protocol", "rf.modules[1].failsafe_mode"):
+        saved = assert_read_only(window, table, editors[0], editors[1], path)
+        if path.endswith(".failsafe_mode"):
+            assert saved == "Hold"
+    close_editor(window)
+
+
+def exercise_multirotor(launch, cli, package, scratch, env):
+    corpus = package / "fixtures"
+    source = corpus / "category-multi-before.bin"
+    app, window = launch(source)
+    window.wait("visible", timeout=20)
+    table = window.child_window(class_name="SysListView32").wrapper_object()
+    tree = window.child_window(class_name="SysTreeView32").wrapper_object()
+    controls = sorted((e for e in window.descendants(class_name="Edit") if e.is_visible()),
+                      key=lambda e: (e.rectangle().top, e.rectangle().left))
+    search, physical, application = controls
+    wait_for(lambda: [c.window_text() for c in window.descendants(class_name="Static")],
+             lambda labels: any("category-multi-before.bin (Multirotor)" in text for text in labels),
+             "opened airframe category")
+    assert_read_only(window, table, search, physical, "model.name")
+    select_section(tree, "Telemetry IDs")
+    sensor_rows = wait_for(lambda: rows(table), lambda rs: len(rs) == 4, "multirotor telemetry")
+    assert all(r[1:3] == ["03", "6803"] for r in sensor_rows)
+    for slot in range(4):
+        table.get_item(slot).select()
+        wait_for(application.window_text, lambda value: value == "6803", "multirotor application ID")
+        application.set_edit_text("6802")
+        window.child_window(title="Stage change", class_name="Button").click()
+        if slot in (0, 3):
+            window.child_window(title="Preview edits", class_name="Button").click()
+            wait_for(lambda: rows(table), lambda rs: len(rs) == slot + 1, "selected ID changes")
+            output = scratch / f"multirotor-{slot + 1}.bin"
+            choose_file(app, window, "Save copy…", "Save repaired model as a new file", output)
+            wait_for(output.exists, bool, "multirotor export")
+            if slot == 0:
+                cli_copy = scratch / "multirotor-cli-one.bin"
+                subprocess.run([str(cli), "repair", str(source), "--output", str(cli_copy), "--set", "0:-:6802"],
+                               check=True, cwd=scratch, env=env, stdout=subprocess.DEVNULL)
+                assert output.read_bytes() == cli_copy.read_bytes()
+                decoded = json.loads(subprocess.check_output([str(cli), "inspect", str(output), "--json"], env=env))
+                assert [s["application_id"] for s in decoded["sensors"]] == [0x6802, 0x6803, 0x6803, 0x6803]
+                select_section(tree, "Telemetry IDs")
+            else:
+                assert output.read_bytes() == (corpus / "category-multi-after.bin").read_bytes()
     close_editor(window)
 
 
@@ -316,8 +389,20 @@ def run_smoke(package, fixtures, runtime=None):
 
             exercise_curve(launch,cli,package,scratch,env)
             exercise_mixed_diff(launch, cli, package, env)
+            exercise_multirotor(launch, cli, package, scratch, env)
+            exercise_wireless_inspection(launch, package)
+            exercise_field_edit(launch, package, scratch, "rf-ppm-min", "rf-ppm-last-four",
+                                [("rf.modules[1].channel_range", "CH61-CH64", "consecutive channels")])
+            exercise_field_edit(launch, package, scratch, "rf-external-sbus", "rf-sbus-last",
+                                [("rf.modules[1].channel_range", "CH49-CH64", "consecutive channels")])
+            exercise_field_edit(launch, package, scratch, "default", "bitmap-path",
+                                [("model.bitmap", "b/c image.png", "bitmaps/models")])
             exercise_field_edit(launch, package, scratch, "logic-and", "logic-or",
                                 [("logic_switches[0].key", "OR", "AND, OR or XOR")])
+            exercise_field_edit(launch, package, scratch, "logic-gt", "logic-delay-on", [
+                ("logic_switches[0].values[1]", "0", "Whole number"),
+                ("logic_switches[0].delay_on", "0.2", "0 to 60 seconds"),
+            ])
             exercise_field_edit(launch, package, scratch, "curve-library", "curve-library-moved",
                                 [("curves.order", "[1,2,3,4,0]", "curve slots")])
             exercise_field_edit(launch, package, scratch, "variable", "var-combined", [
@@ -327,6 +412,15 @@ def run_smoke(package, fixtures, runtime=None):
             exercise_field_edit(launch, package, scratch, "var-action-two", "var-action-empty", [
                 ("variables[0].actions", '[{"condition":"None","function":"Add","source":0}]', "function"),
             ])
+            exercise_field_edit(launch, package, scratch, "extra-trim", "extra-trim-name",
+                                [("extra_trims[0].name", "AZ", "UTF-8")])
+            exercise_field_edit(launch, package, scratch, "trainer-slave-cable", "trainer-slave-span",
+                                [("trainer.channel_range", "CH3-CH11", "consecutive channels")],
+                                read_only=("trainer.mode",))
+            exercise_field_edit(launch, package, scratch, "default", "checklist-throttle-max",
+                                [("checklist.throttle_value", "100", "percentage")])
+            exercise_field_edit(launch, package, scratch, "chart-widget", "chart-auto",
+                                [("screens[1].widgets[0].auto_range", "On", "Choose On or Off")])
 
             if runtime:
                 firmware_app, firmware_window = launch(before, after, with_node=True)
@@ -362,9 +456,9 @@ def run_smoke(package, fixtures, runtime=None):
             error.wait("visible", timeout=15)
             error_text = " ".join(x.window_text() for x in error.descendants(class_name="Static")).lower()
             assert "format" in error_text or "version" in error_text, error_text
-            print("Packaged Windows UI passed native dialogs, mixed telemetry diff, ID repairs, renaming, "
-                  "curve coordinates and reordering, logical switches, variable rates/actions, CLI parity "
-                  "and unsupported-format reporting.")
+            print("Packaged Windows UI passed native dialogs, mixed diff, plane and multirotor ID repairs, "
+                  "bitmap and RF channel edits, curves, logic, variables, extra trims and trainer, "
+                  "read-only controls, CLI/firmware byte agreement and unsupported-format reporting.")
         finally:
             for process in apps:
                 if process.poll() is None:

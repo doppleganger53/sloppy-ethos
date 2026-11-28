@@ -79,6 +79,11 @@ fn opaque_without_slot_references(f: &Field) -> bool {
 
 impl Model {
     fn slot_blocker(&self, collection: Collection) -> Option<String> {
+        if self.bytes[16] != 0 {
+            return Some(
+                "model.type: collection references are not fully verified for this category".into(),
+            );
+        }
         if let Some(w) = self.warnings.first() {
             return Some(w.clone());
         }
@@ -90,6 +95,7 @@ impl Model {
             );
         }
         for path in [
+            "extra_trims.count",
             "mixes.count",
             "curves.count",
             "logic_switches.count",

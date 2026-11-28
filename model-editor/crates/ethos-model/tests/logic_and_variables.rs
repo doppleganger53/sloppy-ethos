@@ -96,6 +96,24 @@ fn native_logic_operators_sources_durations_and_boundaries() {
     ] {
         reproduce(left, right, &paths);
     }
+    reproduce(
+        "logic-eq",
+        "logic-delay-on",
+        &["logic_switches[0].key", "logic_switches[0].delay_on"],
+    );
+    reproduce(
+        "logic-delay-on",
+        "logic-delay-off",
+        &["logic_switches[0].delay_on", "logic_switches[0].delay_off"],
+    );
+    let op = model("logic-delay-on");
+    for name in ["delay_on", "delay_off"] {
+        let path = format!("logic_switches[0].{name}");
+        let high = op.serialize_fields(&[], &[set(&path, "60.0 s")]).unwrap();
+        let check = Model::parse(&high).unwrap();
+        assert_eq!(check.field(&path).unwrap().value, "60 s");
+        assert!(op.preview_fields(&[], &[set(&path, "60.1")]).is_err());
+    }
     let timer = model("logic-timer");
     for value in ["0", "175.1", "1.24"] {
         assert!(timer

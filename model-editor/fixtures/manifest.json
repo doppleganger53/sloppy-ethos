@@ -5505,6 +5505,3884 @@
       },
       "seed": "var-repurpose.bin",
       "seedSha256": "c115193a67cc91eab299e4c91db6fdbf0c028caec8497d74f2644d88643791da"
+    },
+    {
+      "file": "category-glider.bin",
+      "requested": "Create a fresh Glider model using all default choices in the native 1.6.8 wizard.",
+      "accepted": [],
+      "bytes": 654,
+      "sha256": "fee22a41747232822e954f2c9a0fd03232a7e1a98cc011805d823bf6fe2b293b",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model01.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 1,
+      "expectedSettings": {
+        "type": 1,
+        "mixes.length": 3,
+        "telemetry.sensors.length": 0
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          16,
+          284
+        ],
+        "afterPayloadSpan": [
+          16,
+          488
+        ]
+      }
+    },
+    {
+      "file": "category-glider-before.bin",
+      "requested": "Open the stock Glider model, name it and create four S.Port measurements at Physical 03 and Application 6803.",
+      "accepted": [
+        [
+          "Throttle amps",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle volts",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle temp",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle pos",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26627"
+        ]
+      ],
+      "bytes": 822,
+      "sha256": "9e4881e1db094d6fd58e7e8228d2d313a70d6600dfd81cc5669a2ba7f24a1d60",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 1,
+      "expectedSettings": {
+        "type": 1,
+        "name": "Bench Glider",
+        "mixes.length": 3,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.3.key.appId": 26627
+      },
+      "compareWith": "category-glider.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          18,
+          559
+        ],
+        "afterPayloadSpan": [
+          18,
+          727
+        ]
+      },
+      "seed": "category-glider.bin",
+      "seedSha256": "fee22a41747232822e954f2c9a0fd03232a7e1a98cc011805d823bf6fe2b293b"
+    },
+    {
+      "file": "category-glider-after.bin",
+      "requested": "Open the stock Glider model, name it and create four S.Port measurements at Physical 03 and Application 6802.",
+      "accepted": [
+        [
+          "Throttle amps",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle volts",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle temp",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle pos",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26626"
+        ]
+      ],
+      "bytes": 822,
+      "sha256": "23d9cf0e936c278223acfc16c95ce2e65b11fc92901a3617c979e3707c27f67e",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 1,
+      "expectedSettings": {
+        "type": 1,
+        "name": "Bench Glider",
+        "mixes.length": 3,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.3.key.appId": 26626
+      },
+      "compareWith": "category-glider-before.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 577,
+            "end": 578
+          },
+          {
+            "start": 613,
+            "end": 614
+          },
+          {
+            "start": 658,
+            "end": 659
+          },
+          {
+            "start": 698,
+            "end": 699
+          }
+        ]
+      },
+      "seed": "category-glider.bin",
+      "seedSha256": "fee22a41747232822e954f2c9a0fd03232a7e1a98cc011805d823bf6fe2b293b"
+    },
+    {
+      "file": "category-glider-flaps.bin",
+      "requested": "Select four flap channels in the glider wizard.",
+      "accepted": [],
+      "bytes": 784,
+      "sha256": "433743586a60193816cc76aa573cb4c83cd6f5ac8003ab3cb1baf29a0119b8ae",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model01.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 1,
+      "expectedSettings": {
+        "type": 1,
+        "flapsCount": 4,
+        "channels.5.name": "Flap1",
+        "mixes.length": 4
+      },
+      "compareWith": "category-glider.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          43,
+          488
+        ],
+        "afterPayloadSpan": [
+          43,
+          618
+        ]
+      }
+    },
+    {
+      "file": "category-heli.bin",
+      "requested": "Create a fresh Heli model using all default choices in the native 1.6.8 wizard.",
+      "accepted": [],
+      "bytes": 790,
+      "sha256": "1327437e1d141c495907f4384648c981b47d8636f0c419f2c9b33e57a4b44128",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model01.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 2,
+      "expectedSettings": {
+        "type": 2,
+        "mixes.length": 6,
+        "telemetry.sensors.length": 0
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          16,
+          283
+        ],
+        "afterPayloadSpan": [
+          16,
+          623
+        ]
+      }
+    },
+    {
+      "file": "category-heli-before.bin",
+      "requested": "Open the stock Heli model, name it and create four S.Port measurements at Physical 03 and Application 6803.",
+      "accepted": [
+        [
+          "Throttle amps",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle volts",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle temp",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle pos",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26627"
+        ]
+      ],
+      "bytes": 956,
+      "sha256": "82cb309823bfbc26d27da76503c5cfec7d4ee1cb829a625fc318ef0e36176c33",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 2,
+      "expectedSettings": {
+        "type": 2,
+        "name": "Bench Heli",
+        "mixes.length": 6,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.3.key.appId": 26627
+      },
+      "compareWith": "category-heli.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          18,
+          695
+        ],
+        "afterPayloadSpan": [
+          18,
+          861
+        ]
+      },
+      "seed": "category-heli.bin",
+      "seedSha256": "1327437e1d141c495907f4384648c981b47d8636f0c419f2c9b33e57a4b44128"
+    },
+    {
+      "file": "category-heli-after.bin",
+      "requested": "Open the stock Heli model, name it and create four S.Port measurements at Physical 03 and Application 6802.",
+      "accepted": [
+        [
+          "Throttle amps",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle volts",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle temp",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle pos",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26626"
+        ]
+      ],
+      "bytes": 956,
+      "sha256": "c0e382076c9c793a72e02345316c92a903650cd79cbc1ae132f7f98401585ab3",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 2,
+      "expectedSettings": {
+        "type": 2,
+        "name": "Bench Heli",
+        "mixes.length": 6,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.3.key.appId": 26626
+      },
+      "compareWith": "category-heli-before.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 711,
+            "end": 712
+          },
+          {
+            "start": 747,
+            "end": 748
+          },
+          {
+            "start": 792,
+            "end": 793
+          },
+          {
+            "start": 832,
+            "end": 833
+          }
+        ]
+      },
+      "seed": "category-heli.bin",
+      "seedSha256": "1327437e1d141c495907f4384648c981b47d8636f0c419f2c9b33e57a4b44128"
+    },
+    {
+      "file": "category-heli-swash.bin",
+      "requested": "Choose the three-servo 135 degree swash assembly in the Heli wizard.",
+      "accepted": [],
+      "bytes": 744,
+      "sha256": "e78febb6e32ec67968f7cad9d9270bd2e0ff0bdeb9976df86c1a39990d48bbd6",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model01.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 2,
+      "expectedSettings": {
+        "type": 2,
+        "swashType": 4,
+        "channels.0.name": "CYC1",
+        "mixes.length": 5
+      },
+      "compareWith": "category-heli.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          42,
+          623
+        ],
+        "afterPayloadSpan": [
+          42,
+          577
+        ]
+      }
+    },
+    {
+      "file": "category-multi.bin",
+      "requested": "Create a fresh Multi model using all default choices in the native 1.6.8 wizard.",
+      "accepted": [],
+      "bytes": 718,
+      "sha256": "68edbe969498671d17922ab740781ccd09ab2d2a55d108996f272b8170f3fe15",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model01.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 3,
+      "expectedSettings": {
+        "type": 3,
+        "mixes.length": 5,
+        "telemetry.sensors.length": 0
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          16,
+          283
+        ],
+        "afterPayloadSpan": [
+          16,
+          551
+        ]
+      },
+      "freshWizardVariation": {
+        "offset": 517,
+        "field": "mixes[3].cut.sticky",
+        "stableBitMask": 1,
+        "observedByte": 223,
+        "scope": "Fresh wizard generation; preserve the complete byte on repair."
+      }
+    },
+    {
+      "file": "category-multi-before.bin",
+      "requested": "Open the stock Multi model, name it and create four S.Port measurements at Physical 03 and Application 6803.",
+      "accepted": [
+        [
+          "Throttle amps",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle volts",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle temp",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle pos",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26627"
+        ]
+      ],
+      "bytes": 885,
+      "sha256": "a07d63fd10e426e0e212a47b7e25e7969b7cd8f08bba2f4ee4b303e3d514d1e5",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 3,
+      "expectedSettings": {
+        "type": 3,
+        "name": "Bench Multi",
+        "mixes.length": 5,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.3.key.appId": 26627
+      },
+      "compareWith": "category-multi.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          18,
+          623
+        ],
+        "afterPayloadSpan": [
+          18,
+          790
+        ]
+      },
+      "seed": "category-multi.bin",
+      "seedSha256": "68edbe969498671d17922ab740781ccd09ab2d2a55d108996f272b8170f3fe15",
+      "freshWizardVariation": {
+        "offset": 528,
+        "field": "mixes[3].cut.sticky",
+        "stableBitMask": 1,
+        "observedByte": 223,
+        "scope": "Fresh wizard generation; preserve the complete byte on repair."
+      }
+    },
+    {
+      "file": "category-multi-after.bin",
+      "requested": "Open the stock Multi model, name it and create four S.Port measurements at Physical 03 and Application 6802.",
+      "accepted": [
+        [
+          "Throttle amps",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle volts",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle temp",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle pos",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26626"
+        ]
+      ],
+      "bytes": 885,
+      "sha256": "420f5429b26e7a4b72ded93647a25480542240d517fef62dcf8a274d2a5cd240",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 3,
+      "expectedSettings": {
+        "type": 3,
+        "name": "Bench Multi",
+        "mixes.length": 5,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.3.key.appId": 26626
+      },
+      "compareWith": "category-multi-before.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 640,
+            "end": 641
+          },
+          {
+            "start": 676,
+            "end": 677
+          },
+          {
+            "start": 721,
+            "end": 722
+          },
+          {
+            "start": 761,
+            "end": 762
+          }
+        ]
+      },
+      "seed": "category-multi.bin",
+      "seedSha256": "68edbe969498671d17922ab740781ccd09ab2d2a55d108996f272b8170f3fe15",
+      "freshWizardVariation": {
+        "offset": 528,
+        "field": "mixes[3].cut.sticky",
+        "stableBitMask": 1,
+        "observedByte": 223,
+        "scope": "Fresh wizard generation; preserve the complete byte on repair."
+      }
+    },
+    {
+      "file": "category-multi-channel.bin",
+      "requested": "Select channel 6 for Roll in the Multi wizard.",
+      "accepted": [],
+      "bytes": 718,
+      "sha256": "b3554177cf88e4cdc36dc88325f8237a8e7e5707dacb44f62da9485300facb63",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model01.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 3,
+      "expectedSettings": {
+        "type": 3,
+        "channels.5.name": "Roll",
+        "mixes.length": 5
+      },
+      "compareWith": "category-multi.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 100,
+            "end": 101
+          },
+          {
+            "start": 102,
+            "end": 103
+          },
+          {
+            "start": 104,
+            "end": 113
+          },
+          {
+            "start": 118,
+            "end": 137
+          },
+          {
+            "start": 141,
+            "end": 164
+          },
+          {
+            "start": 165,
+            "end": 174
+          },
+          {
+            "start": 192,
+            "end": 194
+          },
+          {
+            "start": 195,
+            "end": 197
+          },
+          {
+            "start": 198,
+            "end": 199
+          },
+          {
+            "start": 200,
+            "end": 209
+          },
+          {
+            "start": 214,
+            "end": 220
+          },
+          {
+            "start": 419,
+            "end": 420
+          }
+        ]
+      },
+      "freshWizardVariation": {
+        "offset": 517,
+        "field": "mixes[3].cut.sticky",
+        "stableBitMask": 1,
+        "observedByte": 223,
+        "scope": "Fresh wizard generation; preserve the complete byte on repair."
+      }
+    },
+    {
+      "file": "category-other.bin",
+      "requested": "Create a fresh Other model using all default choices in the native 1.6.8 wizard.",
+      "accepted": [],
+      "bytes": 445,
+      "sha256": "20d98f76fcc7741dc130eec8910a249f86f4fb764215f8358ed2e7fdb1e5d0fd",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model01.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 4,
+      "expectedSettings": {
+        "type": 99,
+        "mixes.length": 0,
+        "telemetry.sensors.length": 0
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          16,
+          47
+        ],
+        "afterPayloadSpan": [
+          16,
+          42
+        ]
+      }
+    },
+    {
+      "file": "category-other-before.bin",
+      "requested": "Open the stock Other model, name it and create four S.Port measurements at Physical 03 and Application 6803.",
+      "accepted": [
+        [
+          "Throttle amps",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle volts",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle temp",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26627"
+        ],
+        [
+          "Throttle pos",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26627"
+        ]
+      ],
+      "bytes": 612,
+      "sha256": "02f3fa256348120212da9836c1806e5a22436d5f0a1f566f40a128bc829a66b0",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 4,
+      "expectedSettings": {
+        "type": 99,
+        "name": "Bench Other",
+        "mixes.length": 0,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.3.key.appId": 26627
+      },
+      "compareWith": "category-other.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          18,
+          350
+        ],
+        "afterPayloadSpan": [
+          18,
+          517
+        ]
+      },
+      "seed": "category-other.bin",
+      "seedSha256": "20d98f76fcc7741dc130eec8910a249f86f4fb764215f8358ed2e7fdb1e5d0fd"
+    },
+    {
+      "file": "category-other-after.bin",
+      "requested": "Open the stock Other model, name it and create four S.Port measurements at Physical 03 and Application 6802.",
+      "accepted": [
+        [
+          "Throttle amps",
+          "0",
+          "1",
+          "0",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle volts",
+          "0",
+          "1",
+          "1",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle temp",
+          "0",
+          "1",
+          "2",
+          "3",
+          "26626"
+        ],
+        [
+          "Throttle pos",
+          "0",
+          "1",
+          "4",
+          "3",
+          "26626"
+        ]
+      ],
+      "bytes": 612,
+      "sha256": "899833707946a818f9d178b63a3710aa4dd24b46f3c5f487d1704e180dc229e7",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "category": 4,
+      "expectedSettings": {
+        "type": 99,
+        "name": "Bench Other",
+        "mixes.length": 0,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.3.key.appId": 26626
+      },
+      "compareWith": "category-other-before.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 367,
+            "end": 368
+          },
+          {
+            "start": 403,
+            "end": 404
+          },
+          {
+            "start": 448,
+            "end": 449
+          },
+          {
+            "start": 488,
+            "end": 489
+          }
+        ]
+      },
+      "seed": "category-other.bin",
+      "seedSha256": "20d98f76fcc7741dc130eec8910a249f86f4fb764215f8358ed2e7fdb1e5d0fd"
+    },
+    {
+      "file": "rf-internal-access.bin",
+      "requested": "Enable the internal module in ACCESS/ACCST D16 mode.",
+      "accepted": [],
+      "bytes": 611,
+      "sha256": "801b9f1ffe57e4d5b266b1a7aba503b9c119b98db1014aa9c9862f7fa3aadbd7",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.0": 11,
+        "rf.modules.0.enable": true,
+        "rf.modules.0.type": 11,
+        "rf.modules.0.protocol": 0,
+        "rf.modules.0.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627
+      },
+      "compareWith": "throttle-before.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 40,
+            "end": 41
+          },
+          {
+            "start": 171,
+            "end": 172
+          }
+        ]
+      },
+      "seed": "throttle-before.bin",
+      "seedSha256": "566ff2b7cfc0face36a8bd0216e76d297c7355b2b16be7a416b7a914339824d2"
+    },
+    {
+      "file": "rf-internal-td.bin",
+      "requested": "Select internal TD mode.",
+      "accepted": [],
+      "bytes": 611,
+      "sha256": "3245e694fd8eb765a42b6a9a3ff66b1431cf6e33dedff46ba327788090eddc9a",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.0": 11,
+        "rf.modules.0.enable": true,
+        "rf.modules.0.type": 11,
+        "rf.modules.0.protocol": 1,
+        "rf.modules.0.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.0.bands.1.enable": 1
+      },
+      "compareWith": "rf-internal-access.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 173,
+            "end": 174
+          },
+          {
+            "start": 218,
+            "end": 219
+          }
+        ]
+      },
+      "seed": "rf-internal-access.bin",
+      "seedSha256": "801b9f1ffe57e4d5b266b1a7aba503b9c119b98db1014aa9c9862f7fa3aadbd7"
+    },
+    {
+      "file": "rf-internal-tw.bin",
+      "requested": "Select internal TW mode.",
+      "accepted": [],
+      "bytes": 611,
+      "sha256": "3a4673de426a9c5e6fe77fe1ed1c7d61dff51b79939ff3caae3eaf666a1cfd8b",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.0": 11,
+        "rf.modules.0.enable": true,
+        "rf.modules.0.type": 11,
+        "rf.modules.0.protocol": 2,
+        "rf.modules.0.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.0.bands.2.enable": 1
+      },
+      "compareWith": "rf-internal-access.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 173,
+            "end": 174
+          },
+          {
+            "start": 221,
+            "end": 222
+          }
+        ]
+      },
+      "seed": "rf-internal-access.bin",
+      "seedSha256": "801b9f1ffe57e4d5b266b1a7aba503b9c119b98db1014aa9c9862f7fa3aadbd7"
+    },
+    {
+      "file": "rf-external-twin.bin",
+      "requested": "Enable the external Twin Lite Pro module in ACCESS mode.",
+      "accepted": [],
+      "bytes": 611,
+      "sha256": "e1465d0d350a13979961a4e49a3e50c8c2d3da036cfab9a4cd8f635b8b4eb954",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 10,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 10,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.bands.0.enable": 1,
+        "rf.modules.1.bands.2.enable": 0
+      },
+      "compareWith": "throttle-before.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 41,
+            "end": 42
+          },
+          {
+            "start": 227,
+            "end": 228
+          }
+        ]
+      },
+      "seed": "throttle-before.bin",
+      "seedSha256": "566ff2b7cfc0face36a8bd0216e76d297c7355b2b16be7a416b7a914339824d2"
+    },
+    {
+      "file": "rf-twin-accst.bin",
+      "requested": "Select the Twin Lite Pro ACCST protocol.",
+      "accepted": [],
+      "bytes": 611,
+      "sha256": "8c6f6e122809ad9a69af2c9ed3e6be1849fd8588af4e5068cdc18b21b4d305d7",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 10,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 10,
+        "rf.modules.1.protocol": 1,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.bands.0.enable": 1,
+        "rf.modules.1.bands.2.enable": 0
+      },
+      "compareWith": "rf-external-twin.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 229,
+            "end": 230
+          }
+        ]
+      },
+      "seed": "rf-external-twin.bin",
+      "seedSha256": "e1465d0d350a13979961a4e49a3e50c8c2d3da036cfab9a4cd8f635b8b4eb954"
+    },
+    {
+      "file": "rf-twin-elrs.bin",
+      "requested": "Select the Twin Lite Pro ELRS protocol.",
+      "accepted": [],
+      "bytes": 611,
+      "sha256": "cfd786625d89415178db28f1fbd17467b45601309ff0aba77ac4f4b9ec4a01f1",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 10,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 10,
+        "rf.modules.1.protocol": 2,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.bands.0.enable": 0,
+        "rf.modules.1.bands.2.enable": 1
+      },
+      "compareWith": "rf-external-twin.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 229,
+            "end": 230
+          },
+          {
+            "start": 271,
+            "end": 272
+          },
+          {
+            "start": 274,
+            "end": 275
+          }
+        ]
+      },
+      "seed": "rf-external-twin.bin",
+      "seedSha256": "e1465d0d350a13979961a4e49a3e50c8c2d3da036cfab9a4cd8f635b8b4eb954"
+    },
+    {
+      "file": "rf-twin-tw.bin",
+      "requested": "Select the Twin Lite Pro TW protocol.",
+      "accepted": [],
+      "bytes": 611,
+      "sha256": "d6248a1e23fdd82a2ab9622024848db21fe4d96e4e78ad6ef31c80a7e9fa3162",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 10,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 10,
+        "rf.modules.1.protocol": 3,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.bands.0.enable": 1,
+        "rf.modules.1.bands.2.enable": 1
+      },
+      "compareWith": "rf-external-twin.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 229,
+            "end": 230
+          },
+          {
+            "start": 274,
+            "end": 275
+          }
+        ]
+      },
+      "seed": "rf-external-twin.bin",
+      "seedSha256": "e1465d0d350a13979961a4e49a3e50c8c2d3da036cfab9a4cd8f635b8b4eb954"
+    },
+    {
+      "file": "rf-external-xjt.bin",
+      "requested": "Switch the external module type to XJT Lite.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "af9040741ba1a0a88cbc4bba9e64e82bbef7f4f1c00d64d20baf4b520cc56794",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 2,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 2,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.channelsStart": 0
+      },
+      "compareWith": "rf-external-twin.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          41,
+          278
+        ],
+        "afterPayloadSpan": [
+          41,
+          273
+        ]
+      },
+      "seed": "rf-external-twin.bin",
+      "seedSha256": "e1465d0d350a13979961a4e49a3e50c8c2d3da036cfab9a4cd8f635b8b4eb954"
+    },
+    {
+      "file": "rf-external-r9-lite.bin",
+      "requested": "Switch the external module type to R9M Lite.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "db2dad2b10273cf51d898e5a8fc90f366952b23771f8a2ea17739407bedb5edd",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 5,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 5,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.channelsStart": 0
+      },
+      "compareWith": "rf-external-twin.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          41,
+          278
+        ],
+        "afterPayloadSpan": [
+          41,
+          273
+        ]
+      },
+      "seed": "rf-external-twin.bin",
+      "seedSha256": "e1465d0d350a13979961a4e49a3e50c8c2d3da036cfab9a4cd8f635b8b4eb954"
+    },
+    {
+      "file": "rf-external-r9-access.bin",
+      "requested": "Switch the external module type to R9M Lite ACCESS.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "de270e2ee97b44126fc0ee54c6ce1fe2b027a71f8a5b00bceed52f5f148599f7",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 6,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 6,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.channelsStart": 0
+      },
+      "compareWith": "rf-external-twin.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          41,
+          278
+        ],
+        "afterPayloadSpan": [
+          41,
+          273
+        ]
+      },
+      "seed": "rf-external-twin.bin",
+      "seedSha256": "e1465d0d350a13979961a4e49a3e50c8c2d3da036cfab9a4cd8f635b8b4eb954"
+    },
+    {
+      "file": "rf-external-r9-pro-access.bin",
+      "requested": "Switch the external module type to R9M Lite Pro ACCESS.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "66fd2a8ab882f1b3248f08a388b0cf477b8923527d53330deb5cc4bd8ab76e29",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 7,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 7,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.channelsStart": 0
+      },
+      "compareWith": "rf-external-twin.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          41,
+          278
+        ],
+        "afterPayloadSpan": [
+          41,
+          273
+        ]
+      },
+      "seed": "rf-external-twin.bin",
+      "seedSha256": "e1465d0d350a13979961a4e49a3e50c8c2d3da036cfab9a4cd8f635b8b4eb954"
+    },
+    {
+      "file": "rf-external-ppm.bin",
+      "requested": "Switch the external module type to PPM.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "7c72ec62f5cbb4ea9d33984d1ed02c37998d77f4fd8dc27cf77599be2aa8ab05",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 13,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 13,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 8,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.channelsStart": 0
+      },
+      "compareWith": "rf-external-twin.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          41,
+          278
+        ],
+        "afterPayloadSpan": [
+          41,
+          273
+        ]
+      },
+      "seed": "rf-external-twin.bin",
+      "seedSha256": "e1465d0d350a13979961a4e49a3e50c8c2d3da036cfab9a4cd8f635b8b4eb954"
+    },
+    {
+      "file": "rf-external-sbus.bin",
+      "requested": "Switch the external module type to SBUS.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "09461416ae266317d81b93f6dfdd13f17203728d8e88811f9bdbd24b929a107b",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 18,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 18,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.channelsStart": 0
+      },
+      "compareWith": "rf-external-twin.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          41,
+          278
+        ],
+        "afterPayloadSpan": [
+          41,
+          273
+        ]
+      },
+      "seed": "rf-external-twin.bin",
+      "seedSha256": "e1465d0d350a13979961a4e49a3e50c8c2d3da036cfab9a4cd8f635b8b4eb954"
+    },
+    {
+      "file": "rf-xjt-d8.bin",
+      "requested": "Select the external D8 protocol.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "44a80b492ad015f43359de05f94234717635aa8dd430b9ec864224c355114f96",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 2,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 2,
+        "rf.modules.1.protocol": 1,
+        "rf.modules.1.channelsCount": 8,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627
+      },
+      "compareWith": "rf-external-xjt.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 229,
+            "end": 230
+          },
+          {
+            "start": 236,
+            "end": 237
+          }
+        ]
+      },
+      "seed": "rf-external-xjt.bin",
+      "seedSha256": "af9040741ba1a0a88cbc4bba9e64e82bbef7f4f1c00d64d20baf4b520cc56794"
+    },
+    {
+      "file": "rf-xjt-lr12.bin",
+      "requested": "Select the external LR12 protocol.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "b0c8098e57d569c986d3850ede7de791d548edc6dd31cce83accc95378373445",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 2,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 2,
+        "rf.modules.1.protocol": 2,
+        "rf.modules.1.channelsCount": 12,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627
+      },
+      "compareWith": "rf-external-xjt.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 229,
+            "end": 230
+          },
+          {
+            "start": 236,
+            "end": 237
+          }
+        ]
+      },
+      "seed": "rf-external-xjt.bin",
+      "seedSha256": "af9040741ba1a0a88cbc4bba9e64e82bbef7f4f1c00d64d20baf4b520cc56794"
+    },
+    {
+      "file": "rf-r9-eu.bin",
+      "requested": "Select the external EU protocol.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "59dd961f5c9789794d01e3dcef56ff1a675d25b7fd6874910302881553e71d5c",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 5,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 5,
+        "rf.modules.1.protocol": 1,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627
+      },
+      "compareWith": "rf-external-r9-lite.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 229,
+            "end": 230
+          }
+        ]
+      },
+      "seed": "rf-external-r9-lite.bin",
+      "seedSha256": "db2dad2b10273cf51d898e5a8fc90f366952b23771f8a2ea17739407bedb5edd"
+    },
+    {
+      "file": "rf-r9-flex868.bin",
+      "requested": "Select the external FLEX 868MHz protocol.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "52e7f87c182dfcbb40500a01fef7ee11f5792200332ce758b160cf4c72854ea9",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 5,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 5,
+        "rf.modules.1.protocol": 2,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627
+      },
+      "compareWith": "rf-external-r9-lite.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 229,
+            "end": 230
+          }
+        ]
+      },
+      "seed": "rf-external-r9-lite.bin",
+      "seedSha256": "db2dad2b10273cf51d898e5a8fc90f366952b23771f8a2ea17739407bedb5edd"
+    },
+    {
+      "file": "rf-r9-flex915.bin",
+      "requested": "Select the external FLEX 915MHz protocol.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "b8168d2f4c22e20949ce762d33936f59567fcb4c2f40789fd8c52794e3417f99",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 5,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 5,
+        "rf.modules.1.protocol": 3,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627
+      },
+      "compareWith": "rf-external-r9-lite.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 229,
+            "end": 230
+          }
+        ]
+      },
+      "seed": "rf-external-r9-lite.bin",
+      "seedSha256": "db2dad2b10273cf51d898e5a8fc90f366952b23771f8a2ea17739407bedb5edd"
+    },
+    {
+      "file": "rf-ppm-min.bin",
+      "requested": "Use the native channel selector to set CH1 through CH4.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "5da15c3c18b16426518e8741bd995925d688bd8a468bc5374030c1358bac11e6",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 13,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 13,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 4,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.channelsStart": 0
+      },
+      "compareWith": "rf-external-ppm.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 236,
+            "end": 237
+          }
+        ]
+      },
+      "seed": "rf-external-ppm.bin",
+      "seedSha256": "7c72ec62f5cbb4ea9d33984d1ed02c37998d77f4fd8dc27cf77599be2aa8ab05"
+    },
+    {
+      "file": "rf-ppm-max.bin",
+      "requested": "Use the native channel selector to set CH1 through CH16.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "aa6fc41b4fc7ef0a7c56a6e4ce4750de826c4b4e334f90d5a9621597b2aa6aa6",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 13,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 13,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.channelsStart": 0
+      },
+      "compareWith": "rf-external-ppm.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 236,
+            "end": 237
+          }
+        ]
+      },
+      "seed": "rf-external-ppm.bin",
+      "seedSha256": "7c72ec62f5cbb4ea9d33984d1ed02c37998d77f4fd8dc27cf77599be2aa8ab05"
+    },
+    {
+      "file": "rf-ppm-last-four.bin",
+      "requested": "Use the native channel selector to set CH61 through CH64.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "cbe20a6f0e618dd5a7b75384b1b0122cbd314513d29f297dd3b4723118ad8517",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 13,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 13,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 4,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.channelsStart": 60
+      },
+      "compareWith": "rf-ppm-min.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 235,
+            "end": 236
+          }
+        ]
+      },
+      "seed": "rf-ppm-min.bin",
+      "seedSha256": "5da15c3c18b16426518e8741bd995925d688bd8a468bc5374030c1358bac11e6"
+    },
+    {
+      "file": "rf-sbus-last.bin",
+      "requested": "Use the native channel selector to set CH49 through CH64.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "55cb0d902c01fbdf7524e3d2d6c3ef43b4bc70ed2316280d8ff1bc5943a4f77e",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 18,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 18,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.channelsStart": 48
+      },
+      "compareWith": "rf-external-sbus.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 235,
+            "end": 236
+          }
+        ]
+      },
+      "seed": "rf-external-sbus.bin",
+      "seedSha256": "09461416ae266317d81b93f6dfdd13f17203728d8e88811f9bdbd24b929a107b"
+    },
+    {
+      "file": "rf-xjt-failsafe-hold.bin",
+      "requested": "Select the XJT Lite D16 failsafe display mode Hold.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "2adca708534f4b5f5750d12ae637ae4137adb3def760a68ad2b223cd154eca48",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 2,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 2,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.failsafeMode": 1
+      },
+      "compareWith": "rf-external-xjt.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 246,
+            "end": 247
+          }
+        ]
+      },
+      "seed": "rf-external-xjt.bin",
+      "seedSha256": "af9040741ba1a0a88cbc4bba9e64e82bbef7f4f1c00d64d20baf4b520cc56794"
+    },
+    {
+      "file": "rf-xjt-failsafe-custom.bin",
+      "requested": "Select the XJT Lite D16 failsafe display mode Custom.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "21e0a8d23bdd7cbd94b4178921c479347cf0a9e3686678766e6a29a3c6ab02e9",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 2,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 2,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.failsafeMode": 2
+      },
+      "compareWith": "rf-external-xjt.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 246,
+            "end": 247
+          }
+        ]
+      },
+      "seed": "rf-external-xjt.bin",
+      "seedSha256": "af9040741ba1a0a88cbc4bba9e64e82bbef7f4f1c00d64d20baf4b520cc56794"
+    },
+    {
+      "file": "rf-xjt-failsafe-no-pulses.bin",
+      "requested": "Select the XJT Lite D16 failsafe display mode No pulses.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "00caf05d81206310b2300cc329de8139b40789900050adfe45afc0a5707fa113",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 2,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 2,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.failsafeMode": 3
+      },
+      "compareWith": "rf-external-xjt.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 246,
+            "end": 247
+          }
+        ]
+      },
+      "seed": "rf-external-xjt.bin",
+      "seedSha256": "af9040741ba1a0a88cbc4bba9e64e82bbef7f4f1c00d64d20baf4b520cc56794"
+    },
+    {
+      "file": "rf-xjt-failsafe-receiver.bin",
+      "requested": "Select the XJT Lite D16 failsafe display mode Receiver.",
+      "accepted": [],
+      "bytes": 606,
+      "sha256": "398239840685432136bd244747b279602deaa4e11891f0fba6e2148028f98975",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "modulesType.1": 2,
+        "rf.modules.1.enable": true,
+        "rf.modules.1.type": 2,
+        "rf.modules.1.protocol": 0,
+        "rf.modules.1.channelsCount": 16,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.0.key.appId": 26627,
+        "rf.modules.1.failsafeMode": 4
+      },
+      "compareWith": "rf-external-xjt.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 246,
+            "end": 247
+          }
+        ]
+      },
+      "seed": "rf-external-xjt.bin",
+      "seedSha256": "af9040741ba1a0a88cbc4bba9e64e82bbef7f4f1c00d64d20baf4b520cc56794"
+    },
+    {
+      "file": "bitmap-path.bin",
+      "requested": "Set the stored external bitmap reference to \"b/c image.png\".",
+      "accepted": [
+        [
+          "BITMAPS:/models/b/c image.png"
+        ]
+      ],
+      "bytes": 450,
+      "sha256": "1e2c9f6174d01d9fcbe9462bc70e8ecce8e675f8f4e292511455ec1a13facf2b",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "bitmap": "b/c image.png"
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 19,
+            "end": 32
+          }
+        ]
+      },
+      "seed": "default.bin",
+      "seedSha256": "3a7b0f8eb2aa150a1989743e73d5ee237f1c0abca3f867f853b7904dc0ef9e9b"
+    },
+    {
+      "file": "bitmap-max.bin",
+      "requested": "Set the stored external bitmap reference to \"12345678901.png\".",
+      "accepted": [
+        [
+          "BITMAPS:/models/12345678901.png"
+        ]
+      ],
+      "bytes": 450,
+      "sha256": "110a85c25fc322ae39dd380b54c451a2a6a2ba76f5ee0b2cc63676c420e7e4ae",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "bitmap": "12345678901.png"
+      },
+      "compareWith": "bitmap-path.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 19,
+            "end": 34
+          }
+        ]
+      },
+      "seed": "bitmap-path.bin",
+      "seedSha256": "1e2c9f6174d01d9fcbe9462bc70e8ecce8e675f8f4e292511455ec1a13facf2b"
+    },
+    {
+      "file": "bitmap-clear.bin",
+      "requested": "Set the stored external bitmap reference to \"\".",
+      "accepted": [
+        [
+          "SYSTEM:/bitmaps/system/default_plane.png"
+        ]
+      ],
+      "bytes": 450,
+      "sha256": "38babc7aaae094eade5d7e908eacaac19e0219991631eae15c5c0d6b6fbd8e35",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "bitmap": ""
+      },
+      "compareWith": "bitmap-max.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 19,
+            "end": 20
+          }
+        ]
+      },
+      "seed": "bitmap-max.bin",
+      "seedSha256": "110a85c25fc322ae39dd380b54c451a2a6a2ba76f5ee0b2cc63676c420e7e4ae"
+    },
+    {
+      "file": "extra-trim.bin",
+      "requested": "Add the first extra trim to a fresh model.",
+      "accepted": [],
+      "bytes": 460,
+      "sha256": "e30a0050f4a91cdda83e09d2446840fec6dcb69e507dcfb5ea98fc5bbfb9ba49",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.length": 1,
+        "extraTrims.0.name": "",
+        "extraTrims.0.range": 25,
+        "extraTrims.0.step": 2
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          91,
+          91
+        ],
+        "afterPayloadSpan": [
+          91,
+          101
+        ]
+      }
+    },
+    {
+      "file": "extra-trim-name.bin",
+      "requested": "Name the extra trim AZ using the radio keyboard.",
+      "accepted": [],
+      "bytes": 462,
+      "sha256": "a9c42fdaebba85e16f63c80013b23cd2404032a307c4d6bb0b06c30a0b13335c",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.0.name": "AZ"
+      },
+      "compareWith": "extra-trim.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          100,
+          101
+        ],
+        "afterPayloadSpan": [
+          100,
+          103
+        ]
+      }
+    },
+    {
+      "file": "extra-trim-up.bin",
+      "requested": "Select FS1 as the Up trigger.",
+      "accepted": [],
+      "bytes": 463,
+      "sha256": "845096ee3982c991331a476405d8aff1841a3e24542886aee34bd504444a57d9",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.0.triggerUp": {
+          "category": "function_switch",
+          "member": 0
+        },
+        "extraTrims.0.triggerDown": null
+      },
+      "compareWith": "extra-trim.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          101,
+          101
+        ],
+        "afterPayloadSpan": [
+          101,
+          104
+        ]
+      }
+    },
+    {
+      "file": "extra-trim-down.bin",
+      "requested": "Select FS1 as the Down trigger.",
+      "accepted": [],
+      "bytes": 463,
+      "sha256": "4df2a6bbe744d932b3534aeef6bca432624289e4ea7a7ddfd570964cfe964f0d",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.0.triggerUp": null,
+        "extraTrims.0.triggerDown": {
+          "category": "function_switch",
+          "member": 0
+        }
+      },
+      "compareWith": "extra-trim.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          102,
+          102
+        ],
+        "afterPayloadSpan": [
+          102,
+          105
+        ]
+      }
+    },
+    {
+      "file": "extra-trim-medium.bin",
+      "requested": "Select the Medium extra trim step.",
+      "accepted": [],
+      "bytes": 460,
+      "sha256": "69d4e0e537d91a406800c5c577697ac18491eaaaa8f6a44b864c55b3670e8e24",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.0.step": 3
+      },
+      "compareWith": "extra-trim.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 93,
+            "end": 94
+          }
+        ]
+      }
+    },
+    {
+      "file": "extra-trim-range-min.bin",
+      "requested": "Select the minimum extra trim range.",
+      "accepted": [],
+      "bytes": 460,
+      "sha256": "044f502e61e1e6c0f480526a6a376b34ce7b657471ffdaee3230460c6676a79c",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.0.range": 0
+      },
+      "compareWith": "extra-trim.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 94,
+            "end": 95
+          }
+        ]
+      }
+    },
+    {
+      "file": "extra-trim-range-max.bin",
+      "requested": "Select the maximum extra trim range.",
+      "accepted": [],
+      "bytes": 460,
+      "sha256": "76acb3048bc8c3b974b2d5238ae8733fe13d8ba740df2ec46cfad3bffaf7d9f4",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.0.range": 100
+      },
+      "compareWith": "extra-trim.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 94,
+            "end": 95
+          }
+        ]
+      }
+    },
+    {
+      "file": "extra-trim-flight.bin",
+      "requested": "Choose independent per flight mode.",
+      "accepted": [],
+      "bytes": 461,
+      "sha256": "e7a004c880c0738d002641911b5fa62dd2da4ddd91db0e829ef5e37d8e60c191",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.0.mode": 1,
+        "extraTrims.0.lines": [
+          {
+            "activeCondition": null,
+            "mode": 1,
+            "value": 0
+          }
+        ]
+      },
+      "compareWith": "extra-trim.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          95,
+          97
+        ],
+        "afterPayloadSpan": [
+          95,
+          98
+        ]
+      }
+    },
+    {
+      "file": "extra-trim-custom.bin",
+      "requested": "Choose the Custom extra trim mode.",
+      "accepted": [],
+      "bytes": 462,
+      "sha256": "9112f5f8fdcff4b9ff7ab0d1f209a73c756959600697c54d5ad0893f4b58f1fe",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.0.mode": 2,
+        "extraTrims.0.lines": []
+      },
+      "compareWith": "extra-trim.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          95,
+          98
+        ],
+        "afterPayloadSpan": [
+          95,
+          100
+        ]
+      }
+    },
+    {
+      "file": "extra-trim-off.bin",
+      "requested": "Select the Off extra trim mode.",
+      "accepted": [],
+      "bytes": 460,
+      "sha256": "4e49703f71d0aa65c269859ada0a3753f7f8fe31bce071d10fcd9c9894e316f8",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.0.mode": 3,
+        "extraTrims.0.lines": []
+      },
+      "compareWith": "extra-trim.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 95,
+            "end": 96
+          }
+        ]
+      }
+    },
+    {
+      "file": "extra-trim-two.bin",
+      "requested": "Append another extra trim after the named first row.",
+      "accepted": [],
+      "bytes": 472,
+      "sha256": "5f36675f771ca8586ab45824d5e09d0a4213b38c30f4a9a50fd5fb67eea71a55",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.length": 2,
+        "extraTrims.0.name": "AZ",
+        "extraTrims.1.name": ""
+      },
+      "compareWith": "extra-trim-name.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          91,
+          103
+        ],
+        "afterPayloadSpan": [
+          91,
+          113
+        ]
+      },
+      "seed": "extra-trim-name.bin",
+      "seedSha256": "a9c42fdaebba85e16f63c80013b23cd2404032a307c4d6bb0b06c30a0b13335c"
+    },
+    {
+      "file": "trim-range-min.bin",
+      "requested": "Select the minimum physical rudder-trim range.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "ec7bd4177ef51cb25f6e9ca30189d89b3bf593fed9e56af385218678f0c41e1c",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trims.0.range": 0
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 50,
+            "end": 51
+          }
+        ]
+      }
+    },
+    {
+      "file": "trim-range-max.bin",
+      "requested": "Select the maximum physical rudder-trim range.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "57886239d35c95331d699744158195c90f6b3202086b0f97d6ca057713c5a0bb",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trims.0.range": 100
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 50,
+            "end": 51
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-master-bluetooth.bin",
+      "requested": "Select Master bluetooth in the native Trainer menu.",
+      "accepted": [],
+      "bytes": 575,
+      "sha256": "a22b5554876a06a56d366b3c5c34600089d990c6c760982fe0b1bb770e4508f8",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "legacyCheck": {
+        "offset": 292,
+        "bytes": [
+          1,
+          1
+        ],
+        "resave": true
+      },
+      "expectedSettings": {
+        "bluetooth.settingsType": "trainerIn"
+      },
+      "compareWith": "trainer.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 293,
+            "end": 294
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-master-sbus.bin",
+      "requested": "Select Master sbus in the native Trainer menu.",
+      "accepted": [],
+      "bytes": 575,
+      "sha256": "06cb7e8821aaf89d6c1d2c730fe42ecb615f4c77059a47ec09c452a4f56a526d",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "legacyCheck": {
+        "offset": 292,
+        "bytes": [
+          1,
+          2
+        ],
+        "resave": true
+      },
+      "expectedSettings": {},
+      "compareWith": "trainer.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 293,
+            "end": 294
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-master-cppm.bin",
+      "requested": "Select Master cppm in the native Trainer menu.",
+      "accepted": [],
+      "bytes": 575,
+      "sha256": "9dc7680eb8ce297102ebeeeacf2cd1193ab1120b6b40c55eda3c896e99eb91d1",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "legacyCheck": {
+        "offset": 292,
+        "bytes": [
+          1,
+          3
+        ],
+        "resave": true
+      },
+      "expectedSettings": {},
+      "compareWith": "trainer.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 293,
+            "end": 294
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-slave-cable.bin",
+      "requested": "Select Slave cable in the native Trainer menu.",
+      "accepted": [],
+      "bytes": 452,
+      "sha256": "422a7580461f9ae82ea5bd246a8a52f754e2891c922f239ece00584f3023380f",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "legacyCheck": {
+        "offset": 292,
+        "bytes": [
+          2,
+          0
+        ],
+        "resave": true
+      },
+      "expectedSettings": {
+        "trainerCable.settingsType": "trainer_out"
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          292,
+          294
+        ],
+        "afterPayloadSpan": [
+          292,
+          296
+        ]
+      }
+    },
+    {
+      "file": "trainer-slave-bluetooth.bin",
+      "requested": "Select Slave bluetooth in the native Trainer menu.",
+      "accepted": [],
+      "bytes": 452,
+      "sha256": "81d2f34f297a658d7a546bfd44ab09f33f0651d901d085e34fc3ed2e64750a19",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "legacyCheck": {
+        "offset": 292,
+        "bytes": [
+          2,
+          1
+        ],
+        "resave": true
+      },
+      "expectedSettings": {
+        "bluetooth.settingsType": "trainerOut"
+      },
+      "compareWith": "trainer-slave-cable.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 293,
+            "end": 294
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-slave-sbus.bin",
+      "requested": "Select Slave sbus in the native Trainer menu.",
+      "accepted": [],
+      "bytes": 452,
+      "sha256": "9710ef2ab7f1e117594095acd74e29cb55a1067bc8219a5b79f3b15df37455c2",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "legacyCheck": {
+        "offset": 292,
+        "bytes": [
+          2,
+          2
+        ],
+        "resave": true
+      },
+      "expectedSettings": {},
+      "compareWith": "trainer-slave-cable.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 293,
+            "end": 294
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-slave-cppm.bin",
+      "requested": "Select Slave cppm in the native Trainer menu.",
+      "accepted": [],
+      "bytes": 452,
+      "sha256": "6c0c377fcfa84eaa524cf18b2b08afbb60a492d97569b90428f329e7c0705eac",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "legacyCheck": {
+        "offset": 292,
+        "bytes": [
+          2,
+          3
+        ],
+        "resave": true
+      },
+      "expectedSettings": {},
+      "compareWith": "trainer-slave-cable.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 293,
+            "end": 294
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-slave-span.bin",
+      "requested": "Set channels 3 through 11.",
+      "accepted": [],
+      "bytes": 452,
+      "sha256": "7033acef3c70e98d53aa704fb3e258f70293b4a0d4bfad1649bacbf00ad5d271",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trainerCable.trainer_out": {
+          "channelsStart": 2,
+          "channelsCount": 9
+        }
+      },
+      "compareWith": "trainer-slave-cable.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 294,
+            "end": 296
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-slave-upper-start.bin",
+      "requested": "Select the highest start for an eight-channel span.",
+      "accepted": [],
+      "bytes": 452,
+      "sha256": "572a6639998878c8bef689109a91ee2e1bcfa9dd8af2d266bcc675824ec179e9",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trainerCable.trainer_out": {
+          "channelsStart": 56,
+          "channelsCount": 8
+        }
+      },
+      "compareWith": "trainer-slave-cable.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 294,
+            "end": 295
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-slave-count-min.bin",
+      "requested": "Select the minimum output span.",
+      "accepted": [],
+      "bytes": 452,
+      "sha256": "40be32c942466d9b00649568f32a2b5041855107c002a0aada5e0cfd47982e30",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trainerCable.trainer_out": {
+          "channelsStart": 0,
+          "channelsCount": 4
+        }
+      },
+      "compareWith": "trainer-slave-cable.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 295,
+            "end": 296
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-slave-count-max.bin",
+      "requested": "Select the maximum output span.",
+      "accepted": [],
+      "bytes": 452,
+      "sha256": "e5484584f08e296aa3dd0287a3970c20ce212d2bef8332c1d8e97b4fe7e5389b",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trainerCable.trainer_out": {
+          "channelsStart": 0,
+          "channelsCount": 16
+        }
+      },
+      "compareWith": "trainer-slave-cable.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 295,
+            "end": 296
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-master-weight-min.bin",
+      "requested": "Select the minimum master channel 1 weight.",
+      "accepted": [],
+      "bytes": 575,
+      "sha256": "b9ed6a19720bda2f7bfd9656ced7bc9e03141ededf6998569b372bdfcce01179",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trainerCable.trainer_in.channels.0.weight": -125
+      },
+      "compareWith": "trainer.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 296,
+            "end": 297
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-master-weight-max.bin",
+      "requested": "Select the maximum master channel 1 weight.",
+      "accepted": [],
+      "bytes": 575,
+      "sha256": "daafee3174456023185eeb7bbe0a7f1636ae4835bfc7b493b12d8db766eb6067",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trainerCable.trainer_in.channels.0.weight": 125
+      },
+      "compareWith": "trainer.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 296,
+            "end": 297
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-master-channel-add.bin",
+      "requested": "Set master channel 1 to Add.",
+      "accepted": [],
+      "bytes": 575,
+      "sha256": "3ae459703e3033d749ee15fdb1eea79cfc93abe5881e864b0b80fd1e5ba7a6a0",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trainerCable.trainer_in.channels.0.calculationMode": 1
+      },
+      "compareWith": "trainer.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 295,
+            "end": 296
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-master-channel-off.bin",
+      "requested": "Set master channel 1 to Off.",
+      "accepted": [],
+      "bytes": 575,
+      "sha256": "42f1b7cfd4ef0b5479149051f00fb6d2efc005f6615cd74be9f18a31a69fdb98",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trainerCable.trainer_in.channels.0.calculationMode": 0
+      },
+      "compareWith": "trainer.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 295,
+            "end": 296
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-master-destination.bin",
+      "requested": "Change the channel 1 destination to throttle.",
+      "accepted": [],
+      "bytes": 575,
+      "sha256": "4204eb5d6c7b530483e24b23b8fe8816b54143da796cbfb2ff2e7a383b024744",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trainerCable.trainer_in.channels.0.destination": {
+          "category": "analog",
+          "member": 2
+        }
+      },
+      "compareWith": "trainer.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 299,
+            "end": 300
+          }
+        ]
+      }
+    },
+    {
+      "file": "trainer-master-condition.bin",
+      "requested": "Choose FS1 as the master activation condition.",
+      "accepted": [],
+      "bytes": 578,
+      "sha256": "5d9ef5c90b1c41beb6a1ccdc6b8dec1af93dc01bc2175d612e13b04128e5ede9",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "trainerCable.trainer_in.activeCondition": {
+          "category": "function_switch",
+          "member": 0
+        }
+      },
+      "compareWith": "trainer.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          294,
+          294
+        ],
+        "afterPayloadSpan": [
+          294,
+          297
+        ]
+      }
+    },
+    {
+      "file": "trainer-off-from-bluetooth.bin",
+      "requested": "Switch a master Bluetooth model to Off.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "830d05aa711307d763da10cf64b6298dfbc7ec4172869c8d35673c8c27f00a32",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "legacyCheck": {
+        "offset": 292,
+        "bytes": [
+          0,
+          1
+        ],
+        "resave": true
+      },
+      "expectedSettings": {
+        "trainerCable": {
+          "mode": "none"
+        }
+      },
+      "compareWith": "trainer-master-bluetooth.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 10
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          292,
+          419
+        ],
+        "afterPayloadSpan": [
+          292,
+          294
+        ]
+      },
+      "seed": "trainer-master-bluetooth.bin",
+      "seedSha256": "a22b5554876a06a56d366b3c5c34600089d990c6c760982fe0b1bb770e4508f8"
+    },
+    {
+      "file": "checklist-throttle-min.bin",
+      "requested": "Select the minimum throttle threshold in the simulated checklist.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "14ec748ce1b5d261b88a2a5cbf991a3f0eb427cc57b3e48e35e8ddf4c2ce6000",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "preflightChecks.throttleValue": -100
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 437,
+            "end": 438
+          }
+        ]
+      }
+    },
+    {
+      "file": "checklist-throttle-max.bin",
+      "requested": "Select the maximum throttle threshold in the simulated checklist.",
+      "accepted": [],
+      "bytes": 450,
+      "sha256": "c8d62c60d85a8946588600f817e48bf7ca6a923294566a46c784123ade609bb5",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "preflightChecks.throttleValue": 100
+      },
+      "compareWith": "default.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 437,
+            "end": 438
+          }
+        ]
+      }
+    },
+    {
+      "file": "chart-period-min.bin",
+      "requested": "Select the minimum line-chart log period.",
+      "accepted": [],
+      "bytes": 505,
+      "sha256": "184d2e9ae5afc0d02334561d8f95d78a8719ffa3296a54c585a181eecca64821",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.interval": 5
+      },
+      "compareWith": "chart-widget.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 439,
+            "end": 440
+          }
+        ]
+      },
+      "seed": "chart-widget.bin",
+      "seedSha256": "38ac44a3a28ef6504952a8119e925a75aece2d8927ad939abf0cceebb0eb8d22"
+    },
+    {
+      "file": "chart-period-max.bin",
+      "requested": "Select the maximum line-chart log period.",
+      "accepted": [],
+      "bytes": 505,
+      "sha256": "c241f9bae78f147ef4a0d086e046e08fdbbee25e94c226c6efb40b89f93a7397",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.interval": 100
+      },
+      "compareWith": "chart-widget.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 439,
+            "end": 440
+          }
+        ]
+      },
+      "seed": "chart-widget.bin",
+      "seedSha256": "38ac44a3a28ef6504952a8119e925a75aece2d8927ad939abf0cceebb0eb8d22"
+    },
+    {
+      "file": "chart-inverted.bin",
+      "requested": "Enable chart inversion.",
+      "accepted": [],
+      "bytes": 505,
+      "sha256": "4af26da195f4f1681656f4cca98210cb93f967787b4f70b5be99e0f5ae9f385a",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.inverted": true
+      },
+      "compareWith": "chart-widget.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 440,
+            "end": 441
+          }
+        ]
+      },
+      "seed": "chart-widget.bin",
+      "seedSha256": "38ac44a3a28ef6504952a8119e925a75aece2d8927ad939abf0cceebb0eb8d22"
+    },
+    {
+      "file": "chart-auto.bin",
+      "requested": "Enable automatic chart range.",
+      "accepted": [],
+      "bytes": 497,
+      "sha256": "7c9f30ccdd6b8544fec50002b882fcfb692167ededef48ac8a0845b2f39647bf",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.autoRange": true
+      },
+      "compareWith": "chart-widget.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          441,
+          450
+        ],
+        "afterPayloadSpan": [
+          441,
+          442
+        ]
+      },
+      "seed": "chart-widget.bin",
+      "seedSha256": "38ac44a3a28ef6504952a8119e925a75aece2d8927ad939abf0cceebb0eb8d22"
+    },
+    {
+      "file": "chart-manual.bin",
+      "requested": "Return a previously saved automatic chart to manual range.",
+      "accepted": [],
+      "bytes": 505,
+      "sha256": "38ac44a3a28ef6504952a8119e925a75aece2d8927ad939abf0cceebb0eb8d22",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.autoRange": false,
+        "screens.1.widgets.0.minValue": -1024,
+        "screens.1.widgets.0.maxValue": 1024
+      },
+      "compareWith": "chart-auto.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          441,
+          442
+        ],
+        "afterPayloadSpan": [
+          441,
+          450
+        ]
+      },
+      "seed": "chart-auto.bin",
+      "seedSha256": "7c9f30ccdd6b8544fec50002b882fcfb692167ededef48ac8a0845b2f39647bf"
+    },
+    {
+      "file": "chart-min-high.bin",
+      "requested": "Select the maximum possible manual minimum for an unassigned source.",
+      "accepted": [],
+      "bytes": 505,
+      "sha256": "1a89d119e445b96a5a98707890fc3070840549e25d035d9ce36134012030a5e8",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.minValue": 1024,
+        "screens.1.widgets.0.maxValue": 1024
+      },
+      "compareWith": "chart-widget.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 447,
+            "end": 450
+          }
+        ]
+      },
+      "seed": "chart-widget.bin",
+      "seedSha256": "38ac44a3a28ef6504952a8119e925a75aece2d8927ad939abf0cceebb0eb8d22"
+    },
+    {
+      "file": "chart-max-low.bin",
+      "requested": "Select the minimum possible manual maximum for an unassigned source.",
+      "accepted": [],
+      "bytes": 505,
+      "sha256": "041b8d891f99392d97e7cec478e6fa186a2b6ae9751ee36e3af308b3c6f2e7a2",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.minValue": -1024,
+        "screens.1.widgets.0.maxValue": -1024
+      },
+      "compareWith": "chart-widget.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 443,
+            "end": 446
+          }
+        ]
+      },
+      "seed": "chart-widget.bin",
+      "seedSha256": "38ac44a3a28ef6504952a8119e925a75aece2d8927ad939abf0cceebb0eb8d22"
+    },
+    {
+      "file": "chart-min-step.bin",
+      "requested": "Increase the lower chart bound by one.",
+      "accepted": [],
+      "bytes": 505,
+      "sha256": "09d9fb4323bbc3a69edcf4dfde17c68ec519626cc8d63007c195060059e93771",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.minValue": -1023,
+        "screens.1.widgets.0.maxValue": 1024
+      },
+      "compareWith": "chart-widget.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 446,
+            "end": 447
+          }
+        ]
+      },
+      "seed": "chart-widget.bin",
+      "seedSha256": "38ac44a3a28ef6504952a8119e925a75aece2d8927ad939abf0cceebb0eb8d22"
+    },
+    {
+      "file": "chart-max-step.bin",
+      "requested": "Decrease the upper chart bound by one.",
+      "accepted": [],
+      "bytes": 505,
+      "sha256": "a7608868fd332968c4d219a4a614166623f0c7edc38e638742694f1302da374e",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "screens.1.widgets.0.minValue": -1024,
+        "screens.1.widgets.0.maxValue": 1023
+      },
+      "compareWith": "chart-widget.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 442,
+            "end": 444
+          }
+        ]
+      },
+      "seed": "chart-widget.bin",
+      "seedSha256": "38ac44a3a28ef6504952a8119e925a75aece2d8927ad939abf0cceebb0eb8d22"
+    },
+    {
+      "file": "extra-trim-sensors-before.bin",
+      "requested": "Add an extra trim to the existing four-sensor before model.",
+      "accepted": [],
+      "bytes": 621,
+      "sha256": "08a90cc984f0ebe33cff48bbd2bd8dda5805a1b2b4d42f5071e22ad38cee6f79",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.length": 1,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.3.key.appId": 26627
+      },
+      "compareWith": "throttle-before.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          96,
+          96
+        ],
+        "afterPayloadSpan": [
+          96,
+          106
+        ]
+      },
+      "seed": "throttle-before.bin",
+      "seedSha256": "566ff2b7cfc0face36a8bd0216e76d297c7355b2b16be7a416b7a914339824d2"
+    },
+    {
+      "file": "trainer-trim-sensors-before.bin",
+      "requested": "Select external SBUS slave trainer on the extra-trim before model.",
+      "accepted": [],
+      "bytes": 623,
+      "sha256": "6617ce3ebc8fa61fa187350ad5e2afc573f91fc742bac220bf5a1ffa644bf5fb",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "legacyCheck": {
+        "offset": 307,
+        "bytes": [
+          2,
+          2
+        ],
+        "resave": true
+      },
+      "expectedSettings": {
+        "extraTrims.length": 1,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.3.key.appId": 26627
+      },
+      "compareWith": "extra-trim-sensors-before.bin",
+      "changes": {
+        "headerRanges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 14,
+            "end": 16
+          }
+        ],
+        "beforePayloadSpan": [
+          307,
+          309
+        ],
+        "afterPayloadSpan": [
+          307,
+          311
+        ]
+      },
+      "seed": "extra-trim-sensors-before.bin",
+      "seedSha256": "08a90cc984f0ebe33cff48bbd2bd8dda5805a1b2b4d42f5071e22ad38cee6f79"
+    },
+    {
+      "file": "extra-trim-sensors-after.bin",
+      "requested": "Add an extra trim to the existing four-sensor after model.",
+      "accepted": [],
+      "bytes": 621,
+      "sha256": "bb37d89008bca354bf716b1b01d2c0d6fc701354d0c3900421e8d28ad7b71c12",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "expectedSettings": {
+        "extraTrims.length": 1,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.3.key.appId": 26626
+      },
+      "compareWith": "extra-trim-sensors-before.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 376,
+            "end": 377
+          },
+          {
+            "start": 412,
+            "end": 413
+          },
+          {
+            "start": 457,
+            "end": 458
+          },
+          {
+            "start": 497,
+            "end": 498
+          }
+        ]
+      },
+      "seed": "throttle-after.bin",
+      "seedSha256": "7d01cfb167bf20ab8b14cda2aab3bbc2e4bc46195ce634ad09604d063a2d0be5"
+    },
+    {
+      "file": "trainer-trim-sensors-after.bin",
+      "requested": "Select external SBUS slave trainer on the extra-trim after model.",
+      "accepted": [],
+      "bytes": 623,
+      "sha256": "f75bb165ea5181f0d7f7937d171410ad4194547d09586054cea457bf2522cbce",
+      "format": "0.1.37",
+      "diagnostics": [
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e started!",
+        "ModelData::read('USER:/models/model00.bin')",
+        "ModelData::write('USER:/models/model00.bin')",
+        "X20PROAW Ethos 1.6.8 @ a6b30b5e stopped!"
+      ],
+      "legacyCheck": {
+        "offset": 307,
+        "bytes": [
+          2,
+          2
+        ],
+        "resave": true
+      },
+      "expectedSettings": {
+        "extraTrims.length": 1,
+        "telemetry.sensors.length": 4,
+        "telemetry.sensors.3.key.appId": 26626
+      },
+      "compareWith": "trainer-trim-sensors-before.bin",
+      "changes": {
+        "ranges": [
+          {
+            "start": 14,
+            "end": 16
+          },
+          {
+            "start": 378,
+            "end": 379
+          },
+          {
+            "start": 414,
+            "end": 415
+          },
+          {
+            "start": 459,
+            "end": 460
+          },
+          {
+            "start": 499,
+            "end": 500
+          }
+        ]
+      },
+      "seed": "extra-trim-sensors-after.bin",
+      "seedSha256": "bb37d89008bca354bf716b1b01d2c0d6fc701354d0c3900421e8d28ad7b71c12"
     }
   ]
 }

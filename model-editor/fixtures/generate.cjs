@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { cases } = require('./cases.cjs');
+const { multiWizardFlags } = require('./categories.cjs');
 const { changedRanges, checkModel, crc16, digest, format, resolveRuntime, runFirmware } = require('../simulator/runtime.cjs');
 
 function canonicalFixture(bytes) {
@@ -73,7 +74,7 @@ async function generate(runtimeDir, outputDir, oracleDir, settingsOracleDir, cas
     if (oracle) {
       const result = await runFirmware(oracle, { input: bytes, collectJson: true });
       if (!result.snapshot || result.snapshot.runTime !== 0) throw new Error(`${item.id}: normalized field failed independent JSON read-back.`);
-      if (item.id.startsWith('throttle-') || ['sensor-variants', 'servo-addresses', 'id-conflict', 'layout-references'].includes(item.id)) {
+      if (item.verifyTelemetry || item.id.startsWith('throttle-') || ['sensor-variants', 'servo-addresses', 'id-conflict', 'layout-references'].includes(item.id)) {
         const observed = result.snapshot.telemetry.sensors;
         const live = run.accepted.filter(row => row.length === 6);
         if (observed.length !== live.length || live.some(([name, module, band, sub, physical, app], i) => {
@@ -126,6 +127,19 @@ async function generate(runtimeDir, outputDir, oracleDir, settingsOracleDir, cas
       file: item.id + '.bin', requested: item.description, accepted: run.accepted,
       bytes: bytes.length, sha256: digest(bytes), format: format(bytes), diagnostics: run.diagnostics,
     };
+    if (item.category !== undefined) {
+      assert.equal(bytes[16], item.category, `${item.id}: legacy category changed`);
+      entry.category = item.category;
+    }
+    if (item.legacyCheck) {
+      const {offset, bytes:expected, resave} = item.legacyCheck;
+      assert.deepEqual([...bytes.subarray(offset, offset + expected.length)], expected, `${item.id}: legacy setting bytes`);
+      if (resave) {
+        const reopened = await runFirmware(runtime, {input:bytes});
+        assert.ok(canonicalFixture(reopened.saved).equals(bytes), `${item.id}: native reopen changed stored settings`);
+      }
+      entry.legacyCheck = item.legacyCheck;
+    }
     if (item.readback) {
       entry.expectedSettings = item.readback;
       if (settingsOracle) {
@@ -144,6 +158,12 @@ async function generate(runtimeDir, outputDir, oracleDir, settingsOracleDir, cas
     if (seed) {
       entry.seed = item.seed + '.bin';
       entry.seedSha256 = digest(seed);
+    }
+    const flag = multiWizardFlags[entry.file];
+    if (flag !== undefined) {
+      entry.freshWizardVariation = { offset:flag, field:'mixes[3].cut.sticky', stableBitMask:1,
+        observedByte:bytes[flag], scope:'Fresh wizard generation; preserve the complete byte on repair.' };
+      if (seed) assert.equal(bytes[flag], seed[multiWizardFlags[entry.seed]], `${item.id}: source flags changed`);
     }
     fs.writeFileSync(path.join(outputDir, entry.file), bytes, { flag: 'wx' });
     manifest.fixtures.push(entry);

@@ -19,6 +19,14 @@ For ordered fields, the proposed value starts with the current list. For example
 
 In **Variables**, a conditional rate can be entered as `[{"condition":"SA Up","value":3}]` and an action as `[{"condition":"FS1","function":"Add","source":3}]`. The tested radio displays these literal values as 0.3. Keep the rows in the order in which the radio should evaluate them.
 
+In a **Plane** model, **RF system** shows external module settings. For a PPM or SBUS module, select `rf.modules[1].channel_range` and enter a span such as `CH1-CH8` for PPM or `CH49-CH64` for SBUS. Choose 4–16 consecutive channels for PPM or exactly 16 for SBUS, within channels 1–64. The region, binding, receiver and failsafe fields are available for inspection.
+
+Under **Edit model**, `model.bitmap` stores the image name under the radio's `bitmaps/models` directory. The verified field accepts up to 15 UTF-8 bytes, including a relative subdirectory and extension. A blank value selects the default image. Supported logical-switch on/off delays accept 0–60 seconds in tenths.
+
+In **Trims**, select an existing extra trim to inspect or edit its verified name, triggers, range and step. In an active **Trainer** profile, choose a supported link from Cable, Bluetooth, External SBUS or External CPPM. A Master profile exposes verified activation and channel mode, destination and weight fields. A Slave profile exposes its output channel span, such as `CH3-CH11`. The saved role appears as a read-only field.
+
+Under **Checklist**, the throttle startup value is a whole percentage from −100 to 100. For a verified line chart under **Screens**, its log interval uses 10 ms units. An interval of `5` represents 50 ms. The chart's automatic range control is available for the verified unassigned-source layout.
+
 The ID shown by the backup is a comparison value. Choose repair values from your actual sensor configuration.
 
 ## Support
@@ -27,6 +35,8 @@ The ID shown by the backup is a comparison value. Choose repair values from your
 | --- | --- |
 | Windows x64 | Native desktop browser, diff, staging and copy export |
 | FrSky X20 Pro AW FCC plane models, format `0.1.37` | Offline operations on structures verified in the [format and fixture matrix](FORMAT.md) |
+| X20 Pro AW FCC Glider, Helicopter, Multi and Other, format `0.1.37` | Browse and compare the verified layouts and repair existing S.Port IDs. Other fields are read-only in these categories. |
+| Plane RF modules | Browse Twin Lite Pro, XJT Lite, the three verified R9M Lite variants, PPM and SBUS. Authoring includes the verified PPM/SBUS channel spans. |
 | Existing S.Port telemetry | Physical IDs `00–1B`. Verified servo sensors accept same-family Application IDs `6800–6803`. The editor displays each field's edit capability. |
 | Optional simulator read-back | ETHOS 1.6.8 preserves `0.1.37`. ETHOS 26.1.2 converts to `0.2.22` and 26.2.0 converts to `0.2.29` in disposable storage. |
 | Other model boards or formats | The editor reports the unsupported target when opening it |
@@ -36,7 +46,7 @@ Opaque sections are available in the byte inspector. The available edit controls
 
 The bundled `examples/sensor-variants.bin` illustrates sensors with editable Physical IDs and read-only Application IDs.
 
-The unpacked x64 build was exercised on Windows build 26300, with Windows system directories as the applications' only PATH entries. The native Open, Compare and Save dialogs produced the same bytes as the CLI for a servo ID repair, a Physical-only repair and a variable-length model rename. The optional Validate in ETHOS action reopened an exported copy in the 1.6.8 FCC simulator. The telemetry and model-name workflow also passed on a fresh hosted Windows runner at commit `9e30bab`. [Hosted Windows package test](https://github.com/doppleganger53/sloppy-ethos/actions/runs/46083504678/job/140788083638)
+The unpacked x64 build was exercised on Windows build 26300, with Windows system directories as the applications' only PATH entries. The optional Validate in ETHOS action reopened an exported copy in the 1.6.8 FCC simulator. At commit `c20b9da`, a fresh hosted Windows runner verified telemetry repairs, variable-length renaming, curve edits and reordering, logical switches, and variable rates and actions through the native controls. [Hosted Windows package test](https://github.com/doppleganger53/sloppy-ethos/actions/runs/46085294357/job/140794060119)
 
 ## Optional firmware read-back
 

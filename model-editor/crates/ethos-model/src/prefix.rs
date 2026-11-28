@@ -72,7 +72,7 @@ pub(crate) fn expected(c: &mut Cursor<'_>, n: u8) -> Result<()> {
 }
 fn curve_reference(c: &mut Cursor<'_>) -> Result<()> {
     match c.byte()? {
-        0 | 2..=5 => {}
+        0 | 2..=51 => {}
         1 => {
             c.source()?;
         }
@@ -87,21 +87,42 @@ pub(super) fn decode(
     curves: &mut Vec<std::ops::Range<usize>>,
 ) -> Result<()> {
     c.path = "model".into();
-    let kind = byte(c, f, "Model", "model.type")?;
+    let at = c.pos;
+    let kind = c.byte()?;
+    let category = match kind {
+        0 => Some("Plane"),
+        1 => Some("Glider"),
+        2 => Some("Helicopter"),
+        3 => Some("Multirotor"),
+        4 => Some("Other"),
+        _ => None,
+    };
+    f.push(enumeration(
+        "Model",
+        "model.type",
+        at..c.pos,
+        kind.into(),
+        category,
+    ));
     byte(c, f, "Model", "model.category_options")?;
     label(c, f, "Model", "model.name", true)?;
     let p = c.pos;
     let bitmap = c.bytes(16)?;
     let valid = &bitmap[..bitmap.iter().position(|v| *v == 0).unwrap_or(bitmap.len())];
     if let Ok(s) = std::str::from_utf8(valid) {
-        f.push(Field::new(
+        let field = Field::new(
             "Model",
             "model.bitmap",
             p..c.pos,
             Value::Text(s.into()),
             s,
             false,
-        ));
+        );
+        f.push(if valid.len() < 16 {
+            field.writable(EditFormat::BitmapKey)
+        } else {
+            field
+        });
     } else {
         f.push(Field::opaque("Model", "model.bitmap", p..c.pos));
     }
@@ -111,119 +132,49 @@ pub(super) fn decode(
     for i in 0..2 {
         byte(c, f, "RF", &format!("rf.model_ids[{i}]"))?;
     }
-    if kind != 0 {
-        return Err(c.unsupported("aircraft category has a different parameter layout"));
-    }
-    fixed(c, f, "Model", "model.airframe_options", 9)?;
-    let n = byte(c, f, "Trims", "trims.count")?;
-    for i in 0..n {
-        let path = format!("trims[{i}]");
-        c.path = path.clone();
-        let p = c.pos;
-        let step = c.byte()?;
-        f.push(
-            Field::new(
-                "Trims",
-                format!("{path}.step"),
-                p..c.pos,
-                Value::Enum {
-                    raw: step.into(),
-                    label: match step {
-                        2 => Some("Fine".into()),
-                        3 => Some("Medium".into()),
-                        _ => None,
-                    },
-                },
-                step.to_string(),
-                false,
-            )
-            .writable(EditFormat::TrimStep),
-        );
-        byte(c, f, "Trims", &format!("{path}.range"))?;
-        let style = byte(c, f, "Trims", &format!("{path}.mode"))?;
-        byte(c, f, "Trims", &format!("{path}.custom_step"))?;
-        byte(c, f, "Trims", &format!("{path}.play_audio"))?;
-        match style {
-            0 => {
-                let p = c.pos;
-                let n = c.word()? as i16;
-                f.push(Field::number(
-                    "Trims",
-                    format!("{path}.default"),
-                    p..c.pos,
-                    n,
-                ));
-            }
-            1 => {
-                let count = byte(c, f, "Trims", &format!("{path}.lines.count"))?;
-                for j in 0..count {
-                    let p = c.pos;
-                    let value = c.word()? as i16;
-                    f.push(Field::number(
-                        "Trims",
-                        format!("{path}.lines[{j}].value"),
-                        p..c.pos,
-                        value,
-                    ));
-                }
-            }
-            2 => {
-                let p = c.pos;
-                let n = c.word()? as i16;
-                f.push(Field::number(
-                    "Trims",
-                    format!("{path}.default"),
-                    p..c.pos,
-                    n,
-                ));
-                let n = c.count(20)?;
-                for j in 0..n {
-                    source(c, f, "Trims", &format!("{path}.lines[{j}].condition"))?;
-                    let p = c.pos;
-                    let value = c.word()? as i16;
-                    f.push(Field::number(
-                        "Trims",
-                        format!("{path}.lines[{j}].value"),
-                        p..c.pos,
-                        value,
-                    ));
-                    byte(c, f, "Trims", &format!("{path}.lines[{j}].mode"))?;
-                }
-            }
-            _ => return Err(c.unsupported("trim mode")),
+    // Each category has different fixed model options before the independent trim count.
+    let option_bytes = match kind {
+        0 | 1 => 9,
+        2 => 6,
+        3 => 8,
+        4 => 4,
+        _ => {
+            c.path = "model.type".into();
+            return Err(c.unsupported(&format!("unverified aircraft category {kind}")));
         }
+    };
+    let options_at = c.pos;
+    fixed(c, f, "Model", "model.airframe_options", option_bytes)?;
+    if kind == 1 {
+        let at = options_at + 4;
+        f.push(Field::number("Model", "model.flaps_count", at..at + 1, c.data[at]).projected());
+    } else if kind == 2 {
+        let at = options_at + 3;
+        let swash = c.data[at];
+        let name = if swash == 4 {
+            Some("Three servos, 135 degrees")
+        } else {
+            None
+        };
+        f.push(
+            enumeration("Model", "model.swash_type", at..at + 1, swash.into(), name).projected(),
+        );
     }
-    if count(c, f, "Trims", "extra_trims", 5)? != 0 {
-        return Err(c.unsupported("extra trim records"));
-    }
+    super::trims::decode(c, f)?;
     let n = byte(c, f, "Trims", "cross_trims.count")?;
     for i in 0..n {
         byte(c, f, "Trims", &format!("cross_trims[{i}]"))?;
     }
     source(c, f, "Trims", "trims.instant_trim")?;
     channels(c, f)?;
-    rf(c, f)?;
+    super::radio::decode(c, f)?;
     flight_modes(c, f)?;
     mixes(c, f)?;
     super::curves::decode(c, f, curves)?;
     super::logic::switches(c, f)?;
     super::variables::decode(c, f)?;
     functions(c, f)?;
-    c.path = "trainer".into();
-    let v = byte(c, f, "Trainer", "trainer.mode")?;
-    byte(c, f, "Trainer", "trainer.options")?;
-    if v == 1 {
-        source(c, f, "Trainer", "trainer.condition")?;
-        for i in 0..16 {
-            let path = format!("trainer.channels[{i}]");
-            byte(c, f, "Trainer", &format!("{path}.mode"))?;
-            byte(c, f, "Trainer", &format!("{path}.weight"))?;
-            source(c, f, "Trainer", &format!("{path}.destination"))?;
-            source(c, f, "Trainer", &format!("{path}.active_condition"))?;
-        }
-    } else if v != 0 {
-        return Err(c.unsupported("trainer mode"));
-    }
+    super::trainer::decode(c, f)?;
     timers(c, f)
 }
 
@@ -365,89 +316,6 @@ fn channels(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
     Ok(())
 }
 
-fn fixed_label(
-    c: &mut Cursor<'_>,
-    f: &mut Fields,
-    section: &str,
-    path: &str,
-    width: usize,
-) -> Result<bool> {
-    let start = c.pos;
-    let raw = c.bytes(width)?;
-    let cut = raw.iter().position(|v| *v == 0).unwrap_or(width);
-    match std::str::from_utf8(&raw[..cut]) {
-        Ok(s) => f.push(Field::new(
-            section,
-            path,
-            start..c.pos,
-            Value::Text(s.into()),
-            s,
-            false,
-        )),
-        Err(_) => f.push(Field::opaque(section, path, start..c.pos)),
-    }
-    Ok(raw.iter().all(|&v| v == 0))
-}
-fn rf(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
-    for i in 0..2 {
-        let root = format!("rf.modules[{i}]");
-        c.path = root.clone();
-        expected(c, 1)?;
-        let enabled_at = c.pos;
-        let enabled = c.byte()?;
-        let protocol = byte(c, f, "RF", &format!("{root}.type"))?;
-        if !matches!(protocol, 10 | 11) {
-            return Err(c.unsupported(&format!("RF protocol {protocol}")));
-        }
-        byte(c, f, "RF", &format!("{root}.protocol"))?;
-        byte(c, f, "RF", &format!("{root}.power"))?;
-        fixed(c, f, "RF", &format!("{root}.flags"), 4)?;
-        byte(c, f, "RF", &format!("{root}.channels_start"))?;
-        byte(c, f, "RF", &format!("{root}.channels_count"))?;
-        byte(c, f, "RF", &format!("{root}.frequency"))?;
-        fixed_label(c, f, "RF", &format!("{root}.registration_id"), 8)?;
-        byte(c, f, "RF", &format!("{root}.failsafe_mode"))?;
-        let mut empty_receivers = true;
-        for j in 0..3 {
-            empty_receivers &= fixed_label(c, f, "RF", &format!("{root}.receivers[{j}]"), 8)?;
-        }
-        for j in 0..3 {
-            if protocol == 11 {
-                byte(c, f, "RF", &format!("{root}.bands[{j}].enabled"))?;
-            }
-            byte(c, f, "RF", &format!("{root}.bands[{j}].antenna"))?;
-            byte(c, f, "RF", &format!("{root}.bands[{j}].power"))?;
-        }
-        byte(c, f, "RF", &format!("{root}.extra_options"))?;
-        source(c, f, "RF", &format!("{root}.racing_mode_condition"))?;
-        let field = enumeration(
-            "RF",
-            format!("{root}.enabled"),
-            enabled_at..enabled_at + 1,
-            enabled.into(),
-            match enabled {
-                0 => Some("Off"),
-                1 => Some("On"),
-                _ => None,
-            },
-        );
-        let header = f
-            .iter()
-            .find(|item| item.path == format!("rf.module_types[{i}]"))
-            .expect("header fields are decoded first");
-        let proven = i == 0
-            && protocol == 11
-            && empty_receivers
-            && enabled <= 1
-            && header.typed == Value::Integer(if enabled == 0 { 255 } else { 11 });
-        f.push(if proven {
-            field.writable(EditFormat::InternalRf)
-        } else {
-            field
-        });
-    }
-    Ok(())
-}
 fn flight_modes(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
     for i in 0..count(c, f, "Flight modes", "flight_modes", 20)? {
         let path = format!("flight_modes[{i}]");
@@ -462,6 +330,16 @@ fn flight_modes(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
     Ok(())
 }
 
+fn curve_parameters(c: &mut Cursor<'_>) -> Result<()> {
+    curve_reference(c)?;
+    let n = c.count(120)?;
+    for _ in 0..n {
+        curve_reference(c)?;
+        c.source()?;
+    }
+    Ok(())
+}
+
 fn operand_list(c: &mut Cursor<'_>) -> Result<()> {
     let n = c.count(120)?;
     for _ in 0..n {
@@ -470,10 +348,12 @@ fn operand_list(c: &mut Cursor<'_>) -> Result<()> {
     }
     Ok(())
 }
-fn mix_channels(c: &mut Cursor<'_>) -> Result<()> {
-    let n = c.byte()?;
-    c.bytes(n.into())?;
-    Ok(())
+fn mix_channels(c: &mut Cursor<'_>, f: &mut Fields, root: &str) -> Result<usize> {
+    let n = byte(c, f, "Mixes", &format!("{root}.channels.count"))?;
+    for j in 0..n {
+        byte(c, f, "Mixes", &format!("{root}.channels[{j}].index"))?;
+    }
+    Ok(usize::from(n))
 }
 fn free_mix(c: &mut Cursor<'_>, f: &mut Fields, path: &str) -> Result<()> {
     let n = byte(c, f, "Mixes", &format!("{path}.channels.count"))?;
@@ -549,6 +429,14 @@ fn mixes(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
             5 => Some("Elevators"),
             6 => Some("Rudders"),
             7 => Some("Flaps"),
+            8 => Some("Helicopter ailerons"),
+            9 => Some("Helicopter elevators"),
+            10 => Some("Helicopter rudders"),
+            11 => Some("Helicopter pitch"),
+            12 => Some("Multirotor aileron"),
+            13 => Some("Multirotor elevator"),
+            14 => Some("Multirotor rudder"),
+            15 => Some("Bank"),
             16 => Some("Throttle"),
             17 => Some("Ailerons to flaps"),
             20 => Some("Butterfly"),
@@ -570,55 +458,82 @@ fn mixes(c: &mut Cursor<'_>, f: &mut Fields) -> Result<()> {
         match key {
             1 => free_mix(c, f, &path)?,
             4 | 5 | 6 | 17 => {
-                curve_reference(c)?;
-                operand_list(c)?;
-                mix_channels(c)?;
+                curve_parameters(c)?;
+                mix_channels(c, f, &path)?;
                 c.source()?;
                 operand_list(c)?;
                 c.byte()?;
                 c.source()?;
             }
             22 => {
-                curve_reference(c)?;
-                operand_list(c)?;
-                mix_channels(c)?;
+                curve_parameters(c)?;
+                mix_channels(c, f, &path)?;
                 for _ in 0..3 {
                     c.source()?;
                 }
             }
             7 => {
-                curve_reference(c)?;
-                operand_list(c)?;
-                mix_channels(c)?;
-                for _ in 0..4 {
-                    c.source()?;
+                curve_parameters(c)?;
+                let n = mix_channels(c, f, &path)?;
+                for j in 0..n {
+                    source(c, f, "Mixes", &format!("{path}.weights[{j}]"))?;
                 }
+                source(c, f, "Mixes", &format!("{path}.input"))?;
                 c.bytes(2)?;
             }
             20 => {
-                curve_reference(c)?;
-                operand_list(c)?;
-                mix_channels(c)?;
+                curve_parameters(c)?;
+                mix_channels(c, f, &path)?;
                 for _ in 0..7 {
                     c.source()?;
                 }
             }
+            8 | 9 | 10 | 12 | 13 | 14 => {
+                curve_parameters(c)?;
+                mix_channels(c, f, &path)?;
+                source(c, f, "Mixes", &format!("{path}.weight"))?;
+                let n = count(c, f, "Mixes", &format!("{path}.rates"), 120)?;
+                for j in 0..n {
+                    source(c, f, "Mixes", &format!("{path}.rates[{j}].condition"))?;
+                    source(c, f, "Mixes", &format!("{path}.rates[{j}].value"))?;
+                }
+                byte(c, f, "Mixes", &format!("{path}.trim"))?;
+            }
+            11 | 15 => {
+                curve_parameters(c)?;
+                let n = mix_channels(c, f, &path)?;
+                for j in 0..n {
+                    source(c, f, "Mixes", &format!("{path}.weights[{j}]"))?;
+                }
+                source(c, f, "Mixes", &format!("{path}.input"))?;
+            }
             16 => {
                 c.source()?;
-                curve_reference(c)?;
-                operand_list(c)?;
-                mix_channels(c)?;
+                curve_parameters(c)?;
+                mix_channels(c, f, &path)?;
                 for _ in 0..3 {
                     c.source()?;
                 }
-                // Version 1 gyro configuration with a numeric base and a conditional second setting.
+                // The whole byte is persisted, but only its low bit describes the sticky option.
+                // Different fresh wizard saves can contain different high bits.
+                let p = c.pos;
                 let flags = c.byte()?;
-                if flags != 0x93 {
-                    return Err(c.unsupported("gyro mix settings"));
+                f.push(
+                    enumeration(
+                        "Mixes",
+                        format!("{path}.cut.sticky"),
+                        p..c.pos,
+                        (flags & 1).into(),
+                        Some(if flags & 1 != 0 { "On" } else { "Off" }),
+                    )
+                    .projected(),
+                );
+                c.source()?;
+                c.source()?;
+                let enable = c.byte()?;
+                if enable > 1 {
+                    return Err(c.unsupported("throttle hold flag"));
                 }
-                c.source()?;
-                c.source()?;
-                expected(c, 1)?;
                 c.source()?;
             }
             _ => return Err(c.unsupported(&format!("mix key {key}"))),

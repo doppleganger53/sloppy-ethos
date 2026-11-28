@@ -70,7 +70,7 @@ pub(crate) fn encode_op(path: &str, input: &str, boolean: bool) -> Result<(Vec<u
     Ok((vec![raw], label.into()))
 }
 
-pub(crate) fn seconds(path: &str, input: &str, min: i32, max: i32) -> Result<(Vec<u8>, String)> {
+pub(crate) fn seconds(path: &str, input: &str, min: i32, max: i32) -> Result<(i32, String)> {
     let n = input
         .trim()
         .trim_end_matches('s')
@@ -90,10 +90,7 @@ pub(crate) fn seconds(path: &str, input: &str, min: i32, max: i32) -> Result<(Ve
         )));
     }
     let raw = raw as i32;
-    Ok((
-        super::edit::packed_integer(raw),
-        format!("{} s", f64::from(raw) / 10.),
-    ))
+    Ok((raw, format!("{} s", f64::from(raw) / 10.)))
 }
 
 pub(crate) fn encode_inputs(path: &str, data: &str) -> Result<(Vec<u8>, String)> {
@@ -151,7 +148,7 @@ pub(crate) fn switches(c: &mut Cursor<'_>, f: &mut Vec<Field>) -> Result<()> {
         for name in ["delay_on", "delay_off"] {
             let p = c.pos;
             let n = c.word()?;
-            f.push(Field::new(
+            let field = Field::new(
                 SWITCHES,
                 format!("{root}.{name}"),
                 p..c.pos,
@@ -161,7 +158,12 @@ pub(crate) fn switches(c: &mut Cursor<'_>, f: &mut Vec<Field>) -> Result<()> {
                 },
                 format!("{} s", f64::from(n) / 10.),
                 false,
-            ));
+            );
+            f.push(if n <= 600 {
+                field.writable(EditFormat::LogicDelay)
+            } else {
+                field
+            });
         }
         prefix::fixed(c, f, SWITCHES, &format!("{root}.other_timing"), 4)?;
         let table_start = c.pos;

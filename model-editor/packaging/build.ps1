@@ -80,7 +80,8 @@ try {
             }
             Add-PackageFile $file ("fixtures/" + $fixture.file)
         }
-        foreach ($module in 'generate.cjs', 'cases.cjs', 'curves.cjs', 'logic.cjs', 'variables.cjs') {
+        foreach ($module in 'generate.cjs', 'verify-replay.cjs', 'cases.cjs', 'categories.cjs',
+                 'curves.cjs', 'logic.cjs', 'radio.cjs', 'trim-trainer.cjs', 'variables.cjs') {
             Add-PackageFile (Join-Path $corpus $module) "fixtures/$module"
         }
         foreach ($example in 'throttle-before.bin', 'throttle-after.bin', 'sensor-variants.bin') {

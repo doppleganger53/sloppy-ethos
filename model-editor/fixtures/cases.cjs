@@ -283,7 +283,18 @@ end`),
   };
 }
 
+const bitmaps = [
+  ['bitmap-path','b/c image.png','default'],
+  ['bitmap-max','12345678901.png','bitmap-path'],
+  ['bitmap-clear','','bitmap-max'],
+].map(([id, bitmap, compare]) => ({
+  id, compare, seed:compare, description:'Set the stored external bitmap reference to "'+bitmap+'".',
+  fixture:tool(`model.bitmap("${bitmap}")
+print("FX",tostring(model.bitmap()))`), readback:{bitmap},
+}));
+
 module.exports = { cases: [...cases, ...structureCases, ...extraCases, extraServo, outputLimits,
   ...require('./curves.cjs').curveCases(tool), ...require('./logic.cjs').logicCases,
   mixedTelemetry('mixed-telemetry-before', false), mixedTelemetry('mixed-telemetry-after', true),
-  ...require('./variables.cjs').variableCases], variantKeys };
+  ...require('./variables.cjs').variableCases, ...require('./categories.cjs').categoryCases(tool),
+  ...require('./radio.cjs').radioCases, ...bitmaps, ...require('./trim-trainer.cjs').trimTrainerCases], variantKeys };

@@ -244,3 +244,76 @@ fn a_neighbouring_switch_bit_does_not_change_sa() {
         .iter()
         .any(|value| value.path == "checklist.switches.sa"));
 }
+
+#[test]
+fn checklist_thresholds_match_native_menu_limits() {
+    let model = Model::parse(&fixture("default")).unwrap();
+    let dir = tempfile::tempdir().unwrap();
+    let edit = |value: &str| FieldEdit {
+        path: "checklist.throttle_value".into(),
+        value: value.into(),
+    };
+    for (value, expected) in [
+        ("-100", "checklist-throttle-min"),
+        ("100", "checklist-throttle-max"),
+    ] {
+        let file = dir.path().join(expected);
+        model.save_fields_copy(&file, &[], &[edit(value)]).unwrap();
+        assert_eq!(fs::read(file).unwrap(), fixture(expected));
+    }
+    assert!(model.preview_fields(&[], &[edit("-101")]).is_err());
+    assert!(model.preview_fields(&[], &[edit("101")]).is_err());
+}
+
+#[test]
+fn line_chart_modes_bounds_and_intervals_match_independent_native_saves() {
+    let chart = Model::parse(&fixture("chart-widget")).unwrap();
+    let dir = tempfile::tempdir().unwrap();
+    let edit = |leaf: &str, value: &str| FieldEdit {
+        path: format!("screens[1].widgets[0].{leaf}"),
+        value: value.into(),
+    };
+    for (leaf, value, expected) in [
+        ("interval", "5", "chart-period-min"),
+        ("interval", "100", "chart-period-max"),
+        ("inverted", "On", "chart-inverted"),
+        ("auto_range", "On", "chart-auto"),
+        ("minimum", "1024", "chart-min-high"),
+        ("maximum", "-1024", "chart-max-low"),
+        ("minimum", "-1023", "chart-min-step"),
+        ("maximum", "1023", "chart-max-step"),
+    ] {
+        let file = dir.path().join(expected);
+        chart
+            .save_fields_copy(&file, &[], &[edit(leaf, value)])
+            .unwrap();
+        assert_eq!(fs::read(file).unwrap(), fixture(expected), "{expected}");
+    }
+    let automatic = Model::parse(&fixture("chart-auto")).unwrap();
+    assert_eq!(
+        read_field(&automatic, "checklist.throttle_value"),
+        Value::Integer(-95)
+    );
+    assert!(automatic
+        .fields()
+        .iter()
+        .all(|f| f.path != "screens[1].widgets[0].minimum"));
+    let manual = dir.path().join("manual.bin");
+    automatic
+        .save_fields_copy(&manual, &[], &[edit("auto_range", "Off")])
+        .unwrap();
+    assert_eq!(fs::read(manual).unwrap(), fixture("chart-manual"));
+    assert!(chart.preview_fields(&[], &[edit("interval", "4")]).is_err());
+    assert!(chart
+        .preview_fields(&[], &[edit("interval", "101")])
+        .is_err());
+    assert!(chart
+        .preview_fields(&[], &[edit("minimum", "20"), edit("maximum", "10")])
+        .is_err());
+    assert!(chart
+        .preview_fields(&[], &[edit("minimum", "10"), edit("maximum", "20")])
+        .is_ok());
+    assert!(chart
+        .preview_fields(&[], &[edit("auto_range", "On"), edit("minimum", "-250")])
+        .is_err());
+}

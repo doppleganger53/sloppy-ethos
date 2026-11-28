@@ -13,7 +13,7 @@ node fixtures/generate.cjs C:\sim\X20PROAW-FCC-1.6.8 C:\temp\ethos-fixtures C:\s
 node --test simulator/runtime.test.cjs
 ```
 
-Append `--case servo-addresses` to reproduce one case. Repeat `--case` to select several. The generator includes their comparison baselines and seed models automatically.
+Append `--case servo-addresses` to reproduce one case. Repeat `--case` to select several. The generator includes their comparison baselines and seed models automatically. Compare a full run with `node fixtures/verify-replay.cjs fixtures C:\temp\ethos-fixtures`. For a selected subset, append `--partial`.
 
 The optional third and fourth arguments enable the independent read-back checks. The checked-in binaries and manifest can be regenerated with the legacy runtime alone. [Experiment definitions](fixtures/cases.cjs) use the matching firmware's published Lua API and native menus. The Lua registration step runs before the simulator reads the model. The generator opens the experiment tool after preflight. Every experiment starts with a new in-memory filesystem and waits for a model write on shutdown. The [runtime adapter](simulator/runtime.cjs) verifies the extracted JavaScript and WASM separately.
 
@@ -25,12 +25,29 @@ The optional third and fourth arguments enable the independent read-back checks.
 
 The final four payload bytes are the model runtime counter. Their unsigned little-endian value agreed with the newer firmware's `runTime` field, including 111 before normalization and 0 after it. The generator sets that counter to zero on public fixtures and refreshes the header CRC to make repeated experiments comparable. Two independent default model saves reproduced the original 450-byte default after this normalization.
 
+### Model categories
+
+All five 1.6.8 wizard categories use the same X20 Pro AW board word and `0.1.37` version. Their prefixes and mixes differ. The stock models below were created in independent disposable radio profiles. Each before/after sensor pair starts from the same saved stock file. [Category experiments](fixtures/categories.cjs)
+
+| Legacy category | Firmware-created configurations checked |
+| --- | --- |
+| 0 · Airplane | Synthetic fixtures and two local pilot backups. |
+| 1 · Glider | Stock three-mix model, named four-sensor repair pair, and four-flap model with a fourth mix. |
+| 2 · Helicopter | Stock Flybarless model, named four-sensor repair pair, and a three-servo 135° swash model. |
+| 3 · Multi | Stock five-mix model, named four-sensor repair pair, and Roll mapped to channel 6. |
+| 4 · Other | Empty stock model and named four-sensor repair pair. The 26.2.0 JSON oracle represents this category as 99. The editor retains the original legacy byte. |
+
+On all four additional categories the native Windows CLI repaired the selected `03/6803` sensors to `03/6802`. Each output matched the separate firmware-generated target exactly, with only four ID bytes and the checksum changed. The 1.6.8 firmware loaded and resaved each exported copy.
+
+**Fresh Multi wizard results.** Independent wizard initializations produced `01`, `87` and `DF` in the byte containing the throttle-cut sticky flag. Bit 0 remained set. Ordinary 1.6.8 reopen/resave and actual standalone repairs preserved the complete source byte. Snapshot SHA-256 values identify the captured files. Across fresh builds, the checker reports the observed values and offsets and allows only the high bits at that public fixture's measured offset and its CRC to differ. Both sides of a Multi sensor pair must retain the entire byte from that run's stock file. Other fixtures require byte-identical replay. [Replay checker](fixtures/verify-replay.cjs)
+
 ## Fields and experiment coverage
 
 | File structure | Verified with | Observations |
 | --- | --- | --- |
 | Header | All fixtures and independent CRC vector | `FRSK`, marker 1, version bytes 00 01 25, little-endian payload length, board word `0x1381`, payload CRC-16/XMODEM. ASCII `123456789` has CRC `0x31C3`. |
 | Model label | `default`, `name-short`, `name-long` | Absolute byte 18 gives the stored byte count. Text follows and shifts subsequent fields. Empty stored name displays as “New model”. Firmware truncates inputs at 15 bytes, including UTF-8 sequences spanning that boundary. |
+| Model bitmap | `bitmap-path`, `bitmap-max`, `bitmap-clear` | A 16-byte slot stores up to 15 UTF-8 filename bytes followed by NUL. Native clearing replaced the first byte and preserved the old trailing bytes. The model contains a reference to the separate image. |
 | Output channel | `channel` | Output index 1 named “Flap left”, center +3, limits −72/+83, inverted. Matching Lua read-back and converted JSON agree. |
 | Curve | `curve` | A native “none” curve named “Bench rate” changes the counted data before timers. Other types require individual evidence. |
 | Timer | `timer`, `layout-references` | Timer 1 has down direction, start 173, alarm 37. Timer 0 in the second fixture refers to telemetry slot 1. Lua and converted JSON confirm the slot. |
@@ -40,9 +57,12 @@ The final four payload bytes are the model runtime counter. Their unsigned littl
 | Other sensor kinds | `diy`, `calculated-consumption`, `calculated-custom`, `calculated-operation` | The DIY key carries tag 2. Native calculated Consumption and Custom use tag 1 with subtypes 0 and 6. Default sources, a persistent flag and an operation count have different shapes. |
 | Timer actions and limits | `timer-audio-one`, `timer-audio-three`, `timer-limits` | Ordered countdown value, countdown beep and named sound file, individual haptic flags, minimum and maximum signed 32-bit times. |
 | Flight modes, mixes, logic switches, functions and variables | `flight-mode`, `free-mix`, `logic-switch`, `special-function`, `variable` | Independent default insertions identify each byte span. Firmware JSON confirms the second mode, free mix and 100% weight action, comparison switch, disabled Reset and variable bounds. Other variants need matching evidence. |
-| Trims, RF and trainer | `trim`, `rf`, `trainer` | Rudder trim step Fine → Medium changes one byte. The internal RF module and 16-channel trainer input change separate structures. Receiver binding names and variant-specific RF settings need independent cases. |
+| Physical and extra trims | `trim-range-*`, `extra-trim-*` | Physical and extra trim ranges run from 0% to 100%. Extra trims add a name and separate Up/Down source references to the shared trim settings. Captures include the four menu modes, FS1 triggers and a second trim following a variable-length name. [Trim and trainer experiments](fixtures/trim-trainer.cjs) |
+| Trainer | `trainer`, `trainer-master-*`, `trainer-slave-*`, `trainer-trim-sensors-*` | The eight Master/Slave and cable/Bluetooth/external SBUS/external CPPM combinations have native save/load evidence. Master stores 16 channel mappings with condition, operation, signed weight and destination. Slave stores start and count. The external-module settings survived ordinary 1.6.8 reloads. Converted 26.2 JSON can omit them when the module is disabled. |
+| Radio modules | `rf-*` | Coverage includes internal ACCESS/ACCST, TD and TW plus tested XJT Lite, R9M Lite, Twin Lite Pro, PPM and SBUS variants. The plane's enabled external PPM (4–16 channels) and SBUS (16 channels) profiles support verified span edits when receiver slots are empty. Receiver names and the XJT D16 failsafe menu are browsable. Physical binding, transmission, and failsafe behavior require a radio. [RF experiments](fixtures/radio.cjs) |
 | Checklist | `checklist`, `checklist-sa-down`, `checklist-sa-none`, `checklist-failsafe` | The low two switch bits encode all four SA choices. The failsafe reminder has its own byte. Firmware-generated variants verify that edits preserve other switch bits. |
 | Screen and widget data | `screen`, `widget-title`, `widget-timer-source`, `timer-widget`, `chart-widget`, `gps-widget`, `lipo-widget`, `channels-widget`, `text-widget` | Two layouts, counted widget slots, indices, per-widget fields and timer source references. A Value widget supports a zero-based `Timer N`, `Telemetry N` or `None` reference. The codec checks the selected target exists. |
+| Checklist and chart limits | `checklist-throttle-*`, `chart-period-*`, `chart-auto`, `chart-manual`, `chart-inverted`, `chart-min-*`, `chart-max-*` | The checklist accepts a throttle threshold of −100 to +100. Chart intervals use 10 ms units (5–100), with a separate inversion flag. Auto range omits the two signed manual limits. For an unassigned source, manual bounds are −1024 to +1024 and may be equal. Source-dependent bound edits need a matching source experiment. |
 | External Lua references | `lua-references`, `widget-reference` | The synthetic references are `FxTask`, `FxSrc` and `FxView`. The codec preserves length-delimited configuration bytes. The Lua implementation and assets reside outside the model. |
 | Telemetry flags | `telemetry-competition`, `telemetry-bluetooth` | Independent toggle experiments identify the first two bytes after sensors. Competition remains read-only because the firmware clears the telemetry collection when it is enabled. |
 
@@ -94,14 +114,14 @@ The following suffix sizes start after the reset source and include the two-byte
 
 | Issue | Current evidence and scope |
 | --- | --- |
-| #124 · Fixtures | The generator and manifest cover 101 synthetic 1.6.8 model files. Tests check each file's digest, payload length, CRC and board. Independent runtime read-backs confirm the requested settings. |
-| #125 · Codec and CLI | The offline reader opens X20 Pro AW format `0.1.37` plane models, walks supported structures and exposes typed paths, exact byte ranges and opaque data. A supported unchanged model serializes byte-for-byte. |
+| #124 · Fixtures | The manifest inventories the public 1.6.8 captures from all five wizard categories and records each file's digest, payload length, CRC and board. Independent runtime read-backs confirm the requested settings. |
+| #125 · Codec and CLI | The offline reader opens the X20 Pro AW `0.1.37` configurations listed above and exposes typed paths, exact byte ranges and opaque data. A supported unchanged model serializes byte-for-byte. |
 | #126 · Comparison and repair | The four Application ID differences are reproducible in the public and local acceptance pairs. Selected repairs preserve independent bytes. The writer rejects new key conflicts and Application ID changes outside the demonstrated servo family `6800`–`6803`. |
 | #127 · Desktop | Windows x64 desktop and CLI share inspection, comparison, staging, validation and exclusive copy export. The package includes an example backup/current pair. |
-| #128 · Schema coverage | The tables list verified plane-model variants. Extra trims, other RF protocols and trainer modes, further mix/logic/special-function and telemetry variants, and externally interpreted Lua data need additional evidence. Category-specific model prefixes require separate proof. |
-| #129 · Same-format editing | Editable fields include names, channel adjustments, compatible internal RF enable, free-mix settings, supported sensor IDs, timer values and ordered audio actions, eligible curve points and library order, supported logical-switch operations, variable rates/actions, checklist fields and widget references. The codec exposes write capability per field. Unknown source forms or opaque dependency-bearing data can block a particular edit. |
+| #128 · Schema coverage | The experiments above establish category prefixes, the sampled aircraft mixes, trim and trainer layouts, and specific RF profiles. Further mix, logic, special-function and telemetry variants need independent fixtures. External Lua configuration depends on the owning script's schema. |
+| #129 · Same-format editing | Editable fields include names and bitmap references, output and trim settings, selected compatible RF spans, trainer links and channels, free-mix settings, supported sensor IDs, ordered timer actions, eligible curves, logical switches, variable rates/actions, checklist fields and chart/widget settings. The codec exposes write capability per field. Unverified source forms and opaque dependency-bearing data block affected edits. |
 | #130 · Optional validation | Real firmware loaded and resaved disposable copies in 1.6.8. Explicit tests of 26.1.2 and 26.2.0 detect conversions. Saved exports remain separate from disposable read-backs. |
-| #131 · Distribution | The packaged Windows workflow passed the hosted clean-runner smoke at commit `9e30bab`. The workflow exercises opening the examples, comparing, staging and exporting the repair through the GUI and packaged CLI. Public release publication and physical-radio trials are pending. [Hosted run](https://github.com/doppleganger53/sloppy-ethos/actions/runs/46083504678) |
+| #131 · Distribution | The plane milestone at `c20b9da` passed the hosted portable codec, Windows build and clean-Windows package jobs. The smoke test opens the examples, compares, stages and exports through the GUI and packaged CLI. Public release publication and physical-radio trials are pending. [Hosted run](https://github.com/doppleganger53/sloppy-ethos/actions/runs/46085294357) |
 
 ## Optional firmware read-back
 

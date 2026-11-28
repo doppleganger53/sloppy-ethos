@@ -478,7 +478,13 @@ impl Session {
             parts.push("Firmware default".to_owned());
         }
         if field.editable {
+            let screen = field.section == "Screens";
             let hint = match field.encoding {
+                Some(EditFormat::Byte { minimum, maximum }) if screen && field.path.ends_with(".interval") =>
+                    format!("Enter {minimum}–{maximum} units of 10 ms ({}–{} ms).", minimum * 10, maximum * 10),
+                Some(EditFormat::Byte { minimum, maximum }) if field.path == "checklist.throttle_value" =>
+                    format!("Enter a whole percentage from {minimum} to {maximum}."),
+                None if screen && (field.path.ends_with(".auto_range") || field.path.ends_with(".inverted")) => "Choose On or Off.".to_owned(),
                 Some(EditFormat::Percent { minimum, maximum }) => format!(
                     "Percentage {} to {} in 0.1% steps",
                     f64::from(minimum) / 10.0,
@@ -489,6 +495,13 @@ impl Session {
                 }
                 Some(EditFormat::Toggle | EditFormat::InternalRf) => "Choose On or Off".to_owned(),
                 Some(EditFormat::TrimStep) => "Choose Fine or Medium".to_owned(),
+                Some(EditFormat::RadioChannelRange {min_count,max_count}) => format!("Enter CHfirst-CHlast within CH1–CH64, using {min_count} to {max_count} consecutive channels"),
+                Some(EditFormat::Byte {minimum,maximum}) => format!("Whole number from {minimum} to {maximum}"),
+                Some(EditFormat::TrainerControlMode) => "Choose Off, Add, or Replace".to_owned(),
+                Some(EditFormat::TrainerActivation) => "Choose None, Always on, FS1 through FS6, or a switch position".to_owned(),
+                Some(EditFormat::TrainerDestination) => "Choose None, an analog name, or Analog 0 through Analog 10".to_owned(),
+                Some(EditFormat::TrainerLink) => "Choose Cable, Bluetooth, External SBUS, or External CPPM".to_owned(),
+                Some(EditFormat::BitmapKey) => "External bitmap key under bitmaps/models, up to 15 UTF-8 bytes. A blank key selects the radio default.".to_owned(),
                 Some(EditFormat::Label15) => "Name of up to 15 UTF-8 bytes".to_owned(),
                 Some(EditFormat::Boolean) => "Choose Up or Down".to_owned(),
                 Some(EditFormat::TimerSeconds) => "Whole seconds".to_owned(),
@@ -503,6 +516,7 @@ impl Session {
                 Some(EditFormat::LogicComparison) => "Choose Equal, Greater or Less".to_owned(),
                 Some(EditFormat::LogicCombinator) => "Choose AND, OR or XOR".to_owned(),
                 Some(EditFormat::LogicInput) => "Choose a switch position such as SA Up, FS1, or None".to_owned(),
+                Some(EditFormat::LogicDelay) => "Enter 0 to 60 seconds in tenths".to_owned(),
                 Some(EditFormat::TimerInterval) => "Enter 0.1 to 175.0 seconds in tenths".to_owned(),
                 Some(EditFormat::CurveSelector) => "Choose None, Expo N or Curve slot N".to_owned(),
                 Some(EditFormat::CurvePoints) => {
